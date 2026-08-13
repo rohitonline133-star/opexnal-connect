@@ -64,7 +64,7 @@ function Security() {
       const { data, error } = await supabase
         .from("audit_logs")
         .select("id, action, created_at")
-        .eq("actor_id", user!.id)
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
