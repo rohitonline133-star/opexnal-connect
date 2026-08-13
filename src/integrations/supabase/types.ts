@@ -14,16 +14,248 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      follow_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["follow_request_status"]
+          target_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["follow_request_status"]
+          target_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["follow_request_status"]
+          target_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      mutes: {
+        Row: {
+          created_at: string
+          id: string
+          mute_posts: boolean
+          mute_stories: boolean
+          muted_id: string
+          muter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mute_posts?: boolean
+          mute_stories?: boolean
+          muted_id: string
+          muter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mute_posts?: boolean
+          mute_stories?: boolean
+          muted_id?: string
+          muter_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          allow_mentions_from: string
+          allow_tags_from: string
+          avatar_url: string | null
+          bio: string
+          country_code: string | null
+          created_at: string
+          display_name: string
+          followers_count: number
+          following_count: number
+          id: string
+          is_deactivated: boolean
+          is_private: boolean
+          is_verified: boolean
+          last_active_at: string | null
+          locale: string
+          location: string | null
+          posts_count: number
+          show_activity_status: boolean
+          timezone: string
+          updated_at: string
+          username: string
+          website: string | null
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          allow_mentions_from?: string
+          allow_tags_from?: string
+          avatar_url?: string | null
+          bio?: string
+          country_code?: string | null
+          created_at?: string
+          display_name?: string
+          followers_count?: number
+          following_count?: number
+          id: string
+          is_deactivated?: boolean
+          is_private?: boolean
+          is_verified?: boolean
+          last_active_at?: string | null
+          locale?: string
+          location?: string | null
+          posts_count?: number
+          show_activity_status?: boolean
+          timezone?: string
+          updated_at?: string
+          username: string
+          website?: string | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          allow_mentions_from?: string
+          allow_tags_from?: string
+          avatar_url?: string | null
+          bio?: string
+          country_code?: string | null
+          created_at?: string
+          display_name?: string
+          followers_count?: number
+          following_count?: number
+          id?: string
+          is_deactivated?: boolean
+          is_private?: boolean
+          is_verified?: boolean
+          last_active_at?: string | null
+          locale?: string
+          location?: string | null
+          posts_count?: number
+          show_activity_status?: boolean
+          timezone?: string
+          updated_at?: string
+          username?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      account_type: "personal" | "creator" | "business"
+      app_role: "owner" | "super_admin" | "moderator" | "support" | "user"
+      follow_request_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +382,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["personal", "creator", "business"],
+      app_role: ["owner", "super_admin", "moderator", "support", "user"],
+      follow_request_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
