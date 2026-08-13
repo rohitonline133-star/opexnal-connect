@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenticated/profile.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,18 +40,26 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileEditRoute =
+  AuthenticatedProfileEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedProfileRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/profile': typeof AuthenticatedProfileRoute
+  '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/profile': typeof AuthenticatedProfileRoute
+  '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,13 +67,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/profile'
+  fullPaths: '/' | '/auth' | '/reset-password' | '/profile' | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/profile'
+  to: '/' | '/auth' | '/reset-password' | '/profile' | '/profile/edit'
   id:
     | '__root__'
     | '/'
@@ -72,6 +82,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/profile'
+    | '/_authenticated/profile/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,15 +129,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile/edit': {
+      id: '/_authenticated/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof AuthenticatedProfileEditRouteImport
+      parentRoute: typeof AuthenticatedProfileRoute
+    }
   }
 }
 
+interface AuthenticatedProfileRouteChildren {
+  AuthenticatedProfileEditRoute: typeof AuthenticatedProfileEditRoute
+}
+
+const AuthenticatedProfileRouteChildren: AuthenticatedProfileRouteChildren = {
+  AuthenticatedProfileEditRoute: AuthenticatedProfileEditRoute,
+}
+
+const AuthenticatedProfileRouteWithChildren =
+  AuthenticatedProfileRoute._addFileChildren(AuthenticatedProfileRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
