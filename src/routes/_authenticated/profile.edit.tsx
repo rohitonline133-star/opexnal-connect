@@ -126,9 +126,9 @@ function EditProfile() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        display_name: parsed.data.display_name || null,
+        display_name: parsed.data.display_name,
         username: parsed.data.username,
-        bio: parsed.data.bio || null,
+        bio: parsed.data.bio,
         website: parsed.data.website || null,
         account_type: parsed.data.account_type,
       })
