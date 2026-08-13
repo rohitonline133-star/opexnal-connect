@@ -79,14 +79,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "theme-color", content: "#0b0b12" },
+      { title: "Opexnal — Create. Connect. Grow." },
+      {
+        name: "description",
+        content: "Opexnal is a global social platform for creators and communities.",
+      },
+      { name: "author", content: "Opexnal" },
+      { property: "og:title", content: "Opexnal — Create. Connect. Grow." },
+      {
+        property: "og:description",
+        content: "Opexnal is a global social platform for creators and communities.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
