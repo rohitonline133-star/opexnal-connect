@@ -48,7 +48,9 @@ function Privacy() {
     enabled: Boolean(user?.id),
   });
 
-  async function update(patch: Record<string, unknown>) {
+  type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+
+  async function update(patch: ProfileUpdate) {
     if (!user) return;
     const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
     if (error) {
