@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { getProfileById } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
