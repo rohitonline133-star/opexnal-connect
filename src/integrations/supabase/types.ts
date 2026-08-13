@@ -244,6 +244,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_follow_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -251,6 +255,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      request_follow: { Args: { _target_id: string }; Returns: string }
     }
     Enums: {
       account_type: "personal" | "creator" | "business"
