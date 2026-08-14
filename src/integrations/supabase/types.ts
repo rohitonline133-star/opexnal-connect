@@ -65,6 +65,35 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follow_requests: {
         Row: {
           created_at: string
@@ -113,6 +142,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          posts_count: number
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          posts_count?: number
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          posts_count?: number
+          tag?: string
+        }
+        Relationships: []
+      }
       mutes: {
         Row: {
           created_at: string
@@ -137,6 +187,275 @@ export type Database = {
           mute_stories?: boolean
           muted_id?: string
           muter_id?: string
+        }
+        Relationships: []
+      }
+      post_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          likes_count: number
+          parent_id: string | null
+          post_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          post_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_hashtags: {
+        Row: {
+          created_at: string
+          hashtag_id: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          hashtag_id: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          hashtag_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_hashtags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_media: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          height: number | null
+          id: string
+          media_type: Database["public"]["Enums"]["media_type"]
+          position: number
+          post_id: string
+          storage_path: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          height?: number | null
+          id?: string
+          media_type: Database["public"]["Enums"]["media_type"]
+          position?: number
+          post_id: string
+          storage_path: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          height?: number | null
+          id?: string
+          media_type?: Database["public"]["Enums"]["media_type"]
+          position?: number
+          post_id?: string
+          storage_path?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_media_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_shares: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          caption: string
+          comments_count: number
+          comments_enabled: boolean
+          created_at: string
+          id: string
+          likes_count: number
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
+          saves_count: number
+          shares_count: number
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["post_visibility"]
+        }
+        Insert: {
+          caption?: string
+          comments_count?: number
+          comments_enabled?: boolean
+          created_at?: string
+          id?: string
+          likes_count?: number
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          saves_count?: number
+          shares_count?: number
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
+        }
+        Update: {
+          caption?: string
+          comments_count?: number
+          comments_enabled?: boolean
+          created_at?: string
+          id?: string
+          likes_count?: number
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          saves_count?: number
+          shares_count?: number
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Relationships: []
       }
@@ -248,6 +567,8 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      can_view_author_content: { Args: { _author: string }; Returns: boolean }
+      can_view_post: { Args: { _post_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -255,12 +576,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      post_author: { Args: { _post_id: string }; Returns: string }
       request_follow: { Args: { _target_id: string }; Returns: string }
     }
     Enums: {
       account_type: "personal" | "creator" | "business"
       app_role: "owner" | "super_admin" | "moderator" | "support" | "user"
       follow_request_status: "pending" | "approved" | "rejected"
+      media_type: "image" | "video"
+      post_visibility: "public" | "followers" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +715,8 @@ export const Constants = {
       account_type: ["personal", "creator", "business"],
       app_role: ["owner", "super_admin", "moderator", "support", "user"],
       follow_request_status: ["pending", "approved", "rejected"],
+      media_type: ["image", "video"],
+      post_visibility: ["public", "followers", "private"],
     },
   },
 } as const
