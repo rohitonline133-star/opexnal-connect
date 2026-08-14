@@ -327,22 +327,14 @@ export function formatCount(value: number) {
 
 export function timeAgo(iso: string) {
   const seconds = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  const units: [number, string][] = [
-    [60, "s"],
-    [3600, "m"],
-    [86400, "h"],
-    [604800, "d"],
-    [2629800, "w"],
-  ];
   if (seconds < 60) return `${seconds}s`;
-  for (let i = 1; i < units.length; i += 1) {
-    const [limit] = units[i]!;
-    if (seconds < limit) {
-      const [prev, label] = units[i]!;
-      const div = units[i - 1]![0];
-      void prev;
-      return `${Math.floor(seconds / div)}${label}`;
-    }
-  }
-  return `${Math.floor(seconds / 2629800)}mo`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}w`;
+  return `${Math.floor(days / 30)}mo`;
 }
