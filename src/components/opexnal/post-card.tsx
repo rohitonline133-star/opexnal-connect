@@ -66,10 +66,11 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   async function onShare() {
     const url = `${window.location.origin}/p/${post.id}`;
     try {
-      if (navigator.share) await navigator.share({ url, title: "Opexnal post" });
+      const canShare = typeof navigator.share === "function";
+      if (canShare) await navigator.share({ url, title: "Opexnal post" });
       else await navigator.clipboard.writeText(url);
-      if (viewerId) await recordShare(post.id, viewerId, navigator.share ? "native" : "link");
-      if (!navigator.share) toast.success("Link copied");
+      if (viewerId) await recordShare(post.id, viewerId, canShare ? "native" : "link");
+      if (!canShare) toast.success("Link copied");
     } catch {
       /* user dismissed share sheet */
     }
@@ -80,7 +81,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
       <header className="flex items-center gap-3 px-4 py-3">
         {author ? (
           <Link to="/u/$username" params={{ username: author.username }} className="flex items-center gap-3">
-            <ProfileAvatar path={author.avatar_url} fallback={initialsFor(author.display_name || author.username)} className="h-9 w-9" />
+            <ProfileAvatar path={author.avatar_url} fallback={initialsFor(author)} className="h-9 w-9" />
             <div className="min-w-0">
               <p className="flex items-center gap-1 truncate text-sm font-semibold">
                 {author.username}
