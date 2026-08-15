@@ -22,6 +22,7 @@ import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated/settings.privacy'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
+import { Route as AuthenticatedTagTagRouteImport } from './routes/_authenticated/tag.$tag'
 import { Route as AuthenticatedUUsernameRouteImport } from './routes/_authenticated/u.$username'
 
 const IndexRoute = IndexRouteImport.update({
@@ -92,6 +93,11 @@ const AuthenticatedSettingsSecurityRoute =
     path: '/settings/security',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTagTagRoute = AuthenticatedTagTagRouteImport.update({
+  id: '/tag/$tag',
+  path: '/tag/$tag',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUUsernameRoute = AuthenticatedUUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/_authenticated/tag/$tag': typeof AuthenticatedTagTagRoute
   '/_authenticated/u/$username': typeof AuthenticatedUUsernameRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/profile/edit'
     | '/settings/privacy'
     | '/settings/security'
+    | '/tag/$tag'
     | '/u/$username'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/profile/edit'
     | '/settings/privacy'
     | '/settings/security'
+    | '/tag/$tag'
     | '/u/$username'
     | '/settings'
   id:
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/edit'
     | '/_authenticated/settings/privacy'
     | '/_authenticated/settings/security'
+    | '/_authenticated/tag/$tag'
     | '/_authenticated/u/$username'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tag/$tag': {
+      id: '/_authenticated/tag/$tag'
+      path: '/tag/$tag'
+      fullPath: '/tag/$tag'
+      preLoaderRoute: typeof AuthenticatedTagTagRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/u/$username': {
       id: '/_authenticated/u/$username'
       path: '/u/$username'
@@ -323,6 +342,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
+  AuthenticatedTagTagRoute: typeof AuthenticatedTagTagRoute
   AuthenticatedUUsernameRoute: typeof AuthenticatedUUsernameRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
@@ -335,6 +355,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
+  AuthenticatedTagTagRoute: AuthenticatedTagTagRoute,
   AuthenticatedUUsernameRoute: AuthenticatedUUsernameRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
