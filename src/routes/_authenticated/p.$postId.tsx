@@ -61,6 +61,23 @@ function PostPage() {
     onError: () => toast.error("Could not post your comment"),
   });
 
+  const likeComment = useMutation({
+    mutationFn: ({ id, liked }: { id: string; liked: boolean }) =>
+      toggleCommentLike(id, user!.id, liked),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comments", postId] }),
+    onError: () => toast.error("Could not update the like"),
+  });
+
+  const removeComment = useMutation({
+    mutationFn: (id: string) => deleteComment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["post", postId] });
+    },
+    onError: () => toast.error("Could not delete the comment"),
+  });
+
+
   const post = postQuery.data;
 
   return (
