@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Heart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { PostCard } from "@/components/opexnal/post-card";
@@ -10,7 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
-import { addComment, getComments, getPost, timeAgo } from "@/lib/posts";
+import {
+  addComment,
+  deleteComment,
+  formatCount,
+  getComments,
+  getPost,
+  timeAgo,
+  toggleCommentLike,
+} from "@/lib/posts";
+
 
 export const Route = createFileRoute("/_authenticated/p/$postId")({
   head: () => ({
