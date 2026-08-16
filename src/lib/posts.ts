@@ -64,8 +64,10 @@ async function decorate(rows: (PostRow & { post_media: PostMediaRow[] })[], view
   }));
 }
 
+export const FEED_PAGE_SIZE = 10;
+
 /** Home feed: posts from people the viewer follows, plus their own. */
-export async function getHomeFeed(viewerId: string) {
+export async function getHomeFeed(viewerId: string, cursor?: string | null, limit = FEED_PAGE_SIZE) {
   const { data: following } = await supabase
     .from("follows")
     .select("following_id")
@@ -73,15 +75,24 @@ export async function getHomeFeed(viewerId: string) {
 
   const ids = [viewerId, ...(following ?? []).map((f) => f.following_id)];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("posts")
     .select(POST_SELECT)
     .in("user_id", ids)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(limit);
+  if (cursor) query = query.lt("created_at", cursor);
+
+  const { data, error } = await query;
   if (error) throw error;
-  return decorate((data ?? []) as never, viewerId);
+  const items = await decorate((data ?? []) as never, viewerId);
+  const last = items[items.length - 1];
+  return {
+    items,
+    nextCursor: items.length === limit && last ? last.created_at : null,
+  };
 }
+
 
 /** Explore: recent public posts from everyone visible to the viewer. */
 export async function getExploreFeed(viewerId?: string | null) {
