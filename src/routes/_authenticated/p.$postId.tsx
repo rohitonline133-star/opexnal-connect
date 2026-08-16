@@ -74,19 +74,55 @@ function PostPage() {
                   fallback={comment.author ? initialsFor(comment.author) : "?"}
                   className="h-8 w-8"
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm">
-                    <span className="mr-1 font-semibold">{comment.author?.username ?? "user"}</span>
+                    {comment.author?.username ? (
+                      <Link
+                        to="/u/$username"
+                        params={{ username: comment.author.username }}
+                        className="mr-1 font-semibold hover:underline"
+                      >
+                        {comment.author.username}
+                      </Link>
+                    ) : (
+                      <span className="mr-1 font-semibold">user</span>
+                    )}
                     {comment.body}
                   </p>
-                  <p className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{timeAgo(comment.created_at)}</span>
+                    {comment.likes_count > 0 && <span>{formatCount(comment.likes_count)} likes</span>}
+                    {user && comment.user_id === user.id && (
+                      <button
+                        type="button"
+                        className="hover:text-destructive"
+                        onClick={() => removeComment.mutate(comment.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {user && (
+                  <button
+                    type="button"
+                    aria-label={comment.liked ? "Unlike comment" : "Like comment"}
+                    className="pt-1 text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => likeComment.mutate({ id: comment.id, liked: comment.liked })}
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${comment.liked ? "fill-primary text-primary" : ""}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                )}
               </div>
             ))}
             {(commentsQuery.data ?? []).length === 0 && !commentsQuery.isLoading && (
               <p className="text-sm text-muted-foreground">No comments yet.</p>
             )}
           </section>
+
 
           {post.comments_enabled && user && (
             <form
