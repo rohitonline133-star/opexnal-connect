@@ -94,6 +94,42 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          details: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       follow_requests: {
         Row: {
           created_at: string
@@ -537,6 +573,83 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          audience: Database["public"]["Enums"]["story_audience"]
+          caption: string
+          created_at: string
+          duration_seconds: number | null
+          expires_at: string
+          height: number | null
+          id: string
+          media_type: Database["public"]["Enums"]["media_type"]
+          storage_path: string
+          updated_at: string
+          user_id: string
+          views_count: number
+          width: number | null
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["story_audience"]
+          caption?: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at?: string
+          height?: number | null
+          id?: string
+          media_type: Database["public"]["Enums"]["media_type"]
+          storage_path: string
+          updated_at?: string
+          user_id: string
+          views_count?: number
+          width?: number | null
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["story_audience"]
+          caption?: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at?: string
+          height?: number | null
+          id?: string
+          media_type?: Database["public"]["Enums"]["media_type"]
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number
+          width?: number | null
+        }
+        Relationships: []
+      }
+      story_views: {
+        Row: {
+          created_at: string
+          id: string
+          story_id: string
+          viewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          story_id: string
+          viewer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          story_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -569,6 +682,7 @@ export type Database = {
       }
       can_view_author_content: { Args: { _author: string }; Returns: boolean }
       can_view_post: { Args: { _post_id: string }; Returns: boolean }
+      can_view_story: { Args: { _story_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -578,6 +692,7 @@ export type Database = {
       }
       post_author: { Args: { _post_id: string }; Returns: string }
       request_follow: { Args: { _target_id: string }; Returns: string }
+      story_author: { Args: { _story_id: string }; Returns: string }
     }
     Enums: {
       account_type: "personal" | "creator" | "business"
@@ -585,6 +700,7 @@ export type Database = {
       follow_request_status: "pending" | "approved" | "rejected"
       media_type: "image" | "video"
       post_visibility: "public" | "followers" | "private"
+      story_audience: "public" | "followers" | "close_friends"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -717,6 +833,7 @@ export const Constants = {
       follow_request_status: ["pending", "approved", "rejected"],
       media_type: ["image", "video"],
       post_visibility: ["public", "followers", "private"],
+      story_audience: ["public", "followers", "close_friends"],
     },
   },
 } as const
