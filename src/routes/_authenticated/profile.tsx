@@ -114,10 +114,13 @@ function MyProfile() {
             <div className="flex items-center justify-center gap-2 border-b-2 border-foreground py-3 text-sm font-medium">
               <Grid3x3 className="h-4 w-4" aria-hidden="true" /> Posts
             </div>
-            <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-              You haven't posted yet. Posting, stories and reels arrive in the next build phase.
-            </p>
+            <PostGrid
+              userId={profile.id}
+              viewerId={user?.id ?? null}
+              emptyMessage="You haven't posted yet. Tap create to share your first photo or video."
+            />
           </div>
+
         </div>
       )}
     </AppShell>

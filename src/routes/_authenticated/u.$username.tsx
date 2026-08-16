@@ -179,10 +179,9 @@ function PublicProfile() {
                 </p>
               </div>
             ) : (
-              <p className="px-6 py-16 text-center text-sm text-muted-foreground">
-                No posts yet.
-              </p>
+              <PostGrid userId={profile.id} viewerId={user?.id ?? null} />
             )}
+
           </div>
         </div>
       )}
