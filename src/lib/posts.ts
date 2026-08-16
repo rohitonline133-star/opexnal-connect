@@ -116,6 +116,31 @@ export async function getPostsByUser(userId: string, viewerId?: string | null) {
   return decorate((data ?? []) as never, viewerId);
 }
 
+export const GRID_PAGE_SIZE = 18;
+
+/** Paginated posts for a profile grid; RLS decides what is visible. */
+export async function getUserPostsPage(
+  userId: string,
+  viewerId?: string | null,
+  cursor?: string | null,
+  limit = GRID_PAGE_SIZE,
+) {
+  let query = supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (cursor) query = query.lt("created_at", cursor);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  const items = await decorate((data ?? []) as never, viewerId);
+  const last = items[items.length - 1];
+  return { items, nextCursor: items.length === limit && last ? last.created_at : null };
+}
+
+
 export async function getSavedPosts(viewerId: string) {
   const { data: saves } = await supabase
     .from("post_saves")
