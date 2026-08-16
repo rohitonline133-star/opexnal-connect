@@ -4,6 +4,8 @@ import { Grid3x3, Loader2, Settings, BadgeCheck, Lock } from "lucide-react";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
+import { PostGrid } from "@/components/opexnal/post-grid";
+
 import { Button } from "@/components/ui/button";
 import { getProfileById, initialsFor } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";

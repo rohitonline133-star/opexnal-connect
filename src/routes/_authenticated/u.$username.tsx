@@ -5,6 +5,8 @@ import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
+import { PostGrid } from "@/components/opexnal/post-grid";
+
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileByUsername, initialsFor } from "@/lib/profile";
