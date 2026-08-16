@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Heart, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { PostCard } from "@/components/opexnal/post-card";
@@ -10,7 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
-import { addComment, getComments, getPost, timeAgo } from "@/lib/posts";
+import {
+  addComment,
+  deleteComment,
+  formatCount,
+  getComments,
+  getPost,
+  timeAgo,
+  toggleCommentLike,
+} from "@/lib/posts";
+
 
 export const Route = createFileRoute("/_authenticated/p/$postId")({
   head: () => ({
@@ -52,6 +61,23 @@ function PostPage() {
     onError: () => toast.error("Could not post your comment"),
   });
 
+  const likeComment = useMutation({
+    mutationFn: ({ id, liked }: { id: string; liked: boolean }) =>
+      toggleCommentLike(id, user!.id, liked),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["comments", postId] }),
+    onError: () => toast.error("Could not update the like"),
+  });
+
+  const removeComment = useMutation({
+    mutationFn: (id: string) => deleteComment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["post", postId] });
+    },
+    onError: () => toast.error("Could not delete the comment"),
+  });
+
+
   const post = postQuery.data;
 
   return (
@@ -74,19 +100,55 @@ function PostPage() {
                   fallback={comment.author ? initialsFor(comment.author) : "?"}
                   className="h-8 w-8"
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm">
-                    <span className="mr-1 font-semibold">{comment.author?.username ?? "user"}</span>
+                    {comment.author?.username ? (
+                      <Link
+                        to="/u/$username"
+                        params={{ username: comment.author.username }}
+                        className="mr-1 font-semibold hover:underline"
+                      >
+                        {comment.author.username}
+                      </Link>
+                    ) : (
+                      <span className="mr-1 font-semibold">user</span>
+                    )}
                     {comment.body}
                   </p>
-                  <p className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{timeAgo(comment.created_at)}</span>
+                    {comment.likes_count > 0 && <span>{formatCount(comment.likes_count)} likes</span>}
+                    {user && comment.user_id === user.id && (
+                      <button
+                        type="button"
+                        className="hover:text-destructive"
+                        onClick={() => removeComment.mutate(comment.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {user && (
+                  <button
+                    type="button"
+                    aria-label={comment.liked ? "Unlike comment" : "Like comment"}
+                    className="pt-1 text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => likeComment.mutate({ id: comment.id, liked: comment.liked })}
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${comment.liked ? "fill-primary text-primary" : ""}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                )}
               </div>
             ))}
             {(commentsQuery.data ?? []).length === 0 && !commentsQuery.isLoading && (
               <p className="text-sm text-muted-foreground">No comments yet.</p>
             )}
           </section>
+
 
           {post.comments_enabled && user && (
             <form
