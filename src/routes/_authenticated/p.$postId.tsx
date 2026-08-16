@@ -64,13 +64,13 @@ function PostPage() {
         <p className="px-4 py-16 text-center text-sm text-muted-foreground">This post is unavailable.</p>
       ) : (
         <>
-          <PostCard post={post} viewerId={user?.id} />
+          <PostCard post={post} viewerId={user?.id ?? null} />
 
           <section className="space-y-4 px-4 py-4">
             {(commentsQuery.data ?? []).map((comment) => (
               <div key={comment.id} className="flex gap-3">
                 <ProfileAvatar
-                  path={comment.author?.avatar_url}
+                  path={comment.author?.avatar_url ?? null}
                   fallback={comment.author ? initialsFor(comment.author) : "?"}
                   className="h-8 w-8"
                 />
