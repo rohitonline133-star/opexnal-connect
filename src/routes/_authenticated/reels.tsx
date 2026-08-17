@@ -108,13 +108,15 @@ function Reel({ post, viewerId }: { post: FeedPost; viewerId: string | null }) {
   async function onShare() {
     const link = `${window.location.origin}/p/${post.id}`;
     try {
-      if (typeof navigator !== "undefined" && "share" in navigator) {
-        await navigator.share({ url: link, title: "Opexnal reel" });
+      const nav: Navigator = navigator;
+      if (typeof nav.share === "function") {
+        await nav.share({ url: link, title: "Opexnal reel" });
       } else {
-        await navigator.clipboard.writeText(link);
+        await nav.clipboard.writeText(link);
         toast.success("Link copied");
       }
       if (viewerId) await recordShare(post.id, viewerId);
+
     } catch {
       /* user cancelled */
     }

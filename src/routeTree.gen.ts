@@ -18,6 +18,7 @@ import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedReelsRouteImport } from './routes/_authenticated/reels'
 import { Route as AuthenticatedPPostIdRouteImport } from './routes/_authenticated/p.$postId'
 import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenticated/profile.edit'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -70,6 +71,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReelsRoute = AuthenticatedReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPPostIdRoute = AuthenticatedPPostIdRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/explore': typeof AuthenticatedExploreRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/reels': typeof AuthenticatedReelsRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/explore': typeof AuthenticatedExploreRoute
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/reels': typeof AuthenticatedReelsRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/explore': typeof AuthenticatedExploreRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
+  '/_authenticated/reels': typeof AuthenticatedReelsRoute
   '/_authenticated/p/$postId': typeof AuthenticatedPPostIdRoute
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/home'
     | '/profile'
+    | '/reels'
     | '/p/$postId'
     | '/profile/edit'
     | '/settings/privacy'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/home'
     | '/profile'
+    | '/reels'
     | '/p/$postId'
     | '/profile/edit'
     | '/settings/privacy'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/explore'
     | '/_authenticated/home'
     | '/_authenticated/profile'
+    | '/_authenticated/reels'
     | '/_authenticated/p/$postId'
     | '/_authenticated/profile/edit'
     | '/_authenticated/settings/privacy'
@@ -313,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reels': {
+      id: '/_authenticated/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof AuthenticatedReelsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/p/$postId': {
@@ -398,6 +417,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExploreRoute: typeof AuthenticatedExploreRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
+  AuthenticatedReelsRoute: typeof AuthenticatedReelsRoute
   AuthenticatedPPostIdRoute: typeof AuthenticatedPPostIdRoute
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
@@ -414,6 +434,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExploreRoute: AuthenticatedExploreRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
+  AuthenticatedReelsRoute: AuthenticatedReelsRoute,
   AuthenticatedPPostIdRoute: AuthenticatedPPostIdRoute,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
