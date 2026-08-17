@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, PlusSquare, Bell, User } from "lucide-react";
+import { Home, Search, PlusSquare, Bell, User, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/explore", label: "Explore", icon: Search },
   { to: "/create", label: "Create", icon: PlusSquare, primary: true },
+  { to: "/reels", label: "Reels", icon: Clapperboard },
   { to: "/activity", label: "Activity", icon: Bell },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
+
 
 export function AppShell({
   children,

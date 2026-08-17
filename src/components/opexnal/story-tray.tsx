@@ -21,25 +21,23 @@ export function StoryTray({ viewerId }: { viewerId: string }) {
     <div className="border-b border-border">
       <ul className="flex gap-4 overflow-x-auto px-4 py-3">
         <li className="shrink-0">
-          <Link
-            to={mine ? "/stories/$userId" : "/stories/new"}
-            params={mine ? { userId: viewerId } : undefined}
-            className="flex w-16 flex-col items-center gap-1.5"
-          >
-            <span className="relative">
-              <ProfileAvatar
-                path={mine?.author.avatar_url ?? null}
-                fallback={mine ? initialsFor(mine.author) : "Me"}
-                className="h-16 w-16"
-                ring={Boolean(mine?.hasUnseen)}
-              />
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background brand-gradient-bg text-primary-foreground">
-                <Plus className="h-3 w-3" aria-hidden="true" />
-              </span>
-            </span>
-            <span className="w-16 truncate text-center text-xs text-muted-foreground">Your story</span>
-          </Link>
+          {mine ? (
+            <Link
+              to="/stories/$userId"
+              params={{ userId: viewerId }}
+              className="flex w-16 flex-col items-center gap-1.5"
+            >
+              <MyStoryBadge avatarUrl={mine.author.avatar_url} fallback={initialsFor(mine.author)} ring={mine.hasUnseen} />
+              <span className="w-16 truncate text-center text-xs text-muted-foreground">Your story</span>
+            </Link>
+          ) : (
+            <Link to="/stories/new" className="flex w-16 flex-col items-center gap-1.5">
+              <MyStoryBadge avatarUrl={null} fallback="Me" ring={false} />
+              <span className="w-16 truncate text-center text-xs text-muted-foreground">Your story</span>
+            </Link>
+          )}
         </li>
+
 
         {isLoading &&
           Array.from({ length: 4 }).map((_, i) => (
@@ -71,3 +69,23 @@ export function StoryTray({ viewerId }: { viewerId: string }) {
     </div>
   );
 }
+
+function MyStoryBadge({
+  avatarUrl,
+  fallback,
+  ring,
+}: {
+  avatarUrl: string | null;
+  fallback: string;
+  ring: boolean;
+}) {
+  return (
+    <span className="relative">
+      <ProfileAvatar path={avatarUrl} fallback={fallback} className="h-16 w-16" ring={ring} />
+      <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background brand-gradient-bg text-primary-foreground">
+        <Plus className="h-3 w-3" aria-hidden="true" />
+      </span>
+    </span>
+  );
+}
+

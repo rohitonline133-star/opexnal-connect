@@ -106,6 +106,19 @@ export async function getExploreFeed(viewerId?: string | null) {
   return decorate((data ?? []) as never, viewerId);
 }
 
+/** Reels: recent posts whose media includes a video, visible to the viewer. */
+export async function getReelsFeed(viewerId: string, limit = 30) {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(120);
+  if (error) throw error;
+  const items = await decorate((data ?? []) as never, viewerId);
+  return items.filter((p) => p.media.some((m) => m.media_type === "video")).slice(0, limit);
+}
+
+
 export async function getPostsByUser(userId: string, viewerId?: string | null) {
   const { data, error } = await supabase
     .from("posts")
