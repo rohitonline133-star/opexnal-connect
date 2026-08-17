@@ -5,6 +5,8 @@ import { Loader2, PlusSquare } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { OpexnalWordmark } from "@/components/opexnal/logo";
 import { PostCard } from "@/components/opexnal/post-card";
+import { StoryTray } from "@/components/opexnal/story-tray";
+
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { FEED_PAGE_SIZE, getHomeFeed } from "@/lib/posts";
@@ -53,7 +55,9 @@ function HomeFeed() {
 
   return (
     <AppShell header={<ScreenHeader title={<OpexnalWordmark className="text-lg" />} />}>
+      {user && <StoryTray viewerId={user.id} />}
       {isLoading ? (
+
         <div className="flex justify-center py-16">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
