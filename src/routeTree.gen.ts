@@ -23,6 +23,8 @@ import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated/settings.privacy'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
+import { Route as AuthenticatedStoriesUserIdRouteImport } from './routes/_authenticated/stories.$userId'
+import { Route as AuthenticatedStoriesNewRouteImport } from './routes/_authenticated/stories.new'
 import { Route as AuthenticatedTagTagRouteImport } from './routes/_authenticated/tag.$tag'
 import { Route as AuthenticatedUUsernameRouteImport } from './routes/_authenticated/u.$username'
 
@@ -99,6 +101,17 @@ const AuthenticatedSettingsSecurityRoute =
     path: '/settings/security',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStoriesUserIdRoute =
+  AuthenticatedStoriesUserIdRouteImport.update({
+    id: '/stories/$userId',
+    path: '/stories/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStoriesNewRoute = AuthenticatedStoriesNewRouteImport.update({
+  id: '/stories/new',
+  path: '/stories/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTagTagRoute = AuthenticatedTagTagRouteImport.update({
   id: '/tag/$tag',
   path: '/tag/$tag',
@@ -123,6 +136,8 @@ export interface FileRoutesByFullPath {
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
+  '/stories/new': typeof AuthenticatedStoriesNewRoute
   '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -140,6 +155,8 @@ export interface FileRoutesByTo {
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
+  '/stories/new': typeof AuthenticatedStoriesNewRoute
   '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -159,6 +176,8 @@ export interface FileRoutesById {
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
+  '/_authenticated/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
+  '/_authenticated/stories/new': typeof AuthenticatedStoriesNewRoute
   '/_authenticated/tag/$tag': typeof AuthenticatedTagTagRoute
   '/_authenticated/u/$username': typeof AuthenticatedUUsernameRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -178,6 +197,8 @@ export interface FileRouteTypes {
     | '/profile/edit'
     | '/settings/privacy'
     | '/settings/security'
+    | '/stories/$userId'
+    | '/stories/new'
     | '/tag/$tag'
     | '/u/$username'
     | '/settings/'
@@ -195,6 +216,8 @@ export interface FileRouteTypes {
     | '/profile/edit'
     | '/settings/privacy'
     | '/settings/security'
+    | '/stories/$userId'
+    | '/stories/new'
     | '/tag/$tag'
     | '/u/$username'
     | '/settings'
@@ -213,6 +236,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile/edit'
     | '/_authenticated/settings/privacy'
     | '/_authenticated/settings/security'
+    | '/_authenticated/stories/$userId'
+    | '/_authenticated/stories/new'
     | '/_authenticated/tag/$tag'
     | '/_authenticated/u/$username'
     | '/_authenticated/settings/'
@@ -325,6 +350,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stories/$userId': {
+      id: '/_authenticated/stories/$userId'
+      path: '/stories/$userId'
+      fullPath: '/stories/$userId'
+      preLoaderRoute: typeof AuthenticatedStoriesUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stories/new': {
+      id: '/_authenticated/stories/new'
+      path: '/stories/new'
+      fullPath: '/stories/new'
+      preLoaderRoute: typeof AuthenticatedStoriesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tag/$tag': {
       id: '/_authenticated/tag/$tag'
       path: '/tag/$tag'
@@ -362,6 +401,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPPostIdRoute: typeof AuthenticatedPPostIdRoute
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
+  AuthenticatedStoriesUserIdRoute: typeof AuthenticatedStoriesUserIdRoute
+  AuthenticatedStoriesNewRoute: typeof AuthenticatedStoriesNewRoute
   AuthenticatedTagTagRoute: typeof AuthenticatedTagTagRoute
   AuthenticatedUUsernameRoute: typeof AuthenticatedUUsernameRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -376,6 +417,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPPostIdRoute: AuthenticatedPPostIdRoute,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
+  AuthenticatedStoriesUserIdRoute: AuthenticatedStoriesUserIdRoute,
+  AuthenticatedStoriesNewRoute: AuthenticatedStoriesNewRoute,
   AuthenticatedTagTagRoute: AuthenticatedTagTagRoute,
   AuthenticatedUUsernameRoute: AuthenticatedUUsernameRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
