@@ -19,6 +19,8 @@ import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReelsRouteImport } from './routes/_authenticated/reels'
+import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
+import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedPPostIdRouteImport } from './routes/_authenticated/p.$postId'
 import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenticated/profile.edit'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -78,6 +80,18 @@ const AuthenticatedReelsRoute = AuthenticatedReelsRouteImport.update({
   path: '/reels',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMessagesIndexRoute =
+  AuthenticatedMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMessagesConversationIdRoute =
+  AuthenticatedMessagesConversationIdRouteImport.update({
+    id: '/messages/$conversationId',
+    path: '/messages/$conversationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPPostIdRoute = AuthenticatedPPostIdRouteImport.update({
   id: '/p/$postId',
   path: '/p/$postId',
@@ -139,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/reels': typeof AuthenticatedReelsRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -147,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/stories/new': typeof AuthenticatedStoriesNewRoute
   '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
+  '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -159,6 +175,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/reels': typeof AuthenticatedReelsRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -167,6 +184,7 @@ export interface FileRoutesByTo {
   '/stories/new': typeof AuthenticatedStoriesNewRoute
   '/tag/$tag': typeof AuthenticatedTagTagRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
+  '/messages': typeof AuthenticatedMessagesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -181,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/_authenticated/reels': typeof AuthenticatedReelsRoute
+  '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/p/$postId': typeof AuthenticatedPPostIdRoute
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
@@ -189,6 +208,7 @@ export interface FileRoutesById {
   '/_authenticated/stories/new': typeof AuthenticatedStoriesNewRoute
   '/_authenticated/tag/$tag': typeof AuthenticatedTagTagRoute
   '/_authenticated/u/$username': typeof AuthenticatedUUsernameRoute
+  '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -203,6 +223,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/reels'
+    | '/messages/$conversationId'
     | '/p/$postId'
     | '/profile/edit'
     | '/settings/privacy'
@@ -211,6 +232,7 @@ export interface FileRouteTypes {
     | '/stories/new'
     | '/tag/$tag'
     | '/u/$username'
+    | '/messages/'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -223,6 +245,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/reels'
+    | '/messages/$conversationId'
     | '/p/$postId'
     | '/profile/edit'
     | '/settings/privacy'
@@ -231,6 +254,7 @@ export interface FileRouteTypes {
     | '/stories/new'
     | '/tag/$tag'
     | '/u/$username'
+    | '/messages'
     | '/settings'
   id:
     | '__root__'
@@ -244,6 +268,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/profile'
     | '/_authenticated/reels'
+    | '/_authenticated/messages/$conversationId'
     | '/_authenticated/p/$postId'
     | '/_authenticated/profile/edit'
     | '/_authenticated/settings/privacy'
@@ -252,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stories/new'
     | '/_authenticated/tag/$tag'
     | '/_authenticated/u/$username'
+    | '/_authenticated/messages/'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -332,6 +358,20 @@ declare module '@tanstack/react-router' {
       path: '/reels'
       fullPath: '/reels'
       preLoaderRoute: typeof AuthenticatedReelsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/messages/': {
+      id: '/_authenticated/messages/'
+      path: '/messages'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthenticatedMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/messages/$conversationId': {
+      id: '/_authenticated/messages/$conversationId'
+      path: '/messages/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof AuthenticatedMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/p/$postId': {
@@ -418,6 +458,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
   AuthenticatedReelsRoute: typeof AuthenticatedReelsRoute
+  AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedPPostIdRoute: typeof AuthenticatedPPostIdRoute
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
@@ -425,6 +466,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStoriesNewRoute: typeof AuthenticatedStoriesNewRoute
   AuthenticatedTagTagRoute: typeof AuthenticatedTagTagRoute
   AuthenticatedUUsernameRoute: typeof AuthenticatedUUsernameRoute
+  AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -435,6 +477,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
   AuthenticatedReelsRoute: AuthenticatedReelsRoute,
+  AuthenticatedMessagesConversationIdRoute:
+    AuthenticatedMessagesConversationIdRoute,
   AuthenticatedPPostIdRoute: AuthenticatedPPostIdRoute,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
@@ -442,6 +486,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStoriesNewRoute: AuthenticatedStoriesNewRoute,
   AuthenticatedTagTagRoute: AuthenticatedTagTagRoute,
   AuthenticatedUUsernameRoute: AuthenticatedUUsernameRoute,
+  AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
