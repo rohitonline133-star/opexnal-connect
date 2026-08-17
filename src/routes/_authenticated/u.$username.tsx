@@ -154,7 +154,7 @@ function PublicProfile() {
           </div>
 
           {!isSelf && (
-            <div className="px-4 pt-4">
+            <div className="flex gap-2 px-4 pt-4">
               <Button
                 variant={relationship?.following || relationship?.requested ? "surface" : "brand"}
                 size="xl"
@@ -168,8 +168,24 @@ function PublicProfile() {
                       ? "Request to follow"
                       : "Follow"}
               </Button>
+              <Button
+                variant="surface"
+                size="xl"
+                onClick={async () => {
+                  if (!viewer) return;
+                  try {
+                    const id = await openDirectConversation(viewer.id, profile.id);
+                    navigate({ to: "/messages/$conversationId", params: { conversationId: id } });
+                  } catch {
+                    toast.error("Could not open the conversation");
+                  }
+                }}
+              >
+                Message
+              </Button>
             </div>
           )}
+
 
           <div className="mt-8 border-t border-border">
             {profile.is_private && !relationship?.following && !isSelf ? (
