@@ -27,9 +27,15 @@ export const Route = createFileRoute("/_authenticated/stories/$userId")({
   head: () => ({
     meta: [
       { title: "Stories — Opexnal" },
-      { name: "description", content: "Watch 24-hour photo and video stories from people you follow on Opexnal." },
+      {
+        name: "description",
+        content: "Watch 24-hour photo and video stories from people you follow on Opexnal.",
+      },
       { property: "og:title", content: "Stories — Opexnal" },
-      { property: "og:description", content: "Watch 24-hour photo and video stories from people you follow on Opexnal." },
+      {
+        property: "og:description",
+        content: "Watch 24-hour photo and video stories from people you follow on Opexnal.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary" },
@@ -199,7 +205,9 @@ function StoryViewer() {
           className="h-8 w-8"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{current.author?.username ?? "user"}</p>
+          <p className="truncate text-sm font-semibold text-white">
+            {current.author?.username ?? "user"}
+          </p>
           <p className="text-xs text-white/60">
             {timeAgo(current.created_at)} · {timeLeft(current.expires_at)}
           </p>

@@ -68,7 +68,11 @@ function Privacy() {
         <ScreenHeader
           title="Privacy"
           left={
-            <Link to="/settings" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/settings"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }

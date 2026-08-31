@@ -27,8 +27,16 @@ export const Route = createFileRoute("/")({
 });
 
 const highlights = [
-  { icon: Sparkles, title: "Built for creators", body: "Personal, creator and business accounts from day one." },
-  { icon: ShieldCheck, title: "Security first", body: "Two-factor auth, device sessions and audit logging." },
+  {
+    icon: Sparkles,
+    title: "Built for creators",
+    body: "Personal, creator and business accounts from day one.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Security first",
+    body: "Two-factor auth, device sessions and audit logging.",
+  },
   { icon: Globe2, title: "Global ready", body: "Worldwide accounts, time zones and languages." },
 ];
 
@@ -37,7 +45,10 @@ function Landing() {
 
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-12 pt-16">
-      <div className="brand-glow pointer-events-none absolute inset-x-0 top-0 h-80" aria-hidden="true" />
+      <div
+        className="brand-glow pointer-events-none absolute inset-x-0 top-0 h-80"
+        aria-hidden="true"
+      />
 
       <div className="relative flex flex-1 flex-col">
         <OpexnalMark className="h-14 w-14" />

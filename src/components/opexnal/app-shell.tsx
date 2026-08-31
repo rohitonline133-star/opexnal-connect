@@ -12,14 +12,7 @@ const tabs = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-
-export function AppShell({
-  children,
-  header,
-}: {
-  children: ReactNode;
-  header?: ReactNode;
-}) {
+export function AppShell({ children, header }: { children: ReactNode; header?: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -43,7 +36,8 @@ export function AppShell({
               className={cn(
                 "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
                 primary && "brand-gradient-bg text-primary-foreground shadow-[var(--shadow-brand)]",
-                !primary && (active ? "text-foreground" : "text-muted-foreground hover:text-foreground"),
+                !primary &&
+                  (active ? "text-foreground" : "text-muted-foreground hover:text-foreground"),
               )}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />

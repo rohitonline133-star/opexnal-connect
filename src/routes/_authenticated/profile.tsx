@@ -89,7 +89,9 @@ function MyProfile() {
                 <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-label="Private account" />
               )}
             </p>
-            <p className="text-xs capitalize text-muted-foreground">{profile.account_type} account</p>
+            <p className="text-xs capitalize text-muted-foreground">
+              {profile.account_type} account
+            </p>
             {profile.bio && <p className="mt-2 whitespace-pre-line text-sm">{profile.bio}</p>}
             {profile.website && (
               <a
@@ -122,7 +124,6 @@ function MyProfile() {
               emptyMessage="You haven't posted yet. Tap create to share your first photo or video."
             />
           </div>
-
         </div>
       )}
     </AppShell>

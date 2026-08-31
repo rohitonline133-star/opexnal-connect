@@ -27,17 +27,24 @@ export function StoryTray({ viewerId }: { viewerId: string }) {
               params={{ userId: viewerId }}
               className="flex w-16 flex-col items-center gap-1.5"
             >
-              <MyStoryBadge avatarUrl={mine.author.avatar_url} fallback={initialsFor(mine.author)} ring={mine.hasUnseen} />
-              <span className="w-16 truncate text-center text-xs text-muted-foreground">Your story</span>
+              <MyStoryBadge
+                avatarUrl={mine.author.avatar_url}
+                fallback={initialsFor(mine.author)}
+                ring={mine.hasUnseen}
+              />
+              <span className="w-16 truncate text-center text-xs text-muted-foreground">
+                Your story
+              </span>
             </Link>
           ) : (
             <Link to="/stories/new" className="flex w-16 flex-col items-center gap-1.5">
               <MyStoryBadge avatarUrl={null} fallback="Me" ring={false} />
-              <span className="w-16 truncate text-center text-xs text-muted-foreground">Your story</span>
+              <span className="w-16 truncate text-center text-xs text-muted-foreground">
+                Your story
+              </span>
             </Link>
           )}
         </li>
-
 
         {isLoading &&
           Array.from({ length: 4 }).map((_, i) => (
@@ -88,4 +95,3 @@ function MyStoryBadge({
     </span>
   );
 }
-

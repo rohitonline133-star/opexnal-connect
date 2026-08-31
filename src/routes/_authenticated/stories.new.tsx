@@ -24,9 +24,15 @@ export const Route = createFileRoute("/_authenticated/stories/new")({
   head: () => ({
     meta: [
       { title: "Add to your story — Opexnal" },
-      { name: "description", content: "Share a photo or video story on Opexnal for the next 24 hours." },
+      {
+        name: "description",
+        content: "Share a photo or video story on Opexnal for the next 24 hours.",
+      },
       { property: "og:title", content: "Add to your story — Opexnal" },
-      { property: "og:description", content: "Share a photo or video story on Opexnal for the next 24 hours." },
+      {
+        property: "og:description",
+        content: "Share a photo or video story on Opexnal for the next 24 hours.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary" },
@@ -86,7 +92,8 @@ function NewStory() {
       await queryClient.invalidateQueries({ queryKey: ["story-tray"] });
       navigate({ to: "/home" });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not share your story"),
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Could not share your story"),
   });
 
   return (
@@ -95,7 +102,11 @@ function NewStory() {
         <ScreenHeader
           title="Your story"
           left={
-            <Link to="/home" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/home"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
@@ -115,9 +126,18 @@ function NewStory() {
         ) : (
           <div className="relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-secondary">
             {isVideo ? (
-              <video src={previewUrl ?? undefined} className="h-full w-full object-cover" controls playsInline />
+              <video
+                src={previewUrl ?? undefined}
+                className="h-full w-full object-cover"
+                controls
+                playsInline
+              />
             ) : (
-              <img src={previewUrl ?? undefined} alt="Story preview" className="h-full w-full object-cover" />
+              <img
+                src={previewUrl ?? undefined}
+                alt="Story preview"
+                className="h-full w-full object-cover"
+              />
             )}
             <button
               type="button"

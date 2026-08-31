@@ -41,12 +41,20 @@ function Inbox() {
         <ScreenHeader
           title="Messages"
           left={
-            <Link to="/home" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/home"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
           right={
-            <Link to="/explore" aria-label="New message" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/explore"
+              aria-label="New message"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <MessageSquarePlus className="h-5 w-5" aria-hidden="true" />
             </Link>
           }

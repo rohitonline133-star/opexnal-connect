@@ -18,10 +18,14 @@ export const Route = createFileRoute("/_authenticated/settings/security")({
       { title: "Security — Opexnal" },
       {
         name: "description",
-        content: "Change your password, enable two-factor authentication and review account activity.",
+        content:
+          "Change your password, enable two-factor authentication and review account activity.",
       },
       { property: "og:title", content: "Security — Opexnal" },
-      { property: "og:description", content: "Password, two-factor authentication and activity log." },
+      {
+        property: "og:description",
+        content: "Password, two-factor authentication and activity log.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -148,7 +152,11 @@ function Security() {
         <ScreenHeader
           title="Security"
           left={
-            <Link to="/settings" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/settings"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
@@ -185,7 +193,10 @@ function Security() {
           </h2>
 
           {factors.isLoading ? (
-            <Loader2 className="mt-3 h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+            <Loader2
+              className="mt-3 h-4 w-4 animate-spin text-muted-foreground"
+              aria-hidden="true"
+            />
           ) : factors.data?.length ? (
             <div className="mt-3 space-y-2">
               {factors.data.map((factor) => (
@@ -193,7 +204,12 @@ function Security() {
                   <p className="text-xs text-muted-foreground">
                     Authenticator app · {factor.status}
                   </p>
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeFactor(factor.id)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => removeFactor(factor.id)}
+                  >
                     Remove
                   </Button>
                 </div>
@@ -238,7 +254,10 @@ function Security() {
         <section className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="text-sm font-semibold">Recent account activity</h2>
           {auditLogs.isLoading ? (
-            <Loader2 className="mt-3 h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+            <Loader2
+              className="mt-3 h-4 w-4 animate-spin text-muted-foreground"
+              aria-hidden="true"
+            />
           ) : auditLogs.data?.length ? (
             <ul className="mt-3 space-y-2">
               {auditLogs.data.map((log) => (
@@ -255,7 +274,12 @@ function Security() {
           )}
         </section>
 
-        <Button variant="surface" size="xl" className="text-destructive" onClick={signOutEverywhere}>
+        <Button
+          variant="surface"
+          size="xl"
+          className="text-destructive"
+          onClick={signOutEverywhere}
+        >
           Log out of all devices
         </Button>
       </div>

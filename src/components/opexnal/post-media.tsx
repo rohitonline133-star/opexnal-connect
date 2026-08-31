@@ -33,7 +33,13 @@ export function MediaThumb({
   if (!media) return <div className={cn("bg-secondary", className)} />;
   if (!url) return <div className={cn("animate-pulse bg-secondary", className)} />;
   return media.media_type === "video" ? (
-    <video src={url} className={cn("object-cover", className)} muted playsInline preload="metadata" />
+    <video
+      src={url}
+      className={cn("object-cover", className)}
+      muted
+      playsInline
+      preload="metadata"
+    />
   ) : (
     <img src={url} alt={alt} loading="lazy" className={cn("object-cover", className)} />
   );
@@ -50,7 +56,13 @@ export function MediaCarousel({ media, alt }: { media: PostMediaRow[]; alt: stri
     <div className="relative aspect-square w-full overflow-hidden bg-secondary">
       {url ? (
         current?.media_type === "video" ? (
-          <video src={url} className="h-full w-full object-cover" controls playsInline preload="metadata" />
+          <video
+            src={url}
+            className="h-full w-full object-cover"
+            controls
+            playsInline
+            preload="metadata"
+          />
         ) : (
           <img src={url} alt={alt} className="h-full w-full object-cover" />
         )

@@ -20,14 +20,19 @@ import {
   toggleCommentLike,
 } from "@/lib/posts";
 
-
 export const Route = createFileRoute("/_authenticated/p/$postId")({
   head: () => ({
     meta: [
       { title: "Post — Opexnal" },
-      { name: "description", content: "View an Opexnal post, its media and the conversation around it." },
+      {
+        name: "description",
+        content: "View an Opexnal post, its media and the conversation around it.",
+      },
       { property: "og:title", content: "Post — Opexnal" },
-      { property: "og:description", content: "View an Opexnal post, its media and the conversation around it." },
+      {
+        property: "og:description",
+        content: "View an Opexnal post, its media and the conversation around it.",
+      },
       { property: "og:type", content: "article" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -77,7 +82,6 @@ function PostPage() {
     onError: () => toast.error("Could not delete the comment"),
   });
 
-
   const post = postQuery.data;
 
   return (
@@ -87,7 +91,9 @@ function PostPage() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
       ) : !post ? (
-        <p className="px-4 py-16 text-center text-sm text-muted-foreground">This post is unavailable.</p>
+        <p className="px-4 py-16 text-center text-sm text-muted-foreground">
+          This post is unavailable.
+        </p>
       ) : (
         <>
           <PostCard post={post} viewerId={user?.id ?? null} />
@@ -117,7 +123,9 @@ function PostPage() {
                   </p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>{timeAgo(comment.created_at)}</span>
-                    {comment.likes_count > 0 && <span>{formatCount(comment.likes_count)} likes</span>}
+                    {comment.likes_count > 0 && (
+                      <span>{formatCount(comment.likes_count)} likes</span>
+                    )}
                     {user && comment.user_id === user.id && (
                       <button
                         type="button"
@@ -149,7 +157,6 @@ function PostPage() {
             )}
           </section>
 
-
           {post.comments_enabled && user && (
             <form
               className="sticky bottom-20 flex items-center gap-2 border-t border-border bg-background px-4 py-3"
@@ -165,7 +172,12 @@ function PostPage() {
                 placeholder="Add a comment…"
                 aria-label="Add a comment"
               />
-              <Button type="submit" variant="brand" size="sm" disabled={!body.trim() || mutation.isPending}>
+              <Button
+                type="submit"
+                variant="brand"
+                size="sm"
+                disabled={!body.trim() || mutation.isPending}
+              >
                 Post
               </Button>
             </form>

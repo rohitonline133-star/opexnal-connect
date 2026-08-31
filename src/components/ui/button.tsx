@@ -18,8 +18,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         brand:
           "brand-gradient-bg text-primary-foreground font-semibold shadow-[var(--shadow-brand)] transition-opacity hover:opacity-90",
-        surface:
-          "bg-surface text-surface-foreground border border-border hover:bg-secondary",
+        surface: "bg-surface text-surface-foreground border border-border hover:bg-secondary",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -28,7 +27,6 @@ const buttonVariants = cva(
         xl: "h-12 w-full rounded-xl px-8 text-base",
         icon: "h-9 w-9",
       },
-
     },
     defaultVariants: {
       variant: "default",

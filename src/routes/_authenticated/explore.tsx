@@ -15,7 +15,10 @@ export const Route = createFileRoute("/_authenticated/explore")({
       { title: "Explore people — Opexnal" },
       { name: "description", content: "Search Opexnal for creators, friends and communities." },
       { property: "og:title", content: "Explore people — Opexnal" },
-      { property: "og:description", content: "Search Opexnal for creators, friends and communities." },
+      {
+        property: "og:description",
+        content: "Search Opexnal for creators, friends and communities.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },

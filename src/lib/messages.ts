@@ -24,7 +24,10 @@ export async function listConversations(userId: string) {
 
   const [convRes, memberRes, msgRes] = await Promise.all([
     supabase.from("conversations").select("id, last_message_at").in("id", ids),
-    supabase.from("conversation_members").select("conversation_id, user_id").in("conversation_id", ids),
+    supabase
+      .from("conversation_members")
+      .select("conversation_id, user_id")
+      .in("conversation_id", ids),
     supabase
       .from("messages")
       .select("conversation_id, body, created_at")

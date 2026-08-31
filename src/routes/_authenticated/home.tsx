@@ -15,9 +15,15 @@ export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
       { title: "Home feed — Opexnal" },
-      { name: "description", content: "Your Opexnal home feed of photo and video posts from people you follow." },
+      {
+        name: "description",
+        content: "Your Opexnal home feed of photo and video posts from people you follow.",
+      },
       { property: "og:title", content: "Home feed — Opexnal" },
-      { property: "og:description", content: "Your Opexnal home feed of photo and video posts from people you follow." },
+      {
+        property: "og:description",
+        content: "Your Opexnal home feed of photo and video posts from people you follow.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,13 +36,14 @@ function HomeFeed() {
   const { user } = useSession();
   const sentinel = useRef<HTMLDivElement | null>(null);
 
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["home-feed", user?.id],
-    enabled: Boolean(user),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) => getHomeFeed(user!.id, pageParam, FEED_PAGE_SIZE),
-    getNextPageParam: (last) => last.nextCursor,
-  });
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["home-feed", user?.id],
+      enabled: Boolean(user),
+      initialPageParam: null as string | null,
+      queryFn: ({ pageParam }) => getHomeFeed(user!.id, pageParam, FEED_PAGE_SIZE),
+      getNextPageParam: (last) => last.nextCursor,
+    });
 
   useEffect(() => {
     const node = sentinel.current;
@@ -57,7 +64,6 @@ function HomeFeed() {
     <AppShell header={<ScreenHeader title={<OpexnalWordmark className="text-lg" />} />}>
       {user && <StoryTray viewerId={user.id} />}
       {isLoading ? (
-
         <div className="flex justify-center py-16">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
@@ -90,7 +96,9 @@ function HomeFeed() {
             </div>
           )}
           {!hasNextPage && (
-            <p className="py-6 text-center text-xs text-muted-foreground">You&apos;re all caught up.</p>
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              You&apos;re all caught up.
+            </p>
           )}
         </div>
       )}

@@ -33,7 +33,10 @@ export async function resolveMediaUrl(path: string, expiresIn = 3600) {
   return data?.signedUrl ?? null;
 }
 
-async function decorate(rows: (PostRow & { post_media: PostMediaRow[] })[], viewerId?: string | null) {
+async function decorate(
+  rows: (PostRow & { post_media: PostMediaRow[] })[],
+  viewerId?: string | null,
+) {
   if (rows.length === 0) return [] as FeedPost[];
   const authorIds = Array.from(new Set(rows.map((r) => r.user_id)));
   const postIds = rows.map((r) => r.id);
@@ -67,7 +70,11 @@ async function decorate(rows: (PostRow & { post_media: PostMediaRow[] })[], view
 export const FEED_PAGE_SIZE = 10;
 
 /** Home feed: posts from people the viewer follows, plus their own. */
-export async function getHomeFeed(viewerId: string, cursor?: string | null, limit = FEED_PAGE_SIZE) {
+export async function getHomeFeed(
+  viewerId: string,
+  cursor?: string | null,
+  limit = FEED_PAGE_SIZE,
+) {
   const { data: following } = await supabase
     .from("follows")
     .select("following_id")
@@ -93,7 +100,6 @@ export async function getHomeFeed(viewerId: string, cursor?: string | null, limi
   };
 }
 
-
 /** Explore: recent public posts from everyone visible to the viewer. */
 export async function getExploreFeed(viewerId?: string | null) {
   const { data, error } = await supabase
@@ -117,7 +123,6 @@ export async function getReelsFeed(viewerId: string, limit = 30) {
   const items = await decorate((data ?? []) as never, viewerId);
   return items.filter((p) => p.media.some((m) => m.media_type === "video")).slice(0, limit);
 }
-
 
 export async function getPostsByUser(userId: string, viewerId?: string | null) {
   const { data, error } = await supabase
@@ -153,7 +158,6 @@ export async function getUserPostsPage(
   return { items, nextCursor: items.length === limit && last ? last.created_at : null };
 }
 
-
 export async function getSavedPosts(viewerId: string) {
   const { data: saves } = await supabase
     .from("post_saves")
@@ -168,7 +172,11 @@ export async function getSavedPosts(viewerId: string) {
 }
 
 export async function getPost(postId: string, viewerId?: string | null) {
-  const { data, error } = await supabase.from("posts").select(POST_SELECT).eq("id", postId).maybeSingle();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("id", postId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   const [post] = await decorate([data as never], viewerId);
@@ -206,7 +214,9 @@ export async function toggleLike(postId: string, userId: string, liked: boolean)
       .eq("user_id", userId);
     if (error) throw error;
   } else {
-    const { error } = await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
+    const { error } = await supabase
+      .from("post_likes")
+      .insert({ post_id: postId, user_id: userId });
     if (error) throw error;
   }
 }
@@ -220,7 +230,9 @@ export async function toggleSave(postId: string, userId: string, saved: boolean)
       .eq("user_id", userId);
     if (error) throw error;
   } else {
-    const { error } = await supabase.from("post_saves").insert({ post_id: postId, user_id: userId });
+    const { error } = await supabase
+      .from("post_saves")
+      .insert({ post_id: postId, user_id: userId });
     if (error) throw error;
   }
 }
@@ -254,7 +266,10 @@ export async function getComments(postId: string, viewerId?: string | null) {
           .from("comment_likes")
           .select("comment_id")
           .eq("user_id", viewerId)
-          .in("comment_id", rows.map((r) => r.id))
+          .in(
+            "comment_id",
+            rows.map((r) => r.id),
+          )
       : Promise.resolve({ data: [] as { comment_id: string }[] }),
   ]);
 
@@ -335,7 +350,9 @@ export async function createPost(input: {
   try {
     const rows: Database["public"]["Tables"]["post_media"]["Insert"][] = [];
     for (const [index, item] of input.media.entries()) {
-      const ext = item.file.name.split(".").pop()?.toLowerCase() || (item.mediaType === "video" ? "mp4" : "jpg");
+      const ext =
+        item.file.name.split(".").pop()?.toLowerCase() ||
+        (item.mediaType === "video" ? "mp4" : "jpg");
       const path = `${input.userId}/${post.id}/${index}-${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("post-media")

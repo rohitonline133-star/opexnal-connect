@@ -6,7 +6,14 @@ import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { MediaCarousel } from "@/components/opexnal/post-media";
 import { cn } from "@/lib/utils";
 import { initialsFor } from "@/lib/profile";
-import { formatCount, recordShare, timeAgo, toggleLike, toggleSave, type FeedPost } from "@/lib/posts";
+import {
+  formatCount,
+  recordShare,
+  timeAgo,
+  toggleLike,
+  toggleSave,
+  type FeedPost,
+} from "@/lib/posts";
 
 function Caption({ text }: { text: string }) {
   const parts = text.split(/(#[A-Za-z0-9_]{1,50})/g);
@@ -80,12 +87,22 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     <article className="border-b border-border pb-4">
       <header className="flex items-center gap-3 px-4 py-3">
         {author ? (
-          <Link to="/u/$username" params={{ username: author.username }} className="flex items-center gap-3">
-            <ProfileAvatar path={author.avatar_url} fallback={initialsFor(author)} className="h-9 w-9" />
+          <Link
+            to="/u/$username"
+            params={{ username: author.username }}
+            className="flex items-center gap-3"
+          >
+            <ProfileAvatar
+              path={author.avatar_url}
+              fallback={initialsFor(author)}
+              className="h-9 w-9"
+            />
             <div className="min-w-0">
               <p className="flex items-center gap-1 truncate text-sm font-semibold">
                 {author.username}
-                {author.is_verified && <BadgeCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />}
+                {author.is_verified && (
+                  <BadgeCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                )}
               </p>
               {post.location_name && (
                 <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
@@ -101,11 +118,23 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
         <span className="ml-auto text-xs text-muted-foreground">{timeAgo(post.created_at)}</span>
       </header>
 
-      {post.media.length > 0 && <MediaCarousel media={post.media} alt={post.caption || "Post media"} />}
+      {post.media.length > 0 && (
+        <MediaCarousel media={post.media} alt={post.caption || "Post media"} />
+      )}
 
       <div className="flex items-center gap-4 px-4 pt-3">
-        <button type="button" onClick={onLike} aria-label={liked ? "Unlike" : "Like"} aria-pressed={liked}>
-          <Heart className={cn("h-6 w-6 transition-colors", liked ? "fill-primary text-primary" : "text-foreground")} />
+        <button
+          type="button"
+          onClick={onLike}
+          aria-label={liked ? "Unlike" : "Like"}
+          aria-pressed={liked}
+        >
+          <Heart
+            className={cn(
+              "h-6 w-6 transition-colors",
+              liked ? "fill-primary text-primary" : "text-foreground",
+            )}
+          />
         </button>
         <Link to="/p/$postId" params={{ postId: post.id }} aria-label="Comments">
           <MessageCircle className="h-6 w-6" />
@@ -113,8 +142,16 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
         <button type="button" onClick={onShare} aria-label="Share post">
           <Send className="h-6 w-6" />
         </button>
-        <button type="button" onClick={onSave} className="ml-auto" aria-label={saved ? "Remove save" : "Save post"} aria-pressed={saved}>
-          <Bookmark className={cn("h-6 w-6", saved ? "fill-foreground text-foreground" : "text-foreground")} />
+        <button
+          type="button"
+          onClick={onSave}
+          className="ml-auto"
+          aria-label={saved ? "Remove save" : "Save post"}
+          aria-pressed={saved}
+        >
+          <Bookmark
+            className={cn("h-6 w-6", saved ? "fill-foreground text-foreground" : "text-foreground")}
+          />
         </button>
       </div>
 

@@ -36,12 +36,23 @@ function TagPage() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
       ) : (data ?? []).length === 0 ? (
-        <p className="px-4 py-16 text-center text-sm text-muted-foreground">No posts with this hashtag yet.</p>
+        <p className="px-4 py-16 text-center text-sm text-muted-foreground">
+          No posts with this hashtag yet.
+        </p>
       ) : (
         <div className="grid grid-cols-3 gap-0.5 p-0.5">
           {(data ?? []).map((post) => (
-            <Link key={post.id} to="/p/$postId" params={{ postId: post.id }} className="aspect-square">
-              <MediaThumb media={post.media[0]} alt={post.caption || "Post"} className="h-full w-full" />
+            <Link
+              key={post.id}
+              to="/p/$postId"
+              params={{ postId: post.id }}
+              className="aspect-square"
+            >
+              <MediaThumb
+                media={post.media[0]}
+                alt={post.caption || "Post"}
+                className="h-full w-full"
+              />
             </Link>
           ))}
         </div>

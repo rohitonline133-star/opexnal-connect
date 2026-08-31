@@ -10,7 +10,10 @@ export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
     meta: [
       { title: "Settings — Opexnal" },
-      { name: "description", content: "Manage your Opexnal account, privacy and security settings." },
+      {
+        name: "description",
+        content: "Manage your Opexnal account, privacy and security settings.",
+      },
       { property: "og:title", content: "Settings — Opexnal" },
       { property: "og:description", content: "Manage your Opexnal account, privacy and security." },
       { property: "og:type", content: "website" },
@@ -28,6 +31,12 @@ function Settings() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    try {
+      localStorage.removeItem("guest_user");
+      localStorage.removeItem("opexnal_guest_user");
+    } catch {
+      // ignore
+    }
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -38,7 +47,11 @@ function Settings() {
         <ScreenHeader
           title="Settings"
           left={
-            <Link to="/profile" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/profile"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
@@ -46,7 +59,12 @@ function Settings() {
       }
     >
       <div className="space-y-2 px-4 py-4">
-        <SettingsLink to="/profile/edit" icon={UserCog} label="Edit profile" hint="Name, username, photo" />
+        <SettingsLink
+          to="/profile/edit"
+          icon={UserCog}
+          label="Edit profile"
+          hint="Name, username, photo"
+        />
         <SettingsLink
           to="/settings/privacy"
           icon={Lock}

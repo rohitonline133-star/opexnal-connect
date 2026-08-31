@@ -17,20 +17,21 @@ import {
 } from "@/components/ui/select";
 import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
-import {
-  createPost,
-  extractHashtags,
-  type NewPostMedia,
-  type PostVisibility,
-} from "@/lib/posts";
+import { createPost, extractHashtags, type NewPostMedia, type PostVisibility } from "@/lib/posts";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({
     meta: [
       { title: "Create a post — Opexnal" },
-      { name: "description", content: "Share a photo or video with a caption, hashtags and location on Opexnal." },
+      {
+        name: "description",
+        content: "Share a photo or video with a caption, hashtags and location on Opexnal.",
+      },
       { property: "og:title", content: "Create a post — Opexnal" },
-      { property: "og:description", content: "Share a photo or video with a caption, hashtags and location on Opexnal." },
+      {
+        property: "og:description",
+        content: "Share a photo or video with a caption, hashtags and location on Opexnal.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -54,7 +55,8 @@ function readDimensions(item: Draft) {
       img.src = item.previewUrl;
     } else {
       const video = document.createElement("video");
-      video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
+      video.onloadedmetadata = () =>
+        resolve({ width: video.videoWidth, height: video.videoHeight });
       video.onerror = () => resolve({ width: null, height: null });
       video.src = item.previewUrl;
     }
@@ -157,7 +159,11 @@ function Create() {
           title="New post"
           right={
             <Button size="sm" variant="brand" disabled={!canPost} onClick={handleSubmit}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Share"}
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                "Share"
+              )}
             </Button>
           }
         />
@@ -187,11 +193,23 @@ function Create() {
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {items.map((item, index) => (
-                <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
+                <div
+                  key={item.id}
+                  className="relative aspect-square overflow-hidden rounded-xl bg-secondary"
+                >
                   {item.mediaType === "video" ? (
-                    <video src={item.previewUrl} className="h-full w-full object-cover" muted playsInline />
+                    <video
+                      src={item.previewUrl}
+                      className="h-full w-full object-cover"
+                      muted
+                      playsInline
+                    />
                   ) : (
-                    <img src={item.previewUrl} alt={`Selected media ${index + 1}`} className="h-full w-full object-cover" />
+                    <img
+                      src={item.previewUrl}
+                      alt={`Selected media ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
                   )}
                   <button
                     type="button"
@@ -230,12 +248,20 @@ function Create() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-wrap gap-1.5">
               {hashtags.map((tag) => (
-                <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-primary">
+                <span
+                  key={tag}
+                  className="rounded-full bg-secondary px-2 py-0.5 text-xs text-primary"
+                >
                   #{tag}
                 </span>
               ))}
             </div>
-            <span className={cn("shrink-0 text-xs text-muted-foreground", caption.length > 2100 && "text-destructive")}>
+            <span
+              className={cn(
+                "shrink-0 text-xs text-muted-foreground",
+                caption.length > 2100 && "text-destructive",
+              )}
+            >
               {caption.length}/2200
             </span>
           </div>
@@ -244,7 +270,10 @@ function Create() {
         <section className="space-y-2">
           <Label htmlFor="location">Location</Label>
           <div className="relative">
-            <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <MapPin
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               id="location"
               value={locationName}
@@ -273,9 +302,15 @@ function Create() {
         <section className="flex items-center justify-between rounded-xl border border-border p-3">
           <div>
             <p className="text-sm font-medium">Allow comments</p>
-            <p className="text-xs text-muted-foreground">Turn off to disable replies on this post.</p>
+            <p className="text-xs text-muted-foreground">
+              Turn off to disable replies on this post.
+            </p>
           </div>
-          <Switch checked={commentsEnabled} onCheckedChange={setCommentsEnabled} aria-label="Allow comments" />
+          <Switch
+            checked={commentsEnabled}
+            onCheckedChange={setCommentsEnabled}
+            aria-label="Allow comments"
+          />
         </section>
       </div>
     </AppShell>

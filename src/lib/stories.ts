@@ -29,7 +29,10 @@ async function decorateStories(rows: StoryRow[], viewerId: string) {
       .from("story_views")
       .select("story_id")
       .eq("viewer_id", viewerId)
-      .in("story_id", rows.map((r) => r.id)),
+      .in(
+        "story_id",
+        rows.map((r) => r.id),
+      ),
   ]);
 
   const authors = new Map((profilesRes.data ?? []).map((p) => [p.id, p as FeedAuthor]));
@@ -96,7 +99,9 @@ export async function createStory(input: {
   width?: number | null;
   height?: number | null;
 }) {
-  const ext = input.file.name.split(".").pop()?.toLowerCase() || (input.mediaType === "video" ? "mp4" : "jpg");
+  const ext =
+    input.file.name.split(".").pop()?.toLowerCase() ||
+    (input.mediaType === "video" ? "mp4" : "jpg");
   const path = `${input.userId}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
@@ -134,7 +139,10 @@ export async function deleteStory(story: Pick<StoryRow, "id" | "storage_path">) 
 export async function recordStoryView(storyId: string, viewerId: string) {
   await supabase
     .from("story_views")
-    .upsert({ story_id: storyId, viewer_id: viewerId }, { onConflict: "story_id,viewer_id", ignoreDuplicates: true });
+    .upsert(
+      { story_id: storyId, viewer_id: viewerId },
+      { onConflict: "story_id,viewer_id", ignoreDuplicates: true },
+    );
 }
 
 export async function getStoryViewers(storyId: string) {
@@ -149,7 +157,10 @@ export async function getStoryViewers(storyId: string) {
   const { data: profiles } = await supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, is_verified")
-    .in("id", rows.map((r) => r.viewer_id));
+    .in(
+      "id",
+      rows.map((r) => r.viewer_id),
+    );
   const map = new Map((profiles ?? []).map((p) => [p.id, p as FeedAuthor]));
   return rows
     .map((r) => ({ viewer: map.get(r.viewer_id), created_at: r.created_at }))

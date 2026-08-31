@@ -91,7 +91,9 @@ function PublicProfile() {
         toast.error(error.message);
         return;
       }
-      toast.success(data === "requested" ? "Follow request sent" : `Following @${profile.username}`);
+      toast.success(
+        data === "requested" ? "Follow request sent" : `Following @${profile.username}`,
+      );
     }
     await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
     await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
@@ -103,7 +105,11 @@ function PublicProfile() {
         <ScreenHeader
           title={`@${username}`}
           left={
-            <Link to="/explore" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/explore"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
@@ -186,7 +192,6 @@ function PublicProfile() {
             </div>
           )}
 
-
           <div className="mt-8 border-t border-border">
             {profile.is_private && !relationship?.following && !isSelf ? (
               <div className="flex flex-col items-center px-8 py-20 text-center">
@@ -199,7 +204,6 @@ function PublicProfile() {
             ) : (
               <PostGrid userId={profile.id} viewerId={user?.id ?? null} />
             )}
-
           </div>
         </div>
       )}

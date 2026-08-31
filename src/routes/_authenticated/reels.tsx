@@ -24,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/reels")({
       { title: "Reels — Opexnal" },
       { name: "description", content: "Scroll short vertical videos from the Opexnal community." },
       { property: "og:title", content: "Reels — Opexnal" },
-      { property: "og:description", content: "Scroll short vertical videos from the Opexnal community." },
+      {
+        property: "og:description",
+        content: "Scroll short vertical videos from the Opexnal community.",
+      },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -116,7 +119,6 @@ function Reel({ post, viewerId }: { post: FeedPost; viewerId: string | null }) {
         toast.success("Link copied");
       }
       if (viewerId) await recordShare(post.id, viewerId);
-
     } catch {
       /* user cancelled */
     }
@@ -141,8 +143,16 @@ function Reel({ post, viewerId }: { post: FeedPost; viewerId: string | null }) {
       )}
 
       <div className="absolute bottom-24 right-3 flex flex-col items-center gap-5">
-        <button type="button" aria-label="Like" onClick={onLike} className="flex flex-col items-center text-white">
-          <Heart className={cn("h-6 w-6", liked && "fill-primary text-primary")} aria-hidden="true" />
+        <button
+          type="button"
+          aria-label="Like"
+          onClick={onLike}
+          className="flex flex-col items-center text-white"
+        >
+          <Heart
+            className={cn("h-6 w-6", liked && "fill-primary text-primary")}
+            aria-hidden="true"
+          />
           <span className="text-xs">{formatCount(likes)}</span>
         </button>
         <Link
@@ -175,7 +185,9 @@ function Reel({ post, viewerId }: { post: FeedPost; viewerId: string | null }) {
               className="h-8 w-8"
             />
             <span className="text-sm font-semibold">{post.author.username}</span>
-            {post.author.is_verified && <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified" />}
+            {post.author.is_verified && (
+              <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified" />
+            )}
           </Link>
         )}
         {post.caption && <p className="mt-2 line-clamp-2 text-sm text-white/90">{post.caption}</p>}

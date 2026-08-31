@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
     meta: [
       { title: "Activity — Opexnal" },
-      { name: "description", content: "Follow requests and new followers on your Opexnal account." },
+      {
+        name: "description",
+        content: "Follow requests and new followers on your Opexnal account.",
+      },
       { property: "og:title", content: "Activity — Opexnal" },
       { property: "og:description", content: "Follow requests and new followers on Opexnal." },
       { property: "og:type", content: "website" },
@@ -42,7 +45,9 @@ function Activity() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("follow_requests")
-        .select("id, created_at, requester:profiles!follow_requests_requester_id_fkey(id, username, display_name, avatar_url)")
+        .select(
+          "id, created_at, requester:profiles!follow_requests_requester_id_fkey(id, username, display_name, avatar_url)",
+        )
         .eq("target_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -56,7 +61,9 @@ function Activity() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("follows")
-        .select("created_at, follower:profiles!follows_follower_id_fkey(id, username, display_name, avatar_url)")
+        .select(
+          "created_at, follower:profiles!follows_follower_id_fkey(id, username, display_name, avatar_url)",
+        )
         .eq("following_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(25);
@@ -110,7 +117,11 @@ function Activity() {
                       <Button size="sm" variant="brand" onClick={() => respond(request.id, true)}>
                         Accept
                       </Button>
-                      <Button size="sm" variant="surface" onClick={() => respond(request.id, false)}>
+                      <Button
+                        size="sm"
+                        variant="surface"
+                        onClick={() => respond(request.id, false)}
+                      >
                         Decline
                       </Button>
                     </div>
@@ -147,7 +158,11 @@ function PersonLink({ person }: { person: Person }) {
       params={{ username: person.username }}
       className="flex min-w-0 items-center gap-3"
     >
-      <ProfileAvatar path={person.avatar_url} fallback={initialsFor(person)} className="h-11 w-11" />
+      <ProfileAvatar
+        path={person.avatar_url}
+        fallback={initialsFor(person)}
+        className="h-11 w-11"
+      />
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">@{person.username}</p>
         <p className="truncate text-xs text-muted-foreground">

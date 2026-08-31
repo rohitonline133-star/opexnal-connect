@@ -1,18 +1,34 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-const ADMIN_EMAIL = "rahuldamor07575@gmail.com";
-
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    
-    if (error || !data.user || data.user.email !== ADMIN_EMAIL) {
-      throw redirect({ to: "/auth" });
+    try {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!error && data.user) {
+        return { user: data.user };
+      }
+    } catch {
+      // ignore auth check error
     }
 
-    return { user: data.user };
+    if (typeof window !== "undefined") {
+      try {
+        const localGuest = localStorage.getItem("opexnal_guest_user");
+        if (localGuest) {
+          const user = JSON.parse(localGuest);
+          if (user && user.id) {
+            return { user };
+          }
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
+
+    throw redirect({ to: "/auth" });
   },
   component: () => <Outlet />,
 });

@@ -1,163 +1,347 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Opexnal - Profile</title>
-  <script src="https://unpkg.com/@lucide/web"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #000; color: #fff; padding-bottom: 60px; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Opexnal - Profile</title>
+    <script src="https://unpkg.com/@lucide/web"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      body {
+        background-color: #000;
+        color: #fff;
+        padding-bottom: 60px;
+      }
 
-    /* Top Bar */
-    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; font-weight: 700; font-size: 20px; }
-    .username-title { display: flex; align-items: center; gap: 4px; font-size: 18px; }
-    .top-right { display: flex; gap: 18px; align-items: center; }
+      /* Top Bar */
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        font-weight: 700;
+        font-size: 20px;
+      }
+      .username-title {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 18px;
+      }
+      .top-right {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+      }
 
-    /* Profile Header */
-    .profile-header { display: flex; align-items: center; padding: 10px 16px 4px; justify-content: space-between; }
-    .avatar-container { position: relative; width: 84px; height: 84px; }
-    .avatar-img { width: 100%; height: 100%; border-radius: 50%; background: #27272a; object-fit: cover; border: 1px solid #3f3f46; }
-    .add-story-btn { position: absolute; bottom: 0; right: 0; background: #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #fff; border: 2px solid #000; }
-    .inspo-bubble { position: absolute; top: -14px; left: -10px; background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 3px 8px; font-size: 10px; color: #a1a1aa; white-space: nowrap; }
+      /* Profile Header */
+      .profile-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px 4px;
+        justify-content: space-between;
+      }
+      .avatar-container {
+        position: relative;
+        width: 84px;
+        height: 84px;
+      }
+      .avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: #27272a;
+        object-fit: cover;
+        border: 1px solid #3f3f46;
+      }
+      .add-story-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #000;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: #fff;
+        border: 2px solid #000;
+      }
+      .inspo-bubble {
+        position: absolute;
+        top: -14px;
+        left: -10px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 3px 8px;
+        font-size: 10px;
+        color: #a1a1aa;
+        white-space: nowrap;
+      }
 
-    /* Stats */
-    .stats-container { display: flex; gap: 28px; text-align: center; margin-right: 8px; }
-    .stat-num { font-weight: 700; font-size: 17px; }
-    .stat-label { font-size: 13px; color: #fff; }
+      /* Stats */
+      .stats-container {
+        display: flex;
+        gap: 28px;
+        text-align: center;
+        margin-right: 8px;
+      }
+      .stat-num {
+        font-weight: 700;
+        font-size: 17px;
+      }
+      .stat-label {
+        font-size: 13px;
+        color: #fff;
+      }
 
-    /* Bio Section */
-    .bio-section { padding: 4px 16px 10px; }
-    .category { color: #a1a1aa; font-size: 13px; margin-bottom: 4px; }
-    .bio-text { font-size: 13.5px; line-height: 1.45; }
+      /* Bio Section */
+      .bio-section {
+        padding: 4px 16px 10px;
+      }
+      .category {
+        color: #a1a1aa;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+      .bio-text {
+        font-size: 13.5px;
+        line-height: 1.45;
+      }
 
-    /* Horizontal Links Scroll Bar */
-    .links-bar { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
-    .links-bar::-webkit-scrollbar { display: none; }
-    .link-pill { display: flex; align-items: center; gap: 6px; background: #18181b; border: 1px solid #27272a; padding: 6px 12px; border-radius: 20px; font-size: 12.5px; white-space: nowrap; font-weight: 500; }
+      /* Horizontal Links Scroll Bar */
+      .links-bar {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .links-bar::-webkit-scrollbar {
+        display: none;
+      }
+      .link-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12.5px;
+        white-space: nowrap;
+        font-weight: 500;
+      }
 
-    /* Professional Dashboard Box */
-    .dashboard-card { background: #18181b; margin: 0 16px 12px; padding: 12px 16px; border-radius: 10px; border: 1px solid #27272a; }
-    .dashboard-title { font-weight: 600; font-size: 13.5px; }
-    .dashboard-sub { font-size: 12px; color: #a1a1aa; margin-top: 2px; }
+      /* Professional Dashboard Box */
+      .dashboard-card {
+        background: #18181b;
+        margin: 0 16px 12px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid #27272a;
+      }
+      .dashboard-title {
+        font-weight: 600;
+        font-size: 13.5px;
+      }
+      .dashboard-sub {
+        font-size: 12px;
+        color: #a1a1aa;
+        margin-top: 2px;
+      }
 
-    /* Action Buttons */
-    .action-buttons { display: flex; gap: 6px; padding: 0 16px 14px; }
-    .btn { flex: 1; background: #18181b; border: 1px solid #27272a; color: #fff; padding: 7px 0; border-radius: 8px; font-weight: 600; font-size: 13px; text-align: center; }
+      /* Action Buttons */
+      .action-buttons {
+        display: flex;
+        gap: 6px;
+        padding: 0 16px 14px;
+      }
+      .btn {
+        flex: 1;
+        background: #18181b;
+        border: 1px solid #27272a;
+        color: #fff;
+        padding: 7px 0;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        text-align: center;
+      }
 
-    /* Story Highlights */
-    .highlights { padding: 0 16px 12px; display: flex; gap: 16px; }
-    .highlight-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; color: #a1a1aa; }
-    .highlight-circle { width: 62px; height: 62px; border-radius: 50%; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; }
+      /* Story Highlights */
+      .highlights {
+        padding: 0 16px 12px;
+        display: flex;
+        gap: 16px;
+      }
+      .highlight-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 11.5px;
+        color: #a1a1aa;
+      }
+      .highlight-circle {
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        border: 1px solid #3f3f46;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    /* Grid Tabs Bar */
-    .tabs-bar { display: flex; border-top: 1px solid #18181b; }
-    .tab { flex: 1; text-align: center; padding: 10px 0; color: #71717a; display: flex; justify-content: center; align-items: center; }
-    .tab.active { color: #fff; border-bottom: 1.5px solid #fff; }
+      /* Grid Tabs Bar */
+      .tabs-bar {
+        display: flex;
+        border-top: 1px solid #18181b;
+      }
+      .tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        color: #71717a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .tab.active {
+        color: #fff;
+        border-bottom: 1.5px solid #fff;
+      }
 
-    /* Bottom Navigation */
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #18181b; z-index: 100; }
-  </style>
-</head>
-<body>
-
-  <!-- Top Bar -->
-  <div class="top-bar">
-    <i data-lucide="plus-square"></i>
-    <div class="username-title">
-      <span>@opexnal</span>
-      <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
-    </div>
-    <div class="top-right">
-      <i data-lucide="at-sign"></i>
-      <i data-lucide="menu"></i>
-    </div>
-  </div>
-
-  <!-- Profile Info Header -->
-  <div class="profile-header">
-    <div class="avatar-container">
-      <div class="inspo-bubble">Inspo needed...</div>
-      <div class="avatar-img"></div>
-      <div class="add-story-btn">+</div>
-    </div>
-
-    <div class="stats-container">
-      <div>
-        <div class="stat-num">0</div>
-        <div class="stat-label">posts</div>
+      /* Bottom Navigation */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: #000;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        border-top: 1px solid #18181b;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <i data-lucide="plus-square"></i>
+      <div class="username-title">
+        <span>@opexnal</span>
+        <i data-lucide="chevron-down" style="width: 16px; height: 16px"></i>
       </div>
-      <div>
-        <div class="stat-num">3,044</div>
-        <div class="stat-label">followers</div>
-      </div>
-      <div>
-        <div class="stat-num">671</div>
-        <div class="stat-label">following</div>
+      <div class="top-right">
+        <i data-lucide="at-sign"></i>
+        <i data-lucide="menu"></i>
       </div>
     </div>
-  </div>
 
-  <!-- Bio Section -->
-  <div class="bio-section">
-    <div class="category">Reel creator • AI creator</div>
-    <div class="bio-text">
-      ⚡ Living My Own Story<br>
-      🎭 Reel Creator<br>
-      🤍 Family First<br>
-      📍 India
+    <!-- Profile Info Header -->
+    <div class="profile-header">
+      <div class="avatar-container">
+        <div class="inspo-bubble">Inspo needed...</div>
+        <div class="avatar-img"></div>
+        <div class="add-story-btn">+</div>
+      </div>
+
+      <div class="stats-container">
+        <div>
+          <div class="stat-num">0</div>
+          <div class="stat-label">posts</div>
+        </div>
+        <div>
+          <div class="stat-num">3,044</div>
+          <div class="stat-label">followers</div>
+        </div>
+        <div>
+          <div class="stat-num">671</div>
+          <div class="stat-label">following</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Horizontal Scroll Links Bar -->
-  <div class="links-bar">
-    <div class="link-pill"><i data-lucide="search" style="width: 14px;"></i> ♦Join MY INSTA FA...</div>
-    <div class="link-pill"><i data-lucide="play" style="width: 14px;"></i> Ajnabi Mujhko Itna Ba...</div>
-    <div class="link-pill"><i data-lucide="facebook" style="width: 14px;"></i> Facebook profile</div>
-    <div class="link-pill">✨ Rahul damor 💖</div>
-    <div class="link-pill">+ Add</div>
-  </div>
-
-  <!-- Professional Dashboard Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-title">Professional dashboard</div>
-    <div class="dashboard-sub">513 views in the last 30 days.</div>
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="action-buttons">
-    <div class="btn">Edit profile</div>
-    <div class="btn">Share profile</div>
-    <div class="btn">Contact</div>
-  </div>
-
-  <!-- Story Highlights -->
-  <div class="highlights">
-    <div class="highlight-item">
-      <div class="highlight-circle"><i data-lucide="plus" style="width: 24px; color: #fff;"></i></div>
-      <span>New</span>
+    <!-- Bio Section -->
+    <div class="bio-section">
+      <div class="category">Reel creator • AI creator</div>
+      <div class="bio-text">
+        ⚡ Living My Own Story<br />
+        🎭 Reel Creator<br />
+        🤍 Family First<br />
+        📍 India
+      </div>
     </div>
-  </div>
 
-  <!-- Grid Navigation Tabs Bar -->
-  <div class="tabs-bar">
-    <div class="tab active"><i data-lucide="grid"></i></div>
-    <div class="tab"><i data-lucide="clapperboard"></i></div>
-    <div class="tab"><i data-lucide="repeat"></i></div>
-    <div class="tab"><i data-lucide="user-square-2"></i></div>
-  </div>
+    <!-- Horizontal Scroll Links Bar -->
+    <div class="links-bar">
+      <div class="link-pill">
+        <i data-lucide="search" style="width: 14px"></i> ♦Join MY INSTA FA...
+      </div>
+      <div class="link-pill">
+        <i data-lucide="play" style="width: 14px"></i> Ajnabi Mujhko Itna Ba...
+      </div>
+      <div class="link-pill">
+        <i data-lucide="facebook" style="width: 14px"></i> Facebook profile
+      </div>
+      <div class="link-pill">✨ Rahul damor 💖</div>
+      <div class="link-pill">+ Add</div>
+    </div>
 
-  <!-- Bottom Nav -->
-  <div class="bottom-nav">
-    <i data-lucide="home"></i>
-    <i data-lucide="clapperboard"></i>
-    <i data-lucide="send"></i>
-    <i data-lucide="search"></i>
-    <i data-lucide="user-circle"></i>
-  </div>
+    <!-- Professional Dashboard Card -->
+    <div class="dashboard-card">
+      <div class="dashboard-title">Professional dashboard</div>
+      <div class="dashboard-sub">513 views in the last 30 days.</div>
+    </div>
 
-  <script>
-    lucide.createIcons();
-  </script>
-</body>
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <div class="btn">Edit profile</div>
+      <div class="btn">Share profile</div>
+      <div class="btn">Contact</div>
+    </div>
+
+    <!-- Story Highlights -->
+    <div class="highlights">
+      <div class="highlight-item">
+        <div class="highlight-circle">
+          <i data-lucide="plus" style="width: 24px; color: #fff"></i>
+        </div>
+        <span>New</span>
+      </div>
+    </div>
+
+    <!-- Grid Navigation Tabs Bar -->
+    <div class="tabs-bar">
+      <div class="tab active"><i data-lucide="grid"></i></div>
+      <div class="tab"><i data-lucide="clapperboard"></i></div>
+      <div class="tab"><i data-lucide="repeat"></i></div>
+      <div class="tab"><i data-lucide="user-square-2"></i></div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <i data-lucide="home"></i>
+      <i data-lucide="clapperboard"></i>
+      <i data-lucide="send"></i>
+      <i data-lucide="search"></i>
+      <i data-lucide="user-circle"></i>
+    </div>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
 </html>

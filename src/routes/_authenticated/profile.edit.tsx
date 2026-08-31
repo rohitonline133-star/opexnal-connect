@@ -104,7 +104,10 @@ function EditProfile() {
       toast.error(uploadError.message);
       return;
     }
-    const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: path })
+      .eq("id", user.id);
     setUploading(false);
     if (error) {
       toast.error(error.message);
@@ -135,9 +138,7 @@ function EditProfile() {
       .eq("id", user.id);
     setBusy(false);
     if (error) {
-      toast.error(
-        error.code === "23505" ? "That username is already taken" : error.message,
-      );
+      toast.error(error.code === "23505" ? "That username is already taken" : error.message);
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
@@ -151,7 +152,11 @@ function EditProfile() {
         <ScreenHeader
           title="Edit profile"
           left={
-            <Link to="/profile" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/profile"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }

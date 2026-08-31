@@ -62,7 +62,12 @@ function Conversation() {
       .channel(`messages:${conversationId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
         () => queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
       )
       .subscribe();
@@ -89,13 +94,21 @@ function Conversation() {
         <ScreenHeader
           title={peer?.username ?? "Conversation"}
           left={
-            <Link to="/messages" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/messages"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
           }
           right={
             peer ? (
-              <ProfileAvatar path={peer.avatar_url} fallback={initialsFor(peer)} className="h-8 w-8" />
+              <ProfileAvatar
+                path={peer.avatar_url}
+                fallback={initialsFor(peer)}
+                className="h-8 w-8"
+              />
             ) : null
           }
         />
@@ -118,7 +131,12 @@ function Conversation() {
                   )}
                 >
                   <p className="whitespace-pre-line break-words">{message.body}</p>
-                  <p className={cn("mt-1 text-[10px]", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                  <p
+                    className={cn(
+                      "mt-1 text-[10px]",
+                      mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                    )}
+                  >
                     {timeAgo(message.created_at)}
                   </p>
                 </div>
@@ -145,7 +163,12 @@ function Conversation() {
           placeholder="Message…"
           aria-label="Message"
         />
-        <Button type="submit" variant="brand" size="sm" disabled={!body.trim() || mutation.isPending}>
+        <Button
+          type="submit"
+          variant="brand"
+          size="sm"
+          disabled={!body.trim() || mutation.isPending}
+        >
           Send
         </Button>
       </form>
