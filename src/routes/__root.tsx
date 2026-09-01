@@ -80,16 +80,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0b0b12" },
-      { title: "Opexnal — Create. Connect. Grow." },
+      { title: "Opexnal Connect" },
       {
         name: "description",
-        content: "Opexnal is a global social platform for creators and communities.",
+        content:
+          "A global, mobile-first social platform for creators and communities to create, connect, and grow.",
       },
-      { name: "author", content: "Opexnal" },
-      { property: "og:title", content: "Opexnal — Create. Connect. Grow." },
+      { name: "author", content: "Opexnal Connect" },
+      { property: "og:title", content: "Opexnal Connect" },
       {
         property: "og:description",
-        content: "Opexnal is a global social platform for creators and communities.",
+        content:
+          "A global, mobile-first social platform for creators and communities to create, connect, and grow.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

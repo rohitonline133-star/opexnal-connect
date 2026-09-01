@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ImagePlus, MapPin, X, Loader2 } from "lucide-react";
+import { ImagePlus, MapPin, X, Loader2, Sparkles, RefreshCw, Wand2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { createPost, extractHashtags, type NewPostMedia, type PostVisibility } from "@/lib/posts";
+import { runAiCreatorTool } from "@/lib/ai-client";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({
@@ -43,6 +44,28 @@ export const Route = createFileRoute("/_authenticated/create")({
 const MAX_FILES = 10;
 const MAX_IMAGE_MB = 15;
 const MAX_VIDEO_MB = 200;
+
+const TRENDING_SUGGESTIONS = [
+  "Opexnal",
+  "CreatorLife",
+  "Aesthetics",
+  "DesignInspo",
+  "TechVibes",
+  "DailyGram",
+  "VisualArt",
+  "BuildInPublic",
+];
+
+const POPULAR_CITIES = [
+  "Mumbai, India",
+  "Bengaluru, India",
+  "Delhi, India",
+  "New York, USA",
+  "London, UK",
+  "Tokyo, Japan",
+  "Dubai, UAE",
+  "San Francisco, USA",
+];
 
 type Draft = NewPostMedia & { id: string; previewUrl: string };
 
@@ -74,7 +97,24 @@ function Create() {
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // AI Assistant in creation
+  const [showAiHelper, setShowAiHelper] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiTone, setAiTone] = useState("Aesthetic & Engaging");
+  const [aiGenerating, setAiGenerating] = useState(false);
+
   useEffect(() => {
+    // Check if user came from Opexnal AI with a drafted caption
+    try {
+      const draft = sessionStorage.getItem("opexnal_draft_caption");
+      if (draft) {
+        setCaption(draft);
+        sessionStorage.removeItem("opexnal_draft_caption");
+      }
+    } catch {
+      // ignore
+    }
+
     return () => {
       items.forEach((i) => URL.revokeObjectURL(i.previewUrl));
     };
@@ -122,6 +162,35 @@ function Create() {
     });
   }
 
+  function insertHashtag(tag: string) {
+    const formatted = `#${tag} `;
+    if (!caption.includes(`#${tag}`)) {
+      setCaption((prev) => (prev ? `${prev.trimEnd()} ${formatted}` : formatted));
+    }
+  }
+
+  async function handleGenerateAiCaption() {
+    const prompt = aiPrompt.trim() || caption.trim() || "A captivating social media moment";
+    setAiGenerating(true);
+    try {
+      const result = await runAiCreatorTool({
+        tool: "caption",
+        topic: prompt,
+        tone: aiTone,
+      });
+
+      // Extract a clean caption or set the full result
+      setCaption(result);
+      setShowAiHelper(false);
+      toast.success("AI Caption generated!");
+    } catch (err: unknown) {
+      const e = err as Error;
+      toast.error(e.message || "Failed to generate AI caption");
+    } finally {
+      setAiGenerating(false);
+    }
+  }
+
   async function handleSubmit() {
     if (!user || items.length === 0) return;
     setSubmitting(true);
@@ -143,7 +212,7 @@ function Create() {
       setItems([]);
       setCaption("");
       setLocationName("");
-      toast.success("Post shared");
+      toast.success("Post shared to Opexnal!");
       navigate({ to: "/home" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not share your post");
@@ -156,7 +225,7 @@ function Create() {
     <AppShell
       header={
         <ScreenHeader
-          title="New post"
+          title="New Post"
           right={
             <Button size="sm" variant="brand" disabled={!canPost} onClick={handleSubmit}>
               {submitting ? (
@@ -169,7 +238,8 @@ function Create() {
         />
       }
     >
-      <div className="space-y-6 p-4">
+      <div className="space-y-5 p-4 max-w-lg mx-auto">
+        {/* Media Selector */}
         <section className="space-y-3">
           <input
             ref={inputRef}
@@ -184,18 +254,22 @@ function Create() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="flex h-52 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-secondary/40 text-muted-foreground transition-colors hover:text-foreground"
+              className="flex h-52 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
             >
-              <ImagePlus className="h-7 w-7" aria-hidden="true" />
-              <span className="text-sm font-medium">Add photos or videos</span>
-              <span className="text-xs">Up to {MAX_FILES} files</span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl brand-gradient-bg text-primary-foreground shadow-sm">
+                <ImagePlus className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Select Photos or Videos</span>
+              <span className="text-xs text-muted-foreground">
+                Attach up to {MAX_FILES} carousel items
+              </span>
             </button>
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="relative aspect-square overflow-hidden rounded-xl bg-secondary"
+                  className="relative aspect-square overflow-hidden rounded-xl bg-secondary border border-border"
                 >
                   {item.mediaType === "video" ? (
                     <video
@@ -215,10 +289,13 @@ function Create() {
                     type="button"
                     aria-label={`Remove media ${index + 1}`}
                     onClick={() => removeItem(item.id)}
-                    className="absolute right-1 top-1 rounded-full bg-background/80 p-1 text-foreground backdrop-blur"
+                    className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow-sm"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
+                  <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                    {index + 1}
+                  </span>
                 </div>
               ))}
               {items.length < MAX_FILES && (
@@ -226,49 +303,126 @@ function Create() {
                   type="button"
                   onClick={() => inputRef.current?.click()}
                   aria-label="Add more media"
-                  className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground hover:text-foreground"
+                  className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
                 >
                   <ImagePlus className="h-5 w-5" aria-hidden="true" />
+                  <span className="text-[10px]">Add more</span>
                 </button>
               )}
             </div>
           )}
         </section>
 
+        {/* Caption & AI Assistant */}
         <section className="space-y-2">
-          <Label htmlFor="caption">Caption</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="caption" className="text-xs font-semibold">
+              Caption
+            </Label>
+            <button
+              type="button"
+              onClick={() => setShowAiHelper(!showAiHelper)}
+              className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {showAiHelper ? "Hide AI Helper" : "AI Magic Caption"}
+            </button>
+          </div>
+
+          {/* Inline AI Helper Panel */}
+          {showAiHelper && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2.5 animate-in fade-in-50">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <Wand2 className="h-4 w-4 text-primary" />
+                <span>Opexnal AI Caption Generator</span>
+              </div>
+              <Input
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="What's happening in this photo or video? (e.g. coffee break in rain)"
+                className="h-9 text-xs bg-background"
+              />
+              <div className="flex items-center justify-between gap-2">
+                <select
+                  value={aiTone}
+                  onChange={(e) => setAiTone(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground"
+                >
+                  <option>Aesthetic & Engaging</option>
+                  <option>Viral & Punchy</option>
+                  <option>Hinglish / Trendy</option>
+                  <option>Storytelling</option>
+                </select>
+                <Button
+                  size="sm"
+                  type="button"
+                  disabled={aiGenerating}
+                  onClick={handleGenerateAiCaption}
+                  className="h-8 text-xs brand-gradient-bg text-primary-foreground font-semibold"
+                >
+                  {aiGenerating ? (
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Generate Caption
+                </Button>
+              </div>
+            </div>
+          )}
+
           <Textarea
             id="caption"
             value={caption}
             maxLength={2200}
             rows={4}
-            placeholder="Write a caption… use #hashtags to reach more people"
+            placeholder="Write a caption… use #hashtags and @mentions to connect"
+            className="rounded-xl bg-surface resize-none text-xs sm:text-sm"
             onChange={(e) => setCaption(e.target.value)}
           />
-          <div className="flex items-start justify-between gap-3">
+
+          {/* Quick Trending Hashtags */}
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              Trending Tags (tap to add):
+            </p>
             <div className="flex flex-wrap gap-1.5">
-              {hashtags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-secondary px-2 py-0.5 text-xs text-primary"
-                >
-                  #{tag}
-                </span>
-              ))}
+              {TRENDING_SUGGESTIONS.map((tag) => {
+                const added = hashtags.includes(tag.toLowerCase());
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => insertHashtag(tag)}
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors border",
+                      added
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-surface border-border text-muted-foreground hover:text-foreground hover:bg-secondary",
+                    )}
+                  >
+                    #{tag}
+                  </button>
+                );
+              })}
             </div>
-            <span
-              className={cn(
-                "shrink-0 text-xs text-muted-foreground",
-                caption.length > 2100 && "text-destructive",
-              )}
-            >
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+            <span>
+              {hashtags.length} hashtag{hashtags.length === 1 ? "" : "s"} added
+            </span>
+            <span className={cn(caption.length > 2100 && "text-destructive font-semibold")}>
               {caption.length}/2200
             </span>
           </div>
         </section>
 
+        {/* Location Section with Quick City Suggestions */}
         <section className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location" className="text-xs font-semibold">
+            Location
+          </Label>
           <div className="relative">
             <MapPin
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -278,32 +432,51 @@ function Create() {
               id="location"
               value={locationName}
               maxLength={120}
-              placeholder="Add a place"
-              className="pl-9"
+              placeholder="Search or add a location"
+              className="h-10 pl-9 rounded-xl bg-surface text-xs sm:text-sm"
               onChange={(e) => setLocationName(e.target.value)}
             />
           </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {POPULAR_CITIES.map((city) => (
+              <button
+                key={city}
+                type="button"
+                onClick={() => setLocationName(city)}
+                className="shrink-0 rounded-full border border-border bg-surface px-2.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-secondary"
+              >
+                {city}
+              </button>
+            ))}
+          </div>
         </section>
 
+        {/* Audience Visibility */}
         <section className="space-y-2">
-          <Label htmlFor="visibility">Who can see this</Label>
+          <Label htmlFor="visibility" className="text-xs font-semibold">
+            Audience & Visibility
+          </Label>
           <Select value={visibility} onValueChange={(v) => setVisibility(v as PostVisibility)}>
-            <SelectTrigger id="visibility">
+            <SelectTrigger id="visibility" className="h-10 rounded-xl bg-surface">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="public">Everyone</SelectItem>
-              <SelectItem value="followers">Followers only</SelectItem>
-              <SelectItem value="private">Only me</SelectItem>
+              <SelectItem value="public">🌐 Everyone (Public on Feed & Explore)</SelectItem>
+              <SelectItem value="followers">👥 Followers Only</SelectItem>
+              <SelectItem value="private">🔒 Private (Only Me)</SelectItem>
             </SelectContent>
           </Select>
         </section>
 
-        <section className="flex items-center justify-between rounded-xl border border-border p-3">
+        {/* Allow Comments Switch */}
+        <section className="flex items-center justify-between rounded-xl border border-border bg-surface p-3.5">
           <div>
-            <p className="text-sm font-medium">Allow comments</p>
-            <p className="text-xs text-muted-foreground">
-              Turn off to disable replies on this post.
+            <p className="text-xs sm:text-sm font-medium text-foreground">
+              Allow comments & replies
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Anyone with access to the post can leave thoughts.
             </p>
           </div>
           <Switch

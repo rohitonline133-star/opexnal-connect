@@ -80,8 +80,8 @@ function Landing() {
         <div className="mt-auto space-y-3 pt-10">
           {loading ? null : user ? (
             <Button asChild variant="brand" size="xl">
-              <Link to="/profile">
-                Open Opexnal <ArrowRight className="h-4 w-4" />
+              <Link to="/home">
+                Open Feed <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           ) : (
@@ -92,8 +92,8 @@ function Landing() {
                 </Link>
               </Button>
               <Button asChild variant="surface" size="xl">
-                <Link to="/auth" search={{ mode: "login" }}>
-                  Log in
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Instant Demo / Sign up
                 </Link>
               </Button>
             </>

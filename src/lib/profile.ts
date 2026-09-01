@@ -14,8 +14,7 @@ export async function getProfileById(id: string) {
 
   if (typeof window !== "undefined") {
     try {
-      const raw =
-        localStorage.getItem("guest_user") || localStorage.getItem("opexnal_guest_user");
+      const raw = localStorage.getItem("guest_user") || localStorage.getItem("opexnal_guest_user");
       if (raw) {
         const guest = JSON.parse(raw);
         if (guest?.id === id || id.startsWith("guest_") || id.startsWith("usr_")) {

@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated")({
       }
     }
 
-    throw redirect({ to: "/auth" });
+    throw redirect({ to: "/auth", search: { mode: "signup" } });
   },
   component: () => <Outlet />,
 });
