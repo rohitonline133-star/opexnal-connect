@@ -100,7 +100,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: "gemini-3.8-flash",
         contents: contents as never,
         config: {
           systemInstruction,
@@ -198,7 +198,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
       parts.push({ text: prompt });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: "gemini-3.8-flash",
         contents: [{ role: "user", parts }] as never,
         config: {
           systemInstruction:
