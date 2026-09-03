@@ -32,27 +32,27 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use static property access so Vite can replace import.meta.env at build time
   const SUPABASE_URL =
-    import.meta.env.VITE_SUPABASE_URL ||
-    (import.meta.env.VITE_SUPABASE_PROJECT_ID
-      ? `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`
+    import.meta.env["VITE_SUPABASE_URL"] ||
+    (import.meta.env["VITE_SUPABASE_PROJECT_ID"]
+      ? `https://${import.meta.env["VITE_SUPABASE_PROJECT_ID"]}.supabase.co`
       : undefined) ||
-    (typeof process !== "undefined"
-      ? process.env?.SUPABASE_URL ||
-        process.env?.VITE_SUPABASE_URL ||
-        (process.env?.SUPABASE_PROJECT_ID
-          ? `https://${process.env.SUPABASE_PROJECT_ID}.supabase.co`
+    (typeof process !== "undefined" && process.env
+      ? process.env["SUPABASE_URL"] ||
+        process.env["VITE_SUPABASE_URL"] ||
+        (process.env["SUPABASE_PROJECT_ID"]
+          ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
           : undefined)
       : undefined) ||
     "https://cvzloydcxjjpjydzjyhw.supabase.co";
 
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    (typeof process !== "undefined"
-      ? process.env?.SUPABASE_PUBLISHABLE_KEY ||
-        process.env?.VITE_SUPABASE_PUBLISHABLE_KEY ||
-        process.env?.SUPABASE_ANON_KEY ||
-        process.env?.VITE_SUPABASE_ANON_KEY
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    import.meta.env["VITE_SUPABASE_ANON_KEY"] ||
+    (typeof process !== "undefined" && process.env
+      ? process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+        process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+        process.env["SUPABASE_ANON_KEY"] ||
+        process.env["VITE_SUPABASE_ANON_KEY"]
       : undefined) ||
     "mock-anon-key-for-local-preview";
 

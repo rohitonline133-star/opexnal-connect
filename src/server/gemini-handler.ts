@@ -4,7 +4,7 @@ let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
+    const apiKey = process.env["GEMINI_API_KEY"] || "";
     aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
@@ -32,7 +32,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
   }
 
   const rawBody = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
     // Graceful fallback if GEMINI_API_KEY is not configured yet
     return handleFallbackResponse(url.pathname, rawBody);
@@ -226,7 +226,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
 
 function handleFallbackResponse(pathname: string, body: Record<string, unknown>): Response {
   if (pathname === "/api/ai/chat") {
-    const prompt = String(body.prompt || "");
+    const prompt = String(body["prompt"] || "");
     let reply =
       "Opexnal AI here! Ask me to generate viral captions, reel scripts, hashtag strategies, or optimize your creator bio.";
     const lower = prompt.toLowerCase();

@@ -143,13 +143,27 @@ function Settings() {
               <span className="font-medium">Supabase Enterprise</span>
             </div>
             <div className="pt-2 border-t border-border flex justify-between text-[11px]">
-              <Link to="/about" className="hover:underline">
+              <a
+                href="#about"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.info("Opexnal Connect v1.0.0 — Next-gen creator platform.");
+                }}
+                className="hover:underline"
+              >
                 About Opexnal
-              </Link>
-              <Link to="/terms" className="hover:underline">
+              </a>
+              <a
+                href="#terms"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.info("Opexnal Terms: Respect creators, uphold integrity, create freely.");
+                }}
+                className="hover:underline"
+              >
                 Terms of Service
-              </Link>
-              <Link to="/privacy" className="hover:underline">
+              </a>
+              <Link to="/settings/privacy" className="hover:underline">
                 Privacy Policy
               </Link>
             </div>
