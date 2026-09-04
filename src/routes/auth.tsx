@@ -132,7 +132,9 @@ function AuthPage() {
     };
 
     try {
+      sessionStorage.removeItem("opexnal_explicit_signout");
       localStorage.setItem("opexnal_guest_user", JSON.stringify(guestUserObj));
+      localStorage.setItem("guest_user", JSON.stringify(guestUserObj));
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(new CustomEvent("opexnal_session_change"));
     } catch {
@@ -282,6 +284,11 @@ function AuthPage() {
 
           if (loginData?.session) {
             sessionCreated = true;
+            try {
+              sessionStorage.removeItem("opexnal_explicit_signout");
+            } catch {
+              // ignore
+            }
             if (loginData.user?.id) {
               signedUpUserId = loginData.user.id;
             }
@@ -346,6 +353,11 @@ function AuthPage() {
 
           if (!error && data?.session) {
             loginSuccess = true;
+            try {
+              sessionStorage.removeItem("opexnal_explicit_signout");
+            } catch {
+              // ignore
+            }
             toast.success("Welcome back to Opexnal!");
             const destination = (search.redirect || "/home") as string;
             navigate({ to: destination as never, replace: true });
