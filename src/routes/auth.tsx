@@ -159,8 +159,11 @@ function AuthPage() {
     setUnconfirmedEmail(false);
     setForgotSent(false);
     navigate({
-      search: (prev) => ({ ...prev, mode: newMode }),
-    });
+      search: (prev: { mode?: "login" | "signup" | "forgot"; redirect?: string }) => ({
+        ...prev,
+        mode: newMode,
+      }),
+    } as never);
   };
 
   const handleResendConfirmation = async () => {
@@ -216,8 +219,7 @@ function AuthPage() {
         if (rawInput.includes("@")) {
           finalEmail = rawInput.toLowerCase();
           if (!finalUsername) {
-            finalUsername = rawInput
-              .split("@")[0]
+            finalUsername = (rawInput.split("@")[0] ?? "")
               .toLowerCase()
               .replace(/[^a-z0-9._]/g, "");
           }
@@ -336,8 +338,7 @@ function AuthPage() {
         let targetEmail = rawInput.toLowerCase();
         let fallbackUsername = rawInput.toLowerCase().replace(/[^a-z0-9._]/g, "");
         if (rawInput.includes("@")) {
-          fallbackUsername = rawInput
-            .split("@")[0]
+          fallbackUsername = (rawInput.split("@")[0] ?? "")
             .toLowerCase()
             .replace(/[^a-z0-9._]/g, "");
         } else {
@@ -682,10 +683,7 @@ function AuthPage() {
                       autoCapitalize="none"
                       placeholder={
                         email.includes("@")
-                          ? email
-                              .split("@")[0]
-                              .toLowerCase()
-                              .replace(/[^a-z0-9._]/g, "")
+                          ? (email.split("@")[0] ?? "").toLowerCase().replace(/[^a-z0-9._]/g, "")
                           : "handle"
                       }
                       value={username}

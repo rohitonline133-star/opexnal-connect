@@ -93,7 +93,7 @@ function AIPage() {
     {
       id: "welcome",
       sender: "ai",
-      text: `Namaste & welcome ${user?.user_metadata?.username ? `@${user.user_metadata.username}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, analyze images, and optimize your creator profile in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
+      text: `Namaste & welcome ${user?.user_metadata?.["username"] ? `@${user.user_metadata["username"]}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, analyze images, and optimize your creator profile in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
       timestamp: "Just now",
     },
   ]);
