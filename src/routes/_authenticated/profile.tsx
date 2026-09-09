@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Grid3x3, Loader2, Settings, BadgeCheck, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
@@ -70,7 +71,7 @@ function MyProfile() {
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Followers</dt>
-                <dd className="text-lg font-semibold">{profile.followers_count}</dd>
+                <dd className="stat-num text-lg font-semibold">{profile.followers_count}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Following</dt>
@@ -105,7 +106,19 @@ function MyProfile() {
             )}
           </div>
 
-          <div className="flex gap-2 px-4 pt-4">
+          <div id="action-buttons" className="action-buttons flex gap-2 px-4 pt-4">
+            <Button
+              asChild
+              variant="brand"
+              id="btn-follow"
+              className="btn-pop flex-1 rounded-xl active:scale-90 duration-200"
+              onClick={() => toast.success("Discover creators to follow on Explore")}
+            >
+              <Link to="/explore">Follow</Link>
+            </Button>
+            <Button asChild variant="surface" id="btn-message" className="flex-1 rounded-xl">
+              <Link to="/messages">Message</Link>
+            </Button>
             <Button asChild variant="surface" className="flex-1 rounded-xl">
               <Link to="/profile/edit">Edit profile</Link>
             </Button>

@@ -108,6 +108,46 @@
       .stat-num {
         font-weight: 700;
         font-size: 17px;
+        display: inline-block;
+        will-change: transform;
+        transition: color 0.3s ease;
+      }
+      .stat-num.incrementing {
+        animation: stat-increment 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .stat-num.decrementing {
+        animation: stat-decrement 0.35s cubic-bezier(0.2, 0.8, 0.4, 1);
+      }
+      @keyframes stat-increment {
+        0% {
+          transform: translateY(6px) scale(0.88);
+          opacity: 0.5;
+          color: #c084fc;
+        }
+        50% {
+          transform: translateY(-3px) scale(1.22);
+          opacity: 1;
+          color: #e879f9;
+        }
+        100% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+          color: inherit;
+        }
+      }
+      @keyframes stat-decrement {
+        0% {
+          transform: translateY(-4px) scale(1.1);
+          color: #a1a1aa;
+        }
+        50% {
+          transform: translateY(2px) scale(0.92);
+          color: #71717a;
+        }
+        100% {
+          transform: translateY(0) scale(1);
+          color: inherit;
+        }
       }
       .stat-label {
         font-size: 13px;
@@ -118,10 +158,30 @@
       .bio-section {
         padding: 4px 16px 10px;
       }
+      .category-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+      }
       .category {
         color: #a1a1aa;
         font-size: 13px;
-        margin-bottom: 4px;
+      }
+      .badge-follows-you {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #27272a;
+        color: #d4d4d8;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 4px;
+        border: 1px solid #3f3f46;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
       }
       .bio-text {
         font-size: 13.5px;
@@ -186,6 +246,146 @@
         font-weight: 600;
         font-size: 13px;
         text-align: center;
+        cursor: pointer;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+      }
+      .btn:hover {
+        background: #27272a;
+      }
+      .btn-primary {
+        background: linear-gradient(
+          100deg,
+          oklch(0.55 0.25 288) 0%,
+          oklch(0.62 0.24 305) 55%,
+          oklch(0.68 0.2 330) 100%
+        ), linear-gradient(100deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+        border: 1px solid transparent;
+        color: #ffffff;
+        box-shadow: 0 4px 14px -2px rgba(168, 85, 247, 0.45);
+      }
+      .btn-primary:hover {
+        opacity: 0.92;
+        box-shadow: 0 6px 18px -2px rgba(168, 85, 247, 0.6);
+      }
+      .btn-primary:active {
+        transform: scale(0.92);
+      }
+      #btn-follow {
+        transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1),
+          background 0.2s ease,
+          box-shadow 0.25s ease,
+          color 0.2s ease,
+          border-color 0.2s ease,
+          opacity 0.2s ease;
+        will-change: transform, opacity;
+      }
+      #btn-follow:active {
+        transform: scale(0.91);
+        transition: transform 0.08s ease-out;
+      }
+      #btn-follow.pop {
+        transform: scale(1.08);
+        transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      #btn-follow.btn-primary.pop {
+        box-shadow: 0 6px 20px -2px rgba(168, 85, 247, 0.75);
+      }
+      #btn-follow.loading {
+        opacity: 0.65;
+        cursor: wait;
+        pointer-events: none;
+      }
+      .btn-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: btn-spin 0.65s linear infinite;
+        vertical-align: middle;
+      }
+      .btn.following .btn-spinner {
+        border-color: rgba(161, 161, 170, 0.3);
+        border-top-color: #a1a1aa;
+      }
+      @keyframes btn-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .btn.following {
+        background: #18181b;
+        border: 1px solid #27272a;
+        color: #a1a1aa;
+        box-shadow: none;
+      }
+      .btn.following.mutual {
+        border-color: rgba(168, 85, 247, 0.45);
+        color: #f4f4f5;
+        background: #18181b;
+      }
+      .mutual-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #a855f7;
+        box-shadow: 0 0 6px rgba(168, 85, 247, 0.85);
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      /* Toast Notification Overlay */
+      .toast-overlay {
+        position: fixed;
+        bottom: 74px;
+        left: 50%;
+        transform: translate(-50%, 16px) scale(0.94);
+        background: rgba(24, 24, 27, 0.94);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(63, 63, 70, 0.6);
+        color: #f4f4f5;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 9px 16px;
+        border-radius: 9999px;
+        box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(168, 85, 247, 0.25);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+          transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+          visibility 0.22s ease;
+        z-index: 9999;
+        white-space: nowrap;
+      }
+      .toast-overlay.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0) scale(1);
+      }
+      .toast-overlay .toast-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7, #ec4899);
+        color: #ffffff;
+        font-size: 10px;
+        flex-shrink: 0;
       }
 
       /* Story Highlights */
@@ -273,7 +473,7 @@
           <div class="stat-label">posts</div>
         </div>
         <div>
-          <div class="stat-num">3,044</div>
+          <div class="stat-num" id="followers-stat-num">3,044</div>
           <div class="stat-label">followers</div>
         </div>
         <div>
@@ -285,7 +485,10 @@
 
     <!-- Bio Section -->
     <div class="bio-section">
-      <div class="category">Reel creator • AI creator</div>
+      <div class="category-row">
+        <span class="category">Reel creator • AI creator</span>
+        <span class="badge-follows-you" id="badge-follows-you">Follows you</span>
+      </div>
       <div class="bio-text">
         ⚡ Living My Own Story<br />
         🎭 Reel Creator<br />
@@ -316,10 +519,12 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="action-buttons">
-      <div class="btn">Edit profile</div>
-      <div class="btn">Share profile</div>
-      <div class="btn">Contact</div>
+    <div class="action-buttons" id="action-buttons">
+      <button type="button" class="btn btn-primary" id="btn-follow" data-followed-by="true">Follow Back</button>
+      <button type="button" class="btn" id="btn-message">Message</button>
+      <div class="btn" id="btn-edit-profile">Edit profile</div>
+      <div class="btn" id="btn-share-profile">Share profile</div>
+      <div class="btn" id="btn-contact">Contact</div>
     </div>
 
     <!-- Story Highlights -->
@@ -349,8 +554,97 @@
       <i data-lucide="user-circle"></i>
     </div>
 
+    <!-- Toast Notification Overlay -->
+    <div class="toast-overlay" id="toast-overlay" role="status" aria-live="polite">
+      <span class="toast-icon">✓</span>
+      <span id="toast-message">Now following @sophia.creates</span>
+    </div>
+
     <script>
       lucide.createIcons();
+
+      const followBtn = document.getElementById("btn-follow");
+      const toastOverlay = document.getElementById("toast-overlay");
+      const toastMessage = document.getElementById("toast-message");
+      const followersStat = document.getElementById("followers-stat-num");
+      const baseFollowers = 3044;
+      let currentFollowers = baseFollowers;
+      let toastTimer = null;
+
+      function showToast(message) {
+        if (!toastOverlay) return;
+        if (toastMessage) toastMessage.textContent = message;
+        toastOverlay.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastOverlay.classList.remove("show");
+        }, 2200);
+      }
+
+      if (followersStat) {
+        followersStat.addEventListener("animationend", () => {
+          followersStat.classList.remove("incrementing", "decrementing");
+        });
+      }
+
+      if (followBtn) {
+        followBtn.addEventListener("click", () => {
+          if (followBtn.classList.contains("loading")) return;
+
+          const isFollowedBy = followBtn.getAttribute("data-followed-by") === "true";
+          const willFollow = !followBtn.classList.contains("following");
+
+          // Simulate asynchronous API request with spinner and momentarily reduced opacity
+          followBtn.classList.add("loading");
+          followBtn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>' + (willFollow ? "Following..." : "Unfollowing...");
+
+          setTimeout(() => {
+            followBtn.classList.remove("loading");
+
+            // Trigger subtle 'pop' animation
+            followBtn.classList.remove("pop");
+            void followBtn.offsetWidth; // Force reflow to re-trigger transition
+            followBtn.classList.add("pop");
+            setTimeout(() => {
+              followBtn.classList.remove("pop");
+            }, 180);
+
+            if (willFollow) {
+              followBtn.classList.add("following");
+              followBtn.classList.remove("btn-primary");
+              if (isFollowedBy) {
+                followBtn.classList.add("mutual");
+                followBtn.innerHTML = '<span class="mutual-dot"></span>Mutual';
+                showToast("Mutual follow! You and @opexnal follow each other");
+              } else {
+                followBtn.textContent = "Following";
+                showToast("Now following @opexnal");
+              }
+
+              if (followersStat) {
+                currentFollowers = baseFollowers + 1;
+                followersStat.textContent = currentFollowers.toLocaleString();
+                followersStat.classList.remove("incrementing", "decrementing");
+                void followersStat.offsetWidth; // Force reflow
+                followersStat.classList.add("incrementing");
+              }
+            } else {
+              followBtn.classList.remove("following", "mutual");
+              followBtn.classList.add("btn-primary");
+              followBtn.textContent = isFollowedBy ? "Follow Back" : "Follow";
+              showToast("Unfollowed @opexnal");
+
+              if (followersStat) {
+                currentFollowers = baseFollowers;
+                followersStat.textContent = currentFollowers.toLocaleString();
+                followersStat.classList.remove("incrementing", "decrementing");
+                void followersStat.offsetWidth; // Force reflow
+                followersStat.classList.add("decrementing");
+              }
+            }
+          }, 500);
+        });
+      }
     </script>
   </body>
 </html>

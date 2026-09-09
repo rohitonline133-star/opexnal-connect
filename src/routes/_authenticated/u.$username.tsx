@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, ChevronLeft, Loader2, Lock } from "lucide-react";
+import { BadgeCheck, ChevronLeft, Loader2, Lock, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
@@ -33,6 +34,7 @@ function PublicProfile() {
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile-by-username", username],
@@ -45,7 +47,7 @@ function PublicProfile() {
     queryKey: ["relationship", user?.id, profile?.id],
     enabled: Boolean(user?.id && profile?.id) && !isSelf,
     queryFn: async () => {
-      const [follow, request] = await Promise.all([
+      const [follow, request, followedBy] = await Promise.all([
         supabase
           .from("follows")
           .select("follower_id")
@@ -58,47 +60,66 @@ function PublicProfile() {
           .eq("requester_id", user!.id)
           .eq("target_id", profile!.id)
           .maybeSingle(),
+        supabase
+          .from("follows")
+          .select("follower_id")
+          .eq("follower_id", profile!.id)
+          .eq("following_id", user!.id)
+          .maybeSingle(),
       ]);
-      return { following: Boolean(follow.data), requested: Boolean(request.data) };
+      return {
+        following: Boolean(follow.data),
+        requested: Boolean(request.data),
+        followedBy: Boolean(followedBy.data),
+      };
     },
   });
 
   async function toggleFollow() {
-    if (!user || !profile) return;
-    if (relationship?.following) {
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", user.id)
-        .eq("following_id", profile.id);
-      if (error) {
-        toast.error(error.message);
-        return;
+    if (!user || !profile || isFollowLoading) return;
+    setIsFollowLoading(true);
+    try {
+      if (relationship?.following) {
+        const { error } = await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", user.id)
+          .eq("following_id", profile.id);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success(`Unfollowed @${profile.username}`);
+      } else if (relationship?.requested) {
+        const { error } = await supabase
+          .from("follow_requests")
+          .delete()
+          .eq("requester_id", user.id)
+          .eq("target_id", profile.id);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Request withdrawn");
+      } else {
+        const { data, error } = await supabase.rpc("request_follow", { _target_id: profile.id });
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        if (relationship?.followedBy && data !== "requested") {
+          toast.success(`Mutual follow! You and @${profile.username} are now following each other`);
+        } else {
+          toast.success(
+            data === "requested" ? "Follow request sent" : `Following @${profile.username}`,
+          );
+        }
       }
-      toast.success(`Unfollowed @${profile.username}`);
-    } else if (relationship?.requested) {
-      const { error } = await supabase
-        .from("follow_requests")
-        .delete()
-        .eq("requester_id", user.id)
-        .eq("target_id", profile.id);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success("Request withdrawn");
-    } else {
-      const { data, error } = await supabase.rpc("request_follow", { _target_id: profile.id });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success(
-        data === "requested" ? "Follow request sent" : `Following @${profile.username}`,
-      );
+      await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
+      await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
+    } finally {
+      setIsFollowLoading(false);
     }
-    await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
-    await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
   }
 
   return (
@@ -142,7 +163,7 @@ function PublicProfile() {
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Followers</dt>
-                <dd className="text-lg font-semibold">{profile.followers_count}</dd>
+                <dd className="stat-num text-lg font-semibold">{profile.followers_count}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Following</dt>
@@ -152,12 +173,19 @@ function PublicProfile() {
           </div>
 
           <div className="px-4 pt-4">
-            <p className="flex items-center gap-1.5 text-sm font-semibold">
-              {profile.display_name || profile.username}
-              {profile.is_verified && (
-                <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified" />
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="flex items-center gap-1.5 text-sm font-semibold">
+                {profile.display_name || profile.username}
+                {profile.is_verified && (
+                  <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified" />
+                )}
+              </p>
+              {relationship?.followedBy && (
+                <span className="inline-flex items-center rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  Follows you
+                </span>
               )}
-            </p>
+            </div>
             {profile.bio && <p className="mt-2 whitespace-pre-line text-sm">{profile.bio}</p>}
           </div>
 
@@ -166,15 +194,33 @@ function PublicProfile() {
               <Button
                 variant={relationship?.following || relationship?.requested ? "surface" : "brand"}
                 size="xl"
+                disabled={isFollowLoading}
+                className="btn-pop active:scale-90 duration-200 disabled:opacity-70 disabled:pointer-events-none"
                 onClick={toggleFollow}
               >
-                {relationship?.following
-                  ? "Following"
-                  : relationship?.requested
-                    ? "Requested"
-                    : profile.is_private
-                      ? "Request to follow"
-                      : "Follow"}
+                {isFollowLoading ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+                    <span>{relationship?.following ? "Unfollowing..." : "Following..."}</span>
+                  </>
+                ) : relationship?.following ? (
+                  relationship?.followedBy ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                      <span>Mutual</span>
+                    </span>
+                  ) : (
+                    "Following"
+                  )
+                ) : relationship?.requested ? (
+                  "Requested"
+                ) : relationship?.followedBy ? (
+                  "Follow Back"
+                ) : profile.is_private ? (
+                  "Request to follow"
+                ) : (
+                  "Follow"
+                )}
               </Button>
               <Button
                 variant="surface"
