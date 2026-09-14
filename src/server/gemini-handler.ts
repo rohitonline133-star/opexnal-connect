@@ -10,6 +10,38 @@ function getAiClient(): GoogleGenAI {
   return aiClient;
 }
 
+async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    const nodeReq = (request as any).runtime?.node?.req;
+    if (nodeReq) {
+      if (nodeReq.complete && nodeReq.rawBody) {
+        const str = typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
+        return str ? JSON.parse(str) : {};
+      }
+      const chunks: Buffer[] = [];
+      const text = await new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => resolve(""), 5000);
+        nodeReq.on("data", (chunk: any) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+        nodeReq.once("end", () => {
+          clearTimeout(timer);
+          resolve(Buffer.concat(chunks).toString("utf8"));
+        });
+        nodeReq.once("error", (err: any) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+      return text ? JSON.parse(text) : {};
+    }
+
+    const text = await request.text();
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.error("[parseRequestBody] Failed to parse request body:", err);
+    return {};
+  }
+}
+
 export async function handleAiRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
 
@@ -31,7 +63,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  const rawBody = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const rawBody = await parseRequestBody(request);
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
     // Graceful fallback if GEMINI_API_KEY is not configured yet
@@ -100,7 +132,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.6-flash",
         contents: contents as never,
         config: {
           systemInstruction,
@@ -198,7 +230,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
       parts.push({ text: prompt });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.6-flash",
         contents: [{ role: "user", parts }] as never,
         config: {
           systemInstruction:
