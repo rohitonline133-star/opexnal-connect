@@ -1,200 +1,114 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Lock,
-  ShieldCheck,
-  UserCog,
-  Sparkles,
-  HelpCircle,
-  FileText,
-  Bell,
-  Moon,
-  Info,
-  BadgeCheck,
-} from "lucide-react";
-
-import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { AppShell, ScreenHeader } from "@/components/AppShell";
+import { UserCog, Lock, ShieldCheck, Sparkles, ChevronRight, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
-    meta: [
-      { title: "Settings & Preferences — Opexnal" },
-      {
-        name: "description",
-        content: "Manage your Opexnal account, AI preferences, privacy and security settings.",
-      },
-      { property: "og:title", content: "Settings & Preferences — Opexnal" },
-      { property: "og:description", content: "Manage your Opexnal account, privacy and security." },
-      { property: "og:type", content: "website" },
-      { name: "robots", content: "noindex" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+    meta: [{ title: "Settings - Opexnal" }],
   }),
-  component: Settings,
+  component: SettingsIndexPage,
 });
 
-function Settings() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    try {
-      localStorage.removeItem("guest_user");
-      localStorage.removeItem("opexnal_guest_user");
-    } catch {
-      // ignore
-    }
+function SettingsIndexPage() {
+  const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
-  }
+    window.location.href = "/auth";
+  };
 
   return (
-    <AppShell
-      header={
-        <ScreenHeader
-          title="Settings"
-          left={
-            <Link
-              to="/profile"
-              aria-label="Back"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </Link>
-          }
-        />
-      }
-    >
-      <div className="space-y-4 px-3 sm:px-4 py-4 max-w-lg mx-auto">
-        {/* Account Section */}
-        <div className="space-y-1.5">
-          <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <AppShell>
+      <div className="max-w-xl mx-auto p-4 space-y-6">
+        <ScreenHeader title="Settings" />
+
+        <div className="space-y-2">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
             Account & Profile
-          </p>
-          <div className="space-y-1.5">
-            <SettingsLink
+          </h2>
+
+          <div className="bg-card border rounded-2xl overflow-hidden divide-y divide-border">
+            <Link
               to="/profile/edit"
-              icon={UserCog}
-              label="Edit profile"
-              hint="Name, username, bio, website & avatar"
-            />
-            <SettingsLink
+              className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <UserCog className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="font-medium">Edit profile</div>
+                  <div className="text-xs text-muted-foreground">
+                    Name, username, bio, website & avatar
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+
+            <Link
               to="/settings/privacy"
-              icon={Lock}
-              label="Privacy & Visibility"
-              hint="Private account, mentions & tag permissions"
-            />
-            <SettingsLink
+              className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="font-medium">Privacy & Visibility</div>
+                  <div className="text-xs text-muted-foreground">
+                    Private account, mentions & tag permissions
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+
+            <Link
               to="/settings/security"
-              icon={ShieldCheck}
-              label="Security & Two-Factor"
-              hint="Password, TOTP 2FA & audit log"
-            />
+              className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="font-medium">Security & Two-Factor</div>
+                  <div className="text-xs text-muted-foreground">
+                    Password, TOTP 2FA & audit log
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
           </div>
         </div>
 
-        {/* AI & Creation Studio Section */}
-        <div className="space-y-1.5">
-          <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-2">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
             Intelligence & Tools
-          </p>
-          <div className="space-y-1.5">
+          </h2>
+          <div className="bg-card border rounded-2xl overflow-hidden">
             <Link
               to="/ai"
-              className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3.5 transition-colors hover:bg-primary/10"
+              className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl brand-gradient-bg text-primary-foreground shadow-xs">
-                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="font-medium">Opexnal AI Studio</div>
+                  <div className="text-xs text-muted-foreground">
+                    Captions, hooks, hashtags, reels ideas & Hinglish
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">Opexnal AI Studio</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Captions, hooks, hashtags, reels ideas & Hinglish co-pilot
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Link>
           </div>
         </div>
 
-        {/* Info & Legal Section */}
-        <div className="space-y-1.5">
-          <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            About & Community
-          </p>
-          <div className="rounded-2xl border border-border bg-surface p-4 space-y-3 text-xs text-muted-foreground">
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-foreground">Platform Version</span>
-              <span className="font-semibold text-primary">Opexnal v2.5 Production</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-foreground">AI Engine</span>
-              <span className="font-medium">Google Gemini 3.7 Flash</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-foreground">Cloud Storage & Auth</span>
-              <span className="font-medium">Supabase Enterprise</span>
-            </div>
-            <div className="pt-2 border-t border-border flex justify-between text-[11px]">
-              <Link to="/about" className="hover:underline">
-                About Opexnal
-              </Link>
-              <Link to="/terms" className="hover:underline">
-                Terms of Service
-              </Link>
-              <Link to="/privacy" className="hover:underline">
-                Privacy Policy
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Sign Out Button */}
-        <div className="pt-2">
-          <Button
-            variant="surface"
-            size="xl"
-            className="w-full rounded-2xl text-destructive hover:bg-destructive/10 border-destructive/20"
-            onClick={signOut}
-          >
-            <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
-            Sign out of Opexnal
-          </Button>
-        </div>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center gap-2 p-4 text-red-500 bg-red-500/10 border border-red-500/20 rounded-2xl font-medium hover:bg-red-500/20 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign out of Opexnal
+        </button>
       </div>
     </AppShell>
-  );
-}
-
-function SettingsLink({
-  to,
-  icon: Icon,
-  label,
-  hint,
-}: {
-  to: "/profile/edit" | "/settings/privacy" | "/settings/security";
-  icon: typeof Lock;
-  label: string;
-  hint: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 transition-colors hover:bg-secondary"
-    >
-      <Icon className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">{label}</p>
-        <p className="truncate text-xs text-muted-foreground">{hint}</p>
-      </div>
-      <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-    </Link>
   );
 }

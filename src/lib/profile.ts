@@ -12,34 +12,6 @@ export async function getProfileById(id: string) {
     // ignore query error
   }
 
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem("guest_user") || localStorage.getItem("opexnal_guest_user");
-      if (raw) {
-        const guest = JSON.parse(raw);
-        if (guest?.id === id || id.startsWith("guest_") || id.startsWith("usr_")) {
-          return {
-            id,
-            username: guest.user_metadata?.username || "guest_creator",
-            display_name: guest.user_metadata?.display_name || "Guest Explorer",
-            bio: "Exploring Opexnal in Guest Mode 🚀",
-            avatar_url: null,
-            website: null,
-            is_verified: true,
-            is_private: false,
-            followers_count: 142,
-            following_count: 88,
-            posts_count: 3,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as Profile;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
   return null;
 }
 

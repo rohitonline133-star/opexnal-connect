@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronLeft, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileByUsername, initialsFor } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
+import { openDirectConversation } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/u/$username")({
   head: ({ params }) => ({
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/u/$username")({
 function PublicProfile() {
   const { username } = Route.useParams();
   const { user } = useSession();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
@@ -178,9 +180,9 @@ function PublicProfile() {
                 variant="surface"
                 size="xl"
                 onClick={async () => {
-                  if (!viewer) return;
+                  if (!user) return;
                   try {
-                    const id = await openDirectConversation(viewer.id, profile.id);
+                    const id = await openDirectConversation(user.id, profile.id);
                     navigate({ to: "/messages/$conversationId", params: { conversationId: id } });
                   } catch {
                     toast.error("Could not open the conversation");

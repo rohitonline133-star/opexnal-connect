@@ -4,7 +4,7 @@ let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
+    const apiKey = process.env["GEMINI_API_KEY"] || process.env["VITE_GEMINI_API_KEY"] || "";
     aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
@@ -31,7 +31,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const apiKey = process.env["GEMINI_API_KEY"] || process.env["VITE_GEMINI_API_KEY"];
   if (!apiKey) {
     // Graceful fallback if GEMINI_API_KEY is not configured yet
     return handleFallbackResponse(url.pathname, await request.json().catch(() => ({})));
@@ -87,14 +87,14 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
                   mimeType: body.imageMime,
                 },
               },
-              { text: body.prompt || "Analyze this image and suggest social media captions." },
+              { text: body["prompt"] || "Analyze this image and suggest social media captions." },
             ],
           });
         }
-      } else if (body.prompt && contents.length === 0) {
+      } else if (body["prompt"] && contents.length === 0) {
         contents.push({
           role: "user",
-          parts: [{ text: body.prompt }],
+          parts: [{ text: body["prompt"] }],
         });
       }
 
@@ -234,7 +234,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
 
 function handleFallbackResponse(pathname: string, body: Record<string, unknown>): Response {
   if (pathname === "/api/ai/chat") {
-    const prompt = String(body.prompt || "");
+    const prompt = String(body["prompt"] || "");
     let reply =
       "Opexnal AI here! Ask me to generate viral captions, reel scripts, hashtag strategies, or optimize your creator bio.";
     const lower = prompt.toLowerCase();
