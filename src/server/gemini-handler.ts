@@ -10,23 +10,39 @@ function getAiClient(): GoogleGenAI {
   return aiClient;
 }
 
+interface NodeReqLike {
+  complete?: boolean;
+  rawBody?: string | Buffer;
+  on: (event: "data", listener: (chunk: Buffer | string | Uint8Array) => void) => void;
+  once: {
+    (event: "end", listener: () => void): void;
+    (event: "error", listener: (err: unknown) => void): void;
+  };
+}
+
 async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
   try {
-    const nodeReq = (request as any).runtime?.node?.req;
+    const reqWithRuntime = request as unknown as {
+      runtime?: { node?: { req?: NodeReqLike } };
+    };
+    const nodeReq = reqWithRuntime.runtime?.node?.req;
     if (nodeReq) {
       if (nodeReq.complete && nodeReq.rawBody) {
-        const str = typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
+        const str =
+          typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
         return str ? JSON.parse(str) : {};
       }
       const chunks: Buffer[] = [];
       const text = await new Promise<string>((resolve, reject) => {
         const timer = setTimeout(() => resolve(""), 5000);
-        nodeReq.on("data", (chunk: any) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+        nodeReq.on("data", (chunk: Buffer | string | Uint8Array) =>
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)),
+        );
         nodeReq.once("end", () => {
           clearTimeout(timer);
           resolve(Buffer.concat(chunks).toString("utf8"));
         });
-        nodeReq.once("error", (err: any) => {
+        nodeReq.once("error", (err: unknown) => {
           clearTimeout(timer);
           reject(err);
         });
