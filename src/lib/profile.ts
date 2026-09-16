@@ -70,7 +70,8 @@ const SEED_PROFILES: Record<string, Profile> = {
   } as Profile,
 };
 
-export async function getProfileById(id: string) {
+export async function getProfileById(id: string): Promise<Profile | null> {
+  if (!id) return null;
   if (SEED_PROFILES[id]) {
     return SEED_PROFILES[id];
   }
@@ -83,98 +84,15 @@ export async function getProfileById(id: string) {
     // ignore query error
   }
 
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem("guest_user") || localStorage.getItem("opexnal_guest_user");
-      if (raw) {
-        const guest = JSON.parse(raw);
-        if (guest?.id === id || id.startsWith("guest_") || id.startsWith("usr_") || !id) {
-          const custom = guest.profile || {};
-          return {
-            id: id || guest.id || "usr_preview_creator",
-            username: custom.username || guest.user_metadata?.username || "creator",
-            display_name:
-              custom.display_name || guest.user_metadata?.display_name || "Opexnal Creator",
-            bio: custom.bio !== undefined ? custom.bio : "Exploring Opexnal in Guest Mode 🚀",
-            avatar_url: custom.avatar_url || null,
-            website: custom.website || null,
-            is_verified: custom.is_verified ?? true,
-            is_private: custom.is_private ?? false,
-            show_activity_status: custom.show_activity_status ?? true,
-            allow_tags_from: custom.allow_tags_from || "everyone",
-            allow_mentions_from: custom.allow_mentions_from || "everyone",
-            account_type: custom.account_type || "creator",
-            location: custom.location || "India",
-            phone: custom.phone || null,
-            followers_count: custom.followers_count ?? 142,
-            following_count: custom.following_count ?? 88,
-            posts_count: custom.posts_count ?? 3,
-            created_at: custom.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as unknown as Profile;
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return {
-    id,
-    username: "creator",
-    display_name: "Opexnal Creator",
-    bio: "Exploring Opexnal 🚀",
-    avatar_url: null,
-    website: null,
-    is_verified: true,
-    is_private: false,
-    show_activity_status: true,
-    allow_tags_from: "everyone",
-    allow_mentions_from: "everyone",
-    account_type: "creator",
-    location: "India",
-    phone: null,
-    followers_count: 142,
-    following_count: 88,
-    posts_count: 3,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  } as unknown as Profile;
+  return null;
 }
 
-export async function getProfileByUsername(username: string) {
+export async function getProfileByUsername(username: string): Promise<Profile | null> {
+  if (!username) return null;
   const normalized = username.toLowerCase();
   for (const profile of Object.values(SEED_PROFILES)) {
     if (profile.username.toLowerCase() === normalized) {
       return profile;
-    }
-  }
-
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem("guest_user") || localStorage.getItem("opexnal_guest_user");
-      if (raw) {
-        const guest = JSON.parse(raw);
-        if (guest?.user_metadata?.username?.toLowerCase() === normalized) {
-          return {
-            id: guest.id,
-            username: guest.user_metadata.username,
-            display_name: guest.user_metadata.display_name || "Guest Explorer",
-            bio: "Exploring Opexnal in Guest Mode 🚀",
-            avatar_url: null,
-            website: null,
-            is_verified: true,
-            is_private: false,
-            followers_count: 142,
-            following_count: 88,
-            posts_count: 3,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as Profile;
-        }
-      }
-    } catch {
-      // ignore
     }
   }
 

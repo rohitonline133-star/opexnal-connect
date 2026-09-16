@@ -56,26 +56,14 @@ function Privacy() {
     try {
       const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
       if (error) {
-        const raw =
-          localStorage.getItem("opexnal_guest_user") || localStorage.getItem("guest_user");
-        if (raw) {
-          const guest = JSON.parse(raw);
-          guest.profile = { ...(guest.profile || {}), ...patch };
-          localStorage.setItem("opexnal_guest_user", JSON.stringify(guest));
-          localStorage.setItem("guest_user", JSON.stringify(guest));
-        }
+        toast.error(error.message);
+        return;
       }
-    } catch {
-      const raw = localStorage.getItem("opexnal_guest_user") || localStorage.getItem("guest_user");
-      if (raw) {
-        const guest = JSON.parse(raw);
-        guest.profile = { ...(guest.profile || {}), ...patch };
-        localStorage.setItem("opexnal_guest_user", JSON.stringify(guest));
-        localStorage.setItem("guest_user", JSON.stringify(guest));
-      }
+      await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      toast.success("Privacy updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update privacy settings");
     }
-    await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
-    toast.success("Privacy updated");
   }
 
   return (

@@ -111,48 +111,6 @@ function AuthPage() {
     }
   }, [loading, user, navigate, search.redirect]);
 
-  // Helper to establish a local guest session
-  const establishGuestSession = (customUsername?: string, customEmail?: string, id?: string) => {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const finalName = (customUsername || `creator_${randomSuffix}`)
-      .toLowerCase()
-      .replace(/[^a-z0-9._]/g, "");
-    const finalMail = customEmail || `${finalName}@opexnal.user`;
-
-    const guestUserObj = {
-      id: id || `usr_${Date.now()}_${randomSuffix}`,
-      email: finalMail,
-      user_metadata: {
-        username: finalName,
-        display_name: finalName,
-      },
-      app_metadata: {},
-      aud: "authenticated",
-      created_at: new Date().toISOString(),
-    };
-
-    try {
-      sessionStorage.removeItem("opexnal_explicit_signout");
-      localStorage.setItem("opexnal_guest_user", JSON.stringify(guestUserObj));
-      localStorage.setItem("guest_user", JSON.stringify(guestUserObj));
-      window.dispatchEvent(new Event("storage"));
-      window.dispatchEvent(new CustomEvent("opexnal_session_change"));
-    } catch {
-      // ignore
-    }
-
-    return guestUserObj;
-  };
-
-  // Instant demo access - bypasses login completely
-  const handleInstantDemo = () => {
-    setBusy(true);
-    const guest = establishGuestSession();
-    toast.success(`Demo mode activated! Welcome, @${guest.user_metadata.username}`);
-    const destination = (search.redirect || "/home") as string;
-    navigate({ to: destination as never, replace: true });
-  };
-
   // Clear errors when switching modes
   const handleSwitchMode = (newMode: "login" | "signup" | "forgot") => {
     setFormError(null);
@@ -210,24 +168,23 @@ function AuthPage() {
     try {
       if (mode === "signup") {
         const rawInput = email.trim();
-        let finalEmail = "";
+        const effectivePassword = password.trim();
+
+        if (!rawInput.includes("@")) {
+          const msg = "Please enter a valid email address.";
+          setFormError(msg);
+          toast.error(msg);
+          setBusy(false);
+          return;
+        }
+
         let finalUsername = username
           .trim()
           .toLowerCase()
           .replace(/[^a-z0-9._]/g, "");
 
-        if (rawInput.includes("@")) {
-          finalEmail = rawInput.toLowerCase();
-          if (!finalUsername) {
-            finalUsername = (rawInput.split("@")[0] ?? "")
-              .toLowerCase()
-              .replace(/[^a-z0-9._]/g, "");
-          }
-        } else {
-          if (!finalUsername) {
-            finalUsername = rawInput.toLowerCase().replace(/[^a-z0-9._]/g, "");
-          }
-          finalEmail = `${finalUsername || "user"}@opexnal.user`;
+        if (!finalUsername) {
+          finalUsername = (rawInput.split("@")[0] ?? "").toLowerCase().replace(/[^a-z0-9._]/g, "");
         }
 
         if (finalUsername.length < 3) {
@@ -237,10 +194,8 @@ function AuthPage() {
           finalUsername = finalUsername.slice(0, 30);
         }
 
-        const effectivePassword = password.trim() || "opexnal123";
-
         const parsed = signupSchema.safeParse({
-          emailOrUsername: rawInput || finalEmail,
+          emailOrUsername: rawInput,
           username: finalUsername,
           password: effectivePassword,
           confirmPassword: confirmPassword || effectivePassword,
@@ -254,57 +209,31 @@ function AuthPage() {
           return;
         }
 
-        let signedUpUserId: string | undefined;
-
         // 1. Call supabase.auth.signUp()
-        try {
-          const { data: signUpData } = await supabase.auth.signUp({
-            email: finalEmail,
-            password: effectivePassword,
-            options: {
-              emailRedirectTo: `${window.location.origin}/home`,
-              data: {
-                username: finalUsername,
-                display_name: finalUsername,
-              },
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: rawInput.toLowerCase(),
+          password: effectivePassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/home`,
+            data: {
+              username: finalUsername,
+              display_name: finalUsername,
             },
-          });
-          if (signUpData?.user?.id) {
-            signedUpUserId = signUpData.user.id;
-          }
-        } catch {
-          // Supabase signup failure handled by guest fallback
+          },
+        });
+
+        if (signUpError) {
+          setFormError(signUpError.message);
+          toast.error(signUpError.message);
+          setBusy(false);
+          return;
         }
 
-        // 2. Immediately call supabase.auth.signInWithPassword() for instant direct login
-        let sessionCreated = false;
-        try {
-          const { data: loginData } = await supabase.auth.signInWithPassword({
-            email: finalEmail,
-            password: effectivePassword,
-          });
-
-          if (loginData?.session) {
-            sessionCreated = true;
-            try {
-              sessionStorage.removeItem("opexnal_explicit_signout");
-            } catch {
-              // ignore
-            }
-            if (loginData.user?.id) {
-              signedUpUserId = loginData.user.id;
-            }
-          }
-        } catch {
-          // handled below
-        }
-
-        // Upsert profile if Supabase profile exists
-        if (signedUpUserId) {
+        if (signUpData.user?.id) {
           try {
             await supabase.from("profiles").upsert(
               {
-                id: signedUpUserId,
+                id: signUpData.user.id,
                 username: finalUsername,
                 display_name: finalUsername,
               },
@@ -315,15 +244,18 @@ function AuthPage() {
           }
         }
 
-        // 3. Guest Fallback: If Supabase fails, requires confirmation, or no active session
-        if (!sessionCreated) {
-          establishGuestSession(finalUsername, finalEmail, signedUpUserId);
+        if (signUpData.session) {
+          toast.success(`Welcome to Opexnal, @${finalUsername}!`);
+          const destination = (search.redirect || "/home") as string;
+          navigate({ to: destination as never, replace: true });
+          return;
+        } else {
+          // Requires email confirmation
+          setUnconfirmedEmail(true);
+          toast.info("Account created! Please check your email to confirm your registration.");
+          setBusy(false);
+          return;
         }
-
-        toast.success(`Welcome to Opexnal, @${finalUsername}!`);
-        const destination = (search.redirect || "/home") as string;
-        navigate({ to: destination as never, replace: true });
-        return;
       } else if (mode === "login") {
         const rawInput = email.trim();
         const parsed = loginSchema.safeParse({ identifier: rawInput, password });
@@ -335,43 +267,49 @@ function AuthPage() {
           return;
         }
 
-        let targetEmail = rawInput.toLowerCase();
-        let fallbackUsername = rawInput.toLowerCase().replace(/[^a-z0-9._]/g, "");
-        if (rawInput.includes("@")) {
-          fallbackUsername = (rawInput.split("@")[0] ?? "")
-            .toLowerCase()
-            .replace(/[^a-z0-9._]/g, "");
-        } else {
-          targetEmail = `${fallbackUsername || "user"}@opexnal.user`;
-        }
+        const targetEmail = rawInput.toLowerCase();
+        if (!targetEmail.includes("@")) {
+          // Try to look up profile email if username provided
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("username", targetEmail)
+            .maybeSingle();
 
-        let loginSuccess = false;
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: targetEmail,
-            password: parsed.data.password,
-          });
-
-          if (!error && data?.session) {
-            loginSuccess = true;
-            try {
-              sessionStorage.removeItem("opexnal_explicit_signout");
-            } catch {
-              // ignore
-            }
-            toast.success("Welcome back to Opexnal!");
-            const destination = (search.redirect || "/home") as string;
-            navigate({ to: destination as never, replace: true });
+          if (!profile) {
+            const msg = "Account not found. Please log in using your registered email address.";
+            setFormError(msg);
+            toast.error(msg);
+            setBusy(false);
             return;
           }
-        } catch {
-          // Handled by automatic guest fallback
+
+          const msg = "Please enter your registered email address to log in.";
+          setFormError(msg);
+          toast.error(msg);
+          setBusy(false);
+          return;
         }
 
-        // Automatic Guest Fallback so user is never blocked on login form
-        if (!loginSuccess) {
-          establishGuestSession(fallbackUsername, targetEmail);
-          toast.success(`Welcome back to Opexnal, @${fallbackUsername}!`);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: parsed.data.password,
+        });
+
+        if (error) {
+          setFormError(error.message);
+          toast.error(error.message);
+          setBusy(false);
+          return;
+        }
+
+        if (data?.session) {
+          try {
+            sessionStorage.removeItem("opexnal_explicit_signout");
+          } catch {
+            // ignore
+          }
+          toast.success("Welcome back to Opexnal!");
           const destination = (search.redirect || "/home") as string;
           navigate({ to: destination as never, replace: true });
           return;
@@ -406,11 +344,9 @@ function AuthPage() {
         toast.success("Password reset instructions sent to your email.");
       }
     } catch (err) {
-      // In case of unexpected failure, guest fallback keeps app accessible
-      establishGuestSession(username || email);
-      toast.success("Signed in successfully!");
-      const destination = (search.redirect || "/home") as string;
-      navigate({ to: destination as never, replace: true });
+      const msg = err instanceof Error ? err.message : "Authentication failed. Please try again.";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }
@@ -839,20 +775,6 @@ function AuthPage() {
                         ? "Send reset instructions"
                         : "Log in"}
                 </Button>
-
-                {mode !== "forgot" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    onClick={handleInstantDemo}
-                    disabled={busy}
-                    className="w-full h-10 rounded-xl border-dashed border-primary/40 bg-primary/5 text-xs font-semibold text-primary hover:bg-primary/10 hover:border-primary transition-all"
-                  >
-                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                    Instant Demo Access (Skip Auth)
-                  </Button>
-                )}
               </div>
             </form>
           )}
