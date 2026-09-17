@@ -22,19 +22,33 @@ interface NodeReqLike {
 
 async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
   try {
+    // Try standard Request body first
+    try {
+      const cloned = request.clone();
+      const text = await cloned.text();
+      if (text && text.trim().length > 0) {
+        return JSON.parse(text);
+      }
+    } catch {
+      // Body may be locked or streamed via nodeReq
+    }
+
     const reqWithRuntime = request as unknown as {
-      runtime?: { node?: { req?: NodeReqLike } };
+      runtime?: { node?: { req?: NodeReqLike & { readableEnded?: boolean } } };
     };
     const nodeReq = reqWithRuntime.runtime?.node?.req;
     if (nodeReq) {
-      if (nodeReq.complete && nodeReq.rawBody) {
+      if (nodeReq.rawBody) {
         const str =
           typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
         return str ? JSON.parse(str) : {};
       }
+      if (nodeReq.complete || nodeReq.readableEnded) {
+        return {};
+      }
       const chunks: Buffer[] = [];
       const text = await new Promise<string>((resolve, reject) => {
-        const timer = setTimeout(() => resolve(""), 5000);
+        const timer = setTimeout(() => resolve(""), 800);
         nodeReq.on("data", (chunk: Buffer | string | Uint8Array) =>
           chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)),
         );
