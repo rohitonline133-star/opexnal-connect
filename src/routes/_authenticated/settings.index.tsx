@@ -127,7 +127,7 @@ function Settings() {
   }
 
   const username =
-    profile?.username || user?.user_metadata?.username || user?.email?.split("@")[0] || "user";
+    profile?.username || user?.user_metadata?.["username"] || user?.email?.split("@")[0] || "user";
 
   return (
     <AppShell
