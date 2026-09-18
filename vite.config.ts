@@ -3,7 +3,7 @@ import path from "path";
 
 export default defineConfig({
   nitro: {
-    preset: "vercel",
+    preset: "node-server",
   },
   vite: {
     resolve: {

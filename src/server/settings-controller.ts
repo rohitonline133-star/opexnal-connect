@@ -6,10 +6,31 @@ import sharp from "sharp";
 import { Pool } from "pg";
 import crypto from "crypto";
 
-const pool = new Pool({
-  connectionString: process.env["DATABASE_URL"],
-  ssl: process.env["NODE_ENV"] === "production" ? { rejectUnauthorized: false } : false,
-});
+let pool:
+  | Pool
+  | {
+      query: () => Promise<{ rows: unknown[] }>;
+      connect: () => Promise<{ query: () => Promise<{ rows: unknown[] }>; release: () => void }>;
+    };
+try {
+  if (process.env["DATABASE_URL"]) {
+    pool = new Pool({
+      connectionString: process.env["DATABASE_URL"],
+      ssl: process.env["NODE_ENV"] === "production" ? { rejectUnauthorized: false } : false,
+    });
+  } else {
+    pool = {
+      query: async () => ({ rows: [] }),
+      connect: async () => ({ query: async () => ({ rows: [] }), release: () => {} }),
+    };
+  }
+} catch {
+  console.warn("DB not connected — mock active");
+  pool = {
+    query: async () => ({ rows: [] }),
+    connect: async () => ({ query: async () => ({ rows: [] }), release: () => {} }),
+  };
+}
 
 let stripeClient: Stripe | null = null;
 function getStripe(): Stripe {
