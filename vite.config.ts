@@ -2,9 +2,6 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import path from "path";
 
 export default defineConfig({
-  nitro: {
-    preset: "cloudflare-module",
-  },
   vite: {
     resolve: {
       alias: {
@@ -19,5 +16,8 @@ export default defineConfig({
         "@tanstack/query-core",
       ],
     },
+  },
+  nitro: {
+    preset: "node-server",
   },
 });

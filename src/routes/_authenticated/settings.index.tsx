@@ -126,7 +126,8 @@ function Settings() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const username = profile?.username || "creator";
+  const username =
+    profile?.username || user?.user_metadata?.["username"] || user?.email?.split("@")[0] || "user";
 
   return (
     <AppShell
