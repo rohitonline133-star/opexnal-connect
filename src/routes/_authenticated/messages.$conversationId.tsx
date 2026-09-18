@@ -55,7 +55,7 @@ function Conversation() {
   useEffect(() => {
     if (!user) return;
     markConversationRead(conversationId, user.id).catch(() => undefined);
-  }, [conversationId, user?.id, messagesQuery.data?.length]);
+  }, [conversationId, user, messagesQuery.data?.length]);
 
   useEffect(() => {
     const channel = supabase

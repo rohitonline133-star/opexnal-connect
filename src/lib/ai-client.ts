@@ -3,25 +3,25 @@ export interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   timestamp: string;
-  imagePreview?: string;
+  imagePreview?: string | undefined;
 }
 
 export interface AiCreatorOptions {
   tool: "caption" | "reels_idea" | "hashtags" | "bio" | "rewrite" | "image_analysis";
-  topic?: string;
-  tone?: string;
-  language?: string;
-  imageBase64?: string;
-  imageMime?: string;
-  contextText?: string;
+  topic?: string | undefined;
+  tone?: string | undefined;
+  language?: string | undefined;
+  imageBase64?: string | undefined;
+  imageMime?: string | undefined;
+  contextText?: string | undefined;
 }
 
 export async function sendAiChatMessage(params: {
   messages: Array<{ role: "user" | "model"; content: string }>;
-  prompt?: string;
-  language?: string;
-  imageBase64?: string;
-  imageMime?: string;
+  prompt?: string | undefined;
+  language?: string | undefined;
+  imageBase64?: string | undefined;
+  imageMime?: string | undefined;
 }): Promise<string> {
   const response = await fetch("/api/ai/chat", {
     method: "POST",

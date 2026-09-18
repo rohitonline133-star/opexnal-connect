@@ -1,13 +1,62 @@
 import { GoogleGenAI } from "@google/genai";
 
+type NodeIncomingRequest = {
+  complete?: boolean;
+  rawBody?: string | Buffer;
+  on: (event: "data" | "end", listener: (...args: unknown[]) => void) => void;
+  once: (event: "end" | "error", listener: (...args: unknown[]) => void) => void;
+};
+
 let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
   if (!aiClient) {
-    const apiKey = process.env["GEMINI_API_KEY"] || process.env["VITE_GEMINI_API_KEY"] || "";
+    const apiKey = process.env["GEMINI_API_KEY"] || "";
     aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
+}
+
+async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    const nodeReq = (request as Request & { runtime?: { node?: { req?: NodeIncomingRequest } } })
+      .runtime?.node?.req;
+    if (nodeReq) {
+      if (nodeReq.complete && nodeReq.rawBody) {
+        const str =
+          typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
+        return str ? JSON.parse(str) : {};
+      }
+      const chunks: Buffer[] = [];
+      const text = await new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => resolve(""), 5000);
+        nodeReq.on("data", (chunk: unknown) => {
+          if (Buffer.isBuffer(chunk)) {
+            chunks.push(chunk);
+          } else if (typeof chunk === "string") {
+            chunks.push(Buffer.from(chunk, "utf8"));
+          } else if (chunk instanceof Uint8Array) {
+            chunks.push(Buffer.from(chunk));
+          }
+        });
+        nodeReq.once("end", () => {
+          clearTimeout(timer);
+          resolve(Buffer.concat(chunks).toString("utf8"));
+        });
+        nodeReq.once("error", (err: unknown) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+      return text ? JSON.parse(text) : {};
+    }
+
+    const text = await request.text();
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.error("[parseRequestBody] Failed to parse request body:", err);
+    return {};
+  }
 }
 
 export async function handleAiRequest(request: Request): Promise<Response> {
@@ -31,18 +80,19 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  const apiKey = process.env["GEMINI_API_KEY"] || process.env["VITE_GEMINI_API_KEY"];
+  const rawBody = await parseRequestBody(request);
+  const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
     // Graceful fallback if GEMINI_API_KEY is not configured yet
-    return handleFallbackResponse(url.pathname, await request.json().catch(() => ({})));
+    return handleFallbackResponse(url.pathname, rawBody);
   }
 
   const ai = getAiClient();
 
   try {
     if (url.pathname === "/api/ai/chat") {
-      const body = (await request.json()) as {
-        messages: Array<{ role: "user" | "model"; content: string }>;
+      const body = rawBody as {
+        messages?: Array<{ role: "user" | "model"; content: string }>;
         prompt?: string;
         language?: string;
         imageBase64?: string;
@@ -99,7 +149,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.7-flash",
+        model: "gemini-3.6-flash",
         contents: contents as never,
         config: {
           systemInstruction,
@@ -116,7 +166,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
     }
 
     if (url.pathname === "/api/ai/creator-tools") {
-      const body = (await request.json()) as {
+      const body = rawBody as {
         tool: "caption" | "reels_idea" | "hashtags" | "bio" | "rewrite" | "image_analysis";
         topic?: string;
         tone?: string;
@@ -197,7 +247,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
       parts.push({ text: prompt });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.7-flash",
+        model: "gemini-3.6-flash",
         contents: [{ role: "user", parts }] as never,
         config: {
           systemInstruction:
@@ -218,17 +268,8 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("Gemini API error:", err);
-    return new Response(
-      JSON.stringify({
-        error: "AI processing error",
-        message: err.message || "Failed to generate AI response",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    console.error("Gemini API error, falling back to offline creator response:", err.message);
+    return handleFallbackResponse(url.pathname, rawBody);
   }
 }
 

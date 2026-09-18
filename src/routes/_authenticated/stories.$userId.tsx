@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BellOff, Bell, ChevronLeft, Eye, Flag, Loader2, Trash2 } from "lucide-react";
@@ -66,29 +66,35 @@ function StoryViewer() {
   const isOwner = user?.id === userId;
 
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const currentStoragePath = current?.storage_path;
   useEffect(() => {
     let active = true;
     setMediaUrl(null);
-    if (!current) return;
-    resolveStoryMediaUrl(current.storage_path)
+    if (!currentStoragePath) return;
+    resolveStoryMediaUrl(currentStoragePath)
       .then((url) => active && setMediaUrl(url))
       .catch(() => active && setMediaUrl(null));
     return () => {
       active = false;
     };
-  }, [current?.storage_path]);
+  }, [currentStoragePath]);
 
   // Mark seen
+  const currentStoryId = current?.id;
+  const currentUserId = user?.id;
   useEffect(() => {
-    if (!current || !user || isOwner) return;
-    recordStoryView(current.id, user.id).catch(() => undefined);
-  }, [current?.id, user?.id, isOwner]);
+    if (!currentStoryId || !currentUserId || isOwner) return;
+    recordStoryView(currentStoryId, currentUserId).catch(() => undefined);
+  }, [currentStoryId, currentUserId, isOwner]);
 
   function next() {
     setProgress(0);
     if (index + 1 < stories.length) setIndex(index + 1);
     else navigate({ to: "/home" });
   }
+
+  const nextRef = useRef(next);
+  nextRef.current = next;
 
   function prev() {
     setProgress(0);
@@ -97,21 +103,21 @@ function StoryViewer() {
 
   // Progress timer for images (videos advance on ended)
   useEffect(() => {
-    if (!current || paused || current.media_type === "video" || !mediaUrl) return;
+    if (!currentStoryId || paused || current?.media_type === "video" || !mediaUrl) return;
     const step = 50;
     const timer = window.setInterval(() => {
       setProgress((p) => {
         const nextValue = p + (step / STORY_IMAGE_DURATION_MS) * 100;
         if (nextValue >= 100) {
           window.clearInterval(timer);
-          next();
+          nextRef.current();
           return 100;
         }
         return nextValue;
       });
     }, step);
     return () => window.clearInterval(timer);
-  }, [current?.id, paused, mediaUrl]);
+  }, [currentStoryId, current?.media_type, paused, mediaUrl]);
 
   const mutedQuery = useQuery({
     queryKey: ["story-muted", user?.id, userId],
