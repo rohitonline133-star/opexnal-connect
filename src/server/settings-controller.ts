@@ -53,7 +53,7 @@ settingsRouter.post("/ai/moderate-comment", async (req: Request, res: Response) 
     }
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: `Moderate this comment for hate speech or spam: "${commentText}". Return JSON { "flagged": boolean, "reason": string }.`,
     });
     res.json({ success: true, result: response.text });
