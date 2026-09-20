@@ -3,6 +3,11 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { handleAiRequest } from "./server/gemini-handler";
+import {
+  handleSecurityPreflight,
+  handleSecurityApiRoutes,
+  applySecurityHeaders,
+} from "./server/security/security-middleware";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -48,19 +53,53 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      const url = new URL(request.url);
-      if (url.pathname.startsWith("/api/ai/")) {
-        return await handleAiRequest(request);
+      // 1. Defense-in-depth preflight: WAF, rate-limiting, and session validation
+      const preflight = await handleSecurityPreflight(request);
+      if (preflight.blockedResponse) {
+        return preflight.blockedResponse;
       }
 
+      const url = new URL(request.url);
+
+      // 2. Dedicated Security Subsystem API endpoints
+      if (url.pathname.startsWith("/api/security")) {
+        const secResponse = await handleSecurityApiRoutes(request, preflight.clientContext);
+        if (secResponse) return secResponse;
+      }
+
+      // 3. AI Service Endpoints
+      if (url.pathname.startsWith("/api/ai/")) {
+        const aiResponse = await handleAiRequest(request);
+        const newHeaders = new Headers(aiResponse.headers);
+        applySecurityHeaders(newHeaders);
+        return new Response(aiResponse.body, {
+          status: aiResponse.status,
+          statusText: aiResponse.statusText,
+          headers: newHeaders,
+        });
+      }
+
+      // 4. SSR and Application handler
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalizedResponse = await normalizeCatastrophicSsrResponse(response);
+
+      // Enrich all application responses with enterprise security headers
+      const enrichedHeaders = new Headers(normalizedResponse.headers);
+      applySecurityHeaders(enrichedHeaders);
+
+      return new Response(normalizedResponse.body, {
+        status: normalizedResponse.status,
+        statusText: normalizedResponse.statusText,
+        headers: enrichedHeaders,
+      });
     } catch (error) {
       console.error(error);
+      const errorHeaders = new Headers({ "content-type": "text/html; charset=utf-8" });
+      applySecurityHeaders(errorHeaders);
       return new Response(renderErrorPage(), {
         status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
+        headers: errorHeaders,
       });
     }
   },
