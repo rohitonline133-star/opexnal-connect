@@ -197,6 +197,30 @@ export function engageEmergencyContainment(
 }
 
 /**
+ * Checks if an account is currently under emergency containment
+ */
+export function isAccountContained(userId: string): { isContained: boolean; reason?: string } {
+  const q = quarantinedAccounts.get(userId);
+  if (!q) return { isContained: false };
+  if (Date.now() > q.until) {
+    quarantinedAccounts.delete(userId);
+    return { isContained: false };
+  }
+  return { isContained: true, reason: q.reason };
+}
+
+/**
+ * Trigger emergency containment adapter
+ */
+export function triggerEmergencyContainment(params: {
+  userId: string;
+  reason: string;
+  severity?: string;
+}): void {
+  engageEmergencyContainment(params.userId, params.reason, 120);
+}
+
+/**
  * Retrieves list of active sessions for a user
  */
 export function getUserSessions(userId: string, currentSessionId?: string): ActiveUserSession[] {

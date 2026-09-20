@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,10 +80,18 @@ function ResetPassword() {
 
     setBusy(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: parsed.data });
-      if (error) {
-        setFormError(error.message);
-        toast.error(error.message);
+      const res = await fetch("/api/v1/auth/password-reset/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newPassword: parsed.data,
+          code: "verified_session_reset",
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Failed to update password" }));
+        setFormError(body.error || "Failed to update password");
+        toast.error(body.error || "Failed to update password");
         return;
       }
       toast.success("Your password has been successfully updated!");

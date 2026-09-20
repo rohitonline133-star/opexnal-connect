@@ -8,6 +8,7 @@ import {
   handleSecurityApiRoutes,
   applySecurityHeaders,
 } from "./server/security/security-middleware";
+import { handleApiV1Request } from "./server/api/v1/index";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -61,7 +62,26 @@ export default {
 
       const url = new URL(request.url);
 
-      // 2. Dedicated Security Subsystem API endpoints
+      // 2. First-party Versioned Backend API (/api/v1/*)
+      if (url.pathname.startsWith("/api/v1/")) {
+        const apiResponse = await handleApiV1Request(
+          request,
+          preflight.clientContext.ip,
+          preflight.clientContext.userAgent,
+          preflight.clientContext.fingerprint,
+        );
+        if (apiResponse) {
+          const newHeaders = new Headers(apiResponse.headers);
+          applySecurityHeaders(newHeaders);
+          return new Response(apiResponse.body, {
+            status: apiResponse.status,
+            statusText: apiResponse.statusText,
+            headers: newHeaders,
+          });
+        }
+      }
+
+      // 3. Dedicated Security Subsystem API endpoints
       if (url.pathname.startsWith("/api/security")) {
         const secResponse = await handleSecurityApiRoutes(request, preflight.clientContext);
         if (secResponse) return secResponse;

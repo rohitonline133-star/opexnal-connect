@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { User, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { lovable } from "@/integrations/lovable";
 
 const authSearchSchema = z.object({
@@ -65,7 +65,7 @@ function AuthComponent() {
     setLoading(true);
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await authClient.signInWithPassword({
           email,
           password,
         });
@@ -76,19 +76,25 @@ function AuthComponent() {
           return;
         }
 
+        if (data?.requires2fa) {
+          toast.info("Two-factor authentication required");
+          // Prompt for 2FA or redirect
+          return;
+        }
+
         if (data?.session) {
           toast.success("Welcome back to Opexnal!");
           const target = search.redirect || "/home";
           navigate({ to: target, replace: true });
         }
       } else {
-        if (password.length < 6) {
-          setErrorMessage("Password must be at least 6 characters long");
+        if (password.length < 8) {
+          setErrorMessage("Password must be at least 8 characters long");
           return;
         }
 
         const username = email.includes("@") ? email.split("@")[0] : email;
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await authClient.signUp({
           email,
           password,
           options: {
@@ -109,9 +115,6 @@ function AuthComponent() {
           toast.success("Account created successfully!");
           const target = search.redirect || "/home";
           navigate({ to: target, replace: true });
-        } else if (data?.user && !data?.session) {
-          toast.info("Please check your email inbox to confirm your account.");
-          setIsLogin(true);
         }
       }
     } catch (err: unknown) {

@@ -1,25 +1,37 @@
 import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient, AuthUser, AuthSession } from "@/lib/auth-client";
 
 export function useSession() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    // Listen to first-party auth state events
+    const { data: sub } = authClient.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
-
       setSession(nextSession);
+      if (nextSession) {
+        authClient.getUser().then(({ data }) => {
+          if (active) setUser(data.user);
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    // Check existing session
+    authClient.getSession().then(({ data }) => {
       if (!active) return;
-
       setSession(data.session);
+      if (data.session) {
+        authClient.getUser().then(({ data: uData }) => {
+          if (active) setUser(uData.user);
+        });
+      }
       setLoading(false);
     });
 
@@ -31,7 +43,7 @@ export function useSession() {
 
   return {
     session,
-    user: session?.user ?? null,
+    user,
     loading,
   };
 }
