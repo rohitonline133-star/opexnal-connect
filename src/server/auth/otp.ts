@@ -1,9 +1,9 @@
-import { randomInt } from "node:crypto";
+import { randomInt, createHash, timingSafeEqual } from "node:crypto";
 
 export interface OtpRecord {
   target: string; // phone or email
   type: "phone_verification" | "password_reset" | "email_verification";
-  code: string;
+  codeHash: string;
   expiresAt: number;
   attempts: number;
 }
@@ -14,6 +14,10 @@ const otpStore = new Map<string, OtpRecord>();
 const OTP_TTL_MS = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
 
+function hashOtp(code: string): string {
+  return createHash("sha256").update(code.trim()).digest("hex");
+}
+
 /**
  * Generates a cryptographically secure 6-digit numeric OTP.
  */
@@ -23,7 +27,7 @@ export function generateOtp(target: string, type: OtpRecord["type"]): string {
   otpStore.set(key, {
     target: target.toLowerCase().trim(),
     type,
-    code,
+    codeHash: hashOtp(code),
     expiresAt: Date.now() + OTP_TTL_MS,
     attempts: 0,
   });
@@ -53,7 +57,15 @@ export function verifyOtp(
     return { valid: false, message: "Too many failed attempts. Code has been invalidated." };
   }
 
-  if (record.code !== providedCode.trim()) {
+  const providedHash = hashOtp(providedCode);
+  const expectedBuffer = Buffer.from(record.codeHash, "hex");
+  const providedBuffer = Buffer.from(providedHash, "hex");
+
+  const isMatch =
+    expectedBuffer.length === providedBuffer.length &&
+    timingSafeEqual(expectedBuffer, providedBuffer);
+
+  if (!isMatch) {
     return { valid: false, message: "Incorrect verification code. Please try again." };
   }
 

@@ -3,7 +3,7 @@ import { logSecurityEvent } from "./audit-logger";
 export interface RateLimitConfig {
   maxRequests: number;
   windowMs: number;
-  penaltyMs?: number;
+  penaltyMs?: number | undefined;
 }
 
 export interface RateLimitCheckResult {
@@ -11,14 +11,14 @@ export interface RateLimitCheckResult {
   remaining: number;
   limit: number;
   resetMs: number;
-  retryAfterSeconds?: number;
-  reason?: string;
+  retryAfterSeconds?: number | undefined;
+  reason?: string | undefined;
   dimension: "IP" | "ACCOUNT" | "DEVICE" | "ACTION";
 }
 
 interface WindowBucket {
   timestamps: number[];
-  blockedUntil?: number;
+  blockedUntil?: number | undefined;
   violationCount: number;
 }
 
@@ -144,8 +144,8 @@ export const RATE_LIMIT_PROFILES = {
  */
 export function checkMultiDimensionalRateLimit(params: {
   ip: string;
-  userId?: string;
-  fingerprint?: string;
+  userId?: string | undefined;
+  fingerprint?: string | undefined;
   routeCategory: "DEFAULT" | "AUTH_SENSITIVE" | "AI";
   path: string;
 }): RateLimitCheckResult {

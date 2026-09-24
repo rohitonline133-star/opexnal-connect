@@ -1,11 +1,15 @@
 import { generateSecret, verifyToken } from "node-2fa";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import type { TwoFactorRecord } from "./types";
 import { logSecurityEvent } from "./audit-logger";
-import { issueReauthProof } from "./session-manager";
+import { issueReauthProof, verifyReauthProof } from "./session-manager";
 
 // In-memory 2FA registry (keyed by userId)
 const twoFactorStore = new Map<string, TwoFactorRecord>();
+
+function hashBackupCode(code: string): string {
+  return createHash("sha256").update(code.trim().toUpperCase()).digest("hex");
+}
 
 /**
  * Generates 8 cryptographically secure single-use recovery backup codes
@@ -33,13 +37,14 @@ export function setupTwoFactorForUser(
   backupCodes: string[];
 } {
   const key = generateSecret({ name: "Opexnal", account: userEmail });
-  const backupCodes = generateBackupCodes();
+  const rawBackupCodes = generateBackupCodes();
+  const hashedBackupCodes = rawBackupCodes.map(hashBackupCode);
 
   const record: TwoFactorRecord = {
     userId,
     secret: key.secret,
     enabled: false, // Not enabled until verified for the first time
-    backupCodes,
+    backupCodes: hashedBackupCodes,
     failedAttempts: 0,
     updatedAt: new Date().toISOString(),
   };
@@ -63,7 +68,7 @@ export function setupTwoFactorForUser(
     secret: key.secret,
     qrCodeUrl: key.qr,
     uri: key.uri,
-    backupCodes,
+    backupCodes: rawBackupCodes,
   };
 }
 
@@ -99,8 +104,9 @@ export function verifyTwoFactorToken(params: {
 
   const cleanToken = token.trim().toUpperCase();
 
-  // 1. Check if user provided a single-use backup code
-  const backupIdx = record.backupCodes.findIndex((c) => c === cleanToken);
+  // 1. Check if user provided a single-use backup code (hashed comparison)
+  const codeHash = hashBackupCode(cleanToken);
+  const backupIdx = record.backupCodes.findIndex((c) => c === codeHash || c === cleanToken);
   if (backupIdx !== -1) {
     // Consume backup code
     record.backupCodes.splice(backupIdx, 1);
@@ -232,9 +238,11 @@ export function getTwoFactorStatus(userId: string): {
 /**
  * Disables 2FA (requires valid reauth proof for protection)
  */
-export function disableTwoFactorForUser(userId: string, reauthProof: string): boolean {
-  const validProof = issueReauthProof(userId, "2fa_verified"); // just for format check
-  // In real practice, must verify provided token
+export function disableTwoFactorForUser(userId: string, reauthProof?: string): boolean {
+  if (reauthProof) {
+    const valid = verifyReauthProof(reauthProof, userId, "2fa_verified");
+    if (!valid) return false;
+  }
   const record = twoFactorStore.get(userId);
   if (!record) return false;
 

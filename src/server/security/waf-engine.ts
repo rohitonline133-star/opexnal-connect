@@ -195,10 +195,9 @@ export function inspectRequestWithWaf(params: {
     }
   }
 
-  // 6. SQL Injection patterns in query parameters (only check query and specific critical inputs)
-  const queryPayload = decodeURIComponentSafe(`${search}`);
+  // 6. SQL Injection patterns in query parameters and body
   for (const pattern of ATTACK_PATTERNS.SQLI) {
-    if (pattern.test(queryPayload)) {
+    if (pattern.test(payloadToCheck)) {
       logSecurityEvent({
         severity: "CRITICAL",
         eventType: "WAF_SQLI_BLOCKED",
@@ -207,7 +206,7 @@ export function inspectRequestWithWaf(params: {
         fingerprint,
         path: pathname,
         method: params.method,
-        details: { queryPayload, pattern: pattern.source },
+        details: { pattern: pattern.source },
         riskScore: 95,
       });
       return {
@@ -220,6 +219,15 @@ export function inspectRequestWithWaf(params: {
   }
 
   return { blocked: false };
+}
+
+export function sanitizeInput(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 }
 
 function decodeURIComponentSafe(str: string): string {

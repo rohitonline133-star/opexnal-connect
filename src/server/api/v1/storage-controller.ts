@@ -96,7 +96,7 @@ export async function handleStorageRoutes(
       return json({ error: "File not found" }, 404);
     }
 
-    return new Response(file.buffer, {
+    return new Response(new Uint8Array(file.buffer), {
       status: 200,
       headers: {
         "Content-Type": file.mime,
@@ -109,6 +109,9 @@ export async function handleStorageRoutes(
   const publicMatch = pathname.match(/^\/api\/v1\/storage\/public\/(.+)$/);
   if (publicMatch && method === "GET") {
     const storagePath = publicMatch[1];
+    if (!storagePath) {
+      return json({ error: "Path required" }, 400);
+    }
     // Public media bucket check
     if (
       !storagePath.startsWith("avatars/") &&
@@ -123,7 +126,7 @@ export async function handleStorageRoutes(
       return json({ error: "File not found" }, 404);
     }
 
-    return new Response(file.buffer, {
+    return new Response(new Uint8Array(file.buffer), {
       status: 200,
       headers: {
         "Content-Type": file.mime,

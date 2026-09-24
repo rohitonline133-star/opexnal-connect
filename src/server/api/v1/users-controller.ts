@@ -28,7 +28,7 @@ export async function handleUsersRoutes(
       [identifier, identifier],
     );
 
-    if (res.rows.length === 0) {
+    if (res.rows.length === 0 || !res.rows[0]) {
       return json({ error: "Profile not found" }, 404);
     }
 

@@ -13,12 +13,12 @@ export function logSecurityEvent(params: {
   severity: ThreatSeverity;
   eventType: string;
   actionTaken: SecurityActionTaken;
-  userId?: string;
+  userId?: string | undefined;
   ip: string;
   fingerprint: string;
   path: string;
   method: string;
-  details?: Record<string, unknown>;
+  details?: Record<string, unknown> | undefined;
   riskScore: number;
 }): SecurityEvent {
   const event: SecurityEvent = {

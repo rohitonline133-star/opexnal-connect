@@ -166,15 +166,17 @@ export async function handleStoriesRoutes(
   const deleteMatch = pathname.match(/^\/api\/v1\/stories\/([0-9a-f-]{36})$/i);
   if (deleteMatch && method === "DELETE") {
     const storyId = deleteMatch[1];
+    if (!storyId) return json({ error: "Story ID required" }, 400);
     const auth = await requireAuth(request);
 
     const sRes = await dbQuery<{ user_id: string }>("SELECT user_id FROM stories WHERE id = $1", [
       storyId,
     ]);
-    if (sRes.rows.length === 0) return json({ error: "Story not found" }, 404);
+    if (sRes.rows.length === 0 || !sRes.rows[0]) return json({ error: "Story not found" }, 404);
+    const targetStory = sRes.rows[0];
 
-    if (sRes.rows[0].user_id !== auth.user.userId && auth.user.role !== "super_admin") {
-      assertOwnership(sRes.rows[0].user_id, auth.user.userId, "story");
+    if (targetStory.user_id !== auth.user.userId && auth.user.role !== "super_admin") {
+      assertOwnership(targetStory.user_id, auth.user.userId, "story");
     }
 
     await dbQuery("UPDATE stories SET is_deleted = true WHERE id = $1", [storyId]);

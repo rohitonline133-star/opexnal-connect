@@ -69,6 +69,7 @@ export async function handleSettingsAndSecurityRoutes(
   const revokeMatch = pathname.match(/^\/api\/v1\/security\/sessions\/([^/]+)$/);
   if (revokeMatch && method === "DELETE") {
     const targetSessionId = revokeMatch[1];
+    if (!targetSessionId) return json({ error: "Session ID required" }, 400);
     const auth = await requireAuth(request);
 
     // Verify ownership of the session being revoked
@@ -76,7 +77,7 @@ export async function handleSettingsAndSecurityRoutes(
       targetSessionId,
     ]);
 
-    if (sRes.rows.length === 0 || sRes.rows[0].user_id !== auth.user.userId) {
+    if (sRes.rows.length === 0 || !sRes.rows[0] || sRes.rows[0].user_id !== auth.user.userId) {
       return json({ error: "Session not found or access denied" }, 403);
     }
 

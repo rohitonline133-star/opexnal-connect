@@ -82,7 +82,14 @@ const STORAGE_POLICIES: Record<StorageBucket, StoragePolicy> = {
 };
 
 const STORAGE_SECRET =
-  process.env["STORAGE_SECRET_KEY"] || "opexnal_storage_hmac_signing_secret_928172";
+  process.env["STORAGE_SECRET_KEY"] ||
+  (process.env["NODE_ENV"] === "production"
+    ? (() => {
+        throw new Error(
+          "[SECURITY CRITICAL] Mandatory STORAGE_SECRET_KEY is missing in production environment",
+        );
+      })()
+    : "opexnal_storage_hmac_signing_secret_928172");
 const CDN_BASE_URL = process.env["CDN_BASE_URL"] || "";
 const STORAGE_ROOT = resolve(process.cwd(), ".storage");
 
@@ -207,10 +214,20 @@ export function verifySignedStorageUrl(
  * Retrieves file buffer from disk or memory.
  */
 export function getStorageFile(storagePath: string): { buffer: Buffer; mime: string } | null {
+  // Reject path traversal attempts with dot sequences or null bytes
+  if (storagePath.includes("..") || storagePath.includes("\0")) {
+    return null;
+  }
+
   const mem = memoryStorageMap.get(storagePath);
   if (mem) return mem;
 
   const fullPath = resolve(STORAGE_ROOT, storagePath);
+  // Ensure the resolved target path strictly resides within STORAGE_ROOT
+  if (!fullPath.startsWith(STORAGE_ROOT)) {
+    return null;
+  }
+
   if (existsSync(fullPath)) {
     const buffer = readFileSync(fullPath);
     const ext = extname(storagePath).toLowerCase();

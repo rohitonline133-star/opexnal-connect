@@ -61,29 +61,74 @@ async function parseRequestBody(request: Request): Promise<Record<string, unknow
 
 export async function handleAiRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
+  const origin = request.headers.get("origin") || "";
+  const host = request.headers.get("host") || "";
+
+  // Restrictive CORS: only allow same origin or verified origin
+  let allowedOrigin = "";
+  if (origin) {
+    try {
+      const originHost = new URL(origin).host;
+      if (
+        originHost === host ||
+        originHost.includes("localhost") ||
+        originHost.includes("127.0.0.1") ||
+        originHost.includes(".run.app")
+      ) {
+        allowedOrigin = origin;
+      }
+    } catch {
+      // Invalid origin
+    }
+  }
+
+  const corsHeaders: Record<string, string> = allowedOrigin
+    ? {
+        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true",
+      }
+    : {};
 
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
+      headers: corsHeaders,
     });
   }
 
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
+  // Validate payload size (Max 5MB for AI endpoint)
+  const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+  if (contentLength > 5 * 1024 * 1024) {
+    return new Response(JSON.stringify({ error: "Payload Too Large: Request exceeds 5MB limit" }), {
+      status: 413,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
   const rawBody = await parseRequestBody(request);
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
-    // Graceful fallback if GEMINI_API_KEY is not configured yet
+    if (process.env["NODE_ENV"] === "production") {
+      return new Response(
+        JSON.stringify({
+          error: "AI service configuration missing in production. Service temporarily unavailable.",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
+    }
+    // Graceful fallback only in development/preview if GEMINI_API_KEY is not configured yet
     return handleFallbackResponse(url.pathname, rawBody);
   }
 
@@ -161,7 +206,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
 
       return new Response(JSON.stringify({ text: replyText }), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -258,17 +303,26 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
 
       return new Response(JSON.stringify({ result: response.text || "" }), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
     return new Response(JSON.stringify({ error: "Endpoint not found" }), {
       status: 404,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("Gemini API error, falling back to offline creator response:", err.message);
+    console.error("Gemini API error in handleAiRequest:", err.message);
+    if (process.env["NODE_ENV"] === "production") {
+      return new Response(
+        JSON.stringify({ error: "AI generation failed or is temporarily unavailable" }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
+    }
     return handleFallbackResponse(url.pathname, rawBody);
   }
 }

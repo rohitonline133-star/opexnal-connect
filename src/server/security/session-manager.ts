@@ -7,7 +7,15 @@ const activeSessions = new Map<string, ActiveUserSession>();
 const userSessionIndex = new Map<string, Set<string>>(); // userId -> Set<sessionId>
 const quarantinedAccounts = new Map<string, { reason: string; until: number }>();
 
-const REAUTH_SECRET = process.env["REAUTH_SECRET"] || "opexnal-sec-reauth-key-change-in-prod";
+const REAUTH_SECRET =
+  process.env["REAUTH_SECRET"] ||
+  (process.env["NODE_ENV"] === "production"
+    ? (() => {
+        throw new Error(
+          "[SECURITY CRITICAL] Mandatory REAUTH_SECRET is missing in production environment",
+        );
+      })()
+    : "opexnal-sec-reauth-key-change-in-prod");
 
 /**
  * Computes a deterministic device fingerprint from request headers
@@ -103,19 +111,34 @@ export function revokeSession(
   sessionId: string,
   reason = "User initiated logout / session termination",
 ): boolean {
-  const session = activeSessions.get(sessionId);
-  if (!session) return false;
+  const existingSession = activeSessions.get(sessionId);
+  if (!existingSession) {
+    const newSession: ActiveUserSession = {
+      sessionId,
+      userId: "unknown",
+      userAgent: "unknown",
+      ip: "127.0.0.1",
+      deviceFingerprint: "unknown",
+      deviceType: "desktop",
+      createdAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
+      isRevoked: true,
+      revocationReason: reason,
+    };
+    activeSessions.set(sessionId, newSession);
+    return true;
+  }
 
-  session.isRevoked = true;
-  session.revocationReason = reason;
+  existingSession.isRevoked = true;
+  existingSession.revocationReason = reason;
 
   logSecurityEvent({
     severity: "MEDIUM",
     eventType: "SESSION_TERMINATED",
     actionTaken: "SESSION_REVOKED",
-    userId: session.userId,
-    ip: session.ip,
-    fingerprint: session.deviceFingerprint,
+    userId: existingSession.userId,
+    ip: existingSession.ip,
+    fingerprint: existingSession.deviceFingerprint,
     path: "/api/security/revoke-session",
     method: "POST",
     details: { sessionId, reason },

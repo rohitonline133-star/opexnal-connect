@@ -75,11 +75,17 @@ async function safeJsonParse<T = Record<string, unknown>>(request: Request): Pro
  * Central security gatekeeper invoked on all incoming requests
  */
 export async function handleSecurityPreflight(request: Request): Promise<{
-  blockedResponse?: Response;
-  clientContext: { ip: string; fingerprint: string; userId?: string };
+  blockedResponse?: Response | undefined;
+  clientContext: {
+    ip: string;
+    fingerprint: string;
+    userId?: string | undefined;
+    userAgent?: string | undefined;
+  };
 }> {
   const url = new URL(request.url);
   const ip = extractClientIp(request);
+  const userAgent = request.headers.get("user-agent") || undefined;
   const fingerprint = computeDeviceFingerprint(request.headers, ip);
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
@@ -106,11 +112,46 @@ export async function handleSecurityPreflight(request: Request): Promise<{
         }),
         { status: wafResult.statusCode || 403, headers },
       ),
-      clientContext: { ip, fingerprint, userId },
+      clientContext: { ip, fingerprint, userId, userAgent },
     };
   }
 
-  // 2. Layer 2: Multi-dimensional Rate Limiting
+  // 2. CSRF & Cross-Origin validation for state-changing API mutations
+  if (
+    ["POST", "PUT", "PATCH", "DELETE"].includes(request.method.toUpperCase()) &&
+    (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/"))
+  ) {
+    const origin = request.headers.get("origin");
+    const host = request.headers.get("host");
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (
+          originHost !== host &&
+          !originHost.includes("localhost") &&
+          !originHost.includes("127.0.0.1") &&
+          !originHost.includes(".run.app")
+        ) {
+          const headers = new Headers({ "Content-Type": "application/json" });
+          applySecurityHeaders(headers);
+          return {
+            blockedResponse: new Response(
+              JSON.stringify({
+                error: "CSRF_BLOCKED",
+                message: "Cross-site request forgery protection rejected this cross-origin request",
+              }),
+              { status: 403, headers },
+            ),
+            clientContext: { ip, fingerprint, userId, userAgent },
+          };
+        }
+      } catch {
+        // Ignore parsing errors
+      }
+    }
+  }
+
+  // 3. Layer 3: Multi-dimensional Rate Limiting
   const routeCategory =
     url.pathname.includes("/2fa") ||
     url.pathname.includes("/auth") ||
@@ -147,11 +188,11 @@ export async function handleSecurityPreflight(request: Request): Promise<{
         }),
         { status: 429, headers },
       ),
-      clientContext: { ip, fingerprint, userId },
+      clientContext: { ip, fingerprint, userId, userAgent },
     };
   }
 
-  // 3. Layer 3: Server-side Session Status and Revocation Enforcement
+  // 4. Layer 4: Server-side Session Status and Revocation Enforcement
   const sessionId = request.headers.get("x-session-id") || token?.slice(-16);
   if (sessionId && userId) {
     const status = validateSessionStatus(sessionId, userId);
@@ -179,7 +220,7 @@ export async function handleSecurityPreflight(request: Request): Promise<{
           }),
           { status: 401, headers },
         ),
-        clientContext: { ip, fingerprint, userId },
+        clientContext: { ip, fingerprint, userId, userAgent },
       };
     }
 
@@ -193,7 +234,7 @@ export async function handleSecurityPreflight(request: Request): Promise<{
     });
   }
 
-  return { clientContext: { ip, fingerprint, userId } };
+  return { clientContext: { ip, fingerprint, userId, userAgent } };
 }
 
 /**
@@ -201,7 +242,12 @@ export async function handleSecurityPreflight(request: Request): Promise<{
  */
 export async function handleSecurityApiRoutes(
   request: Request,
-  context: { ip: string; fingerprint: string; userId?: string },
+  context: {
+    ip: string;
+    fingerprint: string;
+    userId?: string | undefined;
+    userAgent?: string | undefined;
+  },
 ): Promise<Response | null> {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/security")) {
@@ -237,19 +283,39 @@ export async function handleSecurityApiRoutes(
     );
   }
 
+  // Protected security routes require authenticated user ID
+  const requiresAuthRoutes = [
+    "/api/security/2fa/status",
+    "/api/security/2fa/setup",
+    "/api/security/2fa/verify",
+    "/api/security/2fa/disable",
+    "/api/security/sessions",
+    "/api/security/sessions/revoke",
+    "/api/security/sessions/revoke-others",
+    "/api/security/containment",
+  ];
+
+  if (requiresAuthRoutes.includes(url.pathname) && !currentUserId) {
+    return new Response(
+      JSON.stringify({
+        error: "UNAUTHORIZED",
+        message: "Authentication required to access security controls",
+      }),
+      { status: 401, headers },
+    );
+  }
+
   // Endpoint: GET /api/security/2fa/status
   if (url.pathname === "/api/security/2fa/status" && request.method === "GET") {
-    const targetUser = currentUserId || "default_user";
-    const status = getTwoFactorStatus(targetUser);
+    const status = getTwoFactorStatus(currentUserId!);
     return new Response(JSON.stringify({ success: true, ...status }), { status: 200, headers });
   }
 
   // Endpoint: POST /api/security/2fa/setup
   if (url.pathname === "/api/security/2fa/setup" && request.method === "POST") {
     const body = await safeJsonParse<{ email?: string }>(request);
-    const targetUser = currentUserId || "default_user";
     const email = body.email || "user@opexnal.com";
-    const result = setupTwoFactorForUser(targetUser, email);
+    const result = setupTwoFactorForUser(currentUserId!, email);
 
     return new Response(JSON.stringify({ success: true, ...result }), { status: 200, headers });
   }
@@ -265,9 +331,8 @@ export async function handleSecurityApiRoutes(
       });
     }
 
-    const targetUser = currentUserId || "default_user";
     const verifyResult = verifyTwoFactorToken({
-      userId: targetUser,
+      userId: currentUserId!,
       token: body.token,
       ip,
       fingerprint,
@@ -279,10 +344,37 @@ export async function handleSecurityApiRoutes(
     });
   }
 
+  // Endpoint: POST /api/security/2fa/disable
+  if (url.pathname === "/api/security/2fa/disable" && request.method === "POST") {
+    const body = await safeJsonParse<{ token?: string; reauthProof?: string }>(request);
+    let proof = body.reauthProof;
+    if (!proof && body.token) {
+      const v = verifyTwoFactorToken({
+        userId: currentUserId!,
+        token: body.token,
+        ip,
+        fingerprint,
+      });
+      if (v.success && v.reauthProof) {
+        proof = v.reauthProof;
+      }
+    }
+    if (!proof || !verifyReauthProof(proof, currentUserId!, "2fa_verified")) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Valid 2FA verification token or reauth proof required",
+        }),
+        { status: 403, headers },
+      );
+    }
+    const disabled = disableTwoFactorForUser(currentUserId!, proof);
+    return new Response(JSON.stringify({ success: disabled }), { status: 200, headers });
+  }
+
   // Endpoint: GET /api/security/sessions
   if (url.pathname === "/api/security/sessions" && request.method === "GET") {
-    const targetUser = currentUserId || "default_user";
-    const sessions = getUserSessions(targetUser, currentSessionId);
+    const sessions = getUserSessions(currentUserId!, currentSessionId);
     return new Response(JSON.stringify({ success: true, sessions }), { status: 200, headers });
   }
 
@@ -306,8 +398,7 @@ export async function handleSecurityApiRoutes(
 
   // Endpoint: POST /api/security/sessions/revoke-others
   if (url.pathname === "/api/security/sessions/revoke-others" && request.method === "POST") {
-    const targetUser = currentUserId || "default_user";
-    const count = revokeAllOtherSessions(targetUser, currentSessionId);
+    const count = revokeAllOtherSessions(currentUserId!, currentSessionId);
     return new Response(JSON.stringify({ success: true, count }), { status: 200, headers });
   }
 
@@ -315,9 +406,8 @@ export async function handleSecurityApiRoutes(
   if (url.pathname === "/api/security/containment" && request.method === "POST") {
     const body = await safeJsonParse<{ reason?: string }>(request);
 
-    const targetUser = currentUserId || "default_user";
     engageEmergencyContainment(
-      targetUser,
+      currentUserId!,
       body.reason || "Suspicious automated compromise detected",
       120,
     );

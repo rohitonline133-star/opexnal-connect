@@ -47,8 +47,8 @@ interface SecurityLogItem {
 }
 
 function SecuritySettingsPage() {
-  const { session } = useSession();
-  const userEmail = session?.user?.email || "user@opexnal.com";
+  const { user } = useSession();
+  const userEmail = user?.email || "user@opexnal.com";
 
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [securityLogs, setSecurityLogs] = useState<SecurityLogItem[]>([]);

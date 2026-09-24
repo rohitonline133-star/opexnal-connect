@@ -40,7 +40,7 @@ export async function handleReelsRoutes(
       "SELECT * FROM reels WHERE id = $1 AND is_deleted = false",
       [reelId],
     );
-    if (res.rows.length === 0) {
+    if (res.rows.length === 0 || !res.rows[0]) {
       return json({ error: "Reel not found" }, 404);
     }
 
@@ -102,6 +102,7 @@ export async function handleReelsRoutes(
     });
 
     const res = await dbQuery("SELECT * FROM reels WHERE id = $1", [reelId]);
+    if (!res.rows[0]) return json({ error: "Reel creation failed" }, 500);
     const reel = await enrichReel(res.rows[0], auth.user.userId);
     return json({ reel }, 201);
   }
@@ -109,17 +110,19 @@ export async function handleReelsRoutes(
   // DELETE /api/v1/reels/:id (IDOR Protection)
   if (singleReelMatch && method === "DELETE") {
     const reelId = singleReelMatch[1];
+    if (!reelId) return json({ error: "Invalid reel ID" }, 400);
     const auth = await requireAuth(request);
 
     const rRes = await dbQuery<{ user_id: string }>("SELECT user_id FROM reels WHERE id = $1", [
       reelId,
     ]);
-    if (rRes.rows.length === 0) {
+    if (rRes.rows.length === 0 || !rRes.rows[0]) {
       return json({ error: "Reel not found" }, 404);
     }
+    const targetReel = rRes.rows[0];
 
-    if (rRes.rows[0].user_id !== auth.user.userId && auth.user.role !== "super_admin") {
-      assertOwnership(rRes.rows[0].user_id, auth.user.userId, "reel");
+    if (targetReel.user_id !== auth.user.userId && auth.user.role !== "super_admin") {
+      assertOwnership(targetReel.user_id, auth.user.userId, "reel");
     }
 
     await withTransaction(async (client) => {

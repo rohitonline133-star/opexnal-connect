@@ -78,9 +78,39 @@ export const inMemoryDb = new InMemoryDatabaseStore();
 
 let realPool: Pool | null = null;
 
+function getPostgresSslConfig(): boolean | { rejectUnauthorized: boolean; ca?: string } {
+  if (process.env["NODE_ENV"] !== "production") {
+    return false;
+  }
+  // Production requires TLS with valid CA verification
+  if (process.env["DATABASE_SSL_CA"]) {
+    return {
+      rejectUnauthorized: true,
+      ca: process.env["DATABASE_SSL_CA"],
+    };
+  }
+  return {
+    rejectUnauthorized: true,
+  };
+}
+
 export function getDatabasePool(): Pool | null {
   if (realPool) return realPool;
   const dbUrl = process.env["DATABASE_URL"];
+
+  if (process.env["NODE_ENV"] === "production") {
+    if (
+      !dbUrl ||
+      dbUrl.trim().length === 0 ||
+      dbUrl.includes("mock") ||
+      dbUrl.includes("placeholder")
+    ) {
+      throw new Error(
+        "[SECURITY CRITICAL] Mandatory DATABASE_URL is missing or invalid in production environment. Failing closed.",
+      );
+    }
+  }
+
   if (
     dbUrl &&
     dbUrl.trim().length > 0 &&
@@ -90,7 +120,7 @@ export function getDatabasePool(): Pool | null {
     try {
       realPool = new Pool({
         connectionString: dbUrl,
-        ssl: process.env["NODE_ENV"] === "production" ? { rejectUnauthorized: false } : false,
+        ssl: getPostgresSslConfig(),
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 5000,
@@ -100,6 +130,9 @@ export function getDatabasePool(): Pool | null {
       });
       return realPool;
     } catch (e) {
+      if (process.env["NODE_ENV"] === "production") {
+        throw new Error(`[SECURITY CRITICAL] PostgreSQL connection failed in production: ${e}`);
+      }
       console.warn("[POSTGRESQL] Connection failed, falling back to ACID in-memory store:", e);
       return null;
     }
@@ -123,6 +156,12 @@ export async function dbQuery<T = Record<string, unknown>>(
       console.error(`[POSTGRESQL ERROR] Failed SQL: ${text}`, err);
       throw err;
     }
+  }
+
+  if (process.env["NODE_ENV"] === "production") {
+    throw new Error(
+      "[SECURITY CRITICAL] Database connection unavailable in production. Failing closed.",
+    );
   }
 
   // Fallback in-memory ACID store simulator for standalone execution & testing
@@ -196,6 +235,9 @@ function executeInMemoryQuery<T = Record<string, unknown>>(
     }
     if (!newRecord["updated_at"]) {
       newRecord["updated_at"] = new Date().toISOString();
+    }
+    if (tableName === "sessions" && newRecord["is_active"] === undefined) {
+      newRecord["is_active"] = true;
     }
 
     const idKey = String(newRecord["id"] ?? randomUUID());

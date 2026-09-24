@@ -76,6 +76,7 @@ export async function handlePostsRoutes(
   const singlePostMatch = pathname.match(/^\/api\/v1\/posts\/([0-9a-f-]{36})$/i);
   if (singlePostMatch && method === "GET") {
     const postId = singlePostMatch[1];
+    if (!postId) return json({ error: "Invalid post ID" }, 400);
     const auth = await extractAuth(request);
     const currentUserId = auth?.user.userId || null;
 
@@ -98,7 +99,7 @@ export async function handlePostsRoutes(
       visibility?: string;
     };
 
-    if (!body.mediaUrls || body.mediaUrls.length === 0) {
+    if (!body.mediaUrls || !Array.isArray(body.mediaUrls) || body.mediaUrls.length === 0) {
       return json({ error: "At least one media item is required to create a post" }, 400);
     }
 
@@ -123,8 +124,10 @@ export async function handlePostsRoutes(
       );
 
       // 2. Insert media items
-      for (let i = 0; i < body.mediaUrls.length; i++) {
-        const url = body.mediaUrls[i];
+      const mediaUrls = body.mediaUrls || [];
+      for (let i = 0; i < mediaUrls.length; i++) {
+        const url = mediaUrls[i];
+        if (!url) continue;
         const isVideo = url.endsWith(".mp4") || url.endsWith(".mov") || url.includes("video");
         await client.query(
           `INSERT INTO post_media (id, post_id, user_id, storage_path, media_type, position, created_at)
@@ -151,7 +154,9 @@ export async function handlePostsRoutes(
     });
 
     const createdPostRes = await dbQuery("SELECT * FROM posts WHERE id = $1", [postId]);
-    const post = await enrichPost(createdPostRes.rows[0], auth.user.userId);
+    const createdPost = createdPostRes.rows[0];
+    if (!createdPost) return json({ error: "Post creation failed" }, 500);
+    const post = await enrichPost(createdPost, auth.user.userId);
 
     publishRealtimeEvent("feed", "post:created", { postId, userId: auth.user.userId });
     return json({ post }, 201);
@@ -160,18 +165,20 @@ export async function handlePostsRoutes(
   // DELETE /api/v1/posts/:id (IDOR verification)
   if (singlePostMatch && method === "DELETE") {
     const postId = singlePostMatch[1];
+    if (!postId) return json({ error: "Invalid post ID" }, 400);
     const auth = await requireAuth(request);
 
     const postRes = await dbQuery<{ user_id: string }>("SELECT user_id FROM posts WHERE id = $1", [
       postId,
     ]);
-    if (postRes.rows.length === 0) {
+    if (postRes.rows.length === 0 || !postRes.rows[0]) {
       return json({ error: "Post not found" }, 404);
     }
+    const targetPost = postRes.rows[0];
 
     // IDOR Protection: verify that requesting user owns this post or is super_admin
-    if (postRes.rows[0].user_id !== auth.user.userId && auth.user.role !== "super_admin") {
-      assertOwnership(postRes.rows[0].user_id, auth.user.userId, "post");
+    if (targetPost.user_id !== auth.user.userId && auth.user.role !== "super_admin") {
+      assertOwnership(targetPost.user_id, auth.user.userId, "post");
     }
 
     await withTransaction(async (client) => {
@@ -190,6 +197,7 @@ export async function handlePostsRoutes(
   const likeMatch = pathname.match(/^\/api\/v1\/posts\/([0-9a-f-]{36})\/like$/i);
   if (likeMatch && method === "POST") {
     const postId = likeMatch[1];
+    if (!postId) return json({ error: "Invalid post ID" }, 400);
     const auth = await requireAuth(request);
 
     // Check post exists
@@ -197,7 +205,7 @@ export async function handlePostsRoutes(
       "SELECT user_id FROM posts WHERE id = $1 AND is_deleted = false",
       [postId],
     );
-    if (pCheck.rows.length === 0) return json({ error: "Post not found" }, 404);
+    if (pCheck.rows.length === 0 || !pCheck.rows[0]) return json({ error: "Post not found" }, 404);
 
     const existing = await dbQuery("SELECT id FROM likes WHERE user_id = $1 AND post_id = $2", [
       auth.user.userId,
@@ -215,7 +223,7 @@ export async function handlePostsRoutes(
         ]);
 
         // Notify post owner if not self
-        const ownerId = pCheck.rows[0].user_id;
+        const ownerId = pCheck.rows[0]!.user_id;
         if (ownerId !== auth.user.userId) {
           await client.query(
             `INSERT INTO notifications (id, user_id, actor_id, type, entity_type, entity_id, message, created_at)

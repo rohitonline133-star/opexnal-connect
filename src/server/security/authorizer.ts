@@ -80,12 +80,16 @@ export function assertOwnership(
 export async function authorizePostAccess(
   postId: string,
   currentUserId: string | null,
-): Promise<{ allowed: boolean; reason?: string; post?: Record<string, unknown> }> {
+): Promise<{
+  allowed: boolean;
+  reason?: string | undefined;
+  post?: Record<string, unknown> | undefined;
+}> {
   const res = await dbQuery<Record<string, unknown>>(
     "SELECT * FROM posts WHERE id = $1 AND is_deleted = false",
     [postId],
   );
-  if (res.rows.length === 0) {
+  if (res.rows.length === 0 || !res.rows[0]) {
     return { allowed: false, reason: "Post not found or has been deleted" };
   }
   const post = res.rows[0];
@@ -136,12 +140,12 @@ export async function authorizePostAccess(
 export async function authorizeConversationAccess(
   conversationId: string,
   currentUserId: string,
-): Promise<{ allowed: boolean; membership?: Record<string, unknown> }> {
+): Promise<{ allowed: boolean; membership?: Record<string, unknown> | undefined }> {
   const memberRes = await dbQuery(
     "SELECT * FROM conversation_members WHERE conversation_id = $1 AND user_id = $2",
     [conversationId, currentUserId],
   );
-  if (memberRes.rows.length === 0) {
+  if (memberRes.rows.length === 0 || !memberRes.rows[0]) {
     return { allowed: false };
   }
   return { allowed: true, membership: memberRes.rows[0] };
@@ -158,7 +162,7 @@ export async function authorizeCommentDelete(
     "SELECT user_id, post_id FROM comments WHERE id = $1",
     [commentId],
   );
-  if (cRes.rows.length === 0) return false;
+  if (cRes.rows.length === 0 || !cRes.rows[0]) return false;
   const comment = cRes.rows[0];
 
   // Comment author can delete
@@ -168,7 +172,7 @@ export async function authorizeCommentDelete(
   const pRes = await dbQuery<{ user_id: string }>("SELECT user_id FROM posts WHERE id = $1", [
     comment.post_id,
   ]);
-  if (pRes.rows.length > 0 && pRes.rows[0].user_id === currentUserId) {
+  if (pRes.rows.length > 0 && pRes.rows[0] && pRes.rows[0].user_id === currentUserId) {
     return true;
   }
 

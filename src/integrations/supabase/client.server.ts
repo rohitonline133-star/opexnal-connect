@@ -33,25 +33,36 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseAdminClient() {
+  const isProd = process.env["NODE_ENV"] === "production";
   const SUPABASE_URL =
     process.env["SUPABASE_URL"] ||
     process.env["VITE_SUPABASE_URL"] ||
     (process.env["SUPABASE_PROJECT_ID"]
       ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
-      : undefined) ||
-    "https://cvzloydcxjjpjydzjyhw.supabase.co";
-  const SUPABASE_SERVICE_ROLE_KEY =
-    process.env["SUPABASE_SERVICE_ROLE_KEY"] || "mock-service-role-key";
+      : undefined);
 
-  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
+  const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+
+  if (isProd) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error(
+        "[SECURITY CRITICAL] Supabase service role credentials missing in production. Failing closed.",
+      );
+    }
+  }
+
+  const effectiveUrl = SUPABASE_URL || "https://cvzloydcxjjpjydzjyhw.supabase.co";
+  const effectiveKey = SUPABASE_SERVICE_ROLE_KEY || "dev-preview-service-role-key";
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.warn(
-      "[Supabase Admin] Supabase service role credentials not found in env. Running with fallback credentials for preview.",
+      "[Supabase Admin] Supabase service role credentials not found in env. Running with non-production preview credentials.",
     );
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient<Database>(effectiveUrl, effectiveKey, {
     global: {
-      fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY),
+      fetch: createSupabaseFetch(effectiveKey),
     },
     auth: {
       storage: undefined,

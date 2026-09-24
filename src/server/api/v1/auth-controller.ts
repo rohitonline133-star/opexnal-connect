@@ -4,6 +4,7 @@ import {
   completeTwoFactorLogin,
   logoutSession,
   validateUserSession,
+  rotateUserTokens,
 } from "../../auth/auth-service";
 import { generateOtp, verifyOtp } from "../../auth/otp";
 import { extractAuth, requireAuth } from "../../security/authorizer";
@@ -57,7 +58,7 @@ export async function handleAuthRoutes(
         return json({ error: res.message }, 400);
       }
       return json(res, 201, {
-        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
       });
     } catch (e: unknown) {
       return json({ error: e instanceof Error ? e.message : "Registration failed" }, 500);
@@ -90,7 +91,7 @@ export async function handleAuthRoutes(
         return json(res, 200);
       }
       return json(res, 200, {
-        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
       });
     } catch (e: unknown) {
       return json({ error: e instanceof Error ? e.message : "Login failed" }, 500);
@@ -115,11 +116,61 @@ export async function handleAuthRoutes(
         return json({ error: res.message }, 401);
       }
       return json(res, 200, {
-        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`,
+        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
       });
     } catch (e: unknown) {
       return json({ error: e instanceof Error ? e.message : "2FA verification failed" }, 500);
     }
+  }
+
+  // POST /api/v1/auth/refresh (Token rotation & reuse rejection)
+  if (pathname === "/api/v1/auth/refresh" && method === "POST") {
+    try {
+      const body = (await request.json()) as { refreshToken?: string };
+      if (!body.refreshToken) {
+        return json({ error: "refreshToken is required" }, 400);
+      }
+      const res = await rotateUserTokens(body.refreshToken);
+      if (!res.success) {
+        return json(
+          { error: res.message, reused: res.reused },
+          res.reused ? 403 : 401,
+          res.reused
+            ? { "Set-Cookie": "opexnal_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0" }
+            : {},
+        );
+      }
+      return json(res, 200, {
+        "Set-Cookie": `opexnal_token=${res.token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`,
+      });
+    } catch (e: unknown) {
+      return json({ error: e instanceof Error ? e.message : "Token refresh failed" }, 500);
+    }
+  }
+
+  // POST /api/v1/auth/email/request-otp (Email verification initiation)
+  if (pathname === "/api/v1/auth/email/request-otp" && method === "POST") {
+    const body = (await request.json()) as { email?: string };
+    if (!body.email) return json({ error: "Email is required" }, 400);
+    const otp = generateOtp(body.email, "email_verification");
+    const isDev = process.env["NODE_ENV"] !== "production";
+    return json({
+      success: true,
+      message: "Email verification OTP sent",
+      ...(isDev ? { testOtp: otp } : {}),
+    });
+  }
+
+  // POST /api/v1/auth/email/verify-otp (Email verification completion)
+  if (pathname === "/api/v1/auth/email/verify-otp" && method === "POST") {
+    const body = (await request.json()) as { email?: string; code?: string };
+    if (!body.email || !body.code) return json({ error: "Email and code are required" }, 400);
+    const check = verifyOtp(body.email, "email_verification", body.code);
+    if (!check.valid) return json({ error: check.message }, 400);
+    await dbQuery("UPDATE users SET email_verified = true WHERE email = $1", [
+      body.email.toLowerCase().trim(),
+    ]);
+    return json({ success: true, message: "Email successfully verified" });
   }
 
   // POST /api/v1/auth/logout
@@ -129,7 +180,7 @@ export async function handleAuthRoutes(
       await logoutSession(auth.sessionId);
     }
     return json({ success: true, message: "Logged out successfully" }, 200, {
-      "Set-Cookie": "opexnal_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
+      "Set-Cookie": "opexnal_token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
     });
   }
 
@@ -164,7 +215,12 @@ export async function handleAuthRoutes(
     const body = (await request.json()) as { email?: string };
     if (!body.email) return json({ error: "Email is required" }, 400);
     const otp = generateOtp(body.email, "password_reset");
-    return json({ success: true, message: "Password reset code sent to email", testOtp: otp });
+    const isDev = process.env["NODE_ENV"] !== "production";
+    return json({
+      success: true,
+      message: "Password reset code sent to email",
+      ...(isDev ? { testOtp: otp } : {}),
+    });
   }
 
   // POST /api/v1/auth/password-reset/confirm
@@ -190,7 +246,12 @@ export async function handleAuthRoutes(
     const body = (await request.json()) as { phone?: string };
     if (!body.phone) return json({ error: "Phone number is required" }, 400);
     const otp = generateOtp(body.phone, "phone_verification");
-    return json({ success: true, message: "Phone OTP sent", testOtp: otp });
+    const isDev = process.env["NODE_ENV"] !== "production";
+    return json({
+      success: true,
+      message: "Phone OTP sent",
+      ...(isDev ? { testOtp: otp } : {}),
+    });
   }
 
   // POST /api/v1/auth/phone/verify-otp

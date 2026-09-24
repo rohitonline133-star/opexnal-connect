@@ -74,6 +74,7 @@ export async function handleCommentsRoutes(
     if (!body.postId || !body.text || body.text.trim().length === 0) {
       return json({ error: "postId and non-empty text are required" }, 400);
     }
+    const text = body.text.trim();
 
     const commentId = randomUUID();
     const now = new Date().toISOString();
@@ -82,21 +83,14 @@ export async function handleCommentsRoutes(
       "SELECT user_id FROM posts WHERE id = $1 AND is_deleted = false",
       [body.postId],
     );
-    if (postRes.rows.length === 0) return json({ error: "Post not found" }, 404);
+    if (postRes.rows.length === 0 || !postRes.rows[0])
+      return json({ error: "Post not found" }, 404);
 
     await withTransaction(async (client) => {
       await client.query(
         `INSERT INTO comments (id, post_id, user_id, parent_id, text, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          commentId,
-          body.postId,
-          auth.user.userId,
-          body.parentId || null,
-          body.text.trim(),
-          now,
-          now,
-        ],
+        [commentId, body.postId, auth.user.userId, body.parentId || null, text, now, now],
       );
 
       await client.query("UPDATE posts SET comments_count = comments_count + 1 WHERE id = $1", [
@@ -104,8 +98,8 @@ export async function handleCommentsRoutes(
       ]);
 
       // Notify post author if not self
-      const postOwnerId = postRes.rows[0].user_id;
-      if (postOwnerId !== auth.user.userId) {
+      const postOwnerId = postRes.rows[0]?.user_id;
+      if (postOwnerId && postOwnerId !== auth.user.userId) {
         await client.query(
           `INSERT INTO notifications (id, user_id, actor_id, type, entity_type, entity_id, message, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, now())`,
@@ -116,7 +110,7 @@ export async function handleCommentsRoutes(
             "comment",
             "post",
             body.postId,
-            `@${auth.user.username} commented on your post: "${body.text.slice(0, 40)}"`,
+            `@${auth.user.username} commented on your post: "${text.slice(0, 40)}"`,
           ],
         );
         publishRealtimeEvent(`user:${postOwnerId}`, "notification:new", {
@@ -137,6 +131,7 @@ export async function handleCommentsRoutes(
   const deleteMatch = pathname.match(/^\/api\/v1\/comments\/([0-9a-f-]{36})$/i);
   if (deleteMatch && method === "DELETE") {
     const commentId = deleteMatch[1];
+    if (!commentId) return json({ error: "Invalid comment ID" }, 400);
     const auth = await requireAuth(request);
 
     const allowed = await authorizeCommentDelete(commentId, auth.user.userId);

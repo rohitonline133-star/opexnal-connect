@@ -14,7 +14,7 @@ export interface SecurityEvent {
   severity: ThreatSeverity;
   eventType: string;
   actionTaken: SecurityActionTaken;
-  userId?: string;
+  userId?: string | undefined;
   ip: string;
   fingerprint: string;
   path: string;
@@ -37,12 +37,13 @@ export interface ActiveUserSession {
   deviceFingerprint: string;
   userAgent: string;
   ip: string;
-  locationEstimate?: string;
+  locationEstimate?: string | undefined;
   createdAt: string;
   lastActiveAt: string;
   isRevoked: boolean;
-  revocationReason?: string;
-  isCurrent?: boolean;
+  revocationReason?: string | undefined;
+  isCurrent?: boolean | undefined;
+  deviceType?: string | undefined;
 }
 
 export interface TwoFactorRecord {
@@ -50,9 +51,9 @@ export interface TwoFactorRecord {
   secret: string;
   enabled: boolean;
   backupCodes: string[];
-  lastUsedTimestamp?: number;
+  lastUsedTimestamp?: number | undefined;
   failedAttempts: number;
-  lockedUntil?: number;
+  lockedUntil?: number | undefined;
   updatedAt: string;
 }
 

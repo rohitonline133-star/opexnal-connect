@@ -4,10 +4,10 @@ import { getSecurityEvents } from "./audit-logger";
 export function evaluateRequestRisk(params: {
   ip: string;
   fingerprint: string;
-  userId?: string;
+  userId?: string | undefined;
   path: string;
   method: string;
-  userAgent?: string;
+  userAgent?: string | undefined;
 }): SecurityRiskAssessment {
   const { ip, fingerprint, userId, path, method, userAgent } = params;
   let score = 0;
@@ -17,6 +17,9 @@ export function evaluateRequestRisk(params: {
   if (!userAgent || userAgent.trim() === "") {
     score += 25;
     factors.push("Missing or empty User-Agent header");
+  } else if (/sqlmap|nikto|nmap|masscan|zgrab|gobuster/i.test(userAgent)) {
+    score += 35;
+    factors.push(`Exploit/vulnerability scanner User-Agent detected (${userAgent})`);
   } else if (/curl|python|wget|postman|insomnia|go-http-client|axios/i.test(userAgent)) {
     score += 20;
     factors.push(`Automated script/client User-Agent detected (${userAgent})`);

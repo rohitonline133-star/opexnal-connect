@@ -3,6 +3,8 @@ import { dbQuery, withTransaction } from "../db/index";
 import { hashPassword, verifyPassword } from "./password";
 import {
   issueAccessToken,
+  issueRefreshToken,
+  verifyAndRotateRefreshToken,
   generateSessionIdentifier,
   hashSessionId,
   verifyAccessToken,
@@ -27,8 +29,8 @@ export interface RegisterParams {
   email: string;
   username: string;
   password: string;
-  displayName?: string;
-  phone?: string;
+  displayName?: string | undefined;
+  phone?: string | undefined;
 }
 
 export interface LoginParams {
@@ -41,18 +43,22 @@ export interface LoginParams {
 
 export interface AuthResult {
   success: boolean;
-  user?: {
-    id: string;
-    email: string;
-    username: string;
-    displayName: string;
-    role: string;
-    avatarUrl: string | null;
-  };
-  token?: string;
-  sessionId?: string;
-  requires2fa?: boolean;
-  message?: string;
+  user?:
+    | {
+        id: string;
+        email: string;
+        username: string;
+        displayName: string;
+        role: string;
+        avatarUrl: string | null;
+      }
+    | undefined;
+  token?: string | undefined;
+  refreshToken?: string | undefined;
+  sessionId?: string | undefined;
+  requires2fa?: boolean | undefined;
+  message?: string | undefined;
+  reused?: boolean | undefined;
 }
 
 export async function registerUser(params: RegisterParams): Promise<AuthResult> {
@@ -125,10 +131,18 @@ export async function registerUser(params: RegisterParams): Promise<AuthResult> 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   await dbQuery(
-    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, expires_at, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, is_active, expires_at, created_at)
+     VALUES ($1, $2, $3, $4, $5, true, $6, $7)`,
     [rawSessionId, userId, hashedToken, "127.0.0.1", "init-fp", expiresAt, now],
   );
+
+  recordSessionActivity({
+    sessionId: rawSessionId,
+    userId,
+    userAgent: "init-agent",
+    ip: "127.0.0.1",
+    fingerprint: "init-fp",
+  });
 
   const token = issueAccessToken({
     userId,
@@ -136,6 +150,11 @@ export async function registerUser(params: RegisterParams): Promise<AuthResult> 
     username,
     role: "user",
     sessionId: rawSessionId,
+  });
+
+  const { refreshToken } = issueRefreshToken({
+    sessionId: rawSessionId,
+    userId,
   });
 
   return {
@@ -149,6 +168,7 @@ export async function registerUser(params: RegisterParams): Promise<AuthResult> 
       avatarUrl: null,
     },
     token,
+    refreshToken,
     sessionId: rawSessionId,
   };
 }
@@ -170,14 +190,14 @@ export async function loginUser(params: LoginParams): Promise<AuthResult> {
     [queryTerm, queryTerm],
   );
 
-  if (userRes.rows.length === 0) {
+  if (userRes.rows.length === 0 || !userRes.rows[0]) {
     return { success: false, message: "Invalid email/username or password" };
   }
 
   const user = userRes.rows[0];
 
   // Check account quarantine / containment status
-  if (isAccountContained(user.id) || user.status === "quarantined") {
+  if (isAccountContained(user.id).isContained || user.status === "quarantined") {
     return {
       success: false,
       message:
@@ -189,13 +209,15 @@ export async function loginUser(params: LoginParams): Promise<AuthResult> {
   const isValid = verifyPassword(params.password, user.password_hash, user.salt);
   if (!isValid) {
     logSecurityEvent({
-      eventType: "AUTH_LOGIN_FAILED",
       severity: "MEDIUM",
-      ipAddress: params.ip,
-      userAgent: params.userAgent,
-      actionTaken: "REJECT",
+      eventType: "AUTH_LOGIN_FAILED",
+      actionTaken: "CHALLENGE_REQUIRED",
+      ip: params.ip,
+      fingerprint: params.fingerprint,
+      path: "/api/v1/auth/login",
+      method: "POST",
+      details: { targetUser: user.username },
       riskScore: 35,
-      metadata: { targetUser: user.username },
     });
     return { success: false, message: "Invalid email/username or password" };
   }
@@ -230,8 +252,8 @@ export async function loginUser(params: LoginParams): Promise<AuthResult> {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   await dbQuery(
-    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, expires_at, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, is_active, expires_at, created_at)
+     VALUES ($1, $2, $3, $4, $5, true, $6, $7)`,
     [
       rawSessionId,
       user.id,
@@ -259,14 +281,22 @@ export async function loginUser(params: LoginParams): Promise<AuthResult> {
     sessionId: rawSessionId,
   });
 
+  const { refreshToken } = issueRefreshToken({
+    sessionId: rawSessionId,
+    userId: user.id,
+  });
+
   logSecurityEvent({
-    eventType: "AUTH_LOGIN_SUCCESS",
     severity: "LOW",
-    ipAddress: params.ip,
-    userAgent: params.userAgent,
+    eventType: "AUTH_LOGIN_SUCCESS",
     actionTaken: "ALLOW",
+    userId: user.id,
+    ip: params.ip,
+    fingerprint: params.fingerprint,
+    path: "/api/v1/auth/login",
+    method: "POST",
+    details: { userId: user.id, sessionId: rawSessionId },
     riskScore: 10,
-    metadata: { userId: user.id, sessionId: rawSessionId },
   });
 
   return {
@@ -280,6 +310,7 @@ export async function loginUser(params: LoginParams): Promise<AuthResult> {
       avatarUrl,
     },
     token,
+    refreshToken,
     sessionId: rawSessionId,
   };
 }
@@ -306,7 +337,7 @@ export async function completeTwoFactorLogin(
     "SELECT id, email, username, role FROM users WHERE id = $1",
     [userId],
   );
-  if (userRes.rows.length === 0) {
+  if (userRes.rows.length === 0 || !userRes.rows[0]) {
     return { success: false, message: "User not found" };
   }
   const user = userRes.rows[0];
@@ -322,8 +353,8 @@ export async function completeTwoFactorLogin(
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   await dbQuery(
-    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, expires_at, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    `INSERT INTO sessions (id, user_id, token_hash, ip_address, fingerprint, is_active, expires_at, created_at)
+     VALUES ($1, $2, $3, $4, $5, true, $6, $7)`,
     [rawSessionId, user.id, hashedToken, ip, fingerprint, expiresAt, new Date().toISOString()],
   );
 
@@ -343,6 +374,11 @@ export async function completeTwoFactorLogin(
     sessionId: rawSessionId,
   });
 
+  const { refreshToken } = issueRefreshToken({
+    sessionId: rawSessionId,
+    userId: user.id,
+  });
+
   return {
     success: true,
     user: {
@@ -354,13 +390,78 @@ export async function completeTwoFactorLogin(
       avatarUrl,
     },
     token,
+    refreshToken,
     sessionId: rawSessionId,
   };
 }
 
-export async function validateUserSession(
-  tokenOrSessionId: string,
-): Promise<{ valid: boolean; user?: UserTokenPayload; sessionId?: string; error?: string }> {
+export async function rotateUserTokens(oldRefreshToken: string): Promise<AuthResult> {
+  const rotation = verifyAndRotateRefreshToken(oldRefreshToken);
+  if (!rotation.success) {
+    if (rotation.reused && rotation.payload) {
+      // Replay attack detected! Terminate the entire compromised session
+      await logoutSession(rotation.payload.sessionId);
+    }
+    return {
+      success: false,
+      reused: rotation.reused,
+      message: rotation.message || "Invalid refresh token",
+    };
+  }
+
+  const payload = rotation.payload!;
+  // Validate session status in DB
+  const sessionStatus = validateSessionStatus(payload.sessionId, payload.userId);
+  if (!sessionStatus.valid) {
+    return { success: false, message: sessionStatus.reason || "Session expired or revoked" };
+  }
+
+  const userRes = await dbQuery<{ id: string; email: string; username: string; role: string }>(
+    "SELECT id, email, username, role FROM users WHERE id = $1",
+    [payload.userId],
+  );
+  if (userRes.rows.length === 0 || !userRes.rows[0]) {
+    return { success: false, message: "User not found" };
+  }
+  const u = userRes.rows[0];
+
+  const profileRes = await dbQuery<{ display_name: string; avatar_url: string | null }>(
+    "SELECT display_name, avatar_url FROM profiles WHERE id = $1",
+    [u.id],
+  );
+  const displayName = profileRes.rows[0]?.display_name || u.username;
+  const avatarUrl = profileRes.rows[0]?.avatar_url || null;
+
+  const newAccessToken = issueAccessToken({
+    userId: u.id,
+    email: u.email,
+    username: u.username,
+    role: u.role,
+    sessionId: payload.sessionId,
+  });
+
+  return {
+    success: true,
+    token: newAccessToken,
+    refreshToken: rotation.newRefreshToken,
+    sessionId: payload.sessionId,
+    user: {
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      displayName,
+      role: u.role,
+      avatarUrl,
+    },
+  };
+}
+
+export async function validateUserSession(tokenOrSessionId: string): Promise<{
+  valid: boolean;
+  user?: UserTokenPayload | undefined;
+  sessionId?: string | undefined;
+  error?: string | undefined;
+}> {
   // If it's a JWT
   if (tokenOrSessionId.includes(".")) {
     const payload = verifyAccessToken(tokenOrSessionId);
@@ -372,6 +473,14 @@ export async function validateUserSession(
     const sessionStatus = validateSessionStatus(payload.sessionId, payload.userId);
     if (!sessionStatus.valid) {
       return { valid: false, error: sessionStatus.reason || "Session revoked" };
+    }
+
+    const dbCheck = await dbQuery<{ is_active: boolean }>(
+      "SELECT is_active FROM sessions WHERE id = $1",
+      [payload.sessionId],
+    );
+    if (dbCheck.rows.length > 0 && dbCheck.rows[0] && dbCheck.rows[0].is_active === false) {
+      return { valid: false, error: "Session marked inactive in database" };
     }
 
     return { valid: true, user: payload, sessionId: payload.sessionId };
@@ -389,7 +498,7 @@ export async function validateUserSession(
     hash,
   ]);
 
-  if (sessionRes.rows.length === 0 || !sessionRes.rows[0].is_active) {
+  if (sessionRes.rows.length === 0 || !sessionRes.rows[0] || !sessionRes.rows[0].is_active) {
     return { valid: false, error: "Session revoked or not found" };
   }
 
@@ -402,7 +511,7 @@ export async function validateUserSession(
     "SELECT id, email, username, role FROM users WHERE id = $1",
     [s.user_id],
   );
-  if (userRes.rows.length === 0) {
+  if (userRes.rows.length === 0 || !userRes.rows[0]) {
     return { valid: false, error: "User not found" };
   }
 

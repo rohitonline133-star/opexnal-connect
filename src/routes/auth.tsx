@@ -93,14 +93,14 @@ function AuthComponent() {
           return;
         }
 
-        const username = email.includes("@") ? email.split("@")[0] : email;
+        const safeUsername = (email.includes("@") ? email.split("@")[0] : email) || "user";
         const { data, error } = await authClient.signUp({
           email,
           password,
           options: {
             data: {
-              username,
-              full_name: username,
+              username: safeUsername,
+              full_name: safeUsername,
             },
           },
         });
@@ -145,7 +145,7 @@ function AuthComponent() {
         return;
       }
 
-      const { data } = await supabase.auth.getUser();
+      const { data } = await authClient.getUser();
       if (data?.user) {
         toast.success("Signed in successfully!");
         navigate({ to: search.redirect || "/home", replace: true });

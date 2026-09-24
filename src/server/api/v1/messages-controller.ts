@@ -42,17 +42,18 @@ export async function handleMessagesRoutes(
         );
 
         let otherUserProfile = null;
-        if (otherMembersRes.rows.length > 0) {
+        const otherMember = otherMembersRes.rows[0];
+        if (otherMember) {
           const pRes = await dbQuery<{
             username: string;
             display_name: string;
             avatar_url: string | null;
           }>("SELECT username, display_name, avatar_url FROM profiles WHERE id = $1", [
-            otherMembersRes.rows[0].user_id,
+            otherMember.user_id,
           ]);
           otherUserProfile = {
-            id: otherMembersRes.rows[0].user_id,
-            ...pRes.rows[0],
+            id: otherMember.user_id,
+            ...(pRes.rows[0] || {}),
           };
         }
 
@@ -70,10 +71,12 @@ export async function handleMessagesRoutes(
       }),
     );
 
-    const validConvs = conversations.filter(Boolean);
+    const validConvs = conversations.filter((c): c is NonNullable<typeof c> => Boolean(c));
     validConvs.sort((a, b) => {
-      const ta = new Date((a?.last_message_at || 0) as string).getTime();
-      const tb = new Date((b?.last_message_at || 0) as string).getTime();
+      const aTime = (a as Record<string, unknown>)["last_message_at"] || 0;
+      const bTime = (b as Record<string, unknown>)["last_message_at"] || 0;
+      const ta = new Date(aTime as string).getTime();
+      const tb = new Date(bTime as string).getTime();
       return tb - ta;
     });
 
@@ -146,6 +149,7 @@ export async function handleMessagesRoutes(
   const convIdMatch = pathname.match(/^\/api\/v1\/messages\/conversation\/([0-9a-f-]{36})$/i);
   if (convIdMatch && method === "GET") {
     const convId = convIdMatch[1];
+    if (!convId) return json({ error: "Invalid conversation ID" }, 400);
     const auth = await requireAuth(request);
 
     // IDOR Protection: verify user is in conversation

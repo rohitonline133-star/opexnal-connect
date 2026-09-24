@@ -67,7 +67,7 @@ export default {
         const apiResponse = await handleApiV1Request(
           request,
           preflight.clientContext.ip,
-          preflight.clientContext.userAgent,
+          preflight.clientContext.userAgent || "unknown",
           preflight.clientContext.fingerprint,
         );
         if (apiResponse) {
