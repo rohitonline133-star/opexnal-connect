@@ -112,10 +112,10 @@ export async function evaluateCreatorEligibility(
 
     if (userSettings?.settings && typeof userSettings.settings === "object") {
       const s = userSettings.settings as Record<string, unknown>;
-      if (typeof s.twoFactorEnabled === "boolean") {
-        twoFactor = s.twoFactorEnabled;
+      if (typeof s["twoFactorEnabled"] === "boolean") {
+        twoFactor = s["twoFactorEnabled"];
       }
-      if (s.verificationStatus === "APPROVED") {
+      if (s["verificationStatus"] === "APPROVED") {
         kycStatus = "verified";
       }
     }
@@ -394,7 +394,7 @@ export interface AdImpressionResult {
   creatorShareCents: number;
   platformFeeCents: number;
   fraudFiltered: boolean;
-  filterReason?: string;
+  filterReason?: string | undefined;
 }
 
 export function filterInvalidTraffic(payload: AdImpressionPayload): {
@@ -1191,7 +1191,6 @@ export async function requestCreatorPayout(
 
   try {
     await supabase.from("payout_lifecycle_requests").insert({
-      id: undefined, // let gen_random_uuid assign DB id
       user_id: userId,
       amount_cents: amountCents,
       currency: "USD",

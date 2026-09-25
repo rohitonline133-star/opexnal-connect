@@ -24,16 +24,18 @@ CREATE TABLE IF NOT EXISTS public.monetization_eligibility (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS monetization_eligibility_user_idx ON public.monetization_eligibility (user_id);
-GRANT SELECT, INSERT, UPDATE ON public.monetization_eligibility TO authenticated;
+GRANT SELECT ON public.monetization_eligibility TO authenticated;
 GRANT ALL ON public.monetization_eligibility TO service_role;
 ALTER TABLE public.monetization_eligibility ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY monetization_eligibility_select_own ON public.monetization_eligibility
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-CREATE POLICY monetization_eligibility_insert_own ON public.monetization_eligibility
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-CREATE POLICY monetization_eligibility_update_own ON public.monetization_eligibility
-  FOR UPDATE TO authenticated USING (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (
+    user_id = auth.uid() OR public.has_role(auth.uid(), 'moderator') OR public.has_role(auth.uid(), 'super_admin')
+  );
+CREATE POLICY monetization_eligibility_update_mod ON public.monetization_eligibility
+  FOR UPDATE TO authenticated USING (
+    public.has_role(auth.uid(), 'moderator') OR public.has_role(auth.uid(), 'super_admin')
+  );
 
 -- 2. Monetization Programs Configuration (Admin configurable revenue shares and rules)
 CREATE TABLE IF NOT EXISTS public.monetization_programs_config (
@@ -52,6 +54,10 @@ ALTER TABLE public.monetization_programs_config ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY monetization_programs_config_select_all ON public.monetization_programs_config
   FOR SELECT TO authenticated USING (true);
+CREATE POLICY monetization_programs_config_update_admin ON public.monetization_programs_config
+  FOR UPDATE TO authenticated USING (
+    public.has_role(auth.uid(), 'super_admin')
+  );
 
 -- 3. Ad Revenue Events & Impression Tracking
 CREATE TABLE IF NOT EXISTS public.ad_revenue_events (
@@ -334,16 +340,14 @@ CREATE TABLE IF NOT EXISTS public.creator_financial_wallets (
   currency text NOT NULL DEFAULT 'USD',
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-GRANT SELECT, INSERT, UPDATE ON public.creator_financial_wallets TO authenticated;
+GRANT SELECT ON public.creator_financial_wallets TO authenticated;
 GRANT ALL ON public.creator_financial_wallets TO service_role;
 ALTER TABLE public.creator_financial_wallets ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY creator_wallet_select_own ON public.creator_financial_wallets
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-CREATE POLICY creator_wallet_insert_own ON public.creator_financial_wallets
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-CREATE POLICY creator_wallet_update_own ON public.creator_financial_wallets
-  FOR UPDATE TO authenticated USING (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (
+    user_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin')
+  );
 
 CREATE TABLE IF NOT EXISTS public.transactions_ledger (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -364,14 +368,14 @@ CREATE TABLE IF NOT EXISTS public.transactions_ledger (
 );
 CREATE INDEX IF NOT EXISTS ledger_user_idx ON public.transactions_ledger (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS ledger_idempotency_idx ON public.transactions_ledger (idempotency_key);
-GRANT SELECT, INSERT, UPDATE ON public.transactions_ledger TO authenticated;
+GRANT SELECT ON public.transactions_ledger TO authenticated;
 GRANT ALL ON public.transactions_ledger TO service_role;
 ALTER TABLE public.transactions_ledger ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY ledger_select_own ON public.transactions_ledger
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
-CREATE POLICY ledger_insert_own ON public.transactions_ledger
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (
+    user_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin')
+  );
 
 -- 12. Payout Lifecycle Requests & Payout Accounts
 CREATE TABLE IF NOT EXISTS public.payout_account_configs (
@@ -415,16 +419,22 @@ CREATE TABLE IF NOT EXISTS public.payout_lifecycle_requests (
   completed_at timestamptz
 );
 CREATE INDEX IF NOT EXISTS payout_lifecycle_user_idx ON public.payout_lifecycle_requests (user_id, created_at DESC);
-GRANT SELECT, INSERT, UPDATE ON public.payout_lifecycle_requests TO authenticated;
+GRANT SELECT, INSERT ON public.payout_lifecycle_requests TO authenticated;
 GRANT ALL ON public.payout_lifecycle_requests TO service_role;
 ALTER TABLE public.payout_lifecycle_requests ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY payout_lifecycle_select_own ON public.payout_lifecycle_requests
-  FOR SELECT TO authenticated USING (user_id = auth.uid());
+  FOR SELECT TO authenticated USING (
+    user_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin')
+  );
 CREATE POLICY payout_lifecycle_insert_own ON public.payout_lifecycle_requests
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-CREATE POLICY payout_lifecycle_update_own ON public.payout_lifecycle_requests
-  FOR UPDATE TO authenticated USING (user_id = auth.uid());
+  FOR INSERT TO authenticated WITH CHECK (
+    user_id = auth.uid() AND status IN ('pending', 'in_review')
+  );
+CREATE POLICY payout_lifecycle_update_admin ON public.payout_lifecycle_requests
+  FOR UPDATE TO authenticated USING (
+    public.has_role(auth.uid(), 'super_admin')
+  );
 
 -- Seed initial default monetization program configurations
 INSERT INTO public.monetization_programs_config (id, program_name, creator_revenue_share_pct, platform_fee_pct, min_payout_cents, rules)
