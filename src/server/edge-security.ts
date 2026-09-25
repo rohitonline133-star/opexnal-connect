@@ -4,7 +4,7 @@
  * Provides:
  * - Malicious Payload Filtering (SQLi, XSS, Path Traversal, Proto Pollution, SSRF/Metadata)
  * - Anti-Scanner & Automated Bot Filtering (SQLMap, Nikto, Nuclei, ZGrab, etc.)
- * - Origin Protection (X-Origin-Verify token inspection)
+ * - Origin Protection (X-Origin-Verify token inspection with constant-time equality)
  * - Multi-Tier Sliding Window Rate Limiting (Auth, AI, API, Static)
  * - Cloudflare / AWS Shield / Google Cloud Armor Edge Integration Layer
  * - Security Header Enforcement (HSTS, CSP, X-Frame-Options, X-Content-Type-Options)
@@ -14,8 +14,8 @@
  * edge WAF rules must be provisioned at the cloud provider boundary (see terraform/edge-security.tf).
  */
 
+import { createHash, timingSafeEqual } from "node:crypto";
 import { checkRateLimit } from "../lib/security";
-import { evaluateDeviceBotSignals } from "../lib/risk-engine";
 
 export interface EdgeSecurityConfig {
   originVerificationToken?: string;
@@ -227,19 +227,50 @@ export function inspectRequestWaf(request: Request): WafInspectionResult {
 }
 
 /**
+ * Constant-time string equality check to prevent timing side-channel attacks on secret tokens.
+ * Pre-hashes inputs with SHA-256 to ensure identical 32-byte buffer lengths.
+ */
+export function safeTimingEqual(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const hashA = createHash("sha256").update(a).digest();
+  const hashB = createHash("sha256").update(b).digest();
+  return timingSafeEqual(hashA, hashB);
+}
+
+/**
  * Validates Origin Protection to ensure requests reach origin solely via authorized edge/CDN proxy.
+ *
+ * FAIL-CLOSED BEHAVIOR:
+ * When strict mode is enabled (e.g. in production, or when strictOrigin is explicitly set),
+ * if expectedSecret is undefined or empty, it FAILS CLOSED rather than bypassing, preventing
+ * accidental exposure of origin servers in production deployments.
  */
 export function verifyOriginSecret(
   request: Request,
   expectedSecret?: string,
+  options?: { strictMode?: boolean },
 ): { valid: boolean; reason?: string } {
-  // If not configured, bypass check (e.g. in development/preview)
-  if (!expectedSecret) return { valid: true };
+  const isStrict =
+    options?.strictMode ??
+    (process.env["NODE_ENV"] === "production" || process.env["OPEXNAL_STRICT_ORIGIN"] === "true");
+
+  // Fail closed if strict mode is active but the origin secret is unconfigured
+  if (!expectedSecret || expectedSecret.trim() === "") {
+    if (isStrict) {
+      return {
+        valid: false,
+        reason:
+          "Fail-closed: Strict origin protection enforced but ORIGIN_VERIFY_TOKEN is unconfigured.",
+      };
+    }
+    // Allow pass-through in non-production local development if unconfigured
+    return { valid: true };
+  }
 
   const providedSecret =
     request.headers.get("x-origin-verify") || request.headers.get("cf-access-client-id") || "";
 
-  if (!providedSecret || providedSecret !== expectedSecret) {
+  if (!providedSecret || !safeTimingEqual(providedSecret, expectedSecret)) {
     return {
       valid: false,
       reason: "Direct origin access prohibited. Traffic must route through approved CDN edge.",

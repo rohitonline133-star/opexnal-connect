@@ -23,7 +23,7 @@ import { ShoppingModal } from "@/components/opexnal/shopping-modal";
 import { Button } from "@/components/ui/button";
 import { getProfileById, initialsFor } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
-import { getWishlist, type ProductItem } from "@/lib/interactive-features";
+import { getWishlistProducts, type ProductItem } from "@/lib/interactive-features";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -59,7 +59,7 @@ function MyProfile() {
     enabled: Boolean(user?.id),
   });
 
-  const wishlist = getWishlist();
+  const wishlist = getWishlistProducts();
 
   return (
     <AppShell

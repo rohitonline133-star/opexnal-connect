@@ -12,18 +12,31 @@ import {
 import { cn } from "@/lib/utils";
 
 interface MusicPickerDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   selectedTrackId?: string | null;
   onSelectTrack: (track: AudioTrack) => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function MusicPickerDialog({
+  open = true,
+  onOpenChange,
   selectedTrackId,
   onSelectTrack,
   onClose,
 }: MusicPickerDialogProps) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  if (!open) return null;
+
+  function handleClose() {
+    stopSynthPreview();
+    setPlayingId(null);
+    onClose?.();
+    onOpenChange?.(false);
+  }
 
   const tracks = CURATED_AUDIO_TRACKS.filter(
     (t) =>
@@ -48,7 +61,7 @@ export function MusicPickerDialog({
     stopSynthPreview();
     onSelectTrack(track);
     toast.success(`Attached "${track.title}" by ${track.artist}`);
-    onClose();
+    handleClose();
   }
 
   return (
@@ -67,10 +80,7 @@ export function MusicPickerDialog({
           </div>
           <button
             type="button"
-            onClick={() => {
-              stopSynthPreview();
-              onClose();
-            }}
+            onClick={handleClose}
             className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             <X className="h-5 w-5" />

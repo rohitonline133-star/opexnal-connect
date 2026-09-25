@@ -1,11 +1,19 @@
 /**
  * ==============================================================================
  * OPEXNAL GLOBAL EDGE SECURITY & DDOS MITIGATION INFRASTRUCTURE (TERRAFORM)
- * Provider Configuration Specification: Cloudflare & Google Cloud Armor
+ * Production Edge Provider: Cloudflare Enterprise / Business Architecture
  *
  * STATUS: PROVIDER CONFIGURATION REQUIRED
- * This configuration defines the edge perimeter, WAF ruleset, rate limiting,
- * SSL/TLS strict mode, and origin protection shielding for Opexnal.
+ * This configuration specifies the end-to-end edge perimeter:
+ * 1. Cloudflare DNS Proxying (Proxied Anycast A/AAAA/CNAME records)
+ * 2. Edge TLS 1.3 & Authenticated Origin Pulls (Strict mTLS)
+ * 3. HTTP DDoS Attack Protection Managed Ruleset
+ * 4. Layer 7 Custom Edge WAF & OWASP Core Ruleset
+ * 5. Multi-Tier Edge Rate Limiting (Auth, AI, API)
+ * 6. Cloudflare Bot Management & Super Bot Fight Mode
+ * 7. Origin Request Header Modification (Inject X-Origin-Verify secret)
+ * 8. Edge Health Checks & Failover Monitoring (/api/health)
+ * 9. Cloudflare Logpush Telemetry to Centralized SIEM
  * ==============================================================================
  */
 
@@ -23,8 +31,77 @@ terraform {
   }
 }
 
+variable "cloudflare_zone_id" {
+  type        = string
+  description = "Cloudflare Zone ID for the opexnal.com domain"
+}
+
+variable "cloudflare_account_id" {
+  type        = string
+  description = "Cloudflare Account ID"
+}
+
+variable "domain_name" {
+  type        = string
+  default     = "opexnal.com"
+  description = "Primary production apex domain"
+}
+
+variable "origin_ip" {
+  type        = string
+  description = "Target origin server IP address or load balancer VIP"
+}
+
+variable "origin_verify_secret" {
+  type        = string
+  sensitive   = true
+  description = "Cryptographically secure secret token injected by Cloudflare and verified by origin (ORIGIN_VERIFY_TOKEN)"
+}
+
+variable "enforce_origin_protection" {
+  type        = bool
+  default     = true
+  description = "Whether to enforce strict origin header validation at the edge and origin"
+}
+
+variable "siem_destination_bucket" {
+  type        = string
+  default     = "gs://opexnal-security-siem-logs-prod"
+  description = "GCS/S3 destination bucket for Cloudflare Logpush security audit logs"
+}
+
 # ------------------------------------------------------------------------------
-# 1. CLOUDFLARE ZONE SETTINGS (EDGE SSL, MINIMUM TLS 1.3, STRICT CIPHERS)
+# 1. DNS PROXYING (ANYCAST DDOS SHIELD)
+# ------------------------------------------------------------------------------
+resource "cloudflare_record" "apex_a" {
+  zone_id = var.cloudflare_zone_id
+  name    = "@"
+  value   = var.origin_ip
+  type    = "A"
+  ttl     = 1 # Automatic when proxied
+  proxied = true
+}
+
+resource "cloudflare_record" "www_cname" {
+  zone_id = var.cloudflare_zone_id
+  name    = "www"
+  value   = var.domain_name
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+resource "cloudflare_record" "api_subdomain" {
+  zone_id = var.cloudflare_zone_id
+  name    = "api"
+  value   = var.domain_name
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# ------------------------------------------------------------------------------
+# 2. CLOUDFLARE ZONE SETTINGS (EDGE SSL, MINIMUM TLS 1.3, STRICT CIPHERS)
 # ------------------------------------------------------------------------------
 resource "cloudflare_zone_settings_override" "opexnal_edge_settings" {
   zone_id = var.cloudflare_zone_id
@@ -49,7 +126,40 @@ resource "cloudflare_zone_settings_override" "opexnal_edge_settings" {
 }
 
 # ------------------------------------------------------------------------------
-# 2. CLOUDFLARE WAF & BOT MITIGATION RULESET
+# 3. AUTHENTICATED ORIGIN PULLS (CLIENT CERTIFICATE FROM CLOUDFLARE TO ORIGIN)
+# ------------------------------------------------------------------------------
+resource "cloudflare_authenticated_origin_pulls" "opexnal_aop" {
+  zone_id = var.cloudflare_zone_id
+  enabled = true
+}
+
+# ------------------------------------------------------------------------------
+# 4. HTTP DDOS ATTACK PROTECTION MANAGED RULESET OVERRIDE
+# ------------------------------------------------------------------------------
+resource "cloudflare_ruleset" "opexnal_ddos_override" {
+  zone_id     = var.cloudflare_zone_id
+  name        = "Opexnal Managed HTTP DDoS Mitigation Override"
+  description = "Aggressive sensitivity for L7 HTTP flood attacks against Opexnal"
+  kind        = "zone"
+  phase       = "ddos_l7"
+
+  rules {
+    action = "execute"
+    action_parameters {
+      id = "4f2ffd5214264665a392b2164f9cb376" # Cloudflare Managed HTTP DDoS Ruleset ID
+      overrides {
+        sensitivity_level = "high"
+        action            = "block"
+      }
+    }
+    expression  = "true"
+    description = "Enforce high-sensitivity adaptive HTTP DDoS mitigation"
+    enabled     = true
+  }
+}
+
+# ------------------------------------------------------------------------------
+# 5. CLOUDFLARE CUSTOM WAF & BOT MITIGATION RULESET
 # ------------------------------------------------------------------------------
 resource "cloudflare_ruleset" "opexnal_edge_waf" {
   zone_id     = var.cloudflare_zone_id
@@ -62,19 +172,19 @@ resource "cloudflare_ruleset" "opexnal_edge_waf" {
   rules {
     action      = "block"
     description = "Block automated vulnerability and fuzzing scanners"
-    expression  = "(http.user_agent contains \"sqlmap\") or (http.user_agent contains \"nikto\") or (http.user_agent contains \"nuclei\") or (http.user_agent contains \"zgrab\")"
+    expression  = "(http.user_agent contains \"sqlmap\") or (http.user_agent contains \"nikto\") or (http.user_agent contains \"nuclei\") or (http.user_agent contains \"zgrab\") or (http.user_agent contains \"acunetix\")"
     enabled     = true
   }
 
-  # Rule 2: Challenge known threat scores
+  # Rule 2: Managed Challenge for high threat score or verified automated bots
   rules {
     action      = "interactive_challenge"
-    description = "Managed Challenge for high Cloudflare threat score IP addresses"
-    expression  = "(cf.threat_score gt 40) or (cf.client.bot)"
+    description = "Managed Challenge for suspicious traffic and unverified bots"
+    expression  = "(cf.threat_score gt 30) or (cf.client.bot and not cf.bot_management.verified_bot)"
     enabled     = true
   }
 
-  # Rule 3: Enforce Origin Protection Secret
+  # Rule 3: Enforce strict origin header if accessing origin directly
   rules {
     action      = "block"
     description = "Enforce secret origin header to prevent direct-to-origin IP bypass"
@@ -84,7 +194,32 @@ resource "cloudflare_ruleset" "opexnal_edge_waf" {
 }
 
 # ------------------------------------------------------------------------------
-# 3. RATE LIMITING AT THE EDGE (PREVENTS HTTP FLOOD BEFORE ORIGIN)
+# 6. ORIGIN REQUEST HEADER MODIFICATION (INJECT ORIGIN_VERIFY_TOKEN AT EDGE)
+# ------------------------------------------------------------------------------
+resource "cloudflare_ruleset" "opexnal_inject_origin_token" {
+  zone_id     = var.cloudflare_zone_id
+  name        = "Opexnal Origin Verification Header Injection"
+  description = "Injects the trusted X-Origin-Verify secret header from Cloudflare edge to origin"
+  kind        = "zone"
+  phase       = "http_request_late_transform"
+
+  rules {
+    action = "rewrite"
+    action_parameters {
+      headers {
+        name       = "X-Origin-Verify"
+        operation  = "set"
+        value      = var.origin_verify_secret
+      }
+    }
+    expression  = "true"
+    description = "Inject trusted origin verification token"
+    enabled     = true
+  }
+}
+
+# ------------------------------------------------------------------------------
+# 7. RATE LIMITING AT THE EDGE (PREVENTS HTTP FLOOD BEFORE ORIGIN)
 # ------------------------------------------------------------------------------
 resource "cloudflare_ruleset" "opexnal_rate_limiting" {
   zone_id     = var.cloudflare_zone_id
@@ -125,7 +260,41 @@ resource "cloudflare_ruleset" "opexnal_rate_limiting" {
 }
 
 # ------------------------------------------------------------------------------
-# 4. GOOGLE CLOUD ARMOR POLICY (ALTERNATIVE GCP EDGE CONTROLS)
+# 8. CLOUDFLARE HEALTH CHECK & FAILOVER MONITORING
+# ------------------------------------------------------------------------------
+resource "cloudflare_healthcheck" "opexnal_origin_healthcheck" {
+  zone_id          = var.cloudflare_zone_id
+  name             = "opexnal-origin-health"
+  description      = "Monitors Opexnal Origin health check endpoint"
+  address          = var.domain_name
+  type             = "HTTPS"
+  port             = 443
+  method           = "GET"
+  path             = "/api/health"
+  expected_codes   = ["200"]
+  interval         = 60
+  retries          = 2
+  timeout          = 5
+  consecutive_fails     = 3
+  consecutive_successes = 2
+  check_regions    = ["WNAM", "ENAM", "WEU", "EEU", "SEAS"]
+}
+
+# ------------------------------------------------------------------------------
+# 9. CLOUDFLARE LOGPUSH (SIEM AUDIT LOGGING)
+# ------------------------------------------------------------------------------
+resource "cloudflare_logpush_job" "http_requests_siem" {
+  zone_id          = var.cloudflare_zone_id
+  name             = "opexnal-edge-http-requests-siem"
+  logstream        = true
+  destination_conf = "${var.siem_destination_bucket}/edge-logs?header_x-amz-server-side-encryption=AES256"
+  dataset          = "http_requests"
+  enabled          = true
+  filter           = "{\"where\":{\"and\":[{\"key\":\"EdgeResponseStatus\",\"operator\":\"in\",\"value\":[400,401,403,429,500,502,503]}]}}"
+}
+
+# ------------------------------------------------------------------------------
+# 10. GOOGLE CLOUD ARMOR POLICY (ALTERNATIVE GCP EDGE CONTROLS)
 # ------------------------------------------------------------------------------
 resource "google_compute_security_policy" "opexnal_cloud_armor" {
   name        = "opexnal-cloud-armor-waf"

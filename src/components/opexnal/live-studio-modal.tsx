@@ -122,15 +122,17 @@ export function LiveStudioModal({ creatorUsername, creatorAvatar, onClose }: Liv
       // Occasionally add a sample comment
       if (Math.random() > 0.45) {
         const sample = SAMPLE_COMMENTS[Math.floor(Math.random() * SAMPLE_COMMENTS.length)];
-        setComments((prev) => [
-          ...prev.slice(-15),
-          {
-            id: `c_${Date.now()}_${Math.random()}`,
-            user: sample.user,
-            text: sample.text,
-            avatar: sample.avatar,
-          },
-        ]);
+        if (sample) {
+          setComments((prev) => [
+            ...prev.slice(-15),
+            {
+              id: `c_${Date.now()}_${Math.random()}`,
+              user: sample.user,
+              text: sample.text,
+              avatar: sample.avatar,
+            },
+          ]);
+        }
       }
     }, 2800);
 
@@ -142,7 +144,7 @@ export function LiveStudioModal({ creatorUsername, creatorAvatar, onClose }: Liv
     const newHeart: FloatingHeart = {
       id: Date.now() + Math.random(),
       x: 60 + Math.random() * 30, // % from right
-      color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
+      color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)] ?? "#EC4899",
     };
     setHearts((prev) => [...prev.slice(-12), newHeart]);
   }

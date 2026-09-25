@@ -29,10 +29,10 @@ interface ShoppingModalProps {
 }
 
 export function ShoppingModal({ product: initialProduct, productId, onClose }: ShoppingModalProps) {
-  const product =
+  const product: ProductItem =
     initialProduct ||
     CURATED_SHOPPING_CATALOG.find((p) => p.id === productId) ||
-    CURATED_SHOPPING_CATALOG[0];
+    (CURATED_SHOPPING_CATALOG[0] as ProductItem);
 
   const [wishlist, setWishlist] = useState<string[]>(() => getWishlist());
   const [checkingOut, setCheckingOut] = useState(false);

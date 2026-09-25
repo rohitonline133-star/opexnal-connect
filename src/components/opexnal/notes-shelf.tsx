@@ -14,10 +14,10 @@ import { initialsFor } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 interface NotesShelfProps {
-  currentUserId?: string;
-  currentUsername?: string;
-  currentUserAvatar?: string | null;
-  onSendDMToUser?: (username: string, replyText: string) => void;
+  currentUserId?: string | undefined;
+  currentUsername?: string | undefined;
+  currentUserAvatar?: string | null | undefined;
+  onSendDMToUser?: ((username: string, replyText?: string) => void) | undefined;
 }
 
 const MOOD_EMOJIS = ["💭", "✨", "🎧", "☕", "🚀", "🎨", "🔥", "🏔️", "💡", "🌿", "⚡", "😴"];

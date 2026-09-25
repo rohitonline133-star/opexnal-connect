@@ -33,26 +33,26 @@ export interface ImpossibleTravelResult {
 }
 
 export interface BehavioralSignals {
-  accountAgeDays?: number;
-  failedLoginVelocity10m?: number; // failed attempts in last 10m
-  loginVelocity1h?: number; // logins in last 1h
-  passwordResetVelocity24h?: number; // password resets in last 24h
-  apiRequestVelocity1m?: number; // API requests in last 1m
-  messageVelocity1m?: number; // messages sent in last 1m
-  followVelocity1h?: number; // follows in last 1h
-  commentVelocity1m?: number; // comments in last 1m
-  likeVelocity1m?: number; // likes in last 1m
-  postingVelocity1h?: number; // posts created in last 1h
-  isNewDevice?: boolean;
-  isNewIp?: boolean;
-  isKnownBadIp?: boolean;
-  isKnownTorOrProxy?: boolean;
-  impossibleTravel?: ImpossibleTravelResult;
+  accountAgeDays?: number | undefined;
+  failedLoginVelocity10m?: number | undefined; // failed attempts in last 10m
+  loginVelocity1h?: number | undefined; // logins in last 1h
+  passwordResetVelocity24h?: number | undefined; // password resets in last 24h
+  apiRequestVelocity1m?: number | undefined; // API requests in last 1m
+  messageVelocity1m?: number | undefined; // messages sent in last 1m
+  followVelocity1h?: number | undefined; // follows in last 1h
+  commentVelocity1m?: number | undefined; // comments in last 1m
+  likeVelocity1m?: number | undefined; // likes in last 1m
+  postingVelocity1h?: number | undefined; // posts created in last 1h
+  isNewDevice?: boolean | undefined;
+  isNewIp?: boolean | undefined;
+  isKnownBadIp?: boolean | undefined;
+  isKnownTorOrProxy?: boolean | undefined;
+  impossibleTravel?: ImpossibleTravelResult | undefined;
   deviceBotSignals?: {
-    isHeadlessOrAutomated?: boolean;
-    hasSuspiciousHeaders?: boolean;
-    entropyScore?: number; // 0 (suspicious) - 100 (normal browser)
-  };
+    isHeadlessOrAutomated?: boolean | undefined;
+    hasSuspiciousHeaders?: boolean | undefined;
+    entropyScore?: number | undefined; // 0 (suspicious) - 100 (normal browser)
+  } | undefined;
 }
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
@@ -171,7 +171,7 @@ export function evaluateDeviceBotSignals(
 ): {
   isHeadlessOrAutomated: boolean;
   hasSuspiciousHeaders: boolean;
-  botCategory?: string;
+  botCategory?: string | undefined;
   riskScore: number;
 } {
   const uaLower = userAgent.toLowerCase();

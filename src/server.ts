@@ -19,6 +19,7 @@ import {
 } from "./lib/risk-engine";
 import { securityPipeline } from "./server/security-pipeline";
 import { evaluateIpReputation } from "./server/threat-intelligence";
+import { securityMlPipeline } from "./server/ml-security-pipeline";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -192,10 +193,13 @@ export default {
                 edgeWaf: "PASS",
                 rateLimiter: "PASS",
                 riskEngine: "PASS",
-                threatIntelligence: "PASS",
+                realMlSecurity: "NOT VERIFIED (Deterministic Behavioral Scoring Active)",
+                threatIntelligence: "PASS (Static Baseline Active; External Feeds NOT VERIFIED)",
+                originProtection: "PASS (Constant-time token validation / Fail-Closed)",
                 aiSecurityGuardrails: "PASS",
                 supabaseAuthMiddleware: "PASS",
               },
+              mlMetadata: securityMlPipeline.getMetadata(),
               telemetry: metrics,
             }),
             {
@@ -272,11 +276,13 @@ export default {
         };
 
         const evaluation = calculateCentralizedRiskScore(compositeSignals);
+        const mlInference = securityMlPipeline.evaluate(compositeSignals);
 
         return applyEdgeSecurityHeaders(
           new Response(
             JSON.stringify({
               evaluation,
+              mlInference,
               ipReputation: ipRep,
               deviceBotSignals: botSignals,
               impossibleTravel: travelResult,

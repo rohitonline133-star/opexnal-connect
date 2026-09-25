@@ -16,6 +16,7 @@ import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { NotesShelf } from "@/components/opexnal/notes-shelf";
 import { BroadcastChannelsView } from "@/components/opexnal/broadcast-channels-view";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";

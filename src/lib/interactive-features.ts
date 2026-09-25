@@ -8,8 +8,8 @@ export interface DMNote {
   displayName: string;
   avatarUrl: string | null;
   text: string; // up to 60 characters
-  moodEmoji?: string;
-  audioSnippet?: string;
+  moodEmoji?: string | undefined;
+  audioSnippet?: string | undefined;
   audience: "followers" | "close_friends";
   createdAt: string;
   expiresAt: string;
@@ -30,13 +30,15 @@ export interface BroadcastChannel {
     id: string;
     text: string;
     timestamp: string;
-    mediaUrl?: string;
-    poll?: {
-      question: string;
-      options: { text: string; votes: number; userVoted?: boolean }[];
-      totalVotes: number;
-    };
-    reactions: { emoji: string; count: number; userReacted?: boolean }[];
+    mediaUrl?: string | undefined;
+    poll?:
+      | {
+          question: string;
+          options: { text: string; votes: number; userVoted?: boolean | undefined }[];
+          totalVotes: number;
+        }
+      | undefined;
+    reactions: { emoji: string; count: number; userReacted?: boolean | undefined }[];
   };
 }
 
@@ -412,6 +414,11 @@ export function getWishlist(): string[] {
   } catch {
     return ["prod_1"];
   }
+}
+
+export function getWishlistProducts(): ProductItem[] {
+  const ids = getWishlist();
+  return CURATED_SHOPPING_CATALOG.filter((p) => ids.includes(p.id));
 }
 
 export function toggleWishlistItem(productId: string): string[] {
