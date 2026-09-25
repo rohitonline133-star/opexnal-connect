@@ -406,6 +406,15 @@ describe("Layer 6: Origin Protection & Edge Security Headers", () => {
     assert.strictEqual(safeTimingEqual(secret, ""), false);
   });
 
+  test("Rejects direct origin requests with invalid origin secret token", () => {
+    const request = new Request("https://origin.internal/api/feed", {
+      headers: { "x-origin-verify": "attacker_supplied_invalid_token" },
+    });
+    const result = verifyOriginSecret(request, "secret_prod_origin_key_123");
+    assert.strictEqual(result.valid, false);
+    assert.ok(result.reason?.includes("Direct origin access prohibited"));
+  });
+
   test("Rejects direct origin requests when origin secret token is missing in strict mode (Fail-Closed)", () => {
     const request = new Request("https://origin.internal/api/feed");
     // Explicit strict mode check
@@ -472,7 +481,7 @@ describe("Layer 7: Cyber Threat Intelligence & IP Reputation", () => {
     assert.strictEqual(result.riskScore, 95);
   });
 
-  test("Blocks SSRF and Cloud Metadata IPs (169.254.169.254, metadata.google.internal)", () => {
+  test("Blocks SSRF and Cloud Metadata targets (169.254.169.254, metadata.google.internal, 100.100.100.200)", () => {
     const awsMeta = evaluateIpReputation("169.254.169.254");
     assert.strictEqual(awsMeta.isThreat, true);
     assert.strictEqual(awsMeta.threatType, "CLOUD_METADATA_SSRF");
@@ -481,15 +490,36 @@ describe("Layer 7: Cyber Threat Intelligence & IP Reputation", () => {
     const gcpMeta = evaluateIpReputation("metadata.google.internal");
     assert.strictEqual(gcpMeta.isThreat, true);
     assert.strictEqual(gcpMeta.threatType, "CLOUD_METADATA_SSRF");
+
+    const aliMeta = evaluateIpReputation("100.100.100.200");
+    assert.strictEqual(aliMeta.isThreat, true);
+    assert.strictEqual(aliMeta.threatType, "CLOUD_METADATA_SSRF");
   });
 
-  test("Blocks RFC1918 Private IPs and Loopback from public SSRF ingestion", () => {
-    assert.strictEqual(isPrivateOrMetadataIp("10.0.0.1"), true);
-    assert.strictEqual(isPrivateOrMetadataIp("192.168.1.1"), true);
-    assert.strictEqual(isPrivateOrMetadataIp("172.16.0.1"), true);
+  test("Blocks RFC1918 Private IPs, localhost, and IPv6 private/loopback ranges from public SSRF ingestion", () => {
+    // Localhost & Loopback
     assert.strictEqual(isPrivateOrMetadataIp("127.0.0.1"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("localhost"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("127.0.0.53"), true);
+
+    // RFC1918 Private IPv4
+    assert.strictEqual(isPrivateOrMetadataIp("10.0.0.1"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("10.255.255.254"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("172.16.0.1"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("172.31.255.254"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("192.168.1.1"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("192.168.254.254"), true);
+
+    // IPv6 Private & Loopback ranges
     assert.strictEqual(isPrivateOrMetadataIp("::1"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("::"), true);
+    assert.strictEqual(isPrivateOrMetadataIp("fc00::1"), true); // Unique Local
+    assert.strictEqual(isPrivateOrMetadataIp("fd12:3456:789a::1"), true); // Unique Local
+    assert.strictEqual(isPrivateOrMetadataIp("fe80::1"), true); // Link-Local
+
+    // Clean Public IP (not private or metadata)
     assert.strictEqual(isPrivateOrMetadataIp("8.8.8.8"), false);
+    assert.strictEqual(isPrivateOrMetadataIp("1.1.1.1"), false);
   });
 
   test("Feed freshness monitoring accurately flags stale vs fresh feeds", () => {

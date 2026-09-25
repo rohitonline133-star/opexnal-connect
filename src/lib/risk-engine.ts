@@ -48,11 +48,13 @@ export interface BehavioralSignals {
   isKnownBadIp?: boolean | undefined;
   isKnownTorOrProxy?: boolean | undefined;
   impossibleTravel?: ImpossibleTravelResult | undefined;
-  deviceBotSignals?: {
-    isHeadlessOrAutomated?: boolean | undefined;
-    hasSuspiciousHeaders?: boolean | undefined;
-    entropyScore?: number | undefined; // 0 (suspicious) - 100 (normal browser)
-  } | undefined;
+  deviceBotSignals?:
+    | {
+        isHeadlessOrAutomated?: boolean | undefined;
+        hasSuspiciousHeaders?: boolean | undefined;
+        entropyScore?: number | undefined; // 0 (suspicious) - 100 (normal browser)
+      }
+    | undefined;
 }
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
