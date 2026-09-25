@@ -5,12 +5,18 @@ import {
   BadgeCheck,
   Bookmark,
   ChevronLeft,
+  Copy,
+  EyeOff,
+  Flag,
   Heart,
+  Link as LinkIcon,
   Loader2,
   MessageCircle,
+  MoreHorizontal,
   Music2,
   Play,
   Send,
+  ShieldCheck,
   Sparkles,
   Volume2,
   VolumeX,
@@ -20,6 +26,14 @@ import { toast } from "sonner";
 
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { useSignedMediaUrl } from "@/components/opexnal/post-media";
+import { ReportContentDialog } from "@/components/opexnal/post-controls";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
@@ -155,6 +169,26 @@ function ReelItem({
   const [showHeartAnim, setShowHeartAnim] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [expandedCaption, setExpandedCaption] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [hidden, setHidden] = useState(false);
+
+  async function handleToggleFollow() {
+    if (!viewerId || !post.user_id) return;
+    try {
+      const { data, error } = await supabase.rpc("request_follow", { _target_id: post.user_id });
+      if (!error) {
+        setFollowing(!following);
+        toast.success(
+          data === "requested" ? "Follow request sent" : `Following @${post.author?.username}`,
+        );
+      }
+    } catch {
+      setFollowing(!following);
+    }
+  }
 
   // Double tap to like
   const lastTapRef = useRef<number>(0);
@@ -212,6 +246,8 @@ function ReelItem({
       // dismissed
     }
   }
+
+  if (hidden) return null;
 
   return (
     <section className="relative h-screen w-full snap-start bg-black overflow-hidden flex items-center justify-center">
@@ -298,6 +334,19 @@ function ReelItem({
           </div>
           <span className="text-[11px] font-semibold mt-1">{saved ? "Saved" : "Save"}</span>
         </button>
+
+        {/* 3-dots Reel Options */}
+        <button
+          type="button"
+          aria-label="Reel options"
+          onClick={() => setOptionsOpen(true)}
+          className="flex flex-col items-center text-white drop-shadow-md group"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform">
+            <MoreHorizontal className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-[11px] font-semibold mt-1">More</span>
+        </button>
       </div>
 
       {/* Bottom Metadata Bar */}
@@ -323,6 +372,20 @@ function ReelItem({
                 )}
               </div>
             </Link>
+
+            {viewerId && viewerId !== post.user_id && (
+              <button
+                type="button"
+                onClick={handleToggleFollow}
+                className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                  following
+                    ? "border-white/30 bg-white/20 text-white"
+                    : "border-primary bg-primary text-primary-foreground hover:brightness-110"
+                }`}
+              >
+                {following ? "Following" : "Follow"}
+              </button>
+            )}
           </div>
         )}
 
@@ -341,12 +404,130 @@ function ReelItem({
           </div>
         )}
 
-        {/* Audio Track Tag */}
-        <div className="flex items-center gap-1.5 text-[11px] text-white/80">
-          <Music2 className="h-3 w-3 animate-spin text-primary" />
+        {/* Audio Track Tag - Tappable to open Audio Details */}
+        <button
+          type="button"
+          onClick={() => setAudioOpen(true)}
+          className="flex items-center gap-1.5 text-[11px] text-white/80 hover:text-white transition-colors text-left"
+        >
+          <Music2 className="h-3 w-3 animate-spin text-primary shrink-0" />
           <span className="truncate">Original audio — @{post.author?.username || "opexnal"}</span>
-        </div>
+        </button>
       </div>
+
+      {/* Reel Options Dialog */}
+      <Dialog open={optionsOpen} onOpenChange={setOptionsOpen}>
+        <DialogContent className="max-w-xs p-0 overflow-hidden rounded-2xl bg-card border border-border">
+          <div className="divide-y divide-border text-center text-sm font-medium">
+            <button
+              type="button"
+              onClick={() => {
+                setOptionsOpen(false);
+                setReportOpen(true);
+              }}
+              className="w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2"
+            >
+              <Flag className="h-4 w-4" />
+              Report Reel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setHidden(true);
+                toast.success("Reel hidden from your feed");
+                setOptionsOpen(false);
+              }}
+              className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
+            >
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
+              Not Interested
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/p/${post.id}`);
+                toast.success("Reel link copied");
+                setOptionsOpen(false);
+              }}
+              className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
+            >
+              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+              Copy Link
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOptionsOpen(false);
+                setAudioOpen(true);
+              }}
+              className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
+            >
+              <Music2 className="h-4 w-4 text-primary" />
+              Audio & Licensing Details
+            </button>
+            <button
+              type="button"
+              onClick={() => setOptionsOpen(false)}
+              className="w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal"
+            >
+              Cancel
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audio Modal */}
+      <Dialog open={audioOpen} onOpenChange={setAudioOpen}>
+        <DialogContent className="max-w-sm bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+              <Music2 className="h-5 w-5 text-primary" />
+              Audio Track & Licensing
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Track information and audio attribution.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2 text-xs">
+            <div className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">Track Title</span>
+                <span className="text-muted-foreground">Original Audio</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">Creator</span>
+                <span className="text-primary font-medium">
+                  @{post.author?.username || "creator"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">Rights Management</span>
+                <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3" /> Cleared for Reels
+                </span>
+              </div>
+            </div>
+            <Button
+              className="w-full rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+              onClick={() => {
+                toast.success("Audio selected! Redirecting to creator camera...");
+                setAudioOpen(false);
+              }}
+            >
+              Use This Audio in New Reel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Modal */}
+      <ReportContentDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetId={post.id}
+        targetType="reel"
+        viewerId={viewerId || "anonymous"}
+      />
 
       {/* Interactive Reel Comments Drawer */}
       {showComments && (

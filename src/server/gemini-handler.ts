@@ -1,5 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 
+type NodeIncomingRequest = {
+  complete?: boolean;
+  rawBody?: string | Buffer;
+  on: (event: "data" | "end", listener: (...args: unknown[]) => void) => void;
+  once: (event: "end" | "error", listener: (...args: unknown[]) => void) => void;
+};
+
 let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
@@ -8,6 +15,48 @@ function getAiClient(): GoogleGenAI {
     aiClient = new GoogleGenAI({ apiKey });
   }
   return aiClient;
+}
+
+async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
+  try {
+    const nodeReq = (request as Request & { runtime?: { node?: { req?: NodeIncomingRequest } } })
+      .runtime?.node?.req;
+    if (nodeReq) {
+      if (nodeReq.complete && nodeReq.rawBody) {
+        const str =
+          typeof nodeReq.rawBody === "string" ? nodeReq.rawBody : nodeReq.rawBody.toString("utf8");
+        return str ? JSON.parse(str) : {};
+      }
+      const chunks: Buffer[] = [];
+      const text = await new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => resolve(""), 5000);
+        nodeReq.on("data", (chunk: unknown) => {
+          if (Buffer.isBuffer(chunk)) {
+            chunks.push(chunk);
+          } else if (typeof chunk === "string") {
+            chunks.push(Buffer.from(chunk, "utf8"));
+          } else if (chunk instanceof Uint8Array) {
+            chunks.push(Buffer.from(chunk));
+          }
+        });
+        nodeReq.once("end", () => {
+          clearTimeout(timer);
+          resolve(Buffer.concat(chunks).toString("utf8"));
+        });
+        nodeReq.once("error", (err: unknown) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+      return text ? JSON.parse(text) : {};
+    }
+
+    const text = await request.text();
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.error("[parseRequestBody] Failed to parse request body:", err);
+    return {};
+  }
 }
 
 export async function handleAiRequest(request: Request): Promise<Response> {
@@ -31,7 +80,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  const rawBody = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const rawBody = await parseRequestBody(request);
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
     // Graceful fallback if GEMINI_API_KEY is not configured yet
@@ -88,19 +137,19 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
                   mimeType: body.imageMime,
                 },
               },
-              { text: body.prompt || "Analyze this image and suggest social media captions." },
+              { text: body["prompt"] || "Analyze this image and suggest social media captions." },
             ],
           });
         }
-      } else if (body.prompt && contents.length === 0) {
+      } else if (body["prompt"] && contents.length === 0) {
         contents.push({
           role: "user",
-          parts: [{ text: body.prompt }],
+          parts: [{ text: body["prompt"] }],
         });
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.6-flash",
         contents: contents as never,
         config: {
           systemInstruction,
@@ -198,7 +247,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
       parts.push({ text: prompt });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-3.6-flash",
         contents: [{ role: "user", parts }] as never,
         config: {
           systemInstruction:

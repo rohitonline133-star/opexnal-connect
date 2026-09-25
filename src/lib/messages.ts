@@ -128,10 +128,10 @@ export async function listConversations(userId: string) {
         .sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : -1));
     }
   } catch {
-    // fallback to seed conversations
+    // Return empty if error or not yet participating in conversations
   }
 
-  return SEED_CONVERSATIONS;
+  return [];
 }
 
 /** Find an existing 1:1 conversation with `otherId`, or create one. */
@@ -168,9 +168,7 @@ export async function openDirectConversation(userId: string, otherId: string) {
   return conversation.id;
 }
 
-export async function getMessages(conversationId: string) {
-  const local = getLocalMessages(conversationId);
-
+export async function getMessages(conversationId: string): Promise<MessageRow[]> {
   try {
     const { data, error } = await supabase
       .from("messages")
@@ -178,35 +176,18 @@ export async function getMessages(conversationId: string) {
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
     if (!error && data) {
-      return [...data, ...local];
+      return data;
     }
   } catch {
-    // fallback
+    // Return empty array
   }
-
-  const initialSeed: MessageRow[] = [];
-  if (conversationId === "conv_maya") {
-    initialSeed.push({
-      id: "seed_msg_maya_1",
-      conversation_id: "conv_maya",
-      sender_id: "user_maya",
-      body: "Hey! Loved your latest post on the feed. Are you going to the creator meetup?",
-      created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    });
-  } else if (conversationId === "conv_zenith") {
-    initialSeed.push({
-      id: "seed_msg_zenith_1",
-      conversation_id: "conv_zenith",
-      sender_id: "user_zenith",
-      body: "The new motion graphics shader is ready for testing! Check it out when you can.",
-      created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    });
-  }
-
-  return [...initialSeed, ...local];
+  return [];
 }
 
-export async function getConversationPeers(conversationId: string, userId: string) {
+export async function getConversationPeers(
+  conversationId: string,
+  userId: string,
+): Promise<FeedAuthor[]> {
   try {
     const { data } = await supabase
       .from("conversation_members")
@@ -226,31 +207,54 @@ export async function getConversationPeers(conversationId: string, userId: strin
     // fallback
   }
 
-  const conv = SEED_CONVERSATIONS.find((c) => c.id === conversationId);
-  if (conv) {
-    return conv.others;
-  }
-  return [] as FeedAuthor[];
+  return [];
 }
 
 export async function sendMessage(conversationId: string, senderId: string, body: string) {
-  const newMsg: MessageRow = {
-    id: `local_msg_${Date.now()}`,
-    conversation_id: conversationId,
-    sender_id: senderId,
-    body: body.trim(),
-    created_at: new Date().toISOString(),
-  };
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveSenderId = authData.user?.id || senderId;
 
+  const { error } = await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: effectiveSenderId,
+    body: body.trim(),
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deleteMessage(messageId: string) {
+  const { error } = await supabase.from("messages").delete().eq("id", messageId);
+  if (error) throw error;
+}
+
+const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
+
+const memoryMessageReactions: Record<string, string> = {};
+
+export function getMessageReactions(): Record<string, string> {
+  if (typeof window === "undefined") {
+    return memoryMessageReactions;
+  }
   try {
-    const { error } = await supabase
-      .from("messages")
-      .insert({ conversation_id: conversationId, sender_id: senderId, body: body.trim() });
-    if (error) {
-      saveLocalMessage(conversationId, newMsg);
-    }
+    const raw = localStorage.getItem(LOCAL_MESSAGE_REACTIONS_KEY);
+    return raw ? JSON.parse(raw) : memoryMessageReactions;
   } catch {
-    saveLocalMessage(conversationId, newMsg);
+    return memoryMessageReactions;
+  }
+}
+
+export function setMessageReaction(messageId: string, emoji: string) {
+  memoryMessageReactions[messageId] = emoji;
+  if (typeof window === "undefined") return;
+  try {
+    const current = getMessageReactions();
+    current[messageId] = emoji;
+    localStorage.setItem(LOCAL_MESSAGE_REACTIONS_KEY, JSON.stringify(current));
+  } catch {
+    // ignore
   }
 }
 

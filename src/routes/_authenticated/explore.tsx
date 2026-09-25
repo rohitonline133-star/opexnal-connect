@@ -8,6 +8,7 @@ import {
   Flame,
   Grid3x3,
   Hash,
+  History,
   Layers,
   Loader2,
   Lock,
@@ -71,6 +72,43 @@ function Explore() {
   const queryClient = useQueryClient();
   const [term, setTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"trending" | "people" | "reels" | "tags">("trending");
+
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    if (typeof window === "undefined")
+      return ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+    try {
+      const raw = localStorage.getItem("opexnal_recent_searches");
+      return raw ? JSON.parse(raw) : ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+    } catch {
+      return ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+    }
+  });
+
+  const saveSearchTerm = (termToSave: string) => {
+    const clean = termToSave.trim();
+    if (!clean) return;
+    setRecentSearches((prev) => {
+      const next = [clean, ...prev.filter((t) => t.toLowerCase() !== clean.toLowerCase())].slice(
+        0,
+        8,
+      );
+      try {
+        localStorage.setItem("opexnal_recent_searches", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem("opexnal_recent_searches");
+    } catch {
+      // ignore
+    }
+  };
 
   const query = term.trim().toLowerCase();
 
@@ -177,6 +215,36 @@ function Explore() {
           )}
         </div>
 
+        {/* Recent Searches */}
+        {!query && recentSearches.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-muted-foreground flex items-center gap-1.5">
+                <History className="h-3.5 w-3.5" /> Recent Searches
+              </span>
+              <button
+                type="button"
+                onClick={clearRecentSearches}
+                className="text-primary hover:underline text-[11px] font-medium"
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {recentSearches.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setTerm(s)}
+                  className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-foreground hover:bg-secondary hover:border-primary/40 transition-colors"
+                >
+                  {s.startsWith("#") ? s : `@${s}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Discovery Filter Tabs */}
         {!query && (
           <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -224,6 +292,7 @@ function Explore() {
             <Link
               to="/tag/$tag"
               params={{ tag: query.replace(/^#/, "") }}
+              onClick={() => saveSearchTerm(`#${query.replace(/^#/, "")}`)}
               className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 transition-colors hover:bg-primary/10"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl brand-gradient-bg text-primary-foreground">
@@ -253,6 +322,7 @@ function Explore() {
                   <Link
                     to="/u/$username"
                     params={{ username: person.username }}
+                    onClick={() => saveSearchTerm(person.username)}
                     className="flex min-w-0 flex-1 items-center gap-3"
                   >
                     <ProfileAvatar

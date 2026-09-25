@@ -4,9 +4,9 @@ import { BadgeCheck, Bookmark, Heart, MapPin, MessageCircle, Send } from "lucide
 import { toast } from "sonner";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { MediaCarousel } from "@/components/opexnal/post-media";
+import { PostControlsMenu } from "@/components/opexnal/post-controls";
 import { cn } from "@/lib/utils";
 import { initialsFor } from "@/lib/profile";
-import { getStoredSettings } from "@/lib/settings-store";
 import {
   formatCount,
   recordShare,
@@ -17,36 +17,23 @@ import {
 } from "@/lib/posts";
 
 function Caption({ text }: { text: string }) {
-  const parts = text.split(/(#[A-Za-z0-9_]{1,50}|@[A-Za-z0-9_]{1,50})/g);
+  const parts = text.split(/(#[A-Za-z0-9_]{1,50})/g);
   return (
     <>
-      {parts.map((part, i) => {
-        if (part.startsWith("#")) {
-          return (
-            <Link
-              key={`${part}-${i}`}
-              to="/tag/$tag"
-              params={{ tag: part.slice(1).toLowerCase() }}
-              className="text-primary hover:underline"
-            >
-              {part}
-            </Link>
-          );
-        }
-        if (part.startsWith("@")) {
-          return (
-            <Link
-              key={`${part}-${i}`}
-              to="/u/$username"
-              params={{ username: part.slice(1).toLowerCase() }}
-              className="text-primary font-medium hover:underline"
-            >
-              {part}
-            </Link>
-          );
-        }
-        return <Fragment key={i}>{part}</Fragment>;
-      })}
+      {parts.map((part, i) =>
+        part.startsWith("#") ? (
+          <Link
+            key={`${part}-${i}`}
+            to="/tag/$tag"
+            params={{ tag: part.slice(1).toLowerCase() }}
+            className="text-primary hover:underline"
+          >
+            {part}
+          </Link>
+        ) : (
+          <Fragment key={i}>{part}</Fragment>
+        ),
+      )}
     </>
   );
 }
@@ -56,9 +43,11 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes_count);
   const [saved, setSaved] = useState(post.saved);
+  const [hidden, setHidden] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const author = post.author;
-  const settings = getStoredSettings();
-  const hideLikeCounts = settings.hideLikeAndViewCounts;
+
+  if (hidden || deleted) return null;
 
   async function onLike() {
     if (!viewerId) return;
@@ -131,7 +120,15 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
         ) : (
           <p className="text-sm text-muted-foreground">Unknown author</p>
         )}
-        <span className="ml-auto text-xs text-muted-foreground">{timeAgo(post.created_at)}</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{timeAgo(post.created_at)}</span>
+          <PostControlsMenu
+            post={post}
+            viewerId={viewerId}
+            onPostDeleted={() => setDeleted(true)}
+            onPostHidden={() => setHidden(true)}
+          />
+        </div>
       </header>
 
       {post.media.length > 0 && (
@@ -172,13 +169,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
       </div>
 
       <div className="space-y-1 px-4 pt-2">
-        <p className="text-sm font-semibold">
-          {hideLikeCounts
-            ? liked
-              ? "Liked by you and others"
-              : "Liked by others"
-            : `${formatCount(likes)} likes`}
-        </p>
+        <p className="text-sm font-semibold">{formatCount(likes)} likes</p>
         {post.caption && (
           <p className="whitespace-pre-wrap text-sm">
             {author && <span className="mr-1 font-semibold">{author.username}</span>}

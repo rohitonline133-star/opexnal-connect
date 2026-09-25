@@ -141,7 +141,7 @@ function AIPage() {
       sender: "user",
       text: text || "Analyze this image",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      imagePreview: attachedImage?.base64,
+      ...(attachedImage?.base64 ? { imagePreview: attachedImage.base64 } : {}),
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -167,8 +167,8 @@ function AIPage() {
       const reply = await sendAiChatMessage({
         messages: history,
         prompt: userMsg.text,
-        imageBase64: currentImg?.base64,
-        imageMime: currentImg?.mime,
+        ...(currentImg?.base64 ? { imageBase64: currentImg.base64 } : {}),
+        ...(currentImg?.mime ? { imageMime: currentImg.mime } : {}),
       });
 
       const aiMsg: ChatMessage = {
@@ -229,8 +229,8 @@ function AIPage() {
       const result = await runAiCreatorTool({
         tool: studioTool,
         topic: studioTopic.trim(),
-        tone: studioTone,
-        language: studioLang,
+        ...(studioTone ? { tone: studioTone } : {}),
+        ...(studioLang ? { language: studioLang } : {}),
         contextText: studioTopic.trim(),
       });
       setStudioResult(result);

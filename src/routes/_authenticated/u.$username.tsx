@@ -1,17 +1,39 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, ChevronLeft, Loader2, Lock } from "lucide-react";
+import {
+  BadgeCheck,
+  ChevronLeft,
+  Copy,
+  EyeOff,
+  Flag,
+  Link as LinkIcon,
+  Loader2,
+  Lock,
+  MoreHorizontal,
+  Share2,
+  ShieldAlert,
+  UserX,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { PostGrid } from "@/components/opexnal/post-grid";
-
+import { ReportContentDialog } from "@/components/opexnal/post-controls";
+import { ShareProfileDialog } from "@/components/opexnal/share-profile-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileByUsername, initialsFor } from "@/lib/profile";
-import { openDirectConversation } from "@/lib/messages";
 import { useSession } from "@/hooks/use-session";
+import { openDirectConversation } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/u/$username")({
   head: ({ params }) => ({
@@ -33,6 +55,9 @@ function PublicProfile() {
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile-by-username", username],
@@ -40,6 +65,34 @@ function PublicProfile() {
   });
 
   const isSelf = Boolean(user && profile && user.id === profile.id);
+
+  async function handleBlock() {
+    if (!user || !profile) return;
+    try {
+      await supabase.from("blocks").insert({
+        blocker_id: user.id,
+        blocked_id: profile.id,
+      });
+      toast.success(`Blocked @${profile.username}`);
+      setMenuOpen(false);
+      navigate({ to: "/explore" });
+    } catch {
+      toast.error("Could not block user");
+    }
+  }
+
+  function handleRestrict() {
+    if (!profile) return;
+    toast.success(`Restricted @${profile.username}`);
+    setMenuOpen(false);
+  }
+
+  function handleCopyProfileLink() {
+    const url = `${window.location.origin}/u/${username}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Profile link copied");
+    setMenuOpen(false);
+  }
 
   const { data: relationship } = useQuery({
     queryKey: ["relationship", user?.id, profile?.id],
@@ -114,6 +167,18 @@ function PublicProfile() {
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Link>
+          }
+          right={
+            profile && !isSelf ? (
+              <button
+                type="button"
+                aria-label="Account options"
+                onClick={() => setMenuOpen(true)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-full"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            ) : null
           }
         />
       }
@@ -207,6 +272,84 @@ function PublicProfile() {
               <PostGrid userId={profile.id} viewerId={user?.id ?? null} />
             )}
           </div>
+
+          {/* User Options Menu Dialog */}
+          <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
+            <DialogContent className="max-w-xs p-0 overflow-hidden rounded-2xl bg-card border border-border">
+              <div className="divide-y divide-border text-center text-sm font-medium">
+                <button
+                  type="button"
+                  onClick={handleBlock}
+                  className="w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2"
+                >
+                  <UserX className="h-4 w-4" />
+                  Block @{profile.username}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRestrict}
+                  className="w-full py-3.5 text-destructive hover:bg-secondary/50 flex items-center justify-center gap-2"
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  Restrict @{profile.username}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setReportOpen(true);
+                  }}
+                  className="w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2"
+                >
+                  <Flag className="h-4 w-4" />
+                  Report Account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setShareOpen(true);
+                  }}
+                  className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
+                >
+                  <Share2 className="h-4 w-4 text-muted-foreground" />
+                  Share Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyProfileLink}
+                  className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
+                >
+                  <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                  Copy Profile URL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal"
+                >
+                  Cancel
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Report Dialog */}
+          <ReportContentDialog
+            open={reportOpen}
+            onOpenChange={setReportOpen}
+            targetId={profile.id}
+            targetType="user"
+            viewerId={user?.id || "anonymous"}
+          />
+
+          {/* Share Profile Dialog */}
+          <ShareProfileDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            username={profile.username}
+            displayName={profile.display_name || profile.username}
+          />
         </div>
       )}
     </AppShell>

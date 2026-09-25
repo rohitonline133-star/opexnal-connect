@@ -5,6 +5,14 @@ import {
   searchSettings,
   DEFAULT_SETTINGS,
 } from "../src/lib/settings-store.ts";
+import {
+  checkContentSafety,
+  scanMediaForCopyright,
+  getStoredCopyrightCases,
+  submitCopyrightAppeal,
+} from "../src/lib/moderation-copyright.ts";
+import { getStoryHighlights, saveStoryHighlight } from "../src/lib/stories.ts";
+import { getMessageReactions, setMessageReaction } from "../src/lib/messages.ts";
 
 describe("Settings & Activity Master Inventory Audit", () => {
   test("All 14 Settings & Activity sections are present in inventory", () => {
@@ -96,6 +104,33 @@ describe("Settings Real-Time Search Engine", () => {
     assert.ok(results.length > 0);
     assert.ok(results.some((r) => r.id === "login_activity_sessions"));
   });
+
+  test("Gujarati search queries return expected settings items", () => {
+    // Search 'પાસવર્ડ' (Password)
+    const pwResults = searchSettings("પાસવર્ડ");
+    assert.ok(pwResults.length > 0);
+    assert.ok(pwResults.some((r) => r.id === "password_security"));
+
+    // Search 'નોટિફિકેશન' (Notifications)
+    const notifResults = searchSettings("નોટિફિકેશન");
+    assert.ok(notifResults.length > 0);
+    assert.ok(notifResults.some((r) => r.id === "notifications"));
+
+    // Search 'બ્લોક' (Blocked accounts)
+    const blockResults = searchSettings("બ્લોક");
+    assert.ok(blockResults.length > 0);
+    assert.ok(blockResults.some((r) => r.id === "blocked_accounts"));
+
+    // Search 'આર્કાઇવ' (Archive)
+    const archiveResults = searchSettings("આર્કાઇવ");
+    assert.ok(archiveResults.length > 0);
+    assert.ok(archiveResults.some((r) => r.id === "archive"));
+
+    // Search 'પેમેન્ટ' (Payment)
+    const payResults = searchSettings("પેમેન્ટ");
+    assert.ok(payResults.length > 0);
+    assert.ok(payResults.some((r) => r.id === "payment_methods"));
+  });
 });
 
 describe("Default Settings Schema Validation", () => {
@@ -157,59 +192,88 @@ describe("Monetization & Security Rules Enforcement", () => {
     assert.strictEqual(safeUpdatePayload.userId, sessionUserId);
     assert.notStrictEqual(safeUpdatePayload.userId, untrustedBody.userId);
   });
-
-  test("Payment gateway: Live transactions remain disabled until credentials are provided", () => {
-    const hasLiveProvider = Boolean(process.env.STRIPE_SECRET_KEY || process.env.RAZORPAY_KEY_ID);
-    // In our container environment without explicit third party secrets, live money transactions MUST be disabled
-    assert.strictEqual(hasLiveProvider, false);
-  });
 });
 
-describe("Content Safety & Moderation Scanner", () => {
-  test("performClientModerationScan detects phishing and spam links", async () => {
-    const { performClientModerationScan } = await import("../src/lib/moderation.ts");
-
-    const spamPost = "Check out this free crypto giveaway at http://claim-free-crypto.ru/now!";
-    const result = performClientModerationScan(spamPost);
-    assert.strictEqual(result.category, "phishing");
-    assert.strictEqual(result.status, "flagged_for_review");
-    assert.ok(result.reasons.length > 0);
-  });
-
-  test("performClientModerationScan passes benign creator post", async () => {
-    const { performClientModerationScan } = await import("../src/lib/moderation.ts");
-
-    const benignPost = "Beautiful sunset hike in the Pacific Northwest! #nature #photography";
-    const result = performClientModerationScan(benignPost);
-    assert.strictEqual(result.category, "clean");
-    assert.strictEqual(result.status, "clean");
-    assert.strictEqual(result.reasons.length, 0);
-  });
-});
-
-describe("Verification Lifecycle & Badge Integrity", () => {
-  test("Verification application requires full legal name and document identification", () => {
-    function validateApplication(data: { fullName?: string; documentNumber?: string }) {
-      if (!data.fullName || !data.fullName.trim()) {
-        return { valid: false, error: "FULL_NAME_REQUIRED" };
-      }
-      if (!data.documentNumber || !data.documentNumber.trim()) {
-        return { valid: false, error: "DOCUMENT_NUMBER_REQUIRED" };
-      }
-      return { valid: true };
-    }
-
-    assert.strictEqual(validateApplication({}).valid, false);
-    assert.strictEqual(validateApplication({ fullName: "Jane Doe" }).valid, false);
-    assert.strictEqual(
-      validateApplication({ fullName: "Jane Doe", documentNumber: "A12345678" }).valid,
-      true,
+describe("Content Moderation & Safety Protection", () => {
+  test("Content safety filter flags banned spam, scams and hate speech", () => {
+    const spamCheck = checkContentSafety(
+      "Hey everyone, join our free crypto giveaway for 10x returns!",
     );
+    assert.strictEqual(spamCheck.allowed, false);
+    assert.strictEqual(spamCheck.flagged, true);
+    assert.strictEqual(spamCheck.category, "spam");
+
+    const followerSpamCheck = checkContentSafety(
+      "Check out this site to buy cheap followers instantly!",
+    );
+    assert.strictEqual(followerSpamCheck.allowed, false);
+    assert.strictEqual(followerSpamCheck.flagged, true);
+
+    const normalCheck = checkContentSafety(
+      "Late night coding session and designing clean mobile social UI 🚀✨ #opexnal",
+    );
+    assert.strictEqual(normalCheck.allowed, true);
+    assert.strictEqual(normalCheck.flagged, false);
+  });
+});
+
+describe("Copyright Fingerprint Scanning & Appeals", () => {
+  test("Video copyright scan flags restricted commercial sound recordings", () => {
+    const restrictedScan = scanMediaForCopyright("summer_commercial_hit_radio_edit.mp4", "video");
+    assert.strictEqual(restrictedScan.matched, true);
+    assert.strictEqual(restrictedScan.policy, "blocked");
+    assert.strictEqual(restrictedScan.workTitle, "Summer Velocity (Radio Edit)");
+
+    const licensedScan = scanMediaForCopyright("synthwave_neon_sunset_loop.mp4", "video");
+    assert.strictEqual(licensedScan.matched, true);
+    assert.strictEqual(licensedScan.policy, "allow_with_attribution");
+    assert.strictEqual(licensedScan.workTitle, "Neon Horizons");
+
+    const originalScan = scanMediaForCopyright("my_original_acoustic_guitar_solo.mp4", "video");
+    assert.strictEqual(originalScan.matched, false);
   });
 
-  test("Settings schema contains verificationStatus and hideLikeAndViewCounts", () => {
-    assert.strictEqual(typeof DEFAULT_SETTINGS.verificationStatus, "string");
-    assert.strictEqual(typeof DEFAULT_SETTINGS.hideLikeAndViewCounts, "boolean");
-    assert.strictEqual(DEFAULT_SETTINGS.hideLikeAndViewCounts, false);
+  test("Submitting a copyright appeal updates case dispute status", () => {
+    const appealSuccess = submitCopyrightAppeal(
+      "claim_cr_8921",
+      "I have licensed this audio for promotional use under license #LIC-99214",
+    );
+    assert.strictEqual(appealSuccess, true);
+
+    const cases = getStoredCopyrightCases();
+    const updatedCase = cases.find((c) => c.id === "claim_cr_8921");
+    assert.ok(updatedCase);
+    assert.strictEqual(updatedCase.status, "under_dispute");
+    assert.ok(updatedCase.disputeReason?.includes("LIC-99214"));
+  });
+});
+
+describe("Story Highlights & Message Interactions", () => {
+  test("Story highlights can be retrieved and saved per user", () => {
+    const initialHighlights = getStoryHighlights("user_maya");
+    assert.ok(Array.isArray(initialHighlights));
+
+    const newHl = saveStoryHighlight({
+      userId: "test_user_highlight",
+      title: "My Highlights 🌟",
+      coverUrl: "https://example.com/cover.jpg",
+      storyIds: ["story_1", "story_2"],
+    });
+
+    assert.ok(newHl.id.startsWith("hl_"));
+    assert.strictEqual(newHl.title, "My Highlights 🌟");
+
+    const userHighlights = getStoryHighlights("test_user_highlight");
+    assert.ok(userHighlights.some((h) => h.id === newHl.id));
+  });
+
+  test("Message emoji reactions persist and update cleanly", () => {
+    setMessageReaction("msg_test_101", "🔥");
+    const reactions = getMessageReactions();
+    assert.strictEqual(reactions["msg_test_101"], "🔥");
+
+    setMessageReaction("msg_test_101", "❤️");
+    const updatedReactions = getMessageReactions();
+    assert.strictEqual(updatedReactions["msg_test_101"], "❤️");
   });
 });

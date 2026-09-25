@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ImagePlus, MapPin, X, Loader2, Sparkles, RefreshCw, Wand2, Check } from "lucide-react";
+import {
+  ImagePlus,
+  MapPin,
+  X,
+  Loader2,
+  Sparkles,
+  RefreshCw,
+  Wand2,
+  Check,
+  ShieldCheck,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
@@ -19,12 +30,7 @@ import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { createPost, extractHashtags, type NewPostMedia, type PostVisibility } from "@/lib/posts";
 import { runAiCreatorTool } from "@/lib/ai-client";
-import {
-  analyzeContentServer,
-  getLocalModerationQueue,
-  saveLocalModerationQueue,
-  type ModerationQueueItem,
-} from "@/lib/moderation";
+import { checkContentSafety, scanMediaForCopyright } from "@/lib/moderation-copyright";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({
@@ -199,46 +205,32 @@ function Create() {
 
   async function handleSubmit() {
     if (!user || items.length === 0) return;
+
+    // Automated content moderation pre-check
+    const hashtags = extractHashtags(caption);
+    const safetyCheck = checkContentSafety(caption, hashtags);
+    if (!safetyCheck.allowed) {
+      toast.error(safetyCheck.reason || "Content violates Opexnal safety policies");
+      return;
+    }
+
+    // Automated copyright and audio fingerprint scan
+    for (const item of items) {
+      const crCheck = scanMediaForCopyright(item.file.name, item.mediaType);
+      if (crCheck.matched && crCheck.policy === "blocked") {
+        toast.error(
+          `Copyright Alert: ${crCheck.workTitle} is restricted by rights-holder (${crCheck.rightsHolder}). Please use original audio or licensed content.`,
+        );
+        return;
+      } else if (crCheck.matched && crCheck.policy === "allow_with_attribution") {
+        toast.info(
+          `Audio identified: "${crCheck.workTitle}" by ${crCheck.rightsHolder}. Attribution will be credited.`,
+        );
+      }
+    }
+
     setSubmitting(true);
     try {
-      // 1. Run content safety analysis
-      if (caption.trim()) {
-        const safety = await analyzeContentServer(caption, {
-          targetType: "post",
-          authorId: user.id,
-        });
-
-        if (safety.suggestedAction === "temporary_hold") {
-          toast.error(
-            safety.advisoryMessage ||
-              "Post blocked: Content violates community safety policies and cannot be published.",
-          );
-          setSubmitting(false);
-          return;
-        }
-
-        if (safety.status === "flagged_for_review" || safety.status === "warning_issued") {
-          const queue = getLocalModerationQueue();
-          const newItem: ModerationQueueItem = {
-            id: `mod_${Date.now()}`,
-            targetId: `temp_post_${Date.now()}`,
-            targetType: "post",
-            authorId: user.id,
-            authorUsername: user.email?.split("@")[0] || "creator",
-            snippet: caption.slice(0, 100),
-            category: safety.category,
-            confidence: safety.confidence,
-            status: safety.status,
-            reasons: safety.reasons,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            appealSubmitted: false,
-          };
-          saveLocalModerationQueue([newItem, ...queue]);
-          toast.warning("Notice: Post flagged for standard community review.");
-        }
-      }
-
       const media: NewPostMedia[] = [];
       for (const item of items) {
         const dims = await readDimensions(item);

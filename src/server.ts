@@ -3,9 +3,6 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { handleAiRequest } from "./server/gemini-handler";
-import { handleVerificationRequest } from "./server/verification-handler";
-import { handleModerationRequest } from "./server/moderation-handler";
-import { handleMonetizationRequest } from "./server/monetization-handler";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -54,15 +51,6 @@ export default {
       const url = new URL(request.url);
       if (url.pathname.startsWith("/api/ai/")) {
         return await handleAiRequest(request);
-      }
-      if (url.pathname.startsWith("/api/verification/")) {
-        return await handleVerificationRequest(request);
-      }
-      if (url.pathname.startsWith("/api/moderation/")) {
-        return await handleModerationRequest(request);
-      }
-      if (url.pathname.startsWith("/api/monetization/")) {
-        return await handleMonetizationRequest(request);
       }
 
       const handler = await getServerEntry();

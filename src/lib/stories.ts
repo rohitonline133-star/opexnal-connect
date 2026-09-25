@@ -210,10 +210,10 @@ export async function getStoryTray(viewerId: string) {
       return list;
     }
   } catch {
-    // fallback to seed stories
+    // fallback to empty
   }
 
-  return SEED_STORY_GROUPS;
+  return [];
 }
 
 export async function getUserStories(userId: string, viewerId: string) {
@@ -231,8 +231,7 @@ export async function getUserStories(userId: string, viewerId: string) {
     // fallback
   }
 
-  const group = SEED_STORY_GROUPS.find((g) => g.author.id === userId);
-  return group ? group.stories : [];
+  return [];
 }
 
 export async function createStory(input: {
@@ -358,30 +357,82 @@ export async function reportContent(input: {
   if (error) throw error;
 }
 
-export async function sendStoryReaction(storyId: string, userId: string, emoji: string) {
-  try {
-    const { data: s } = await supabase
-      .from("stories")
-      .select("user_id")
-      .eq("id", storyId)
-      .maybeSingle();
+export const STORY_IMAGE_DURATION_MS = 5000;
 
-    if (s && s.user_id !== userId) {
-      await supabase.from("notifications").insert({
-        user_id: s.user_id,
-        actor_id: userId,
-        type: "reaction",
-        entity_id: storyId,
-        entity_type: "story",
-        message: `reacted ${emoji} to your story`,
-      });
+export interface StoryHighlight {
+  id: string;
+  userId: string;
+  title: string;
+  coverUrl: string;
+  storyIds: string[];
+  createdAt: string;
+}
+
+const LOCAL_HIGHLIGHTS_KEY = "opexnal_story_highlights";
+
+const DEFAULT_HIGHLIGHTS: StoryHighlight[] = [
+  {
+    id: "hl_travel",
+    userId: "user_maya",
+    title: "Travel ✈️",
+    coverUrl:
+      "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=300&q=80",
+    storyIds: ["story_maya_1"],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "hl_creative",
+    userId: "user_zenith",
+    title: "3D Art 🎨",
+    coverUrl:
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80",
+    storyIds: ["story_zenith_1"],
+    createdAt: new Date().toISOString(),
+  },
+];
+
+const memoryHighlights: Record<string, StoryHighlight[]> = {};
+
+export function getStoryHighlights(userId: string): StoryHighlight[] {
+  if (typeof window === "undefined") {
+    if (!memoryHighlights[userId]) {
+      memoryHighlights[userId] = DEFAULT_HIGHLIGHTS.filter((h) => h.userId === userId);
     }
+    return memoryHighlights[userId] || [];
+  }
+  try {
+    const raw = localStorage.getItem(`${LOCAL_HIGHLIGHTS_KEY}_${userId}`);
+    if (!raw) {
+      const filtered = DEFAULT_HIGHLIGHTS.filter((h) => h.userId === userId);
+      return filtered;
+    }
+    return JSON.parse(raw);
   } catch {
-    // non-fatal
+    return DEFAULT_HIGHLIGHTS.filter((h) => h.userId === userId);
   }
 }
 
-export const STORY_IMAGE_DURATION_MS = 5000;
+export function saveStoryHighlight(
+  highlight: Omit<StoryHighlight, "id" | "createdAt">,
+): StoryHighlight {
+  const current = getStoryHighlights(highlight.userId);
+  const newHighlight: StoryHighlight = {
+    ...highlight,
+    id: `hl_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  current.push(newHighlight);
+  if (typeof window === "undefined") {
+    memoryHighlights[highlight.userId] = current;
+    return newHighlight;
+  }
+  try {
+    localStorage.setItem(`${LOCAL_HIGHLIGHTS_KEY}_${highlight.userId}`, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+  return newHighlight;
+}
 
 export function timeLeft(expiresAt: string) {
   const ms = new Date(expiresAt).getTime() - Date.now();

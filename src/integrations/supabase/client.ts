@@ -36,10 +36,10 @@ function createSupabaseClient() {
     (import.meta.env["VITE_SUPABASE_PROJECT_ID"]
       ? `https://${import.meta.env["VITE_SUPABASE_PROJECT_ID"]}.supabase.co`
       : undefined) ||
-    (typeof process !== "undefined" && process.env
-      ? process.env["SUPABASE_URL"] ||
-        process.env["VITE_SUPABASE_URL"] ||
-        (process.env["SUPABASE_PROJECT_ID"]
+    (typeof process !== "undefined"
+      ? process.env?.["SUPABASE_URL"] ||
+        process.env?.["VITE_SUPABASE_URL"] ||
+        (process.env?.["SUPABASE_PROJECT_ID"]
           ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
           : undefined)
       : undefined) ||
@@ -48,11 +48,11 @@ function createSupabaseClient() {
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
     import.meta.env["VITE_SUPABASE_ANON_KEY"] ||
-    (typeof process !== "undefined" && process.env
-      ? process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-        process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-        process.env["SUPABASE_ANON_KEY"] ||
-        process.env["VITE_SUPABASE_ANON_KEY"]
+    (typeof process !== "undefined"
+      ? process.env?.["SUPABASE_PUBLISHABLE_KEY"] ||
+        process.env?.["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+        process.env?.["SUPABASE_ANON_KEY"] ||
+        process.env?.["VITE_SUPABASE_ANON_KEY"]
       : undefined) ||
     "mock-anon-key-for-local-preview";
 
