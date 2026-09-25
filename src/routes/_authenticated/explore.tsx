@@ -13,8 +13,10 @@ import {
   Lock,
   Play,
   Search,
+  ShoppingBag,
   Sparkles,
   TrendingUp,
+  Radio,
   UserPlus,
   Users,
   X,
@@ -23,6 +25,8 @@ import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
+import { BroadcastChannelsView } from "@/components/opexnal/broadcast-channels-view";
+import { ShoppingModal } from "@/components/opexnal/shopping-modal";
 import { useSignedMediaUrl } from "@/components/opexnal/post-media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +34,11 @@ import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
+import {
+  CURATED_SHOPPING_CATALOG,
+  getWishlist,
+  type ProductItem,
+} from "@/lib/interactive-features";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/explore")({
@@ -70,7 +79,10 @@ function Explore() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [term, setTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"trending" | "people" | "reels" | "tags">("trending");
+  const [activeTab, setActiveTab] = useState<
+    "trending" | "people" | "reels" | "tags" | "channels" | "shop"
+  >("trending");
+  const [activeProduct, setActiveProduct] = useState<ProductItem | null>(null);
 
   const query = term.trim().toLowerCase();
 
@@ -185,6 +197,8 @@ function Explore() {
               { id: "people", label: "Creators", icon: Users },
               { id: "reels", label: "Reels", icon: Clapperboard },
               { id: "tags", label: "Hashtags", icon: Hash },
+              { id: "shop", label: "Shop", icon: ShoppingBag },
+              { id: "channels", label: "Channels", icon: Radio },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -545,9 +559,76 @@ function Explore() {
                 </div>
               </div>
             )}
+
+            {/* 5. SHOPPING & WISHLIST TAB */}
+            {activeTab === "shop" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Creator Storefronts
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      Curated merch, creative gear & aesthetic products
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                    {getWishlist().length} in Wishlist
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {CURATED_SHOPPING_CATALOG.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setActiveProduct(item)}
+                      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-all hover:border-primary/40 cursor-pointer shadow-xs"
+                    >
+                      <div className="relative aspect-square w-full overflow-hidden bg-secondary">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <span className="absolute bottom-2 left-2 rounded-lg bg-black/75 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-md">
+                          ${item.price}
+                        </span>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                          {item.brand}
+                        </p>
+                        <h4 className="truncate text-xs font-bold text-foreground mt-0.5">
+                          {item.title}
+                        </h4>
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>★ {item.rating}</span>
+                          <span className="font-semibold text-primary group-hover:underline">
+                            View & Buy →
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. BROADCAST CHANNELS TAB */}
+            {activeTab === "channels" && (
+              <div className="space-y-2">
+                <BroadcastChannelsView />
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {/* Shopping Product Details & Checkout Modal */}
+      {activeProduct && (
+        <ShoppingModal product={activeProduct} onClose={() => setActiveProduct(null)} />
+      )}
     </AppShell>
   );
 }

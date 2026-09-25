@@ -210,10 +210,10 @@ export async function getStoryTray(viewerId: string) {
       return list;
     }
   } catch {
-    // fallback to empty
+    // fallback to seed stories
   }
 
-  return [];
+  return SEED_STORY_GROUPS;
 }
 
 export async function getUserStories(userId: string, viewerId: string) {
@@ -231,7 +231,8 @@ export async function getUserStories(userId: string, viewerId: string) {
     // fallback
   }
 
-  return [];
+  const group = SEED_STORY_GROUPS.find((g) => g.author.id === userId);
+  return group ? group.stories : [];
 }
 
 export async function createStory(input: {

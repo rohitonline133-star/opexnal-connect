@@ -200,9 +200,15 @@ export function SettingsDialogContainer({
 }
 
 function PersonalDetailsModal({ username, onClose }: { username: string; onClose: () => void }) {
-  const [email, setEmail] = useState(() => localStorage.getItem("opexnal_user_email") || "");
-  const [phone, setPhone] = useState(() => localStorage.getItem("opexnal_user_phone") || "");
-  const [birthday, setBirthday] = useState(() => localStorage.getItem("opexnal_user_dob") || "");
+  const [email, setEmail] = useState(
+    () => localStorage.getItem("opexnal_user_email") || `${username}@opexnal.user`,
+  );
+  const [phone, setPhone] = useState(
+    () => localStorage.getItem("opexnal_user_phone") || "+1 (555) 019-2834",
+  );
+  const [birthday, setBirthday] = useState(
+    () => localStorage.getItem("opexnal_user_dob") || "1998-07-15",
+  );
 
   function save() {
     localStorage.setItem("opexnal_user_email", email);

@@ -56,13 +56,13 @@ function Privacy() {
     try {
       const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
       if (error) {
-        toast.error(error.message);
+        toast.error("Failed to update privacy settings");
         return;
       }
       await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast.success("Privacy updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update privacy settings");
+    } catch {
+      toast.error("An error occurred while updating settings");
     }
   }
 

@@ -1,37 +1,41 @@
 import { useEffect, useState } from "react";
-import { authClient, AuthUser, AuthSession } from "@/lib/auth-client";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Authoritative Supabase Auth Session Hook.
+ *
+ * In Production-Grade Security mode:
+ * - No fabricated/guest users are returned.
+ * - Sessions must be verified by Supabase Auth.
+ * - Inactive or expired sessions return user = null.
+ */
 export function useSession() {
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    // Listen to first-party auth state events
-    const { data: sub } = authClient.onAuthStateChange((_event, nextSession) => {
-      if (!active) return;
-      setSession(nextSession);
-      if (nextSession) {
-        authClient.getUser().then(({ data }) => {
-          if (active) setUser(data.user);
-        });
-      } else {
-        setUser(null);
+    // Purge any legacy demo bypass keys from storage
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("opexnal_guest_user");
+        localStorage.removeItem("guest_user");
+      } catch {
+        // ignore
       }
+    }
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!active) return;
+      setSession(next);
       setLoading(false);
     });
 
-    // Check existing session
-    authClient.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
-      if (data.session) {
-        authClient.getUser().then(({ data: uData }) => {
-          if (active) setUser(uData.user);
-        });
-      }
       setLoading(false);
     });
 
@@ -41,9 +45,27 @@ export function useSession() {
     };
   }, []);
 
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("opexnal_explicit_signout", "true");
+          localStorage.removeItem("opexnal_guest_user");
+          localStorage.removeItem("guest_user");
+        } catch {
+          // ignore
+        }
+      }
+      setSession(null);
+    }
+  };
+
   return {
     session,
-    user,
+    user: session?.user ?? null,
     loading,
+    signOut,
   };
 }

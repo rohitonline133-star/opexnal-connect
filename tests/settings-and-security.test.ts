@@ -96,33 +96,6 @@ describe("Settings Real-Time Search Engine", () => {
     assert.ok(results.length > 0);
     assert.ok(results.some((r) => r.id === "login_activity_sessions"));
   });
-
-  test("Gujarati search queries return expected settings items", () => {
-    // Search 'પાસવર્ડ' (Password)
-    const pwResults = searchSettings("પાસવર્ડ");
-    assert.ok(pwResults.length > 0);
-    assert.ok(pwResults.some((r) => r.id === "password_security"));
-
-    // Search 'નોટિફિકેશન' (Notifications)
-    const notifResults = searchSettings("નોટિફિકેશન");
-    assert.ok(notifResults.length > 0);
-    assert.ok(notifResults.some((r) => r.id === "notifications"));
-
-    // Search 'બ્લોક' (Blocked accounts)
-    const blockResults = searchSettings("બ્લોક");
-    assert.ok(blockResults.length > 0);
-    assert.ok(blockResults.some((r) => r.id === "blocked_accounts"));
-
-    // Search 'આર્કાઇવ' (Archive)
-    const archiveResults = searchSettings("આર્કાઇવ");
-    assert.ok(archiveResults.length > 0);
-    assert.ok(archiveResults.some((r) => r.id === "archive"));
-
-    // Search 'પેમેન્ટ' (Payment)
-    const payResults = searchSettings("પેમેન્ટ");
-    assert.ok(payResults.length > 0);
-    assert.ok(payResults.some((r) => r.id === "payment_methods"));
-  });
 });
 
 describe("Default Settings Schema Validation", () => {

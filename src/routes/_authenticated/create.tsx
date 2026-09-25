@@ -1,8 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ImagePlus, MapPin, X, Loader2, Sparkles, RefreshCw, Wand2, Check } from "lucide-react";
+import {
+  ImagePlus,
+  MapPin,
+  X,
+  Loader2,
+  Sparkles,
+  RefreshCw,
+  Wand2,
+  Check,
+  Music,
+  Clapperboard,
+  Layers,
+  Palette,
+  Users2,
+  Sliders,
+  Volume2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
+import { MusicPickerDialog } from "@/components/opexnal/music-picker-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,19 +36,21 @@ import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import { createPost, extractHashtags, type NewPostMedia, type PostVisibility } from "@/lib/posts";
 import { runAiCreatorTool } from "@/lib/ai-client";
+import { validateMediaFile } from "@/lib/security";
+import { AudioTrack } from "@/lib/interactive-features";
 
 export const Route = createFileRoute("/_authenticated/create")({
   head: () => ({
     meta: [
-      { title: "Create a post — Opexnal" },
+      { title: "Create Content — Opexnal" },
       {
         name: "description",
-        content: "Share a photo or video with a caption, hashtags and location on Opexnal.",
+        content: "Share photos, carousels, 90s reels, stories and music on Opexnal.",
       },
-      { property: "og:title", content: "Create a post — Opexnal" },
+      { property: "og:title", content: "Create Content — Opexnal" },
       {
         property: "og:description",
-        content: "Share a photo or video with a caption, hashtags and location on Opexnal.",
+        content: "Share photos, carousels, 90s reels, stories and music on Opexnal.",
       },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
@@ -44,6 +63,15 @@ export const Route = createFileRoute("/_authenticated/create")({
 const MAX_FILES = 10;
 const MAX_IMAGE_MB = 15;
 const MAX_VIDEO_MB = 200;
+
+const PHOTO_FILTERS = [
+  { id: "normal", label: "Normal", filterClass: "" },
+  { id: "vivid", label: "Vivid", filterClass: "contrast-125 saturate-125" },
+  { id: "warm", label: "Warm Sun", filterClass: "sepia-[0.25] saturate-110" },
+  { id: "mono", label: "Moody Mono", filterClass: "grayscale contrast-110" },
+  { id: "cyber", label: "Cyber Neon", filterClass: "hue-rotate-30 saturate-150" },
+  { id: "vintage", label: "Vintage Film", filterClass: "sepia-[0.4] brightness-95" },
+];
 
 const TRENDING_SUGGESTIONS = [
   "Opexnal",
@@ -90,7 +118,14 @@ function Create() {
   const navigate = useNavigate();
   const { user } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [format, setFormat] = useState<"post" | "reel" | "story">("post");
   const [items, setItems] = useState<Draft[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState("normal");
+  const [selectedTrack, setSelectedTrack] = useState<AudioTrack | null>(null);
+  const [musicPickerOpen, setMusicPickerOpen] = useState(false);
+  const [collaborator, setCollaborator] = useState("");
+  const [isCloseFriends, setIsCloseFriends] = useState(false);
+
   const [caption, setCaption] = useState("");
   const [locationName, setLocationName] = useState("");
   const [visibility, setVisibility] = useState<PostVisibility>("public");
@@ -138,9 +173,9 @@ function Create() {
         toast.error(`${file.name} isn't a photo or video.`);
         continue;
       }
-      const limit = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
-      if (file.size > limit * 1024 * 1024) {
-        toast.error(`${file.name} is larger than ${limit}MB.`);
+      const val = validateMediaFile(file, isVideo ? "video" : "image");
+      if (!val.valid) {
+        toast.error(val.error || `${file.name} is invalid.`);
         continue;
       }
       next.push({
@@ -200,9 +235,28 @@ function Create() {
         const dims = await readDimensions(item);
         media.push({ file: item.file, mediaType: item.mediaType, ...dims });
       }
+
+      let finalCaption = caption.trim();
+      if (collaborator.trim()) {
+        const cleanCollab = collaborator.trim().replace(/^@/, "");
+        finalCaption += `\n\n🤝 With @${cleanCollab}`;
+      }
+      if (selectedTrack) {
+        finalCaption += `\n🎵 ${selectedTrack.title} — ${selectedTrack.artist}`;
+      }
+      if (format === "reel") {
+        if (!finalCaption.toLowerCase().includes("#reel")) {
+          finalCaption += " #reel #reels";
+        }
+      } else if (format === "story") {
+        if (!finalCaption.toLowerCase().includes("#story")) {
+          finalCaption += " #story";
+        }
+      }
+
       await createPost({
         userId: user.id,
-        caption,
+        caption: finalCaption,
         visibility,
         locationName,
         commentsEnabled,
@@ -212,7 +266,15 @@ function Create() {
       setItems([]);
       setCaption("");
       setLocationName("");
-      toast.success("Post shared to Opexnal!");
+      setSelectedTrack(null);
+      setCollaborator("");
+      toast.success(
+        format === "reel"
+          ? "Reel published!"
+          : format === "story"
+            ? "Story shared for 24h!"
+            : "Post shared to Opexnal!",
+      );
       navigate({ to: "/home" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not share your post");
@@ -225,7 +287,13 @@ function Create() {
     <AppShell
       header={
         <ScreenHeader
-          title="New Post"
+          title={
+            format === "reel"
+              ? "New Reel (90s)"
+              : format === "story"
+                ? "New Story (24h)"
+                : "New Post"
+          }
           right={
             <Button size="sm" variant="brand" disabled={!canPost} onClick={handleSubmit}>
               {submitting ? (
@@ -239,6 +307,49 @@ function Create() {
       }
     >
       <div className="space-y-5 p-4 max-w-lg mx-auto">
+        {/* Content Format Selector */}
+        <div className="flex rounded-2xl border border-border bg-surface p-1 text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setFormat("post")}
+            className={cn(
+              "flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5",
+              format === "post"
+                ? "brand-gradient-bg text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>Post / Carousel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormat("reel")}
+            className={cn(
+              "flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5",
+              format === "reel"
+                ? "brand-gradient-bg text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Clapperboard className="h-3.5 w-3.5" />
+            <span>Reel (90s)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormat("story")}
+            className={cn(
+              "flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5",
+              format === "story"
+                ? "brand-gradient-bg text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>24h Story</span>
+          </button>
+        </div>
+
         {/* Media Selector */}
         <section className="space-y-3">
           <input
@@ -259,58 +370,165 @@ function Create() {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl brand-gradient-bg text-primary-foreground shadow-sm">
                 <ImagePlus className="h-6 w-6" aria-hidden="true" />
               </div>
-              <span className="text-sm font-semibold text-foreground">Select Photos or Videos</span>
+              <span className="text-sm font-semibold text-foreground">
+                {format === "reel" ? "Select Vertical Video" : "Select Photos or Videos"}
+              </span>
               <span className="text-xs text-muted-foreground">
-                Attach up to {MAX_FILES} carousel items
+                {format === "reel"
+                  ? "Upload up to 90 seconds"
+                  : `Attach up to ${MAX_FILES} carousel items`}
               </span>
             </button>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
-              {items.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="relative aspect-square overflow-hidden rounded-xl bg-secondary border border-border"
-                >
-                  {item.mediaType === "video" ? (
-                    <video
-                      src={item.previewUrl}
-                      className="h-full w-full object-cover"
-                      muted
-                      playsInline
-                    />
-                  ) : (
-                    <img
-                      src={item.previewUrl}
-                      alt={`Selected media ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  )}
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {items.map((item, index) => {
+                  const filterObj = PHOTO_FILTERS.find((f) => f.id === selectedFilter);
+                  return (
+                    <div
+                      key={item.id}
+                      className="relative aspect-square overflow-hidden rounded-xl bg-secondary border border-border"
+                    >
+                      {item.mediaType === "video" ? (
+                        <video
+                          src={item.previewUrl}
+                          className={cn("h-full w-full object-cover", filterObj?.filterClass)}
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={item.previewUrl}
+                          alt={`Selected media ${index + 1}`}
+                          className={cn("h-full w-full object-cover", filterObj?.filterClass)}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        aria-label={`Remove media ${index + 1}`}
+                        onClick={() => removeItem(item.id)}
+                        className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow-sm"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                      <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                        {index + 1}
+                      </span>
+                    </div>
+                  );
+                })}
+                {items.length < MAX_FILES && (
                   <button
                     type="button"
-                    aria-label={`Remove media ${index + 1}`}
-                    onClick={() => removeItem(item.id)}
-                    className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow-sm"
+                    onClick={() => inputRef.current?.click()}
+                    aria-label="Add more media"
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    <ImagePlus className="h-5 w-5" aria-hidden="true" />
+                    <span className="text-[10px]">Add more</span>
                   </button>
-                  <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
-                    {index + 1}
-                  </span>
+                )}
+              </div>
+
+              {/* Photo & Reel Visual Filter Pills */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Palette className="h-3.5 w-3.5 text-primary" />
+                  <span>Color & AR Filter</span>
                 </div>
-              ))}
-              {items.length < MAX_FILES && (
-                <button
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                  aria-label="Add more media"
-                  className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                >
-                  <ImagePlus className="h-5 w-5" aria-hidden="true" />
-                  <span className="text-[10px]">Add more</span>
-                </button>
-              )}
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {PHOTO_FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setSelectedFilter(f.id)}
+                      className={cn(
+                        "shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+                        selectedFilter === f.id
+                          ? "brand-gradient-bg text-primary-foreground border-primary"
+                          : "bg-surface border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
+        </section>
+
+        {/* Music / Audio Track Selection */}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <Music className="h-3.5 w-3.5 text-primary" />
+              <span>Audio Sound Track</span>
+            </Label>
+            {selectedTrack && (
+              <button
+                type="button"
+                onClick={() => setSelectedTrack(null)}
+                className="text-[11px] text-muted-foreground hover:text-destructive"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {selectedTrack ? (
+            <div className="flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 p-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={selectedTrack.coverUrl}
+                  alt={selectedTrack.title}
+                  className="h-10 w-10 rounded-xl object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold text-foreground">
+                    {selectedTrack.title}
+                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {selectedTrack.artist} · {selectedTrack.duration}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setMusicPickerOpen(true)}
+                className="rounded-xl text-xs h-8 px-2.5"
+              >
+                Change
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setMusicPickerOpen(true)}
+              className="w-full rounded-2xl border-dashed h-11 text-xs font-semibold justify-start text-muted-foreground hover:text-foreground"
+            >
+              <Music className="mr-2 h-4 w-4 text-primary" />
+              Add trending sound, music or voiceover...
+            </Button>
+          )}
+        </section>
+
+        {/* Collaborator / Co-Author Section */}
+        <section className="space-y-2">
+          <Label htmlFor="collab" className="text-xs font-semibold flex items-center gap-1.5">
+            <Users2 className="h-3.5 w-3.5 text-primary" />
+            <span>Invite Collaborator (Collab Post)</span>
+          </Label>
+          <Input
+            id="collab"
+            value={collaborator}
+            onChange={(e) => setCollaborator(e.target.value)}
+            placeholder="@username to share co-authorship"
+            className="h-10 rounded-xl bg-surface text-xs"
+          />
         </section>
 
         {/* Caption & AI Assistant */}
@@ -464,6 +682,7 @@ function Create() {
             <SelectContent>
               <SelectItem value="public">🌐 Everyone (Public on Feed & Explore)</SelectItem>
               <SelectItem value="followers">👥 Followers Only</SelectItem>
+              <SelectItem value="followers">💚 Close Friends Only</SelectItem>
               <SelectItem value="private">🔒 Private (Only Me)</SelectItem>
             </SelectContent>
           </Select>
@@ -486,6 +705,13 @@ function Create() {
           />
         </section>
       </div>
+
+      {/* Music / Audio Track Selector Dialog */}
+      <MusicPickerDialog
+        open={musicPickerOpen}
+        onOpenChange={setMusicPickerOpen}
+        onSelectTrack={(track) => setSelectedTrack(track)}
+      />
     </AppShell>
   );
 }

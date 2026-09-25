@@ -10,8 +10,8 @@ import { PostGrid } from "@/components/opexnal/post-grid";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileByUsername, initialsFor } from "@/lib/profile";
-import { useSession } from "@/hooks/use-session";
 import { openDirectConversation } from "@/lib/messages";
+import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/u/$username")({
   head: ({ params }) => ({
