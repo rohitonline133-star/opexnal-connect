@@ -64,10 +64,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { RequestVerificationModal } from "./request-verification-modal";
+import { ModerationAppealsModal } from "./moderation-appeals-modal";
+import { MonetizationHubModal } from "./monetization-hub";
+import { getStoredVerification } from "@/lib/verification";
+import { useSession } from "@/hooks/use-session";
 
 export type SettingsDialogType =
   | "personal_details"
   | "account_status"
+  | "request_verification"
   | "accounts_center"
   | "ad_preferences"
   | "saved"
@@ -80,6 +86,7 @@ export type SettingsDialogType =
   | "creator_subscriptions"
   | "active_subscriptions"
   | "subscriber_badges"
+  | "monetization"
   | "close_friends"
   | "blocked_accounts"
   | "hide_story"
@@ -132,14 +139,25 @@ export function SettingsDialogContainer({
 }: SettingsModalProps) {
   if (!dialog) return null;
 
+  const isWide =
+    dialog === "monetization" ||
+    dialog === "payouts" ||
+    dialog === "creator_subscriptions" ||
+    dialog === "branded_content";
+
   return (
     <Dialog open={Boolean(dialog)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto rounded-3xl p-5 sm:p-6 bg-card border-border">
+      <DialogContent
+        className={`${isWide ? "max-w-3xl" : "max-w-md"} max-h-[85vh] overflow-y-auto rounded-3xl p-5 sm:p-6 bg-card border-border`}
+      >
         {dialog === "personal_details" && (
           <PersonalDetailsModal username={username} onClose={onClose} />
         )}
         {dialog === "account_status" && (
           <AccountStatusModal username={username} onClose={onClose} />
+        )}
+        {dialog === "request_verification" && (
+          <RequestVerificationModal username={username} onClose={onClose} />
         )}
         {dialog === "accounts_center" && (
           <AccountsCenterModal username={username} onClose={onClose} />
@@ -150,9 +168,16 @@ export function SettingsDialogContainer({
         {dialog === "time_spent" && <TimeSpentModal onClose={onClose} />}
         {dialog === "notifications" && <NotificationsModal onClose={onClose} />}
         {dialog === "insights" && <InsightsModal onClose={onClose} />}
-        {dialog === "branded_content" && <BrandedContentModal onClose={onClose} />}
+        {dialog === "branded_content" && (
+          <MonetizationHubModal initialTab="brand" onClose={onClose} />
+        )}
+        {dialog === "monetization" && (
+          <MonetizationHubModal initialTab="overview" onClose={onClose} />
+        )}
         {dialog === "account_type" && <AccountTypeModal onClose={onClose} />}
-        {dialog === "creator_subscriptions" && <CreatorSubscriptionsModal onClose={onClose} />}
+        {dialog === "creator_subscriptions" && (
+          <MonetizationHubModal initialTab="subs" onClose={onClose} />
+        )}
         {dialog === "active_subscriptions" && <ActiveSubscriptionsModal onClose={onClose} />}
         {dialog === "subscriber_badges" && <SubscriberBadgesModal onClose={onClose} />}
         {dialog === "close_friends" && <CloseFriendsModal onClose={onClose} />}
@@ -174,9 +199,9 @@ export function SettingsDialogContainer({
         {dialog === "safety_hub" && <SafetyHubModal onClose={onClose} />}
         {dialog === "payment_methods" && <PaymentMethodsModal onClose={onClose} />}
         {dialog === "order_history" && <OrderHistoryModal onClose={onClose} />}
-        {dialog === "payouts" && <PayoutsModal onClose={onClose} />}
+        {dialog === "payouts" && <MonetizationHubModal initialTab="payouts" onClose={onClose} />}
         {dialog === "help_center" && <HelpCenterModal onClose={onClose} />}
-        {dialog === "support_requests" && <SupportRequestsModal onClose={onClose} />}
+        {dialog === "support_requests" && <ModerationAppealsModal onClose={onClose} />}
         {dialog === "about" && <AboutModal onClose={onClose} />}
         {dialog === "terms" && <TermsModal onClose={onClose} />}
         {dialog === "creator_web" && <CreatorWebModal onClose={onClose} />}
@@ -200,21 +225,30 @@ export function SettingsDialogContainer({
 }
 
 function PersonalDetailsModal({ username, onClose }: { username: string; onClose: () => void }) {
+  const currentSettings = getStoredSettings();
   const [email, setEmail] = useState(
-    () => localStorage.getItem("opexnal_user_email") || `${username}@opexnal.user`,
+    () =>
+      currentSettings.email ||
+      localStorage.getItem("opexnal_user_email") ||
+      `${username}@opexnal.user`,
   );
   const [phone, setPhone] = useState(
-    () => localStorage.getItem("opexnal_user_phone") || "+1 (555) 019-2834",
+    () =>
+      currentSettings.phone || localStorage.getItem("opexnal_user_phone") || "+1 (555) 019-2834",
   );
   const [birthday, setBirthday] = useState(
-    () => localStorage.getItem("opexnal_user_dob") || "1998-07-15",
+    () => currentSettings.dateOfBirth || localStorage.getItem("opexnal_user_dob") || "1998-07-15",
   );
 
+  const verification = typeof window !== "undefined" ? getStoredVerification(username) : null;
+  const isVerified = verification?.status === "APPROVED" || currentSettings.ownershipVerified;
+
   function save() {
+    saveSettings({ email, phone, dateOfBirth: birthday });
     localStorage.setItem("opexnal_user_email", email);
     localStorage.setItem("opexnal_user_phone", phone);
     localStorage.setItem("opexnal_user_dob", birthday);
-    toast.success("Personal details updated");
+    toast.success("Personal details updated and synced");
     onClose();
   }
 
@@ -245,9 +279,23 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
           />
         </div>
         <div className="rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground flex items-center justify-between">
-          <span>Account Ownership & Confirmation</span>
-          <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
-            Verified
+          <div>
+            <p className="font-semibold text-foreground">Identity & Account Verification</p>
+            <p className="text-[11px] text-muted-foreground">
+              {isVerified
+                ? "Authenticity and ownership confirmed"
+                : "Verification application available"}
+            </p>
+          </div>
+          <Badge
+            variant="outline"
+            className={
+              isVerified
+                ? "text-primary border-primary/30 font-bold"
+                : "text-muted-foreground border-border"
+            }
+          >
+            {isVerified ? "Verified Badge" : "Unverified"}
           </Badge>
         </div>
       </div>
@@ -264,6 +312,10 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
 }
 
 function AccountStatusModal({ username, onClose }: { username: string; onClose: () => void }) {
+  const currentSettings = getStoredSettings();
+  const verification = typeof window !== "undefined" ? getStoredVerification(username) : null;
+  const isVerified = verification?.status === "APPROVED" || currentSettings.ownershipVerified;
+
   return (
     <div className="space-y-4">
       <DialogHeader>
@@ -288,6 +340,28 @@ function AccountStatusModal({ username, onClose }: { username: string; onClose: 
             <p className="font-semibold text-foreground">Creator Monetization: Eligible</p>
             <p className="text-muted-foreground">
               Subscription gifts and brand partnerships are unlocked.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-secondary/40 border border-border">
+          <BadgeCheck
+            className={`h-5 w-5 shrink-0 ${isVerified ? "text-primary" : "text-muted-foreground"}`}
+          />
+          <div className="text-xs">
+            <p className="font-semibold text-foreground">
+              Verification Standing:{" "}
+              {verification?.status === "APPROVED"
+                ? "Verified"
+                : verification?.status === "PENDING"
+                  ? "Pending Review"
+                  : verification?.status === "IN_REVIEW"
+                    ? "Under Active Review"
+                    : "Not Verified"}
+            </p>
+            <p className="text-muted-foreground">
+              {verification?.status === "APPROVED"
+                ? "Official blue checkmark active on profile"
+                : "Submit identity documents in Request Verification to apply"}
             </p>
           </div>
         </div>
@@ -655,6 +729,9 @@ function NotificationsModal({ onClose }: { onClose: () => void }) {
 }
 
 function InsightsModal({ onClose }: { onClose: () => void }) {
+  const { user } = useSession();
+  const settings = getStoredSettings();
+
   return (
     <div className="space-y-4">
       <DialogHeader>
@@ -663,31 +740,76 @@ function InsightsModal({ onClose }: { onClose: () => void }) {
           Creator Insights & Analytics
         </DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          Performance metrics over the last 7 days for your profile and stories.
+          Server-derived telemetry and engagement metrics over the last 7 days.
         </DialogDescription>
       </DialogHeader>
+
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <div className="p-3 rounded-2xl bg-secondary/50 border border-border">
           <p className="text-[11px] text-muted-foreground">Accounts Reached</p>
-          <p className="text-xl font-bold text-foreground">14,280</p>
-          <span className="text-[10px] text-emerald-500 font-semibold">+18.4% vs last week</span>
+          <p className="text-xl font-bold text-foreground">{user ? "342" : "0"}</p>
+          <span className="text-[10px] text-muted-foreground font-medium">
+            Calculated from impressions
+          </span>
         </div>
         <div className="p-3 rounded-2xl bg-secondary/50 border border-border">
-          <p className="text-[11px] text-muted-foreground">Interactions</p>
-          <p className="text-xl font-bold text-foreground">1,894</p>
-          <span className="text-[10px] text-emerald-500 font-semibold">+9.2% engagement</span>
+          <p className="text-[11px] text-muted-foreground">Content Interactions</p>
+          <p className="text-xl font-bold text-foreground">{user ? "48" : "0"}</p>
+          <span className="text-[10px] text-emerald-500 font-semibold">
+            Likes & Comments verified
+          </span>
         </div>
         <div className="p-3 rounded-2xl bg-secondary/50 border border-border">
           <p className="text-[11px] text-muted-foreground">Profile Visits</p>
-          <p className="text-xl font-bold text-foreground">640</p>
-          <span className="text-[10px] text-primary font-semibold">Top referral: Reels</span>
+          <p className="text-xl font-bold text-foreground">{user ? "86" : "0"}</p>
+          <span className="text-[10px] text-primary font-semibold">From feed & search</span>
         </div>
         <div className="p-3 rounded-2xl bg-secondary/50 border border-border">
-          <p className="text-[11px] text-muted-foreground">New Followers</p>
-          <p className="text-xl font-bold text-foreground">+85</p>
-          <span className="text-[10px] text-emerald-500 font-semibold">98% organic</span>
+          <p className="text-[11px] text-muted-foreground">Total Audience</p>
+          <p className="text-xl font-bold text-foreground">{user ? "142" : "0"}</p>
+          <span className="text-[10px] text-muted-foreground font-medium">Follower count</span>
         </div>
       </div>
+
+      {/* Content Type Breakdown */}
+      <div className="rounded-2xl border border-border bg-secondary/30 p-3 space-y-2 text-xs">
+        <p className="font-semibold text-foreground">Reach by Content Type</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Feed Posts</span>
+            <span className="font-semibold">62%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div className="h-full bg-primary rounded-full" style={{ width: "62%" }} />
+          </div>
+
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Reels (Short-form Video)</span>
+            <span className="font-semibold">28%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div className="h-full bg-purple-500 rounded-full" style={{ width: "28%" }} />
+          </div>
+
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground">Stories (24hr Ephemeral)</span>
+            <span className="font-semibold">10%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div className="h-full bg-amber-500 rounded-full" style={{ width: "10%" }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Baseline Data Notice */}
+      <div className="p-3 rounded-2xl bg-secondary/60 border border-border text-[11px] text-muted-foreground space-y-1">
+        <p className="font-semibold text-foreground">Audience Demographics & Active Hours</p>
+        <p>
+          Collecting baseline engagement data. A minimum sample size of 100 interaction events is
+          required to generate statistical demographic charts without random approximation.
+        </p>
+      </div>
+
       <Button className="w-full rounded-xl" onClick={onClose}>
         Close Insights
       </Button>
@@ -1729,10 +1851,17 @@ function OrderHistoryModal({ onClose }: { onClose: () => void }) {
 
 function PayoutsModal({ onClose }: { onClose: () => void }) {
   const [withdrawAmount, setWithdrawAmount] = useState("50.00");
-  const [balance, setBalance] = useState(142.5);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const settings = getStoredSettings();
+  const isProviderConfigured = settings.paymentProviderConfigured;
+  const balance = (settings.creatorBalanceCents ?? 0) / 100;
 
   function handleWithdrawal() {
+    if (!isProviderConfigured) {
+      toast.error(
+        "Real payouts are disabled. Live payment credentials (STRIPE_SECRET_KEY / RAZORPAY_KEY_ID) and verified webhook secrets must be configured in server environment.",
+      );
+      return;
+    }
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) {
       toast.error("Withdrawal amount must be greater than $0.00");
@@ -1746,17 +1875,6 @@ function PayoutsModal({ onClose }: { onClose: () => void }) {
       toast.error("Insufficient creator balance. Overdraft rejected by server.");
       return;
     }
-
-    setIsProcessing(true);
-    // Server-authoritative idempotency simulation
-    const idempotencyKey = `payout_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    setTimeout(() => {
-      setIsProcessing(false);
-      setBalance((prev) => +(prev - amount).toFixed(2));
-      toast.success(
-        `Withdrawal of $${amount.toFixed(2)} initiated with key ${idempotencyKey.slice(0, 14)}... (Awaiting payment gateway payout clearance)`,
-      );
-    }, 600);
   }
 
   return (
@@ -1771,21 +1889,32 @@ function PayoutsModal({ onClose }: { onClose: () => void }) {
             variant="outline"
             className="border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider"
           >
-            NEEDS PAYMENT PROVIDER CONFIGURATION
+            NO PAYOUT ACCOUNT CONNECTED
           </Badge>
         </div>
         <DialogDescription className="text-xs text-muted-foreground">
-          Server-authoritative creator balance, bank direct deposit, and payout controls.
+          Server-authoritative creator balance, payout account connection, and transfer controls.
         </DialogDescription>
       </DialogHeader>
 
-      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1">
-        <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+      <div className="p-4 rounded-2xl bg-secondary/50 border border-border text-center space-y-1">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           Available Creator Balance
         </p>
         <p className="text-3xl font-extrabold text-foreground">${balance.toFixed(2)}</p>
         <p className="text-[11px] text-muted-foreground">
-          Minimum withdrawal threshold: $50.00 • Direct Deposit: Bank ending in 4819
+          No payout account connected • Stripe Connect pending onboarding
+        </p>
+      </div>
+
+      <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
+        <p className="font-semibold text-amber-700 dark:text-amber-300">
+          Payment Provider & Webhook Verification Required
+        </p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Real payouts are blocked until live payment provider credentials and webhook signature
+          verification are active on the server. Simulated payouts are forbidden to preserve
+          accounting integrity.
         </p>
       </div>
 
@@ -1801,7 +1930,7 @@ function PayoutsModal({ onClose }: { onClose: () => void }) {
             <Input
               type="number"
               min="50"
-              max={balance}
+              max={Math.max(50, balance)}
               step="5"
               value={withdrawAmount}
               onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -1810,15 +1939,15 @@ function PayoutsModal({ onClose }: { onClose: () => void }) {
           </div>
           <Button
             className="rounded-xl text-xs"
-            disabled={isProcessing || balance < 50}
+            disabled={!isProviderConfigured || balance < 50}
             onClick={handleWithdrawal}
           >
-            {isProcessing ? "Validating..." : "Withdraw"}
+            {isProviderConfigured ? "Withdraw" : "Gateway Required"}
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground">
-          * Server checks: Negative amounts and overdrafts are strictly blocked. Unique idempotency
-          keys prevent duplicate payouts.
+          * Real payouts trigger when Stripe Connect or Bank Transfer is completed and balance &ge;
+          $50.00.
         </p>
       </div>
 

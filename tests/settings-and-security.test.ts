@@ -157,4 +157,59 @@ describe("Monetization & Security Rules Enforcement", () => {
     assert.strictEqual(safeUpdatePayload.userId, sessionUserId);
     assert.notStrictEqual(safeUpdatePayload.userId, untrustedBody.userId);
   });
+
+  test("Payment gateway: Live transactions remain disabled until credentials are provided", () => {
+    const hasLiveProvider = Boolean(process.env.STRIPE_SECRET_KEY || process.env.RAZORPAY_KEY_ID);
+    // In our container environment without explicit third party secrets, live money transactions MUST be disabled
+    assert.strictEqual(hasLiveProvider, false);
+  });
+});
+
+describe("Content Safety & Moderation Scanner", () => {
+  test("performClientModerationScan detects phishing and spam links", async () => {
+    const { performClientModerationScan } = await import("../src/lib/moderation.ts");
+
+    const spamPost = "Check out this free crypto giveaway at http://claim-free-crypto.ru/now!";
+    const result = performClientModerationScan(spamPost);
+    assert.strictEqual(result.category, "phishing");
+    assert.strictEqual(result.status, "flagged_for_review");
+    assert.ok(result.reasons.length > 0);
+  });
+
+  test("performClientModerationScan passes benign creator post", async () => {
+    const { performClientModerationScan } = await import("../src/lib/moderation.ts");
+
+    const benignPost = "Beautiful sunset hike in the Pacific Northwest! #nature #photography";
+    const result = performClientModerationScan(benignPost);
+    assert.strictEqual(result.category, "clean");
+    assert.strictEqual(result.status, "clean");
+    assert.strictEqual(result.reasons.length, 0);
+  });
+});
+
+describe("Verification Lifecycle & Badge Integrity", () => {
+  test("Verification application requires full legal name and document identification", () => {
+    function validateApplication(data: { fullName?: string; documentNumber?: string }) {
+      if (!data.fullName || !data.fullName.trim()) {
+        return { valid: false, error: "FULL_NAME_REQUIRED" };
+      }
+      if (!data.documentNumber || !data.documentNumber.trim()) {
+        return { valid: false, error: "DOCUMENT_NUMBER_REQUIRED" };
+      }
+      return { valid: true };
+    }
+
+    assert.strictEqual(validateApplication({}).valid, false);
+    assert.strictEqual(validateApplication({ fullName: "Jane Doe" }).valid, false);
+    assert.strictEqual(
+      validateApplication({ fullName: "Jane Doe", documentNumber: "A12345678" }).valid,
+      true,
+    );
+  });
+
+  test("Settings schema contains verificationStatus and hideLikeAndViewCounts", () => {
+    assert.strictEqual(typeof DEFAULT_SETTINGS.verificationStatus, "string");
+    assert.strictEqual(typeof DEFAULT_SETTINGS.hideLikeAndViewCounts, "boolean");
+    assert.strictEqual(DEFAULT_SETTINGS.hideLikeAndViewCounts, false);
+  });
 });

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+import type { VerificationStatus } from "./verification";
 
 export interface ActiveSession {
   id: string;
@@ -42,6 +44,7 @@ export interface OpexnalSettings {
   phone: string;
   dateOfBirth: string;
   ownershipVerified: boolean;
+  verificationStatus: VerificationStatus;
   recoveryEmail: string;
   recoveryPhone: string;
   backupCodes: string[];
@@ -219,7 +222,8 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   email: "creator@opexnal.user",
   phone: "+1 (555) 019-2834",
   dateOfBirth: "1998-07-15",
-  ownershipVerified: true,
+  ownershipVerified: false,
+  verificationStatus: "NOT_APPLIED",
   recoveryEmail: "recovery@opexnal.user",
   recoveryPhone: "+1 (555) 019-9988",
   backupCodes: ["9823-1490", "7712-4019", "5541-8820", "3091-6652", "1104-9843"],
@@ -522,6 +526,19 @@ export async function saveSettings(
       if (Object.keys(profileUpdates).length > 0) {
         await supabase.from("profiles").update(profileUpdates).eq("id", userId);
       }
+
+      // Persist full settings in user_settings table
+      const settingsPayload = JSON.parse(
+        JSON.stringify(updated),
+      ) as Database["public"]["Tables"]["user_settings"]["Row"]["settings"];
+      await supabase.from("user_settings").upsert(
+        {
+          user_id: userId,
+          settings: settingsPayload,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
     } catch {
       // non-fatal fallback
     }
@@ -533,6 +550,76 @@ export async function saveSettings(
   }
 
   return updated;
+}
+
+/**
+ * Loads user settings directly from Supabase Postgres database into local cache.
+ */
+export async function loadUserSettingsFromDatabase(
+  userId: string,
+): Promise<OpexnalSettings | null> {
+  try {
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!error && data?.settings && typeof data.settings === "object") {
+      const merged: OpexnalSettings = {
+        ...DEFAULT_SETTINGS,
+        ...(data.settings as Record<string, unknown>),
+      };
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          window.dispatchEvent(new CustomEvent("opexnal:settings-updated", { detail: merged }));
+        } catch {
+          // ignore
+        }
+      }
+      return merged;
+    }
+  } catch {
+    // non-fatal
+  }
+  return null;
+}
+
+export function isUserBlockedLocally(userIdOrUsername: string): boolean {
+  const s = getStoredSettings();
+  return (s.blockedUsers || []).some(
+    (u) => u.id === userIdOrUsername || u.username.toLowerCase() === userIdOrUsername.toLowerCase(),
+  );
+}
+
+export function isUserRestrictedLocally(userIdOrUsername: string): boolean {
+  const s = getStoredSettings();
+  return (s.restrictedUsers || []).some(
+    (u) => u.id === userIdOrUsername || u.username.toLowerCase() === userIdOrUsername.toLowerCase(),
+  );
+}
+
+export function blockUserAction(user: { id: string; username: string }) {
+  const s = getStoredSettings();
+  if (!s.blockedUsers.some((u) => u.id === user.id || u.username === user.username)) {
+    saveSettings({
+      blockedUsers: [
+        ...s.blockedUsers,
+        { id: user.id, username: user.username, blockedAt: new Date().toISOString() },
+      ],
+    });
+  }
+}
+
+export function unblockUserAction(userIdOrUsername: string) {
+  const s = getStoredSettings();
+  saveSettings({
+    blockedUsers: s.blockedUsers.filter(
+      (u) =>
+        u.id !== userIdOrUsername && u.username.toLowerCase() !== userIdOrUsername.toLowerCase(),
+    ),
+  });
 }
 
 /**
@@ -596,6 +683,25 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
       "badges",
     ],
     dialog: "account_status",
+  },
+  {
+    id: "request_verification",
+    categoryNumber: 1,
+    categoryTitle: "Your account",
+    title: "Request verification",
+    description: "Apply for verified badge, upload identity documents & review application status",
+    keywords: [
+      "verification",
+      "verify",
+      "badge",
+      "blue check",
+      "identity",
+      "passport",
+      "official",
+      "public figure",
+      "notable",
+    ],
+    dialog: "request_verification",
   },
 
   // 2. Accounts Center
@@ -764,6 +870,29 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
       "growth",
     ],
     dialog: "insights",
+  },
+  {
+    id: "creator_monetization_hub",
+    categoryNumber: 4,
+    categoryTitle: "Your insights & tools",
+    title: "Creator monetization & wallet",
+    description:
+      "Ledger balances, ad revenue sharing, virtual gifts, performance bonuses & payout center",
+    keywords: [
+      "monetization",
+      "creator earnings",
+      "ad revenue",
+      "virtual gifts",
+      "coins",
+      "sparks",
+      "bonuses",
+      "brand marketplace",
+      "affiliate",
+      "wallet",
+      "payout",
+      "revenue share",
+    ],
+    dialog: "monetization",
   },
   {
     id: "branded_content",

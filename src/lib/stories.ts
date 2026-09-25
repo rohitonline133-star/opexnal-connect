@@ -358,6 +358,29 @@ export async function reportContent(input: {
   if (error) throw error;
 }
 
+export async function sendStoryReaction(storyId: string, userId: string, emoji: string) {
+  try {
+    const { data: s } = await supabase
+      .from("stories")
+      .select("user_id")
+      .eq("id", storyId)
+      .maybeSingle();
+
+    if (s && s.user_id !== userId) {
+      await supabase.from("notifications").insert({
+        user_id: s.user_id,
+        actor_id: userId,
+        type: "reaction",
+        entity_id: storyId,
+        entity_type: "story",
+        message: `reacted ${emoji} to your story`,
+      });
+    }
+  } catch {
+    // non-fatal
+  }
+}
+
 export const STORY_IMAGE_DURATION_MS = 5000;
 
 export function timeLeft(expiresAt: string) {

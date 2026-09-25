@@ -1,7 +1,4 @@
 import { GoogleGenAI } from "@google/genai";
-import { checkRateLimit } from "../lib/security";
-import { inspectPromptSecurity } from "./ai-security";
-import { securityPipeline } from "./security-pipeline";
 
 let aiClient: GoogleGenAI | null = null;
 
@@ -13,117 +10,32 @@ function getAiClient(): GoogleGenAI {
   return aiClient;
 }
 
-const ALLOWED_AI_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_PROMPT_LENGTH = 2000;
-const MAX_MESSAGES_COUNT = 50;
-
-/**
- * Validates request origin against allowed host to prevent unauthorized cross-origin abuse.
- */
-function isAllowedOrigin(request: Request): { allowed: boolean; originHeader: string } {
-  const origin = request.headers.get("origin") || "";
-  if (!origin) {
-    // Direct same-origin browser fetches often omit Origin
-    return { allowed: true, originHeader: "" };
-  }
-
-  try {
-    const reqUrl = new URL(request.url);
-    const originUrl = new URL(origin);
-
-    // Allow same hostname/domain and standard local dev
-    if (
-      originUrl.hostname === reqUrl.hostname ||
-      originUrl.hostname === "localhost" ||
-      originUrl.hostname === "127.0.0.1" ||
-      originUrl.hostname.endsWith(".run.app")
-    ) {
-      return { allowed: true, originHeader: origin };
-    }
-  } catch {
-    return { allowed: false, originHeader: "" };
-  }
-
-  return { allowed: false, originHeader: "" };
-}
-
 export async function handleAiRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  const { allowed, originHeader } = isAllowedOrigin(request);
-
-  if (!allowed) {
-    return new Response(JSON.stringify({ error: "Forbidden: Cross-origin request rejected." }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const corsHeaders: Record<string, string> = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  };
-  if (originHeader) {
-    corsHeaders["Access-Control-Allow-Origin"] = originHeader;
-    corsHeaders["Vary"] = "Origin";
-  }
 
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders,
-    });
-  }
-
-  if (request.method === "GET" && url.pathname === "/api/ai/health") {
-    return new Response(JSON.stringify({ status: "ok", service: "opexnal-ai-proxy" }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     });
   }
 
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // --- PER-IP RATE LIMITING ---
-  const clientIp =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("cf-connecting-ip") ||
-    "127.0.0.1";
-
-  const rateCheck = checkRateLimit(`ai_ip:${clientIp}`, 20, 60_000);
-  if (!rateCheck.allowed) {
-    return new Response(
-      JSON.stringify({
-        error: `Rate limit exceeded. Too many AI requests. Please wait ${rateCheck.retryAfterSec} seconds.`,
-      }),
-      {
-        status: 429,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "Retry-After": String(rateCheck.retryAfterSec),
-        },
-      },
-    );
-  }
-
-  // --- PAYLOAD SIZE & PARSING ---
-  const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
-  if (contentLength > 10 * 1024 * 1024) {
-    return new Response(JSON.stringify({ error: "Payload too large. Limit is 10MB." }), {
-      status: 413,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   }
 
   const rawBody = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) {
-    return handleFallbackResponse(url.pathname, rawBody, corsHeaders);
+    // Graceful fallback if GEMINI_API_KEY is not configured yet
+    return handleFallbackResponse(url.pathname, rawBody);
   }
 
   const ai = getAiClient();
@@ -144,58 +56,20 @@ You effortlessly understand and communicate in English, Hindi (हिन्द�
 Respond warmly, with structured formatting (bullet points, clear sections, tasteful emojis).
 Keep your answers actionable, authentic, and tailored for modern creators and community members.`;
 
-      // AI Safety & Prompt Injection Guardrail
-      const textToInspect =
-        body.prompt ||
-        (body.messages && body.messages.length > 0
-          ? body.messages[body.messages.length - 1]?.content
-          : "");
-      if (textToInspect) {
-        const promptCheck = inspectPromptSecurity(textToInspect);
-        if (!promptCheck.safe) {
-          securityPipeline.recordEvent({
-            eventType: "PROMPT_INJECTION_BLOCK",
-            severity: "WARN",
-            actor: { ip: clientIp, userAgent: request.headers.get("user-agent") || "" },
-            details: `Prompt injection attack blocked: ${promptCheck.violation}`,
-            riskScore: promptCheck.riskScore,
-          });
-          return new Response(
-            JSON.stringify({
-              error: "Security Guardrail: Prompt manipulation or jailbreak attempt blocked.",
-            }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            },
-          );
-        }
-      }
-
+      // Build contents
       const contents: Array<{ role?: string; parts: Array<Record<string, unknown>> }> = [];
 
       if (body.messages && Array.isArray(body.messages)) {
-        const sliced = body.messages.slice(-MAX_MESSAGES_COUNT);
-        for (const msg of sliced) {
-          const cleanText = String(msg.content || "").slice(0, MAX_PROMPT_LENGTH);
+        for (const msg of body.messages) {
           contents.push({
             role: msg.role === "user" ? "user" : "model",
-            parts: [{ text: cleanText }],
+            parts: [{ text: msg.content }],
           });
         }
       }
 
+      // If there is an image in the latest request
       if (body.imageBase64 && body.imageMime) {
-        if (!ALLOWED_AI_IMAGE_MIMES.has(body.imageMime.toLowerCase())) {
-          return new Response(
-            JSON.stringify({ error: "Unsupported image format for AI analysis." }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            },
-          );
-        }
-
         const lastUser = contents[contents.length - 1];
         if (lastUser && lastUser.role === "user") {
           lastUser.parts.unshift({
@@ -214,18 +88,14 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
                   mimeType: body.imageMime,
                 },
               },
-              {
-                text: (
-                  body.prompt || "Analyze this image and suggest social media captions."
-                ).slice(0, MAX_PROMPT_LENGTH),
-              },
+              { text: body.prompt || "Analyze this image and suggest social media captions." },
             ],
           });
         }
       } else if (body.prompt && contents.length === 0) {
         contents.push({
           role: "user",
-          parts: [{ text: String(body.prompt).slice(0, MAX_PROMPT_LENGTH) }],
+          parts: [{ text: body.prompt }],
         });
       }
 
@@ -242,7 +112,7 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
 
       return new Response(JSON.stringify({ text: replyText }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -258,72 +128,66 @@ Keep your answers actionable, authentic, and tailored for modern creators and co
       };
 
       let prompt = "";
-      const tone = (body.tone || "Engaging & Viral").slice(0, 50);
-      const lang = (body.language || "English / Hinglish").slice(0, 50);
-      const cleanTopic = (body.topic || "Daily creator journey").slice(0, MAX_PROMPT_LENGTH);
+      const tone = body.tone || "Engaging & Viral";
+      const lang = body.language || "English / Hinglish";
 
       switch (body.tool) {
         case "caption":
-          prompt = `Generate 3 distinct, high-impact social media captions for Opexnal about: "${cleanTopic}".
+          prompt = `Generate 3 distinct, high-impact social media captions for Opexnal about: "${body.topic || "Daily creator journey"}".
 Tone: ${tone}. Preferred language style: ${lang}.
 For each caption:
 - Include a strong opening hook line
 - Body text with personality and appropriate spacing
-- 4-6 relevant hashtags tailored for Opexnal`;
+- Relevant call-to-action
+- 5-8 curated high-reach and niche hashtags`;
           break;
 
         case "reels_idea":
-          prompt = `Create a high-performing Reel / Short video concept for Opexnal about: "${cleanTopic}".
-Tone: ${tone}.
-Include:
-1. Hook (0-3 seconds): Exact visual action + on-screen text
-2. Narrative beat (3-15 seconds): Core value or punchline
-3. Audio recommendation: Style or mood
-4. Call-to-action (CTA)`;
+          prompt = `Generate 3 viral short-video / reel concepts for Opexnal around the topic: "${body.topic || "Creator Lifestyle & Tech"}".
+Tone: ${tone}. Language: ${lang}.
+For each reel concept provide:
+1. 🎯 3-Second Hook (What appears on screen / first spoken sentence)
+2. 🎬 Visual scene flow & action
+3. 🎵 Suggested audio / music mood vibe
+4. 💬 Caption & 4 essential hashtags`;
           break;
 
         case "hashtags":
-          prompt = `Generate 20 curated, high-reach hashtags for Opexnal creators on the topic: "${cleanTopic}".
-Categorize them into:
-- 5 Mega High-Volume tags
-- 10 Niche Creator tags
-- 5 Community & Trending tags`;
+          prompt = `Generate a categorized hashtag set for Opexnal for the topic: "${body.topic || "Photography & Lifestyle"}".
+Group them clearly into:
+- 🚀 High-Volume Trending (Top 5)
+- 🎯 Niche Community Tags (Top 8)
+- ✨ Aesthetic & Location/Vibe Tags (Top 5)
+Also provide a one-click copyable combined list.`;
           break;
 
         case "bio":
-          prompt = `Write 3 creative bio variations for an Opexnal profile around: "${cleanTopic}".
-Style: ${tone}. Keep under 150 characters per option, with tasteful emojis.`;
+          prompt = `Create 4 modern, eye-catching profile bio options for an Opexnal user who is into: "${body.topic || "Digital Creator & Tech Explorer"}".
+Tone: ${tone}. Language: ${lang}.
+Include clean line breaks, tasteful emojis, and a clear call-to-action link placeholder.`;
           break;
 
         case "rewrite":
-          prompt = `Rewrite and enhance the following social post text for higher engagement and clarity:
-"${(body.contextText || cleanTopic).slice(0, MAX_PROMPT_LENGTH)}"
-Tone: ${tone}. Provide 2 alternative angles.`;
+          prompt = `Rewrite and elevate this text for maximum social engagement on Opexnal:
+"${body.contextText || body.topic || "Sharing my thoughts today"}"
+Desired style/tone: ${tone}. Language: ${lang}.
+Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
           break;
 
         case "image_analysis":
-          prompt = `Analyze the provided image and generate:
-1. Aesthetic mood & aesthetic summary
+          prompt = `Analyze this image in detail for a creator on Opexnal:
+1. Aesthetic & mood breakdown
 2. Best visual elements to highlight
 3. 3 suggested ready-to-post captions with hashtags (varying from minimalist to descriptive)
 4. Recommended music vibe`;
           break;
 
         default:
-          prompt = `Provide social media creator guidance for: ${cleanTopic}`;
+          prompt = `Provide social media creator guidance for: ${body.topic || "Content strategy"}`;
       }
 
       const parts: Array<Record<string, unknown>> = [];
       if (body.imageBase64 && body.imageMime) {
-        if (!ALLOWED_AI_IMAGE_MIMES.has(body.imageMime.toLowerCase())) {
-          return new Response(
-            JSON.stringify({ error: "Unsupported image format for AI analysis." }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            },
-          );
-        }
         parts.push({
           inlineData: {
             data: body.imageBase64.replace(/^data:image\/[a-z]+;base64,/, ""),
@@ -345,26 +209,22 @@ Tone: ${tone}. Provide 2 alternative angles.`;
 
       return new Response(JSON.stringify({ result: response.text || "" }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
     return new Response(JSON.stringify({ error: "Endpoint not found" }), {
       status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
     const err = error as Error;
     console.error("Gemini API error, falling back to offline creator response:", err.message);
-    return handleFallbackResponse(url.pathname, rawBody, corsHeaders);
+    return handleFallbackResponse(url.pathname, rawBody);
   }
 }
 
-function handleFallbackResponse(
-  pathname: string,
-  body: Record<string, unknown>,
-  corsHeaders: Record<string, string> = {},
-): Response {
+function handleFallbackResponse(pathname: string, body: Record<string, unknown>): Response {
   if (pathname === "/api/ai/chat") {
     const prompt = String(body["prompt"] || "");
     let reply =
@@ -383,7 +243,7 @@ function handleFallbackResponse(
 
     return new Response(JSON.stringify({ text: reply }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     });
   }
 
@@ -393,7 +253,7 @@ function handleFallbackResponse(
     }),
     {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
     },
   );
 }

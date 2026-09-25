@@ -23,6 +23,12 @@ import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { timeAgo } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
+import {
+  getNotifications,
+  markNotificationRead,
+  type InAppNotification,
+} from "@/lib/notifications";
+import { useRealtimeNotifications } from "@/lib/realtime";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/activity")({
@@ -58,6 +64,18 @@ function Activity() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"all" | "requests" | "followers" | "interactions">("all");
+
+  // Subscribe to real-time notifications
+  useRealtimeNotifications(user?.id);
+
+  // In-app notifications
+  const inAppNotifs = useQuery({
+    queryKey: ["in-app-notifications", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async () => {
+      return getNotifications(user!.id);
+    },
+  });
 
   // Follow Requests
   const requests = useQuery({
@@ -268,48 +286,124 @@ function Activity() {
             )}
 
             {/* Likes & Interactions Section */}
-            {(tab === "all" || tab === "interactions") && (interactions.data?.length ?? 0) > 0 && (
-              <div className="space-y-2">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500" /> Interactions
-                </h2>
-                <div className="divide-y divide-border rounded-2xl border border-border bg-surface overflow-hidden">
-                  {interactions.data?.map((interaction, i) => (
-                    <Link
-                      key={`${interaction.post_id}-${interaction.user.id}-${i}`}
-                      to="/p/$postId"
-                      params={{ postId: interaction.post_id }}
-                      className="flex items-center justify-between gap-3 p-3 transition-colors hover:bg-secondary/50"
-                    >
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <div className="relative">
-                          <ProfileAvatar
-                            path={interaction.user.avatar_url}
-                            fallback={initialsFor(interaction.user)}
-                            className="h-10 w-10"
-                          />
-                          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white">
-                            <Heart className="h-2.5 w-2.5 fill-white" />
-                          </span>
+            {(tab === "all" || tab === "interactions") &&
+              ((inAppNotifs.data?.length ?? 0) > 0 || (interactions.data?.length ?? 0) > 0) && (
+                <div className="space-y-2">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500" /> Notifications &
+                    Interactions
+                  </h2>
+                  <div className="divide-y divide-border rounded-2xl border border-border bg-surface overflow-hidden">
+                    {/* In-App Notifications */}
+                    {inAppNotifs.data?.map((notif) => (
+                      <div
+                        key={notif.id}
+                        onClick={() => {
+                          if (!notif.is_read) {
+                            markNotificationRead(notif.id, user?.id);
+                            queryClient.invalidateQueries({
+                              queryKey: ["in-app-notifications", user?.id],
+                            });
+                          }
+                        }}
+                        className={cn(
+                          "flex items-center justify-between gap-3 p-3 transition-colors cursor-pointer",
+                          notif.is_read
+                            ? "hover:bg-secondary/40"
+                            : "bg-primary/5 hover:bg-primary/10",
+                        )}
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <div className="relative">
+                            {notif.actor ? (
+                              <ProfileAvatar
+                                path={notif.actor.avatar_url}
+                                fallback={initialsFor(notif.actor)}
+                                className="h-10 w-10"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <Bell className="h-5 w-5" />
+                              </div>
+                            )}
+                            <span
+                              className={cn(
+                                "absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-white text-[10px]",
+                                notif.type === "like"
+                                  ? "bg-rose-500"
+                                  : notif.type === "comment"
+                                    ? "bg-blue-500"
+                                    : notif.type === "mention"
+                                      ? "bg-purple-500"
+                                      : "bg-emerald-500",
+                              )}
+                            >
+                              {notif.type === "like" ? (
+                                <Heart className="h-2.5 w-2.5 fill-white" />
+                              ) : notif.type === "comment" ? (
+                                <MessageCircle className="h-2.5 w-2.5" />
+                              ) : (
+                                <Sparkles className="h-2.5 w-2.5" />
+                              )}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm">
+                              {notif.actor && (
+                                <span className="font-semibold text-foreground mr-1">
+                                  @{notif.actor.username}
+                                </span>
+                              )}
+                              <span>{notif.message}</span>
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {timeAgo(notif.created_at)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs sm:text-sm">
-                            <span className="font-semibold text-foreground">
-                              @{interaction.user.username}
-                            </span>{" "}
-                            liked your post
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {timeAgo(interaction.created_at)}
-                          </p>
-                        </div>
+                        {!notif.is_read && (
+                          <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                        )}
                       </div>
-                      <span className="text-[11px] font-semibold text-primary">View</span>
-                    </Link>
-                  ))}
+                    ))}
+
+                    {/* Post Likes */}
+                    {interactions.data?.map((interaction, i) => (
+                      <Link
+                        key={`${interaction.post_id}-${interaction.user.id}-${i}`}
+                        to="/p/$postId"
+                        params={{ postId: interaction.post_id }}
+                        className="flex items-center justify-between gap-3 p-3 transition-colors hover:bg-secondary/50"
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <div className="relative">
+                            <ProfileAvatar
+                              path={interaction.user.avatar_url}
+                              fallback={initialsFor(interaction.user)}
+                              className="h-10 w-10"
+                            />
+                            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white">
+                              <Heart className="h-2.5 w-2.5 fill-white" />
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm">
+                              <span className="font-semibold text-foreground">
+                                @{interaction.user.username}
+                              </span>{" "}
+                              liked your post
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {timeAgo(interaction.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-semibold text-primary">View</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Recent Followers Section */}
             {(tab === "all" || tab === "followers") && (followers.data?.length ?? 0) > 0 && (

@@ -1,17 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2, MessageSquare, PlusSquare, Radio, Sparkles } from "lucide-react";
+import { Loader2, MessageSquare, PlusSquare, Sparkles } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
-import { FeedSwitcher, type FeedFilterMode } from "@/components/opexnal/feed-switcher";
-import { LiveStudioModal } from "@/components/opexnal/live-studio-modal";
+import { OpexnalWordmark } from "@/components/opexnal/logo";
 import { PostCard } from "@/components/opexnal/post-card";
 import { StoryTray } from "@/components/opexnal/story-tray";
 
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/use-session";
 import { FEED_PAGE_SIZE, getHomeFeed } from "@/lib/posts";
-import { getFavoritesFeedList } from "@/lib/interactive-features";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -37,8 +35,6 @@ export const Route = createFileRoute("/_authenticated/home")({
 function HomeFeed() {
   const { user } = useSession();
   const sentinel = useRef<HTMLDivElement | null>(null);
-  const [feedMode, setFeedMode] = useState<FeedFilterMode>("for_you");
-  const [liveStudioOpen, setLiveStudioOpen] = useState(false);
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
@@ -62,31 +58,15 @@ function HomeFeed() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const rawPosts = (data?.pages ?? []).flatMap((page) => page.items);
-
-  // Filter posts based on Feed Mode (For You, Following, Favorites)
-  const favorites = getFavoritesFeedList();
-  const posts =
-    feedMode === "favorites"
-      ? rawPosts.filter((p) => p.author && favorites.includes(p.author.username))
-      : rawPosts;
+  const posts = (data?.pages ?? []).flatMap((page) => page.items);
 
   return (
     <AppShell
       header={
         <ScreenHeader
-          title={<FeedSwitcher currentMode={feedMode} onChangeMode={setFeedMode} />}
+          title={<OpexnalWordmark className="text-lg" />}
           right={
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setLiveStudioOpen(true)}
-                aria-label="Go Live Broadcast"
-                className="flex h-9 items-center gap-1 px-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs transition-colors"
-              >
-                <Radio className="h-3.5 w-3.5 animate-pulse" />
-                <span className="hidden xs:inline">Live</span>
-              </button>
               <Link
                 to="/ai"
                 aria-label="Opexnal AI Studio"
@@ -107,16 +87,6 @@ function HomeFeed() {
       }
     >
       {user && <StoryTray viewerId={user.id} />}
-
-      {/* Live Broadcasting Studio Modal */}
-      {liveStudioOpen && (
-        <LiveStudioModal
-          creatorUsername={user?.email?.split("@")[0] || "creator"}
-          creatorAvatar={null}
-          onClose={() => setLiveStudioOpen(false)}
-        />
-      )}
-
       {isLoading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
@@ -130,13 +100,10 @@ function HomeFeed() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl brand-gradient-bg text-primary-foreground shadow-md">
             <PlusSquare className="h-7 w-7" aria-hidden="true" />
           </div>
-          <h2 className="text-lg font-bold text-foreground">
-            {feedMode === "favorites" ? "No Favorites Yet" : "Welcome to Opexnal"}
-          </h2>
+          <h2 className="text-lg font-bold text-foreground">Welcome to Opexnal</h2>
           <p className="text-xs text-muted-foreground">
-            {feedMode === "favorites"
-              ? "You haven't added any creators to your Favorites list yet. Use the switcher in the header to manage your favorites."
-              : "Follow creators on Explore or share your first post with photos, videos, and AI magic captions."}
+            Follow creators on Explore or share your first post with photos, videos, and AI magic
+            captions.
           </p>
           <div className="flex flex-col w-full gap-2 pt-2">
             <Button

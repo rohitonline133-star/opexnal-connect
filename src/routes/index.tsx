@@ -92,8 +92,8 @@ function Landing() {
                 </Link>
               </Button>
               <Button asChild variant="surface" size="xl">
-                <Link to="/auth" search={{ mode: "login" }}>
-                  Log in to existing account
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Instant Demo / Sign up
                 </Link>
               </Button>
             </>

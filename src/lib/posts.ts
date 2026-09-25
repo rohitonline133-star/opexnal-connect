@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { sanitizeStoragePathSegment, getSafeExtension, validateMediaFile } from "@/lib/security";
+import { getStoredVerification } from "./verification";
 
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PostMediaRow = Database["public"]["Tables"]["post_media"]["Row"];
@@ -614,6 +614,26 @@ export async function toggleLike(postId: string, userId: string, liked: boolean)
       await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
     } else {
       await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
+      // Notify post author if not own post
+      try {
+        const { data: p } = await supabase
+          .from("posts")
+          .select("user_id")
+          .eq("id", postId)
+          .maybeSingle();
+        if (p && p.user_id !== userId) {
+          await supabase.from("notifications").insert({
+            user_id: p.user_id,
+            actor_id: userId,
+            type: "like",
+            entity_id: postId,
+            entity_type: "post",
+            message: "liked your post",
+          });
+        }
+      } catch {
+        // non-fatal
+      }
     }
   } catch {
     // handled locally
@@ -739,6 +759,26 @@ export async function addComment(input: {
       body: input.body.trim(),
       parent_id: input.parentId ?? null,
     });
+    // Send in-app notification to post author
+    try {
+      const { data: p } = await supabase
+        .from("posts")
+        .select("user_id")
+        .eq("id", input.postId)
+        .maybeSingle();
+      if (p && p.user_id !== input.userId) {
+        await supabase.from("notifications").insert({
+          user_id: p.user_id,
+          actor_id: input.userId,
+          type: "comment",
+          entity_id: input.postId,
+          entity_type: "post",
+          message: `commented: "${input.body.trim().slice(0, 45)}"`,
+        });
+      }
+    } catch {
+      // non-fatal
+    }
   } catch {
     // handled locally
   }
@@ -797,15 +837,12 @@ export async function createPost(input: {
       .single();
     if (!error && post) {
       try {
-        const safeUserId = sanitizeStoragePathSegment(input.userId);
         const rows: Database["public"]["Tables"]["post_media"]["Insert"][] = [];
         for (const [index, item] of input.media.entries()) {
-          const val = validateMediaFile(item.file, item.mediaType);
-          if (!val.valid) {
-            throw new Error(val.error || "Invalid media file");
-          }
-          const ext = getSafeExtension(item.file.name, item.mediaType);
-          const path = `${safeUserId}/${post.id}/${index}-${crypto.randomUUID()}.${ext}`;
+          const ext =
+            item.file.name.split(".").pop()?.toLowerCase() ||
+            (item.mediaType === "video" ? "mp4" : "jpg");
+          const path = `${input.userId}/${post.id}/${index}-${crypto.randomUUID()}.${ext}`;
           const { error: uploadError } = await supabase.storage
             .from("post-media")
             .upload(path, item.file, { contentType: item.file.type, upsert: false });
@@ -834,7 +871,7 @@ export async function createPost(input: {
     // fallback to local creation
   }
 
-  // Create locally stored post for offline draft fallback
+  // Create locally stored post for guest / offline mode
   const localPostId = `post_${Date.now()}`;
   const mediaItems: PostMediaRow[] = input.media.map((m, i) => {
     let localUrl = "";
@@ -879,7 +916,7 @@ export async function createPost(input: {
       username: authorName,
       display_name: "You",
       avatar_url: null,
-      is_verified: true,
+      is_verified: getStoredVerification(input.userId)?.status === "APPROVED",
     },
     liked: false,
     saved: false,
@@ -890,16 +927,89 @@ export async function createPost(input: {
   return localPostId;
 }
 
-export async function deletePost(postId: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user?.id) {
-    throw new Error("Unauthorized");
+export async function editPost(input: { postId: string; userId: string; caption: string }) {
+  const trimmed = input.caption.trim();
+
+  // 1. Update in local storage if present
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(LOCAL_POSTS_KEY);
+      if (raw) {
+        const posts: FeedPost[] = JSON.parse(raw);
+        const idx = posts.findIndex((p) => p.id === input.postId && p.user_id === input.userId);
+        if (idx >= 0 && posts[idx]) {
+          posts[idx]!.caption = trimmed;
+          posts[idx]!.updated_at = new Date().toISOString();
+          localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(posts));
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
+
+  // 2. Update in Postgres authoritative store
   const { error } = await supabase
     .from("posts")
-    .delete()
-    .eq("id", postId)
-    .eq("user_id", authData.user.id);
+    .update({ caption: trimmed, updated_at: new Date().toISOString() })
+    .eq("id", input.postId)
+    .eq("user_id", input.userId);
+
+  if (error) throw error;
+}
+
+export function validateMediaFile(
+  file: File,
+  mediaType: "image" | "video",
+): { valid: boolean; error?: string } {
+  const maxImageBytes = 15 * 1024 * 1024; // 15MB
+  const maxVideoBytes = 50 * 1024 * 1024; // 50MB
+
+  if (mediaType === "image") {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+      return { valid: false, error: "Only JPG, PNG, WEBP, and GIF images are supported." };
+    }
+    if (file.size > maxImageBytes) {
+      return {
+        valid: false,
+        error: `Image file exceeds the 15MB limit (${(file.size / 1024 / 1024).toFixed(1)}MB).`,
+      };
+    }
+  } else if (mediaType === "video") {
+    const allowed = ["video/mp4", "video/webm", "video/quicktime"];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(mp4|webm|mov)$/i)) {
+      return { valid: false, error: "Only MP4, WEBM, and MOV videos are supported." };
+    }
+    if (file.size > maxVideoBytes) {
+      return {
+        valid: false,
+        error: `Video file exceeds the 50MB limit (${(file.size / 1024 / 1024).toFixed(1)}MB).`,
+      };
+    }
+  }
+  return { valid: true };
+}
+
+export async function deletePost(postId: string, userId?: string) {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(LOCAL_POSTS_KEY);
+      if (raw) {
+        const posts: FeedPost[] = JSON.parse(raw);
+        const filtered = posts.filter((p) => p.id !== postId);
+        localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(filtered));
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  let query = supabase.from("posts").delete().eq("id", postId);
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+  const { error } = await query;
   if (error) throw error;
 }
 

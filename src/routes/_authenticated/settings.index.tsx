@@ -42,6 +42,7 @@ import {
   Laptop,
   History,
   AlertTriangle,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 
@@ -298,6 +299,13 @@ function Settings() {
                   hint="Guidelines standing, monetization eligibility & badges"
                   onClick={() => setActiveDialog("account_status")}
                 />
+                <SettingsAction
+                  id="action-request-verification"
+                  icon={BadgeCheck}
+                  label="Request verification"
+                  hint="Apply for verified badge & document review"
+                  onClick={() => setActiveDialog("request_verification")}
+                />
               </div>
             </section>
 
@@ -394,6 +402,13 @@ function Settings() {
                   label="Creator insights & analytics"
                   hint="7-day reach, profile visits, engagement & followers"
                   onClick={() => setActiveDialog("insights")}
+                />
+                <SettingsAction
+                  id="action-creator-monetization-hub"
+                  icon={Coins}
+                  label="Creator monetization & wallet"
+                  hint="Ad revenue split, virtual gifts, performance bonuses & ledger"
+                  onClick={() => setActiveDialog("monetization")}
                 />
                 <SettingsAction
                   id="action-branded-content"

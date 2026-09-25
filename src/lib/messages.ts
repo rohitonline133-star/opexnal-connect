@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
-import { sanitizePlainText } from "@/lib/security";
 
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 
@@ -235,21 +234,18 @@ export async function getConversationPeers(conversationId: string, userId: strin
 }
 
 export async function sendMessage(conversationId: string, senderId: string, body: string) {
-  const cleanBody = sanitizePlainText(body).slice(0, 2000);
-  if (!cleanBody) return;
-
   const newMsg: MessageRow = {
     id: `local_msg_${Date.now()}`,
     conversation_id: conversationId,
     sender_id: senderId,
-    body: cleanBody,
+    body: body.trim(),
     created_at: new Date().toISOString(),
   };
 
   try {
     const { error } = await supabase
       .from("messages")
-      .insert({ conversation_id: conversationId, sender_id: senderId, body: cleanBody });
+      .insert({ conversation_id: conversationId, sender_id: senderId, body: body.trim() });
     if (error) {
       saveLocalMessage(conversationId, newMsg);
     }

@@ -6,6 +6,7 @@ import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { MediaCarousel } from "@/components/opexnal/post-media";
 import { cn } from "@/lib/utils";
 import { initialsFor } from "@/lib/profile";
+import { getStoredSettings } from "@/lib/settings-store";
 import {
   formatCount,
   recordShare,
@@ -16,23 +17,36 @@ import {
 } from "@/lib/posts";
 
 function Caption({ text }: { text: string }) {
-  const parts = text.split(/(#[A-Za-z0-9_]{1,50})/g);
+  const parts = text.split(/(#[A-Za-z0-9_]{1,50}|@[A-Za-z0-9_]{1,50})/g);
   return (
     <>
-      {parts.map((part, i) =>
-        part.startsWith("#") ? (
-          <Link
-            key={`${part}-${i}`}
-            to="/tag/$tag"
-            params={{ tag: part.slice(1).toLowerCase() }}
-            className="text-primary hover:underline"
-          >
-            {part}
-          </Link>
-        ) : (
-          <Fragment key={i}>{part}</Fragment>
-        ),
-      )}
+      {parts.map((part, i) => {
+        if (part.startsWith("#")) {
+          return (
+            <Link
+              key={`${part}-${i}`}
+              to="/tag/$tag"
+              params={{ tag: part.slice(1).toLowerCase() }}
+              className="text-primary hover:underline"
+            >
+              {part}
+            </Link>
+          );
+        }
+        if (part.startsWith("@")) {
+          return (
+            <Link
+              key={`${part}-${i}`}
+              to="/u/$username"
+              params={{ username: part.slice(1).toLowerCase() }}
+              className="text-primary font-medium hover:underline"
+            >
+              {part}
+            </Link>
+          );
+        }
+        return <Fragment key={i}>{part}</Fragment>;
+      })}
     </>
   );
 }
@@ -43,6 +57,8 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [likes, setLikes] = useState(post.likes_count);
   const [saved, setSaved] = useState(post.saved);
   const author = post.author;
+  const settings = getStoredSettings();
+  const hideLikeCounts = settings.hideLikeAndViewCounts;
 
   async function onLike() {
     if (!viewerId) return;
@@ -156,7 +172,13 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
       </div>
 
       <div className="space-y-1 px-4 pt-2">
-        <p className="text-sm font-semibold">{formatCount(likes)} likes</p>
+        <p className="text-sm font-semibold">
+          {hideLikeCounts
+            ? liked
+              ? "Liked by you and others"
+              : "Liked by others"
+            : `${formatCount(likes)} likes`}
+        </p>
         {post.caption && (
           <p className="whitespace-pre-wrap text-sm">
             {author && <span className="mr-1 font-semibold">{author.username}</span>}
