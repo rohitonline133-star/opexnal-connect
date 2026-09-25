@@ -109,7 +109,7 @@ function Settings() {
       // ignore
     }
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
   }
 
   async function signOutAll() {
@@ -123,7 +123,7 @@ function Settings() {
       // ignore
     }
     await supabase.auth.signOut({ scope: "global" });
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
   }
 
   const username =

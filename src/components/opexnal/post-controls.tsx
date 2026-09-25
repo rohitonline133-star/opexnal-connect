@@ -39,9 +39,9 @@ import { submitContentReport } from "@/lib/moderation-copyright";
 
 interface PostControlsProps {
   post: FeedPost;
-  viewerId?: string | null;
-  onPostDeleted?: (postId: string) => void;
-  onPostHidden?: (postId: string) => void;
+  viewerId?: string | null | undefined;
+  onPostDeleted?: ((postId: string) => void) | undefined;
+  onPostHidden?: ((postId: string) => void) | undefined;
 }
 
 export function PostControlsMenu({

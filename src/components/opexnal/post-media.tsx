@@ -1,24 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { resolveMediaUrl, type PostMediaRow } from "@/lib/posts";
-
-export function useSignedMediaUrl(path: string | null | undefined) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    if (!path) {
-      setUrl(null);
-      return;
-    }
-    resolveMediaUrl(path)
-      .then((next) => active && setUrl(next))
-      .catch(() => active && setUrl(null));
-    return () => {
-      active = false;
-    };
-  }, [path]);
-  return url;
-}
+import { type PostMediaRow } from "@/lib/posts";
+import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 
 export function MediaThumb({
   media,

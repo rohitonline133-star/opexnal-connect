@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
-import { useSignedMediaUrl } from "@/components/opexnal/post-media";
+import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";

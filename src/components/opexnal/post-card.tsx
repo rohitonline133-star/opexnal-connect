@@ -124,7 +124,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
           <span className="text-xs text-muted-foreground">{timeAgo(post.created_at)}</span>
           <PostControlsMenu
             post={post}
-            viewerId={viewerId}
+            viewerId={viewerId ?? null}
             onPostDeleted={() => setDeleted(true)}
             onPostHidden={() => setHidden(true)}
           />

@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 
 import { ProfileAvatar } from "@/components/opexnal/avatar";
-import { useSignedMediaUrl } from "@/components/opexnal/post-media";
+import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 import { ReportContentDialog } from "@/components/opexnal/post-controls";
 import {
   Dialog,

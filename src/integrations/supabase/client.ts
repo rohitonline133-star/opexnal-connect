@@ -29,31 +29,34 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+function getEnvVar(key: string): string | undefined {
+  if (typeof import.meta !== "undefined" && (import.meta as unknown as { env?: Record<string, string> }).env) {
+    const val = (import.meta as unknown as { env: Record<string, string> }).env[key];
+    if (val) return val;
+  }
+  if (typeof process !== "undefined" && process.env) {
+    const val = process.env[key];
+    if (val) return val;
+  }
+  return undefined;
+}
+
 function createSupabaseClient() {
-  // Use static property access so Vite can replace import.meta.env at build time
+  const projectId =
+    getEnvVar("VITE_SUPABASE_PROJECT_ID") ||
+    getEnvVar("SUPABASE_PROJECT_ID");
+
   const SUPABASE_URL =
-    import.meta.env["VITE_SUPABASE_URL"] ||
-    (import.meta.env["VITE_SUPABASE_PROJECT_ID"]
-      ? `https://${import.meta.env["VITE_SUPABASE_PROJECT_ID"]}.supabase.co`
-      : undefined) ||
-    (typeof process !== "undefined"
-      ? process.env?.["SUPABASE_URL"] ||
-        process.env?.["VITE_SUPABASE_URL"] ||
-        (process.env?.["SUPABASE_PROJECT_ID"]
-          ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
-          : undefined)
-      : undefined) ||
+    getEnvVar("VITE_SUPABASE_URL") ||
+    getEnvVar("SUPABASE_URL") ||
+    (projectId ? `https://${projectId}.supabase.co` : undefined) ||
     "https://cvzloydcxjjpjydzjyhw.supabase.co";
 
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-    import.meta.env["VITE_SUPABASE_ANON_KEY"] ||
-    (typeof process !== "undefined"
-      ? process.env?.["SUPABASE_PUBLISHABLE_KEY"] ||
-        process.env?.["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
-        process.env?.["SUPABASE_ANON_KEY"] ||
-        process.env?.["VITE_SUPABASE_ANON_KEY"]
-      : undefined) ||
+    getEnvVar("VITE_SUPABASE_PUBLISHABLE_KEY") ||
+    getEnvVar("VITE_SUPABASE_ANON_KEY") ||
+    getEnvVar("SUPABASE_PUBLISHABLE_KEY") ||
+    getEnvVar("SUPABASE_ANON_KEY") ||
     "mock-anon-key-for-local-preview";
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
