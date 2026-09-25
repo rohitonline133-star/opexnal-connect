@@ -318,24 +318,55 @@ describe("6. Complete Payout State Machine & Provider Verification", () => {
     const resInitiate = await handleMonetizationRequest(reqInitiate);
     assert.strictEqual(resInitiate.status, 200);
 
-    // 7. Admin transitions: payout_initiated -> paid
-    const reqPaid = new Request("http://localhost:3000/api/monetization/payouts/transition", {
+    // 7. Admin attempts manual transition to PAID -> MUST BE REJECTED!
+    // The database must NEVER mark a payout as PAID merely because an internal API or admin action says so.
+    const reqPaidManual = new Request(
+      "http://localhost:3000/api/monetization/payouts/transition",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-test-user-id": "usr_admin",
+          "x-test-role": "super_admin",
+        },
+        body: JSON.stringify({ payoutId: payout.id, targetStatus: "paid" }),
+      },
+    );
+    const resPaidManual = await handleMonetizationRequest(reqPaidManual);
+    assert.strictEqual(resPaidManual.status, 400);
+    const dataManual = await resPaidManual.json();
+    assert.ok(dataManual.error.includes("MANUAL_PAID_TRANSITION_PROHIBITED"));
+
+    // 8. Legitimate transition to PAID strictly occurs via verified provider webhook (payout.paid)
+    const providerPayoutEvent = {
+      id: "evt_live_payout_settle_001",
+      type: "payout.paid",
+      created: Math.floor(Date.now() / 1000),
+      data: {
+        object: {
+          id: "po_1Q2W3E4R5T6Y7U8I9O0P",
+          amount: 6000,
+          currency: "usd",
+          status: "paid",
+          metadata: { payoutId: payout.id, userId: "usr_creator_lifecycle" },
+        },
+      },
+    };
+
+    const reqWebhookSettle = new Request("http://localhost:3000/api/monetization/webhook", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-test-user-id": "usr_admin",
-        "x-test-role": "super_admin",
+        "stripe-signature": `t=${Math.floor(Date.now() / 1000)},v1=test_sig_hash`,
       },
-      body: JSON.stringify({ payoutId: payout.id, targetStatus: "paid" }),
+      body: JSON.stringify(providerPayoutEvent),
     });
-    const resPaid = await handleMonetizationRequest(reqPaid);
-    assert.strictEqual(resPaid.status, 200);
-    const dataPaid = await resPaid.json();
-    assert.strictEqual(dataPaid.payout.status, "paid");
-    assert.ok(dataPaid.payout.completedAt);
-    // Explicitly verify provider verification state
-    assert.strictEqual(dataPaid.realPaymentProviderVerified, false);
-    assert.ok(dataPaid.providerNotice.includes("REAL PAYMENT PROVIDER: NOT VERIFIED"));
+    const resWebhookSettle = await handleMonetizationRequest(reqWebhookSettle);
+    assert.strictEqual(resWebhookSettle.status, 200);
+    const webhookData = await resWebhookSettle.json();
+    assert.strictEqual(webhookData.status, "processed");
+    assert.strictEqual(webhookData.payoutNewStatus, "paid");
+    assert.strictEqual(webhookData.gatewayReference, "po_1Q2W3E4R5T6Y7U8I9O0P");
   });
 
   test("Failure & Retry cycle: payout_initiated -> failed -> payable retry", async () => {

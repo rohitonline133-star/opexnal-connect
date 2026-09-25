@@ -5,10 +5,11 @@
  * - Eligibility evaluation & recalculation
  * - Authoritative wallet queries & ledger auditing
  * - Payout lifecycle requests, threshold enforcement & overdraft prevention
+ * - Real Stripe Connect creator onboarding, account verification & dashboard links
  * - Admin-only payout approvals and status transitions
+ * - Real payment provider webhook signature verification, replay protection & ledger reconciliation
  * - Virtual coin purchases & gift transactions
  * - Ad impression fraud filtering & split calculation
- * - Payment gateway webhook signature verification & idempotency
  */
 
 import {
@@ -23,22 +24,35 @@ import {
   type PayoutLifecycleRequest,
 } from "../lib/monetization";
 
-interface AuthUser {
+import {
+  isStripeConfigured,
+  isStripeWebhookConfigured,
+  getProviderHealth,
+  createOrGetCreatorConnectedAccount,
+  generateConnectOnboardingLink,
+  getConnectedAccountStatus,
+  generateExpressDashboardLink,
+  executeRealCreatorDisbursement,
+  verifyStripeWebhookSignature,
+  reconcileProviderWebhookEvent,
+} from "./stripe-payout-provider";
+
+export interface AuthUser {
   id: string;
   role: "user" | "creator" | "moderator" | "super_admin";
 }
 
-// In-memory server-authoritative mock state for isolated multi-user verification
-const serverWallets = new Map<
+// In-memory server-authoritative state for isolated multi-user verification
+export const serverWallets = new Map<
   string,
   { availableCents: number; pendingCents: number; lifetimeGrossCents: number }
 >();
-const serverLedgers = new Map<string, Array<Record<string, unknown>>>();
-const serverPayouts = new Map<string, PayoutLifecycleRequest>();
-const processedWebhookEventIds = new Set<string>();
+export const serverLedgers = new Map<string, Array<Record<string, unknown>>>();
+export const serverPayouts = new Map<string, PayoutLifecycleRequest>();
+export const processedWebhookEventIds = new Set<string>();
 
 // Helper to authenticate caller from Bearer token or mock test header
-function authenticateRequest(request: Request): AuthUser | null {
+export function authenticateRequest(request: Request): AuthUser | null {
   const authHeader = request.headers.get("authorization");
   const testUserHeader = request.headers.get("x-test-user-id");
   const testRoleHeader = request.headers.get("x-test-role");
@@ -82,26 +96,24 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
 
   // 1. Health & Payment Provider Configuration Status
   if (request.method === "GET" && pathname === "/api/monetization/health") {
-    const hasStripeKey = Boolean(process.env["STRIPE_SECRET_KEY"]);
-    const hasRazorpayKey = Boolean(process.env["RAZORPAY_KEY_ID"]);
-    const hasLiveProvider = hasStripeKey || hasRazorpayKey;
+    const health = getProviderHealth();
 
     return new Response(
       JSON.stringify({
         status: "healthy",
         monetizationEngine: "Opexnal_Phase_3_Active",
-        paymentGatewayConfigured: hasLiveProvider,
-        paymentProviderName: hasStripeKey ? "Stripe" : hasRazorpayKey ? "Razorpay" : "None",
-        realPaymentProviderVerified: false,
-        notice: hasLiveProvider
-          ? "Payment gateway credentials active on server."
-          : "REAL PAYMENT PROVIDER: NOT VERIFIED. Live credentials (STRIPE_SECRET_KEY / RAZORPAY_KEY_ID) not configured in environment.",
+        paymentGatewayConfigured: health.configured,
+        paymentProviderName: health.provider,
+        realPaymentProviderVerified: health.configured && health.livemode,
+        livemode: health.livemode,
+        webhookConfigured: health.webhookSecretConfigured,
+        notice: health.statusMessage,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  // 2. Webhook endpoint with Signature Verification & Replay Protection
+  // 2. Webhook endpoint with Signature Verification, Replay Protection & Ledger Reconciliation
   if (request.method === "POST" && pathname === "/api/monetization/webhook") {
     const signature =
       request.headers.get("stripe-signature") || request.headers.get("x-razorpay-signature");
@@ -116,35 +128,36 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
 
     try {
-      const body = (await request.json()) as {
-        id?: string;
-        type?: string;
-        event?: string;
-      };
-      const eventId = body.id || `evt_${Date.now()}`;
-
-      // Idempotency: Reject replayed webhook events
-      if (processedWebhookEventIds.has(eventId)) {
-        return new Response(
-          JSON.stringify({
-            received: true,
-            status: "ignored_duplicate_replay",
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        );
+      const rawBody = await request.text();
+      let body: Record<string, unknown>;
+      try {
+        body = JSON.parse(rawBody) as Record<string, unknown>;
+      } catch {
+        return new Response(JSON.stringify({ error: "INVALID_WEBHOOK_BODY" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
-      processedWebhookEventIds.add(eventId);
+      // Check cryptographic signature if webhook secret is configured
+      if (isStripeWebhookConfigured()) {
+        const sigVerify = verifyStripeWebhookSignature(rawBody, signature);
+        if (!sigVerify.valid) {
+          return new Response(
+            JSON.stringify({
+              error: `UNAUTHORIZED_WEBHOOK: ${sigVerify.reason}`,
+            }),
+            { status: 401, headers: { "Content-Type": "application/json" } },
+          );
+        }
+      }
 
-      return new Response(
-        JSON.stringify({
-          received: true,
-          eventId,
-          status: "processed",
-          verified: true,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      );
+      const reconcileResult = await reconcileProviderWebhookEvent(body, serverPayouts);
+
+      return new Response(JSON.stringify(reconcileResult), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     } catch {
       return new Response(JSON.stringify({ error: "INVALID_WEBHOOK_BODY" }), {
         status: 400,
@@ -215,7 +228,92 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     });
   }
 
-  // 5. Payout Withdrawal Request (Strict server validation & overdraft prevention)
+  // 5. Stripe Connect Creator Onboarding
+  if (request.method === "POST" && pathname === "/api/monetization/connect/onboard") {
+    try {
+      const body = (await request.json()) as {
+        email?: string;
+        country?: string;
+        refreshUrl?: string;
+        returnUrl?: string;
+      };
+
+      const effectiveUserId = caller.id;
+      const accountRes = await createOrGetCreatorConnectedAccount({
+        userId: effectiveUserId,
+        email: body.email,
+        country: body.country,
+      });
+
+      if (!accountRes.success || !accountRes.stripeAccountId) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: accountRes.error || "Failed to initialize Stripe Connect account.",
+            realPaymentProviderVerified: isStripeConfigured(),
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      const linkRes = await generateConnectOnboardingLink({
+        accountId: accountRes.stripeAccountId,
+        refreshUrl: body.refreshUrl || `${url.origin}/settings/creator-monetization?tab=payouts`,
+        returnUrl: body.returnUrl || `${url.origin}/settings/creator-monetization?tab=payouts&onboarding=success`,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          stripeAccountId: accountRes.stripeAccountId,
+          onboardingUrl: linkRes.onboardingUrl,
+          payoutsEnabled: accountRes.payoutsEnabled || false,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    } catch {
+      return new Response(JSON.stringify({ error: "INVALID_CONNECT_ONBOARD_PAYLOAD" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // 5b. Stripe Connect Creator Account Status
+  if (request.method === "GET" && pathname === "/api/monetization/connect/status") {
+    const accountId = url.searchParams.get("accountId");
+    if (!accountId) {
+      return new Response(JSON.stringify({ error: "Missing accountId parameter." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const statusRes = await getConnectedAccountStatus(accountId);
+    return new Response(JSON.stringify(statusRes), {
+      status: statusRes.success ? 200 : 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // 5c. Stripe Connect Creator Express Dashboard Single Sign-on
+  if (request.method === "POST" && pathname === "/api/monetization/connect/dashboard") {
+    try {
+      const body = (await request.json()) as { accountId: string };
+      const loginRes = await generateExpressDashboardLink(body.accountId);
+      return new Response(JSON.stringify(loginRes), {
+        status: loginRes.success ? 200 : 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch {
+      return new Response(JSON.stringify({ error: "INVALID_DASHBOARD_LINK_REQUEST" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  // 6. Payout Withdrawal Request (Strict server validation & overdraft prevention)
   if (request.method === "POST" && pathname === "/api/monetization/payouts/request") {
     try {
       const body = (await request.json()) as {
@@ -227,13 +325,36 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
       const effectiveUserId = caller.id;
       const amountCents = body.amountCents;
 
-      if (!amountCents || amountCents <= 0 || isNaN(amountCents)) {
+      // Strict number validation: reject 0, negative, NaN, Infinity
+      if (
+        typeof amountCents !== "number" ||
+        amountCents <= 0 ||
+        !Number.isFinite(amountCents) ||
+        isNaN(amountCents)
+      ) {
         return new Response(
           JSON.stringify({
-            error: "INVALID_AMOUNT: Payout amount must be greater than $0.00.",
+            error:
+              "INVALID_AMOUNT: Payout amount must be a finite positive number greater than $0.00.",
           }),
           { status: 400, headers: { "Content-Type": "application/json" } },
         );
+      }
+
+      // Check for concurrent active payout in progress
+      for (const p of serverPayouts.values()) {
+        if (
+          p.userId === effectiveUserId &&
+          ["in_review", "approved", "payable", "payout_initiated"].includes(p.status)
+        ) {
+          return new Response(
+            JSON.stringify({
+              error:
+                "CONCURRENT_PAYOUT_IN_PROGRESS: You already have an active payout in progress. Wait for it to complete before initiating another.",
+            }),
+            { status: 409, headers: { "Content-Type": "application/json" } },
+          );
+        }
       }
 
       const payoutConfig = await getPayoutAccountConfig(effectiveUserId);
@@ -307,7 +428,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
   }
 
-  // 6. Admin Payout Approval Endpoint (Strictly forbidden to regular creators)
+  // 7. Admin Payout Approval Endpoint (Strictly forbidden to regular creators)
   if (request.method === "POST" && pathname === "/api/monetization/payouts/approve") {
     if (caller.role !== "super_admin") {
       return new Response(
@@ -349,7 +470,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
   }
 
-  // 6b. Admin Payout State Machine Transition Endpoint
+  // 8. Admin Payout State Machine Transition Endpoint
   if (request.method === "POST" && pathname === "/api/monetization/payouts/transition") {
     if (caller.role !== "super_admin") {
       return new Response(
@@ -375,6 +496,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
           | "refund_adjustment";
         reason?: string;
         gatewayReference?: string;
+        stripeAccountId?: string;
       };
 
       const payout = serverPayouts.get(body.payoutId);
@@ -385,11 +507,24 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
         });
       }
 
+      // CRITICAL PRODUCTION SECURITY RULE:
+      // The database must NEVER mark a payout as PAID merely because an internal API or admin action says so.
+      // PAID may ONLY be recorded after the configured payment provider gives a verified successful payout/disbursement event.
+      if (body.targetStatus === "paid") {
+        return new Response(
+          JSON.stringify({
+            error:
+              "MANUAL_PAID_TRANSITION_PROHIBITED: The database must NEVER mark a payout as PAID merely because an internal API or admin action says so. PAID may only be recorded after the configured payment provider delivers a verified successful payout/disbursement event via webhook.",
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
       const validTransitions: Record<string, string[]> = {
         in_review: ["approved", "rejected"],
         approved: ["payable", "rejected"],
         payable: ["payout_initiated", "failed"],
-        payout_initiated: ["paid", "failed"],
+        payout_initiated: ["failed"],
         failed: ["payable", "rejected", "refund_adjustment"],
         paid: ["reversed", "refund_adjustment"],
       };
@@ -404,21 +539,41 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
         );
       }
 
-      const hasLiveProvider = Boolean(
-        process.env["STRIPE_SECRET_KEY"] || process.env["RAZORPAY_KEY_ID"],
-      );
+      // Handle payout_initiated: execute real transfer if live credentials exist
+      let providerNotice = "Internal state machine transitioned.";
+      let realProviderVerified = false;
+
+      if (body.targetStatus === "payout_initiated") {
+        if (isStripeConfigured()) {
+          const disburseRes = await executeRealCreatorDisbursement({
+            payoutId: payout.id,
+            userId: payout.userId,
+            amountCents: payout.amountCents,
+            stripeAccountId: body.stripeAccountId,
+          });
+
+          if (disburseRes.success) {
+            payout.gatewayReference = disburseRes.providerTransferId || null;
+            realProviderVerified = true;
+            providerNotice = disburseRes.notice;
+          } else {
+            providerNotice = disburseRes.notice;
+            realProviderVerified = disburseRes.realPaymentProviderVerified;
+          }
+        } else {
+          // In production without live credentials, do NOT generate fake IDs!
+          payout.gatewayReference = null;
+          realProviderVerified = false;
+          providerNotice =
+            "REAL PAYMENT PROVIDER: NOT CONFIGURED (Awaiting STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET). Batch payout queued in payout_initiated state.";
+        }
+      }
+
       payout.status = body.targetStatus;
       payout.updatedAt = new Date().toISOString();
 
-      if (body.targetStatus === "paid") {
-        payout.completedAt = new Date().toISOString();
-        payout.gatewayReference =
-          body.gatewayReference ||
-          (hasLiveProvider ? `gw_live_${Date.now()}` : "simulated_internal_db_only");
-      }
-
       if (body.targetStatus === "failed") {
-        payout.failureReason = body.reason || "GATEWAY_TRANSFER_REJECTED";
+        payout.failureReason = body.reason || "PAYOUT_GATEWAY_REJECTED";
         payout.retryCount = (payout.retryCount || 0) + 1;
       }
 
@@ -437,10 +592,8 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
         JSON.stringify({
           success: true,
           payout,
-          realPaymentProviderVerified: hasLiveProvider,
-          providerNotice: hasLiveProvider
-            ? "Payment transfer executed via live payment gateway."
-            : "REAL PAYMENT PROVIDER: NOT VERIFIED. Internal database record transitioned; live bank transfer not verified.",
+          realPaymentProviderVerified: realProviderVerified,
+          providerNotice,
           message: `Payout successfully transitioned to '${body.targetStatus}'.`,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -453,7 +606,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
   }
 
-  // 7. Coin Purchase Endpoint
+  // 9. Coin Purchase Endpoint
   if (request.method === "POST" && pathname === "/api/monetization/coins/purchase") {
     try {
       const body = (await request.json()) as { packId: string };
@@ -485,7 +638,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
   }
 
-  // 8. Virtual Gift Sending Endpoint
+  // 10. Virtual Gift Sending Endpoint
   if (request.method === "POST" && pathname === "/api/monetization/gifts/send") {
     try {
       const body = (await request.json()) as {
@@ -540,7 +693,7 @@ export async function handleMonetizationRequest(request: Request): Promise<Respo
     }
   }
 
-  // 9. Ad Impression Fraud Check & Recording Endpoint
+  // 11. Ad Impression Fraud Check & Recording Endpoint
   if (request.method === "POST" && pathname === "/api/monetization/ads/impression") {
     try {
       const body = (await request.json()) as {
