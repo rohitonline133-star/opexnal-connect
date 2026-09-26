@@ -1,35 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  BellOff,
-  Bell,
-  ChevronLeft,
-  Eye,
-  Flag,
-  Heart,
-  Loader2,
-  Plus,
-  Send,
-  Share2,
-  Trash2,
-} from "lucide-react";
+import { BellOff, Bell, ChevronLeft, Eye, Flag, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
 import { timeAgo } from "@/lib/posts";
-import { openDirectConversation, sendMessage } from "@/lib/messages";
 import {
   deleteStory,
   getStoryViewers,
@@ -38,7 +17,6 @@ import {
   recordStoryView,
   reportContent,
   resolveStoryMediaUrl,
-  saveStoryHighlight,
   setStoryMuted,
   STORY_IMAGE_DURATION_MS,
   timeLeft,
@@ -76,10 +54,6 @@ function StoryViewer() {
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [highlightModalOpen, setHighlightModalOpen] = useState(false);
-  const [highlightTitle, setHighlightTitle] = useState("");
-  const [floatingEmoji, setFloatingEmoji] = useState<string | null>(null);
 
   const storiesQuery = useQuery({
     queryKey: ["stories", userId, user?.id],
@@ -90,60 +64,6 @@ function StoryViewer() {
   const stories = useMemo(() => storiesQuery.data ?? [], [storiesQuery.data]);
   const current = stories[Math.min(index, stories.length - 1)];
   const isOwner = user?.id === userId;
-
-  async function handleSendReply(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    if (!user || !replyText.trim() || !current) return;
-    try {
-      const convId = await openDirectConversation(user.id, userId);
-      await sendMessage(convId, user.id, `Replied to story: "${replyText.trim()}"`);
-      toast.success("Reply sent to user's direct messages!");
-      setReplyText("");
-    } catch {
-      toast.error("Could not send reply");
-    }
-  }
-
-  async function handleSendReaction(emoji: string) {
-    if (!user || !current) return;
-    setFloatingEmoji(emoji);
-    setTimeout(() => setFloatingEmoji(null), 1200);
-    try {
-      const convId = await openDirectConversation(user.id, userId);
-      await sendMessage(convId, user.id, `Reacted ${emoji} to your story`);
-      toast.success(`Sent ${emoji} reaction`);
-    } catch {
-      // optimistic
-    }
-  }
-
-  function handleCreateHighlight() {
-    if (!user || !current || !highlightTitle.trim()) return;
-    saveStoryHighlight({
-      userId: user.id,
-      title: highlightTitle.trim(),
-      coverUrl: mediaUrl || current.storage_path,
-      storyIds: [current.id],
-    });
-    toast.success(`Added to Highlight "${highlightTitle.trim()}"!`);
-    setHighlightTitle("");
-    setHighlightModalOpen(false);
-    queryClient.invalidateQueries({ queryKey: ["story-highlights", user.id] });
-  }
-
-  function handleShareStory() {
-    const url = `${window.location.origin}/stories/${userId}`;
-    try {
-      if (typeof navigator.share === "function") {
-        navigator.share({ url, title: "Opexnal Story" });
-      } else {
-        navigator.clipboard.writeText(url);
-        toast.success("Story link copied");
-      }
-    } catch {
-      // dismissed
-    }
-  }
 
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const currentStoragePath = current?.storage_path;
@@ -381,146 +301,43 @@ function StoryViewer() {
         />
       </div>
 
-      {/* Floating Emoji Animation */}
-      {floatingEmoji && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30 animate-bounce text-6xl">
-          {floatingEmoji}
-        </div>
-      )}
-
       {current.caption && (
-        <p className="pointer-events-none absolute inset-x-0 bottom-24 z-10 px-6 text-center text-sm text-white drop-shadow">
+        <p className="pointer-events-none absolute inset-x-0 bottom-20 z-10 px-6 text-center text-sm text-white drop-shadow">
           {current.caption}
         </p>
       )}
 
-      {isOwner ? (
-        <div className="relative z-20 border-t border-white/10 px-4 py-3 flex items-center justify-between">
+      {isOwner && (
+        <div className="relative z-20 border-t border-white/10 px-4 py-3">
           <button
             type="button"
             onClick={() => setShowViewers((v) => !v)}
-            className="flex items-center gap-2 text-sm text-white/80 hover:text-white"
+            className="flex items-center gap-2 text-sm text-white/80"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
             {current.views_count} {current.views_count === 1 ? "view" : "views"}
           </button>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setHighlightModalOpen(true)}
-            className="text-xs text-white/90 hover:text-white hover:bg-white/10 flex items-center gap-1 rounded-full h-8"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Highlight
-          </Button>
-
           {showViewers && (
-            <div className="absolute inset-x-0 bottom-full bg-black/90 backdrop-blur border-t border-white/10 p-4 rounded-t-2xl z-30 max-h-56 overflow-y-auto">
-              <h4 className="text-xs font-semibold text-white/60 mb-2">Story Viewers</h4>
-              <ul className="space-y-3">
-                {(viewersQuery.data ?? []).map((entry) => (
-                  <li key={entry.viewer.id} className="flex items-center gap-3">
-                    <ProfileAvatar
-                      path={entry.viewer.avatar_url}
-                      fallback={initialsFor(entry.viewer)}
-                      className="h-8 w-8"
-                    />
-                    <span className="text-sm text-white">{entry.viewer.username}</span>
-                    <span className="ml-auto text-xs text-white/50">
-                      {timeAgo(entry.created_at)}
-                    </span>
-                  </li>
-                ))}
-                {(viewersQuery.data ?? []).length === 0 && !viewersQuery.isLoading && (
-                  <li className="text-sm text-white/60">No views yet.</li>
-                )}
-              </ul>
-            </div>
+            <ul className={cn("mt-3 max-h-48 space-y-3 overflow-y-auto")}>
+              {(viewersQuery.data ?? []).map((entry: { viewer: any; created_at: string }) => (
+                <li key={entry.viewer.id} className="flex items-center gap-3">
+                  <ProfileAvatar
+                    path={entry.viewer.avatar_url}
+                    fallback={initialsFor(entry.viewer)}
+                    className="h-8 w-8"
+                  />
+                  <span className="text-sm text-white">{entry.viewer.username}</span>
+                  <span className="ml-auto text-xs text-white/50">{timeAgo(entry.created_at)}</span>
+                </li>
+              ))}
+              {(viewersQuery.data ?? []).length === 0 && !viewersQuery.isLoading && (
+                <li className="text-sm text-white/60">No views yet.</li>
+              )}
+            </ul>
           )}
         </div>
-      ) : (
-        <div className="relative z-20 border-t border-white/10 p-3 bg-gradient-to-t from-black/90 to-transparent space-y-2">
-          {/* Quick Emoji Reactions */}
-          <div className="flex items-center justify-around px-2">
-            {["❤️", "🔥", "👏", "😂", "😮", "😢"].map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => handleSendReaction(emoji)}
-                className="text-xl p-1.5 rounded-full hover:scale-125 hover:bg-white/10 transition-transform active:scale-95"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-
-          {/* Reply Input Form */}
-          <form onSubmit={handleSendReply} className="flex items-center gap-2">
-            <Input
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder={`Send message to @${current.author?.username || "user"}...`}
-              className="h-10 text-xs bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full flex-1"
-            />
-            {replyText.trim() ? (
-              <Button
-                type="submit"
-                size="sm"
-                className="h-10 px-4 rounded-full brand-gradient-bg text-primary-foreground text-xs font-semibold"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleShareStory}
-                aria-label="Share story"
-                className="h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-              >
-                <Share2 className="h-4 w-4" />
-              </button>
-            )}
-          </form>
-        </div>
       )}
-
-      {/* Add Story to Highlight Dialog */}
-      <Dialog open={highlightModalOpen} onOpenChange={setHighlightModalOpen}>
-        <DialogContent className="max-w-xs bg-card border border-border rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold">Add to Story Highlight</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Keep this story on your profile permanently in a themed collection.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input
-              value={highlightTitle}
-              onChange={(e) => setHighlightTitle(e.target.value)}
-              placeholder="Highlight title (e.g. Travel, Work, Vibes)"
-              className="text-xs bg-background"
-              maxLength={25}
-            />
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-xl text-xs"
-                onClick={() => setHighlightModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 rounded-xl brand-gradient-bg text-primary-foreground text-xs font-semibold"
-                disabled={!highlightTitle.trim()}
-                onClick={handleCreateHighlight}
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

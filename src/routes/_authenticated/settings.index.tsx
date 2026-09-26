@@ -42,6 +42,7 @@ import {
   Laptop,
   History,
   AlertTriangle,
+  Radio,
   type LucideIcon,
 } from "lucide-react";
 
@@ -51,7 +52,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
-import { getProfileById } from "@/lib/profile";
+import { getProfileById, type Profile } from "@/lib/profile";
 import {
   SettingsDialogContainer,
   type SettingsDialogType,
@@ -59,7 +60,18 @@ import {
 import { searchSettings, type SearchableSettingItem } from "@/lib/settings-store";
 
 type AllowedSettingsRoute =
-  "/profile/edit" | "/settings/privacy" | "/settings/security" | "/activity" | "/ai" | "/messages";
+  | "/profile/edit"
+  | "/settings/privacy"
+  | "/settings/security"
+  | "/activity"
+  | "/ai"
+  | "/messages"
+  | "/live"
+  | "/archive"
+  | "/close-friends"
+  | "/creator"
+  | "/help"
+  | "/admin";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
@@ -92,7 +104,7 @@ function Settings() {
 
   const searchResults = useMemo(() => searchSettings(searchQuery), [searchQuery]);
 
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<Profile | null>({
     queryKey: ["profile", user?.id],
     queryFn: () => (user?.id ? getProfileById(user.id) : null),
     enabled: Boolean(user?.id),
@@ -122,12 +134,15 @@ function Settings() {
     } catch {
       // ignore
     }
-    await supabase.auth.signOut({ scope: "global" });
+    await supabase.auth.signOut();
     navigate({ to: "/auth", search: { mode: "login" }, replace: true });
   }
 
   const username =
-    profile?.username || user?.user_metadata?.["username"] || user?.email?.split("@")[0] || "user";
+    profile?.username ||
+    (user as any)?.user_metadata?.["username"] ||
+    user?.email?.split("@")[0] ||
+    "user";
 
   return (
     <AppShell
@@ -847,14 +862,59 @@ function Settings() {
                   hint="Fast, direct and encrypted social messaging"
                   hintGu="સુરક્ષિત અને ઝડપી મેસેજિંગ"
                 />
-                <SettingsAction
-                  id="action-creator-web"
-                  icon={Smartphone}
-                  label="Opexnal Studio for Web"
-                  labelGu="વેબ સ્ટુડિયો"
-                  hint="Desktop publishing, post scheduling & bulk uploads"
-                  hintGu="ડેસ્કટોપ પબ્લિશિંગ અને પોસ્ટ શેડ્યુલિંગ"
-                  onClick={() => setActiveDialog("creator_web")}
+                <SettingsLink
+                  to="/creator"
+                  id="link-creator-dashboard"
+                  icon={BarChart3}
+                  label="Professional Dashboard & Monetization"
+                  labelGu="પ્રોફેશનલ ડેશબોર્ડ"
+                  hint="Reach, subscriptions, earnings and creator tools"
+                  hintGu="કમાણી અને પ્રોફેશનલ ટૂલ્સ"
+                />
+                <SettingsLink
+                  to="/live"
+                  id="link-live-studio"
+                  icon={Radio}
+                  label="Live Broadcast Studio"
+                  labelGu="લાઇવ સ્ટ્રીમિંગ"
+                  hint="Go live, Q&A, and interactive audience broadcasts"
+                  hintGu="લાઇવ બ્રોડકાસ્ટ અને દર્શકો સાથે ચર્ચા"
+                />
+                <SettingsLink
+                  to="/archive"
+                  id="link-archive-deleted"
+                  icon={Archive}
+                  label="Archive & Recently Deleted"
+                  labelGu="આર્કાઇવ અને ડિલીટ"
+                  hint="30-day restore, posts archive & story history"
+                  hintGu="આર્કાઇવ અને પુનઃસ્થાપિત ટૂલ્સ"
+                />
+                <SettingsLink
+                  to="/close-friends"
+                  id="link-close-friends"
+                  icon={Users}
+                  label="Close Friends & Favorites"
+                  labelGu="ક્લોઝ ફ્રેન્ડ્સ અને ફેવરિટ્સ"
+                  hint="Private story audience & home feed prioritization"
+                  hintGu="ખાસ મિત્રો અને પ્રાથમિક ફીડ"
+                />
+                <SettingsLink
+                  to="/help"
+                  id="link-help-center"
+                  icon={HelpCircle}
+                  label="Help Center & Support Reports"
+                  labelGu="હેલ્પ સેન્ટર અને સપોર્ટ"
+                  hint="Report a problem, case tracker & account status"
+                  hintGu="સમસ્યા રિપોર્ટ કરો અને કેસ ટ્રેકિંગ"
+                />
+                <SettingsLink
+                  to="/admin"
+                  id="link-super-admin"
+                  icon={ShieldCheck}
+                  label="Super Admin & System Operations"
+                  labelGu="સુપર એડમિન કંટ્રોલ"
+                  hint="21-Engine matrix, moderation queue & boundaries"
+                  hintGu="પ્લેટફોર્મ હેલ્થ અને મોડરેશન કતાર"
                 />
               </div>
             </section>
@@ -965,13 +1025,7 @@ function SettingsLink({
   hint,
   hintGu,
 }: {
-  to:
-    | "/profile/edit"
-    | "/settings/privacy"
-    | "/settings/security"
-    | "/activity"
-    | "/ai"
-    | "/messages";
+  to: AllowedSettingsRoute;
   id?: string;
   icon: LucideIcon;
   label: string;

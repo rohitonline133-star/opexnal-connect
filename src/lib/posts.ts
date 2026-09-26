@@ -361,17 +361,20 @@ async function decorate(
       : Promise.resolve({ data: [] as { post_id: string }[] }),
   ]);
 
-  const authors = new Map((profilesRes.data ?? []).map((p) => [p.id, p as FeedAuthor]));
-  const liked = new Set((likesRes.data ?? []).map((r) => r.post_id));
-  const saved = new Set((savesRes.data ?? []).map((r) => r.post_id));
+  const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
+  const liked = new Set(((likesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id));
+  const saved = new Set(((savesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id));
 
-  return rows.map<FeedPost>(({ post_media, ...post }) => ({
-    ...post,
-    media: [...(post_media ?? [])].sort((a, b) => a.position - b.position),
-    author: authors.get(post.user_id) ?? null,
-    liked: liked.has(post.id),
-    saved: saved.has(post.id),
-  }));
+  return rows.map((postItem: PostRow & { post_media: PostMediaRow[] }): FeedPost => {
+    const { post_media, ...post } = postItem;
+    return {
+      ...post,
+      media: [...(post_media ?? [])].sort((a, b) => a.position - b.position),
+      author: authors.get(post.user_id) ?? null,
+      liked: liked.has(post.id),
+      saved: saved.has(post.id),
+    };
+  });
 }
 
 export const FEED_PAGE_SIZE = 10;
@@ -388,7 +391,8 @@ export async function getHomeFeed(
       .select("following_id")
       .eq("follower_id", viewerId);
 
-    const ids = [viewerId, ...(following ?? []).map((f) => f.following_id)];
+    const followingRows = (following ?? []) as Array<{ following_id: string }>;
+    const ids = [viewerId, ...followingRows.map((f) => f.following_id)];
 
     let query = supabase
       .from("posts")
@@ -538,7 +542,8 @@ export async function getSavedPosts(viewerId: string) {
       .select("post_id")
       .eq("user_id", viewerId)
       .order("created_at", { ascending: false });
-    const ids = (saves ?? []).map((s) => s.post_id);
+    const saveRows = (saves ?? []) as Array<{ post_id: string }>;
+    const ids = saveRows.map((s) => s.post_id);
     if (ids.length > 0) {
       const { data, error } = await supabase.from("posts").select(POST_SELECT).in("id", ids);
       if (!error && data) {
@@ -585,7 +590,8 @@ export async function getPostsByHashtag(tag: string, viewerId?: string | null) {
         .from("post_hashtags")
         .select("post_id")
         .eq("hashtag_id", hashtag.id);
-      const ids = (links ?? []).map((l) => l.post_id);
+      const linkRows = (links ?? []) as Array<{ post_id: string }>;
+      const ids = linkRows.map((l) => l.post_id);
       if (ids.length > 0) {
         const { data, error } = await supabase
           .from("posts")
@@ -660,7 +666,7 @@ export async function getComments(postId: string, viewerId?: string | null) {
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
     if (!error && data && data.length > 0) {
-      const rows = data;
+      const rows = data as unknown as CommentRow[];
       const [profilesRes, likesRes] = await Promise.all([
         supabase
           .from("profiles")
@@ -678,10 +684,10 @@ export async function getComments(postId: string, viewerId?: string | null) {
           : Promise.resolve({ data: [] as { comment_id: string }[] }),
       ]);
 
-      const authors = new Map((profilesRes.data ?? []).map((p) => [p.id, p as FeedAuthor]));
-      const liked = new Set((likesRes.data ?? []).map((r) => r.comment_id));
+      const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
+      const liked = new Set(((likesRes.data ?? []) as Array<{ comment_id: string }>).map((r) => r.comment_id));
 
-      const remoteDecorated = rows.map<CommentWithAuthor>((row) => ({
+      const remoteDecorated = rows.map((row: CommentRow): CommentWithAuthor => ({
         ...row,
         author: authors.get(row.user_id) ?? null,
         liked: liked.has(row.id),

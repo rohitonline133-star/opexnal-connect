@@ -166,10 +166,10 @@ async function decorateStories(rows: StoryRow[], viewerId: string) {
       ),
   ]);
 
-  const authors = new Map((profilesRes.data ?? []).map((p) => [p.id, p as FeedAuthor]));
-  const seen = new Set((viewsRes.data ?? []).map((v) => v.story_id));
+  const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
+  const seen = new Set(((viewsRes.data ?? []) as Array<{ story_id: string }>).map((v) => v.story_id));
 
-  return rows.map<Story>((row) => ({
+  return rows.map((row: StoryRow): Story => ({
     ...row,
     author: authors.get(row.user_id) ?? null,
     seen: row.user_id === viewerId || seen.has(row.id),
@@ -296,7 +296,7 @@ export async function getStoryViewers(storyId: string) {
     .eq("story_id", storyId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  const rows = data ?? [];
+  const rows = (data ?? []) as Array<{ viewer_id: string; created_at: string }>;
   if (rows.length === 0) return [] as { viewer: FeedAuthor; created_at: string }[];
   const { data: profiles } = await supabase
     .from("profiles")
@@ -305,7 +305,7 @@ export async function getStoryViewers(storyId: string) {
       "id",
       rows.map((r) => r.viewer_id),
     );
-  const map = new Map((profiles ?? []).map((p) => [p.id, p as FeedAuthor]));
+  const map = new Map(((profiles ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
   return rows
     .map((r) => ({ viewer: map.get(r.viewer_id), created_at: r.created_at }))
     .filter((r): r is { viewer: FeedAuthor; created_at: string } => Boolean(r.viewer));

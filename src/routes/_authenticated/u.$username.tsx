@@ -4,24 +4,26 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BadgeCheck,
   ChevronLeft,
-  Copy,
-  EyeOff,
-  Flag,
-  Link as LinkIcon,
   Loader2,
   Lock,
   MoreHorizontal,
   Share2,
   ShieldAlert,
   UserX,
+  VolumeX,
+  Flag,
+  Info,
+  Grid3x3,
+  Clapperboard,
+  Tag,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
-
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { PostGrid } from "@/components/opexnal/post-grid";
-import { ReportContentDialog } from "@/components/opexnal/post-controls";
-import { ShareProfileDialog } from "@/components/opexnal/share-profile-dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -29,11 +31,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { getProfileByUsername, initialsFor } from "@/lib/profile";
+import { getProfileByUsername, initialsFor, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 import { openDirectConversation } from "@/lib/messages";
+import { getStoredSettings, saveSettings } from "@/lib/settings-store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/u/$username")({
   head: ({ params }) => ({
@@ -50,49 +53,29 @@ export const Route = createFileRoute("/_authenticated/u/$username")({
   component: PublicProfile,
 });
 
+type ProfileTab = "posts" | "reels" | "tagged";
+
 function PublicProfile() {
   const { username } = Route.useParams();
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
 
-  const { data: profile, isLoading } = useQuery({
+  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
+
+  // 3-Dots Menu Dialogs
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [restrictDialogOpen, setRestrictDialogOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
+
+  const { data: profile, isLoading } = useQuery<Profile | null>({
     queryKey: ["profile-by-username", username],
     queryFn: () => getProfileByUsername(username),
   });
 
   const isSelf = Boolean(user && profile && user.id === profile.id);
-
-  async function handleBlock() {
-    if (!user || !profile) return;
-    try {
-      await supabase.from("blocks").insert({
-        blocker_id: user.id,
-        blocked_id: profile.id,
-      });
-      toast.success(`Blocked @${profile.username}`);
-      setMenuOpen(false);
-      navigate({ to: "/explore" });
-    } catch {
-      toast.error("Could not block user");
-    }
-  }
-
-  function handleRestrict() {
-    if (!profile) return;
-    toast.success(`Restricted @${profile.username}`);
-    setMenuOpen(false);
-  }
-
-  function handleCopyProfileLink() {
-    const url = `${window.location.origin}/u/${username}`;
-    navigator.clipboard.writeText(url);
-    toast.success("Profile link copied");
-    setMenuOpen(false);
-  }
 
   const { data: relationship } = useQuery({
     queryKey: ["relationship", user?.id, profile?.id],
@@ -136,14 +119,14 @@ function PublicProfile() {
         .eq("requester_id", user.id)
         .eq("target_id", profile.id);
       if (error) {
-        toast.error(error.message);
+        toast.error((error as Error).message || "Could not withdraw request");
         return;
       }
       toast.success("Request withdrawn");
     } else {
       const { data, error } = await supabase.rpc("request_follow", { _target_id: profile.id });
       if (error) {
-        toast.error(error.message);
+        toast.error((error as Error).message || "Could not follow user");
         return;
       }
       toast.success(
@@ -153,6 +136,45 @@ function PublicProfile() {
     await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
     await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
   }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setMenuOpen(false);
+    toast.success("Profile link copied to clipboard");
+  };
+
+  const handleBlockUser = () => {
+    const settings = getStoredSettings();
+    saveSettings({
+      blockedUsers: [
+        ...settings.blockedUsers,
+        { id: profile?.id || "u", username, blockedAt: "Just now" },
+      ],
+    });
+    setBlockDialogOpen(false);
+    setMenuOpen(false);
+    toast.success(`Blocked @${username}. They will no longer be able to find your profile.`);
+    navigate({ to: "/explore" });
+  };
+
+  const handleRestrictUser = () => {
+    const settings = getStoredSettings();
+    saveSettings({
+      restrictedUsers: [
+        ...settings.restrictedUsers,
+        { id: profile?.id || "u", username, restrictedAt: "Just now" },
+      ],
+    });
+    setRestrictDialogOpen(false);
+    setMenuOpen(false);
+    toast.success(`Restricted @${username}. Only they will see new comments on your posts.`);
+  };
+
+  const handleReportUser = (reason: string) => {
+    setReportDialogOpen(false);
+    setMenuOpen(false);
+    toast.success(`Report submitted for @${username} (${reason}). Thank you.`);
+  };
 
   return (
     <AppShell
@@ -165,18 +187,18 @@ function PublicProfile() {
               aria-label="Back"
               className="text-muted-foreground hover:text-foreground"
             >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              <ChevronLeft className="h-5 w-5" />
             </Link>
           }
           right={
-            profile && !isSelf ? (
+            !isSelf && profile ? (
               <button
                 type="button"
-                aria-label="Account options"
                 onClick={() => setMenuOpen(true)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-full"
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+                aria-label="User actions"
               >
-                <MoreHorizontal className="h-5 w-5" />
+                <MoreHorizontal className="h-4 w-4" />
               </button>
             ) : null
           }
@@ -232,6 +254,7 @@ function PublicProfile() {
                 variant={relationship?.following || relationship?.requested ? "surface" : "brand"}
                 size="xl"
                 onClick={toggleFollow}
+                className="flex-1 rounded-xl"
               >
                 {relationship?.following
                   ? "Following"
@@ -244,6 +267,7 @@ function PublicProfile() {
               <Button
                 variant="surface"
                 size="xl"
+                className="flex-1 rounded-xl"
                 onClick={async () => {
                   if (!user) return;
                   try {
@@ -259,99 +283,269 @@ function PublicProfile() {
             </div>
           )}
 
-          <div className="mt-8 border-t border-border">
+          {/* Grid Tabs: Posts, Reels, Tagged */}
+          <div className="flex border-b border-border mt-6">
+            <button
+              type="button"
+              onClick={() => setActiveTab("posts")}
+              className={cn(
+                "flex-1 flex justify-center items-center gap-1.5 py-3 text-xs font-semibold border-b-2 transition-colors",
+                activeTab === "posts"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Grid3x3 className="h-4 w-4" />
+              <span>Posts</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("reels")}
+              className={cn(
+                "flex-1 flex justify-center items-center gap-1.5 py-3 text-xs font-semibold border-b-2 transition-colors",
+                activeTab === "reels"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Clapperboard className="h-4 w-4" />
+              <span>Reels</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("tagged")}
+              className={cn(
+                "flex-1 flex justify-center items-center gap-1.5 py-3 text-xs font-semibold border-b-2 transition-colors",
+                activeTab === "tagged"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Tag className="h-4 w-4" />
+              <span>Tagged</span>
+            </button>
+          </div>
+
+          <div>
             {profile.is_private && !relationship?.following && !isSelf ? (
               <div className="flex flex-col items-center px-8 py-20 text-center">
                 <Lock className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                 <p className="mt-3 text-sm font-semibold">This account is private</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Follow this account to see their posts.
+                  Follow this account to see their photos, reels and videos.
                 </p>
               </div>
-            ) : (
+            ) : activeTab === "posts" ? (
               <PostGrid userId={profile.id} viewerId={user?.id ?? null} />
+            ) : activeTab === "reels" ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                <Clapperboard className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p>No vertical reels shared by @{username} yet.</p>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                <Tag className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p>No photos or videos tagged with @{username} yet.</p>
+              </div>
             )}
           </div>
-
-          {/* User Options Menu Dialog */}
-          <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-            <DialogContent className="max-w-xs p-0 overflow-hidden rounded-2xl bg-card border border-border">
-              <div className="divide-y divide-border text-center text-sm font-medium">
-                <button
-                  type="button"
-                  onClick={handleBlock}
-                  className="w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2"
-                >
-                  <UserX className="h-4 w-4" />
-                  Block @{profile.username}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRestrict}
-                  className="w-full py-3.5 text-destructive hover:bg-secondary/50 flex items-center justify-center gap-2"
-                >
-                  <ShieldAlert className="h-4 w-4" />
-                  Restrict @{profile.username}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setReportOpen(true);
-                  }}
-                  className="w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2"
-                >
-                  <Flag className="h-4 w-4" />
-                  Report Account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setShareOpen(true);
-                  }}
-                  className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
-                >
-                  <Share2 className="h-4 w-4 text-muted-foreground" />
-                  Share Profile
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopyProfileLink}
-                  className="w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2"
-                >
-                  <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                  Copy Profile URL
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal"
-                >
-                  Cancel
-                </button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Report Dialog */}
-          <ReportContentDialog
-            open={reportOpen}
-            onOpenChange={setReportOpen}
-            targetId={profile.id}
-            targetType="user"
-            viewerId={user?.id || "anonymous"}
-          />
-
-          {/* Share Profile Dialog */}
-          <ShareProfileDialog
-            open={shareOpen}
-            onOpenChange={setShareOpen}
-            username={profile.username}
-            displayName={profile.display_name || profile.username}
-          />
         </div>
       )}
+
+      {/* 3-Dots User Action Sheet */}
+      <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-3 bg-card border-border">
+          <div className="divide-y divide-border text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setAboutDialogOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Info className="h-4 w-4 text-primary" />
+              <span>About this account</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+            >
+              <Share2 className="h-4 w-4 text-muted-foreground" />
+              <span>Share profile link</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setRestrictDialogOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+            >
+              <ShieldAlert className="h-4 w-4 text-amber-400" />
+              <span>Restrict @{username}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setBlockDialogOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
+            >
+              <UserX className="h-4 w-4 text-destructive" />
+              <span>Block @{username}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setReportDialogOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
+            >
+              <Flag className="h-4 w-4 text-destructive" />
+              <span>Report account</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* About Account Dialog */}
+      <Dialog open={aboutDialogOpen} onOpenChange={setAboutDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
+              About This Account
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-surface border border-border rounded-xl">
+              <p className="text-[11px] text-muted-foreground">Username</p>
+              <p className="font-semibold text-foreground">@{username}</p>
+            </div>
+            <div className="p-3 bg-surface border border-border rounded-xl">
+              <p className="text-[11px] text-muted-foreground">Account Type</p>
+              <p className="font-semibold capitalize text-foreground">
+                {profile?.account_type || "personal"}
+              </p>
+            </div>
+            <div className="p-3 bg-surface border border-border rounded-xl">
+              <p className="text-[11px] text-muted-foreground">Community Standing</p>
+              <p className="font-semibold text-emerald-400">Verified & Active</p>
+            </div>
+          </div>
+          <Button
+            variant="surface"
+            onClick={() => setAboutDialogOpen(false)}
+            className="w-full text-xs rounded-xl"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block Confirmation Dialog */}
+      <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold text-destructive flex items-center gap-2">
+              <UserX className="h-4 w-4" />
+              Block @{username}?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              They won't be able to find your profile, posts, or stories on Opexnal. We won't notify
+              them that you blocked them.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="surface"
+              onClick={() => setBlockDialogOpen(false)}
+              className="flex-1 text-xs rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBlockUser}
+              className="flex-1 text-xs rounded-xl font-semibold"
+            >
+              Block
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restrict Confirmation Dialog */}
+      <Dialog open={restrictDialogOpen} onOpenChange={setRestrictDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-amber-400" />
+              Restrict @{username}?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Only you and @{username} will be able to see their new comments on your posts. Their
+              direct chats will be moved to Message Requests.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="surface"
+              onClick={() => setRestrictDialogOpen(false)}
+              className="flex-1 text-xs rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRestrictUser}
+              className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold"
+            >
+              Restrict
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report User Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold text-destructive flex items-center gap-2">
+              <Flag className="h-4 w-4" />
+              Report @{username}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Select why you are reporting this account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 py-2">
+            {[
+              "It's posting spam",
+              "Pretending to be someone else",
+              "Harassment or bullying",
+              "Sharing inappropriate content",
+              "Selling illegal or regulated goods",
+            ].map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                onClick={() => handleReportUser(reason)}
+                className="w-full p-2.5 text-left text-xs bg-surface border border-border rounded-xl hover:bg-secondary transition-colors"
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

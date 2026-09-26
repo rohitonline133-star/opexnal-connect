@@ -106,7 +106,8 @@ function Activity() {
         .eq("user_id", user!.id)
         .limit(20);
 
-      const postIds = (userPosts ?? []).map((p) => p.id);
+      const userPostRows = (userPosts ?? []) as Array<{ id: string }>;
+      const postIds = userPostRows.map((p) => p.id);
       if (postIds.length === 0) return [];
 
       const { data: likes, error } = await supabase
@@ -133,7 +134,7 @@ function Activity() {
       ? await supabase.rpc("accept_follow_request", { _request_id: requestId })
       : await supabase.from("follow_requests").delete().eq("id", requestId);
     if (error) {
-      toast.error(error.message);
+      toast.error((error as Error).message || "Request failed");
       return;
     }
     toast.success(accept ? "Follower accepted" : "Request declined");
@@ -146,7 +147,7 @@ function Activity() {
     try {
       const { data, error } = await supabase.rpc("request_follow", { _target_id: personId });
       if (error) {
-        toast.error(error.message);
+        toast.error((error as Error).message || "Follow failed");
         return;
       }
       toast.success(

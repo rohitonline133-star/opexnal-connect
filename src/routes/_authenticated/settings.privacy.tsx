@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { getProfileById } from "@/lib/profile";
+import { getProfileById, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/settings/privacy")({
@@ -43,9 +43,9 @@ function Privacy() {
   const { user } = useSession();
   const queryClient = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading } = useQuery<Profile | null>({
     queryKey: ["profile", user?.id],
-    queryFn: () => getProfileById(user!.id),
+    queryFn: () => (user?.id ? getProfileById(user.id) : null),
     enabled: Boolean(user?.id),
   });
 

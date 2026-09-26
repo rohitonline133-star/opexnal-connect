@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -19,6 +19,11 @@ import {
   UserPlus,
   Users,
   X,
+  MapPin,
+  Music,
+  Clock,
+  ChevronRight,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,6 +32,14 @@ import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { useSignedMediaUrl } from "@/hooks/use-signed-media-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
@@ -40,13 +53,13 @@ export const Route = createFileRoute("/_authenticated/explore")({
       {
         name: "description",
         content:
-          "Discover trending creators, viral reels, aesthetic posts and popular hashtags on Opexnal.",
+          "Discover trending creators, viral reels, aesthetic posts, audio and popular places on Opexnal.",
       },
       { property: "og:title", content: "Explore & Discover — Opexnal" },
       {
         property: "og:description",
         content:
-          "Discover trending creators, viral reels, aesthetic posts and popular hashtags on Opexnal.",
+          "Discover trending creators, viral reels, aesthetic posts, audio and popular places on Opexnal.",
       },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
@@ -55,6 +68,17 @@ export const Route = createFileRoute("/_authenticated/explore")({
   }),
   component: Explore,
 });
+
+interface ExploreProfile {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+  is_private: boolean;
+  followers_count: number;
+  bio?: string | null;
+}
 
 const CURATED_HASHTAGS = [
   { tag: "opexnal", posts: "12.4K", category: "Community" },
@@ -67,11 +91,38 @@ const CURATED_HASHTAGS = [
   { tag: "minimalism", posts: "9.5K", category: "Art" },
 ];
 
+const CURATED_AUDIO = [
+  { id: "a1", title: "Aesthetic Lo-Fi Beats", artist: "Opexnal Sound Lab", reelsCount: "42.8K" },
+  { id: "a2", title: "Chill Synthwave Sunset", artist: "Retro Vibes", reelsCount: "19.3K" },
+  { id: "a3", title: "Golden Hour Acoustic", artist: "Priya Roy", reelsCount: "8.6K" },
+  { id: "a4", title: "Cyber City Ambient", artist: "Tech Collective", reelsCount: "14.1K" },
+];
+
+const CURATED_PLACES = [
+  { id: "p1", name: "Bandra Bandstand", city: "Mumbai, India", postsCount: "34.5K" },
+  { id: "p2", name: "Indiranagar 100ft Road", city: "Bengaluru, India", postsCount: "28.1K" },
+  { id: "p3", name: "Connaught Place", city: "New Delhi, India", postsCount: "52.4K" },
+  { id: "p4", name: "Dumbo Brooklyn", city: "New York, USA", postsCount: "120.8K" },
+];
+
 function Explore() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [term, setTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"trending" | "people" | "reels" | "tags">("trending");
+  const [activeTab, setActiveTab] = useState<
+    "trending" | "people" | "reels" | "tags" | "audio" | "places"
+  >("trending");
+
+  // Recent Searches
+  const [recentSearches, setRecentSearches] = useState<string[]>([
+    "alex_creator",
+    "#aesthetics",
+    "Mumbai, India",
+  ]);
+
+  // Modals for Detail Views
+  const [selectedAudio, setSelectedAudio] = useState<(typeof CURATED_AUDIO)[0] | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<(typeof CURATED_PLACES)[0] | null>(null);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     if (typeof window === "undefined")
@@ -113,7 +164,7 @@ function Explore() {
   const query = term.trim().toLowerCase();
 
   // Search People query
-  const peopleQuery = useQuery({
+  const peopleQuery = useQuery<ExploreProfile[]>({
     queryKey: ["search-people", query],
     enabled: query.length >= 1,
     queryFn: async () => {
@@ -127,7 +178,7 @@ function Explore() {
         .order("followers_count", { ascending: false })
         .limit(20);
       if (error) throw error;
-      return data;
+      return (data || []) as unknown as ExploreProfile[];
     },
   });
 
@@ -138,7 +189,7 @@ function Explore() {
   });
 
   // Suggested Creators for Explore
-  const suggestedCreatorsQuery = useQuery({
+  const suggestedCreatorsQuery = useQuery<ExploreProfile[]>({
     queryKey: ["suggested-creators", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -148,7 +199,8 @@ function Explore() {
         .order("followers_count", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data?.filter((p) => p.id !== user?.id) || [];
+      const list = (data || []) as unknown as ExploreProfile[];
+      return list.filter((p) => p.id !== user?.id);
     },
   });
 
@@ -160,7 +212,7 @@ function Explore() {
     try {
       const { data, error } = await supabase.rpc("request_follow", { _target_id: targetId });
       if (error) {
-        toast.error(error.message);
+        toast.error((error as Error).message || "Follow failed");
         return;
       }
       toast.success(data === "requested" ? "Follow request sent" : `Following @${targetUsername}`);
@@ -170,6 +222,15 @@ function Explore() {
       toast.error("Could not complete follow action");
     }
   }
+
+  const handleSelectRecentSearch = (item: string) => {
+    setTerm(item);
+  };
+
+  const handleClearRecentSearches = () => {
+    setRecentSearches([]);
+    toast.success("Recent searches cleared");
+  };
 
   return (
     <AppShell
@@ -199,7 +260,7 @@ function Explore() {
           <Input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search creators, hashtags, keywords..."
+            placeholder="Search creators, hashtags, audio, places..."
             aria-label="Search Opexnal"
             maxLength={60}
             className="h-11 rounded-2xl bg-surface pl-10 pr-9 text-xs sm:text-sm placeholder:text-muted-foreground"
@@ -247,12 +308,14 @@ function Explore() {
 
         {/* Discovery Filter Tabs */}
         {!query && (
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
             {[
-              { id: "trending", label: "Trending", icon: Flame },
-              { id: "people", label: "Creators", icon: Users },
+              { id: "trending", label: "Top", icon: Flame },
+              { id: "people", label: "Accounts", icon: Users },
               { id: "reels", label: "Reels", icon: Clapperboard },
+              { id: "audio", label: "Audio", icon: Music },
               { id: "tags", label: "Hashtags", icon: Hash },
+              { id: "places", label: "Places", icon: MapPin },
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -273,6 +336,43 @@ function Explore() {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* RECENT SEARCHES (When input focused but empty) */}
+        {!query && recentSearches.length > 0 && activeTab === "trending" && (
+          <div className="p-3 bg-card border border-border rounded-2xl space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" /> Recent Searches
+              </span>
+              <button
+                type="button"
+                onClick={handleClearRecentSearches}
+                className="text-[11px] text-primary hover:underline"
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {recentSearches.map((item) => (
+                <Badge
+                  key={item}
+                  variant="secondary"
+                  onClick={() => handleSelectRecentSearch(item)}
+                  className="cursor-pointer text-[11px] py-1 px-2.5 hover:bg-secondary flex items-center gap-1"
+                >
+                  <span>{item}</span>
+                  <X
+                    className="h-3 w-3 text-muted-foreground hover:text-foreground ml-0.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRecentSearches((prev) => prev.filter((x) => x !== item));
+                    }}
+                  />
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
 
@@ -365,7 +465,7 @@ function Explore() {
         ) : (
           /* TABBED EXPLORE CONTENT */
           <>
-            {/* 1. TRENDING TAB */}
+            {/* 1. TOP / TRENDING TAB */}
             {activeTab === "trending" && (
               <div className="space-y-5">
                 {/* Featured Creators Carousel */}
@@ -383,7 +483,7 @@ function Explore() {
                     </button>
                   </div>
 
-                  <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                  <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none no-scrollbar">
                     {suggestedCreatorsQuery.data?.slice(0, 6).map((creator) => (
                       <div
                         key={creator.id}
@@ -417,60 +517,24 @@ function Explore() {
                   </div>
                 </div>
 
-                {/* Trending Hashtags Badges */}
+                {/* Explore Grid */}
                 <div className="space-y-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <TrendingUp className="h-3.5 w-3.5 text-primary" /> Trending Topics
-                  </h2>
-                  <div className="grid grid-cols-2 gap-2">
-                    {CURATED_HASHTAGS.slice(0, 6).map((h) => (
-                      <Link
-                        key={h.tag}
-                        to="/tag/$tag"
-                        params={{ tag: h.tag }}
-                        className="flex items-center justify-between rounded-xl border border-border bg-surface p-2.5 transition-colors hover:border-primary/40 hover:bg-secondary/50"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-foreground truncate">#{h.tag}</p>
-                          <p className="text-[10px] text-muted-foreground">{h.category}</p>
-                        </div>
-                        <span className="text-[10px] font-medium text-primary shrink-0">
-                          {h.posts}
-                        </span>
-                      </Link>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Grid3x3 className="h-3.5 w-3.5 text-primary" /> Discover Posts
+                    </h2>
                   </div>
-                </div>
-
-                {/* Explore Media Grid */}
-                <div className="space-y-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Grid3x3 className="h-3.5 w-3.5 text-primary" /> Explore Community
-                  </h2>
 
                   {explorePostsQuery.isLoading ? (
-                    <div className="flex justify-center py-12">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <div className="flex justify-center py-16">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                   ) : posts.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-                      <Compass className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                      <p className="mt-2 text-xs font-semibold text-foreground">
-                        No posts shared yet
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Be the first to share a post!
-                      </p>
-                      <Button
-                        asChild
-                        size="sm"
-                        className="mt-3 brand-gradient-bg text-primary-foreground text-xs"
-                      >
-                        <Link to="/create">Create First Post</Link>
-                      </Button>
+                    <div className="py-12 text-center text-xs text-muted-foreground">
+                      No explore posts yet. Be the first to publish!
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-1 rounded-xl overflow-hidden">
+                    <div className="grid grid-cols-3 gap-0.5 rounded-2xl overflow-hidden">
                       {posts.map((post) => (
                         <ExploreGridItem key={post.id} post={post} />
                       ))}
@@ -480,47 +544,45 @@ function Explore() {
               </div>
             )}
 
-            {/* 2. CREATORS TAB */}
+            {/* 2. CREATORS / ACCOUNTS TAB */}
             {activeTab === "people" && (
               <div className="space-y-2">
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Featured Creators
+                  Suggested Accounts
                 </h2>
-                <div className="space-y-1">
-                  {suggestedCreatorsQuery.data?.map((creator) => (
+                <div className="divide-y divide-border rounded-2xl border border-border bg-surface">
+                  {suggestedCreatorsQuery.data?.map((person) => (
                     <div
-                      key={creator.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 transition-colors hover:bg-secondary/40"
+                      key={person.id}
+                      className="flex items-center justify-between p-3 transition-colors hover:bg-secondary/40"
                     >
                       <Link
                         to="/u/$username"
-                        params={{ username: creator.username }}
+                        params={{ username: person.username }}
                         className="flex min-w-0 flex-1 items-center gap-3"
                       >
                         <ProfileAvatar
-                          path={creator.avatar_url}
-                          fallback={initialsFor(creator)}
-                          className="h-12 w-12 text-sm"
+                          path={person.avatar_url}
+                          fallback={initialsFor(person)}
+                          className="h-10 w-10"
                         />
                         <div className="min-w-0">
-                          <p className="flex items-center gap-1 truncate text-sm font-semibold">
-                            @{creator.username}
-                            {creator.is_verified && (
-                              <BadgeCheck className="h-3.5 w-3.5 text-primary" />
+                          <p className="flex items-center gap-1 truncate text-xs font-semibold text-foreground">
+                            @{person.username}
+                            {person.is_verified && (
+                              <BadgeCheck className="h-3 w-3 text-primary" aria-label="Verified" />
                             )}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {creator.display_name || "Opexnal creator"}
-                          </p>
-                          <p className="text-[10px] text-primary font-medium">
-                            {creator.followers_count} followers
+                          <p className="truncate text-[11px] text-muted-foreground">
+                            {person.followers_count} followers
                           </p>
                         </div>
                       </Link>
+
                       <Button
                         size="sm"
-                        onClick={() => handleQuickFollow(creator.id, creator.username)}
-                        className="h-8 text-xs font-semibold brand-gradient-bg text-primary-foreground"
+                        onClick={() => handleQuickFollow(person.id, person.username)}
+                        className="h-7 rounded-lg text-xs font-semibold brand-gradient-bg text-primary-foreground"
                       >
                         Follow
                       </Button>
@@ -533,29 +595,12 @@ function Explore() {
             {/* 3. REELS TAB */}
             {activeTab === "reels" && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Clapperboard className="h-3.5 w-3.5 text-primary" /> Trending Reels
-                  </h2>
-                  <Button asChild size="sm" variant="ghost" className="h-7 text-xs text-primary">
-                    <Link to="/reels">Full Screen Player</Link>
-                  </Button>
-                </div>
-
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trending Reels
+                </h2>
                 {reels.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
-                    <Clapperboard className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                    <p className="mt-2 text-xs font-semibold">No video reels yet</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Upload a video in Create Post
-                    </p>
-                    <Button
-                      asChild
-                      size="sm"
-                      className="mt-3 brand-gradient-bg text-primary-foreground text-xs"
-                    >
-                      <Link to="/create">Upload Reel</Link>
-                    </Button>
+                  <div className="py-16 text-center text-xs text-muted-foreground">
+                    No vertical video reels available. Tap &ldquo;Create&rdquo; to share one!
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
@@ -564,7 +609,7 @@ function Explore() {
                         key={reel.id}
                         to="/p/$postId"
                         params={{ postId: reel.id }}
-                        className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-black border border-border shadow-xs"
+                        className="group relative aspect-9/16 overflow-hidden rounded-2xl bg-zinc-900 shadow-xs"
                       >
                         <ExploreVideoThumb post={reel} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-2.5">
@@ -586,7 +631,41 @@ function Explore() {
               </div>
             )}
 
-            {/* 4. HASHTAGS TAB */}
+            {/* 4. AUDIO TAB */}
+            {activeTab === "audio" && (
+              <div className="space-y-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trending Audio & Music
+                </h2>
+                <div className="space-y-2">
+                  {CURATED_AUDIO.map((a) => (
+                    <div
+                      key={a.id}
+                      onClick={() => setSelectedAudio(a)}
+                      className="p-3.5 bg-card border border-border rounded-2xl flex items-center justify-between hover:bg-surface cursor-pointer shadow-xs transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl brand-gradient-bg flex items-center justify-center text-white">
+                          <Music className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">{a.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{a.artist}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground">
+                          {a.reelsCount} reels
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 5. HASHTAGS TAB */}
             {activeTab === "tags" && (
               <div className="space-y-2">
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -615,9 +694,103 @@ function Explore() {
                 </div>
               </div>
             )}
+
+            {/* 6. PLACES TAB */}
+            {activeTab === "places" && (
+              <div className="space-y-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trending Places & Locations
+                </h2>
+                <div className="space-y-2">
+                  {CURATED_PLACES.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => setSelectedPlace(p)}
+                      className="p-3.5 bg-card border border-border rounded-2xl flex items-center justify-between hover:bg-surface cursor-pointer shadow-xs transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">{p.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{p.city}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground">
+                          {p.postsCount} posts
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {/* Audio Detail Modal */}
+      <Dialog open={Boolean(selectedAudio)} onOpenChange={() => setSelectedAudio(null)}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Music className="h-4 w-4 text-primary" />
+              {selectedAudio?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              By {selectedAudio?.artist} • {selectedAudio?.reelsCount} reels created with this audio
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-3">
+            <Button
+              variant="surface"
+              onClick={() => setSelectedAudio(null)}
+              className="flex-1 text-xs rounded-xl"
+            >
+              Close
+            </Button>
+            <Button
+              asChild
+              className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold"
+            >
+              <Link to="/create">Use in Reel</Link>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Place Detail Modal */}
+      <Dialog open={Boolean(selectedPlace)} onOpenChange={() => setSelectedPlace(null)}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-emerald-400" />
+              {selectedPlace?.name}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              {selectedPlace?.city} • {selectedPlace?.postsCount} photos & stories tagged here
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-3">
+            <Button
+              variant="surface"
+              onClick={() => setSelectedPlace(null)}
+              className="flex-1 text-xs rounded-xl"
+            >
+              Close
+            </Button>
+            <Button
+              asChild
+              className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold"
+            >
+              <Link to="/create">Tag in Post</Link>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

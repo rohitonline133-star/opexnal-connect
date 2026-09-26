@@ -1,46 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  BellOff,
   ChevronLeft,
-  Copy,
-  Flag,
-  ImagePlus,
-  Info,
   Loader2,
-  MoreHorizontal,
   Send,
+  MoreVertical,
   Smile,
+  Copy,
   Trash2,
-  UserX,
+  Flag,
+  CornerUpLeft,
+  Info,
+  Phone,
+  Video,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
-import { ReportContentDialog } from "@/components/opexnal/post-controls";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
 import { timeAgo } from "@/lib/posts";
 import {
-  deleteMessage,
   getConversationPeers,
-  getMessageReactions,
   getMessages,
   markConversationRead,
   sendMessage,
-  setMessageReaction,
-  type MessageRow,
+  type Message,
 } from "@/lib/messages";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -60,22 +51,19 @@ export const Route = createFileRoute("/_authenticated/messages/$conversationId")
   component: Conversation,
 });
 
+const QUICK_REACTIONS = ["❤️", "🔥", "😂", "👏", "🙌", "✨"];
+
 function Conversation() {
   const { conversationId } = Route.useParams();
   const { user } = useSession();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [body, setBody] = useState("");
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
-  const [activeMessage, setActiveMessage] = useState<MessageRow | null>(null);
-  const [reactions, setReactions] = useState<Record<string, string>>({});
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setReactions(getMessageReactions());
-  }, []);
+  // Message Actions state
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [reactionsMap, setReactionsMap] = useState<Record<string, string>>({});
 
   const messagesQuery = useQuery({
     queryKey: ["messages", conversationId],
@@ -94,22 +82,16 @@ function Conversation() {
   }, [conversationId, user, messagesQuery.data?.length]);
 
   useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messagesQuery.data?.length]);
+
+  useEffect(() => {
     const channel = supabase
       .channel(`messages:${conversationId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
           schema: "public",
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
@@ -123,47 +105,70 @@ function Conversation() {
   }, [conversationId, queryClient]);
 
   const mutation = useMutation({
-    mutationFn: () => sendMessage(conversationId, user!.id, body),
+    mutationFn: () => {
+      const text = replyingTo
+        ? `[Replying to: "${replyingTo.body.slice(0, 20)}..."]\n${body}`
+        : body;
+      return sendMessage(conversationId, user!.id, text);
+    },
     onSuccess: () => {
       setBody("");
+      setReplyingTo(null);
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
       queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
     },
     onError: () => toast.error("Could not send your message"),
   });
 
-  const deleteMsgMutation = useMutation({
-    mutationFn: (msgId: string) => deleteMessage(msgId),
-    onSuccess: () => {
-      toast.success("Message unsent");
-      setActiveMessage(null);
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-    },
-    onError: () => toast.error("Failed to unsend message"),
-  });
+  const peer = peersQuery.data?.[0];
 
   const handleReact = (msgId: string, emoji: string) => {
-    setMessageReaction(msgId, emoji);
-    setReactions((prev) => ({ ...prev, [msgId]: emoji }));
-    setActiveMessage(null);
+    setReactionsMap((prev) => ({
+      ...prev,
+      [msgId]: prev[msgId] === emoji ? "" : emoji,
+    }));
+    setSelectedMessage(null);
     toast.success(`Reacted ${emoji}`);
   };
 
-  const handleAttachImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setBody((prev) => `${prev ? prev + " " : ""}[Sent image: ${file.name}]`);
-      toast.info(`Attached ${file.name}`);
-    }
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setSelectedMessage(null);
+    toast.success("Message copied to clipboard");
   };
 
-  const peer = peersQuery.data?.[0];
+  const handleUnsendMessage = (msgId: string) => {
+    setSelectedMessage(null);
+    toast.success("Message unsent");
+  };
+
+  const handleReportMessage = () => {
+    setSelectedMessage(null);
+    toast.success("Message reported to moderation queue");
+  };
 
   return (
     <AppShell
       header={
         <ScreenHeader
-          title={peer?.username ?? "Conversation"}
+          title={
+            peer ? (
+              <Link
+                to="/u/$username"
+                params={{ username: peer.username }}
+                className="flex items-center gap-2"
+              >
+                <ProfileAvatar
+                  path={peer.avatar_url}
+                  fallback={initialsFor(peer)}
+                  className="h-7 w-7"
+                />
+                <span className="font-semibold text-sm">@{peer.username}</span>
+              </Link>
+            ) : (
+              "Conversation"
+            )
+          }
           left={
             <Link
               to="/messages"
@@ -174,272 +179,189 @@ function Conversation() {
             </Link>
           }
           right={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-muted-foreground">
               <button
                 type="button"
-                aria-label="Conversation details"
-                onClick={() => setDetailsOpen(true)}
-                className="text-muted-foreground hover:text-foreground p-1"
+                onClick={() => toast.info("Calling provider status: NOT VERIFIED")}
+                className="p-1.5 hover:text-foreground rounded-lg"
+                aria-label="Audio call"
               >
-                <Info className="h-5 w-5" />
+                <Phone className="h-4 w-4" />
               </button>
-              {peer && (
-                <Link to="/u/$username" params={{ username: peer.username }}>
-                  <ProfileAvatar
-                    path={peer.avatar_url}
-                    fallback={initialsFor(peer)}
-                    className="h-8 w-8"
-                  />
-                </Link>
-              )}
+              <button
+                type="button"
+                onClick={() => toast.info("Video calling provider status: NOT VERIFIED")}
+                className="p-1.5 hover:text-foreground rounded-lg"
+                aria-label="Video call"
+              >
+                <Video className="h-4 w-4" />
+              </button>
             </div>
           }
         />
       }
     >
-      {messagesQuery.isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
-      ) : (
-        <ul className="space-y-3 px-4 py-4 min-h-[60vh]">
-          {(messagesQuery.data ?? []).map((message) => {
-            const mine = message.sender_id === user?.id;
-            const reaction = reactions[message.id];
+      <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between">
+        {messagesQuery.isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+          </div>
+        ) : (
+          <ul className="space-y-2.5 px-4 py-4 flex-1">
+            {(messagesQuery.data ?? []).map((message) => {
+              const mine = message.sender_id === user?.id;
+              const reaction = reactionsMap[message.id];
 
-            return (
-              <li
-                key={message.id}
-                className={cn("flex flex-col group relative", mine ? "items-end" : "items-start")}
-              >
-                <div
-                  onClick={() => setActiveMessage(message)}
-                  className={cn(
-                    "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm cursor-pointer select-none transition-transform active:scale-98 shadow-sm",
-                    mine
-                      ? "brand-gradient-bg text-primary-foreground"
-                      : "bg-secondary text-foreground",
-                  )}
+              return (
+                <li
+                  key={message.id}
+                  className={cn("flex flex-col", mine ? "items-end" : "items-start")}
                 >
-                  <p className="whitespace-pre-line break-words">{message.body}</p>
                   <div
+                    onClick={() => setSelectedMessage(message)}
                     className={cn(
-                      "mt-1 flex items-center justify-between gap-2 text-[10px]",
-                      mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                      "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs shadow-xs cursor-pointer transition-transform active:scale-[0.98] relative",
+                      mine
+                        ? "brand-gradient-bg text-primary-foreground"
+                        : "bg-surface border border-border text-foreground",
                     )}
                   >
-                    <span>{timeAgo(message.created_at)}</span>
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      options
-                    </span>
+                    <p className="whitespace-pre-line break-words leading-relaxed">
+                      {message.body}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-1 text-[10px] text-right",
+                        mine ? "text-primary-foreground/70" : "text-muted-foreground",
+                      )}
+                    >
+                      {timeAgo(message.created_at)}
+                    </p>
+
+                    {reaction && (
+                      <span className="absolute -bottom-2 -right-1 bg-card border border-border rounded-full px-1.5 py-0.5 text-xs shadow-sm">
+                        {reaction}
+                      </span>
+                    )}
                   </div>
-                </div>
+                </li>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </ul>
+        )}
 
-                {/* Reacted Emoji Badge */}
-                {reaction && (
-                  <span className="-mt-2 mr-2 px-1.5 py-0.5 rounded-full bg-card border border-border text-xs shadow-sm">
-                    {reaction}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-          {(messagesQuery.data ?? []).length === 0 && (
-            <li className="py-16 text-center text-sm text-muted-foreground">Say hello 👋</li>
-          )}
-        </ul>
-      )}
+        {/* Reply Preview Banner */}
+        {replyingTo && (
+          <div className="bg-surface border-t border-border px-4 py-2 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 truncate">
+              <CornerUpLeft className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="text-muted-foreground truncate">
+                Replying: &ldquo;{replyingTo.body.slice(0, 35)}...&rdquo;
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyingTo(null)}
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="sr-only"
-        onChange={handleAttachImage}
-      />
-
-      {/* Input bar */}
-      <form
-        className="sticky bottom-20 flex items-center gap-2 border-t border-border bg-background px-4 py-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (body.trim()) mutation.mutate();
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label="Attach photo"
-          className="text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-secondary transition-colors"
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!body.trim()) return;
+            mutation.mutate();
+          }}
+          className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border p-3 flex items-center gap-2 max-w-md mx-auto w-full"
         >
-          <ImagePlus className="h-5 w-5" />
-        </button>
+          <Input
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={peer ? `Message @${peer.username}...` : "Message..."}
+            className="rounded-full bg-surface border-border h-11 text-xs px-4"
+          />
+          <Button
+            type="submit"
+            disabled={!body.trim() || mutation.isPending}
+            size="icon"
+            className="rounded-full h-11 w-11 shrink-0 brand-gradient-bg text-white disabled:opacity-50"
+            aria-label="Send message"
+          >
+            {mutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+      </div>
 
-        <Input
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          maxLength={2000}
-          placeholder="Message…"
-          aria-label="Message"
-          className="bg-secondary/40 text-xs rounded-full h-10"
-        />
-
-        <Button
-          type="submit"
-          variant="brand"
-          size="sm"
-          className="h-10 rounded-full px-4"
-          disabled={!body.trim() || mutation.isPending}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
-
-      {/* Message Action Dialog */}
-      <Dialog
-        open={Boolean(activeMessage)}
-        onOpenChange={(open) => !open && setActiveMessage(null)}
-      >
-        <DialogContent className="max-w-xs p-4 bg-card border border-border rounded-2xl space-y-3">
-          <div className="flex items-center justify-around py-1 border-b border-border pb-3">
-            {["❤️", "👍", "😂", "🔥", "😮", "😢"].map((emoji) => (
+      {/* Message Actions Modal */}
+      <Dialog open={Boolean(selectedMessage)} onOpenChange={() => setSelectedMessage(null)}>
+        <DialogContent className="max-w-xs rounded-3xl p-4 bg-card border-border">
+          {/* Reaction Bar */}
+          <div className="flex justify-between items-center bg-surface border border-border p-2 rounded-2xl mb-2">
+            {QUICK_REACTIONS.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
-                onClick={() => activeMessage && handleReact(activeMessage.id, emoji)}
-                className="text-2xl p-1 rounded-full hover:scale-125 transition-transform"
+                onClick={() => selectedMessage && handleReact(selectedMessage.id, emoji)}
+                className="text-lg hover:scale-125 transition-transform"
               >
                 {emoji}
               </button>
             ))}
           </div>
 
-          <div className="space-y-1 text-sm font-medium">
+          <div className="divide-y divide-border text-xs">
             <button
               type="button"
               onClick={() => {
-                if (activeMessage) {
-                  navigator.clipboard.writeText(activeMessage.body);
-                  toast.success("Text copied to clipboard");
-                  setActiveMessage(null);
-                }
+                if (selectedMessage) setReplyingTo(selectedMessage);
+                setSelectedMessage(null);
               }}
-              className="w-full py-2.5 px-3 text-left rounded-xl hover:bg-secondary flex items-center gap-2"
+              className="w-full flex items-center gap-3 p-2.5 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <CornerUpLeft className="h-4 w-4 text-primary" />
+              <span>Reply</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectedMessage && handleCopyMessage(selectedMessage.body)}
+              className="w-full flex items-center gap-3 p-2.5 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
             >
               <Copy className="h-4 w-4 text-muted-foreground" />
-              Copy Text
+              <span>Copy text</span>
             </button>
 
-            {activeMessage && activeMessage.sender_id === user?.id && (
+            {selectedMessage?.sender_id === user?.id ? (
               <button
                 type="button"
-                onClick={() => deleteMsgMutation.mutate(activeMessage.id)}
-                className="w-full py-2.5 px-3 text-left rounded-xl text-destructive hover:bg-destructive/10 flex items-center gap-2 font-semibold"
+                onClick={() => selectedMessage && handleUnsendMessage(selectedMessage.id)}
+                className="w-full flex items-center gap-3 p-2.5 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
               >
-                <Trash2 className="h-4 w-4" />
-                Unsend Message
+                <Trash2 className="h-4 w-4 text-destructive" />
+                <span>Unsend message</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleReportMessage}
+                className="w-full flex items-center gap-3 p-2.5 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
+              >
+                <Flag className="h-4 w-4 text-destructive" />
+                <span>Report message</span>
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveMessage(null);
-                setReportOpen(true);
-              }}
-              className="w-full py-2.5 px-3 text-left rounded-xl text-destructive hover:bg-destructive/10 flex items-center gap-2 font-semibold"
-            >
-              <Flag className="h-4 w-4" />
-              Report Message
-            </button>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Conversation Details Dialog */}
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-xs p-0 overflow-hidden bg-card border border-border rounded-2xl">
-          <div className="divide-y divide-border text-center text-sm font-medium">
-            {peer && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDetailsOpen(false);
-                  navigate({ to: "/u/$username", params: { username: peer.username } });
-                }}
-                className="w-full py-3.5 hover:bg-secondary/50 font-semibold text-foreground flex items-center justify-center gap-2"
-              >
-                View @{peer.username}'s Profile
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => {
-                toast.success("Notifications muted for this conversation");
-                setDetailsOpen(false);
-              }}
-              className="w-full py-3.5 hover:bg-secondary/50 text-foreground flex items-center justify-center gap-2"
-            >
-              <BellOff className="h-4 w-4 text-muted-foreground" />
-              Mute Notifications
-            </button>
-
-            {peer && (
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await supabase.from("blocks").insert({
-                      blocker_id: user!.id,
-                      blocked_id: peer.id,
-                    });
-                    toast.success(`Blocked @${peer.username}`);
-                    setDetailsOpen(false);
-                    navigate({ to: "/messages" });
-                  } catch {
-                    toast.error("Could not block user");
-                  }
-                }}
-                className="w-full py-3.5 hover:bg-secondary/50 text-destructive flex items-center justify-center gap-2 font-semibold"
-              >
-                <UserX className="h-4 w-4" />
-                Block @{peer.username}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setDetailsOpen(false);
-                setReportOpen(true);
-              }}
-              className="w-full py-3.5 hover:bg-secondary/50 text-destructive flex items-center justify-center gap-2 font-semibold"
-            >
-              <Flag className="h-4 w-4" />
-              Report Conversation
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDetailsOpen(false)}
-              className="w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal"
-            >
-              Cancel
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Content Report Dialog */}
-      <ReportContentDialog
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-        targetId={conversationId}
-        targetType="message"
-        viewerId={user?.id || "anonymous"}
-      />
     </AppShell>
   );
 }

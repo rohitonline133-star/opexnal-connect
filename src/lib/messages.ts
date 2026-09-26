@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
 
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
+export type Message = MessageRow;
 
 export type ConversationSummary = {
   id: string;
@@ -77,7 +78,9 @@ export async function listConversations(userId: string) {
       .select("conversation_id, last_read_at")
       .eq("user_id", userId);
     if (!error && memberships && memberships.length > 0) {
-      const ids = memberships.map((m) => m.conversation_id);
+      const ids = (memberships as Array<{ conversation_id: string; last_read_at: string }>).map(
+        (m) => m.conversation_id,
+      );
       const [convRes, memberRes, msgRes] = await Promise.all([
         supabase.from("conversations").select("id, last_message_at").in("id", ids),
         supabase
@@ -91,8 +94,9 @@ export async function listConversations(userId: string) {
           .order("created_at", { ascending: false }),
       ]);
 
+      const memberRows = (memberRes.data ?? []) as Array<{ conversation_id: string; user_id: string }>;
       const otherIds = Array.from(
-        new Set((memberRes.data ?? []).filter((m) => m.user_id !== userId).map((m) => m.user_id)),
+        new Set(memberRows.filter((m) => m.user_id !== userId).map((m) => m.user_id)),
       );
       const { data: profiles } = otherIds.length
         ? await supabase
@@ -100,29 +104,31 @@ export async function listConversations(userId: string) {
             .select("id, username, display_name, avatar_url, is_verified")
             .in("id", otherIds)
         : { data: [] };
-      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p as FeedAuthor]));
+      const profileMap = new Map(((profiles ?? []) as Array<FeedAuthor>).map((p) => [p.id, p]));
 
       const lastMessage = new Map<string, { body: string; created_at: string }>();
-      for (const m of msgRes.data ?? []) {
+      const msgRows = (msgRes.data ?? []) as Array<{ conversation_id: string; body: string; created_at: string }>;
+      for (const m of msgRows) {
         if (!lastMessage.has(m.conversation_id)) {
           lastMessage.set(m.conversation_id, { body: m.body, created_at: m.created_at });
         }
       }
-      const readMap = new Map((memberships ?? []).map((m) => [m.conversation_id, m.last_read_at]));
+      const readMap = new Map((memberships as Array<{ conversation_id: string; last_read_at: string }>).map((m) => [m.conversation_id, m.last_read_at]));
 
-      return (convRes.data ?? [])
-        .map<ConversationSummary>((c) => {
+      const convRows = (convRes.data ?? []) as Array<{ id: string; last_message_at: string }>;
+      return convRows
+        .map((c): ConversationSummary => {
           const last = lastMessage.get(c.id) ?? null;
           const lastRead = readMap.get(c.id);
           return {
             id: c.id,
             lastMessageAt: c.last_message_at,
             lastMessage: last?.body ?? null,
-            others: (memberRes.data ?? [])
+            others: memberRows
               .filter((m) => m.conversation_id === c.id && m.user_id !== userId)
               .map((m) => profileMap.get(m.user_id))
               .filter((p): p is FeedAuthor => Boolean(p)),
-            unread: Boolean(last && lastRead && new Date(last.created_at) > new Date(lastRead)),
+            unread: Boolean(last && lastRead && new Date(last.created_at) > new Date(String(lastRead))),
           };
         })
         .sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : -1));
@@ -140,7 +146,8 @@ export async function openDirectConversation(userId: string, otherId: string) {
     .from("conversation_members")
     .select("conversation_id")
     .eq("user_id", userId);
-  const ids = (mine ?? []).map((m) => m.conversation_id);
+  const memberList = (mine ?? []) as Array<{ conversation_id: string }>;
+  const ids = memberList.map((m) => m.conversation_id);
 
   if (ids.length > 0) {
     const { data: shared } = await supabase
@@ -193,7 +200,8 @@ export async function getConversationPeers(
       .from("conversation_members")
       .select("user_id")
       .eq("conversation_id", conversationId);
-    const ids = (data ?? []).map((m) => m.user_id).filter((id) => id !== userId);
+    const memberList = (data ?? []) as Array<{ user_id: string }>;
+    const ids = memberList.map((m) => m.user_id).filter((id) => id !== userId);
     if (ids.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")

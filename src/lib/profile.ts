@@ -3,9 +3,13 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-export async function getProfileById(id: string) {
+export async function getProfileById(id: string): Promise<Profile | null> {
   try {
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
     if (data) return data;
   } catch {
@@ -15,14 +19,18 @@ export async function getProfileById(id: string) {
   return null;
 }
 
-export async function getProfileByUsername(username: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("username", username.toLowerCase())
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+export async function getProfileByUsername(username: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("username", username.toLowerCase())
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 /** Avatars live in a private bucket; resolve a short-lived signed URL. */
