@@ -159,9 +159,13 @@ export function LiveStudioPage() {
   const handleSendComment = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!commentInput.trim()) return;
+    const safeUsername =
+      (user?.user_metadata?.["username"] as string | undefined) ||
+      user?.email?.split("@")[0] ||
+      "you";
     const newC: LiveComment = {
       id: Date.now().toString(),
-      username: user?.username || "you",
+      username: safeUsername,
       text: commentInput.trim(),
       timestamp: "Just now",
       isBadge: true,
@@ -173,11 +177,15 @@ export function LiveStudioPage() {
   const handleAskQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newQuestion.trim()) return;
+    const safeUsername =
+      (user?.user_metadata?.["username"] as string | undefined) ||
+      user?.email?.split("@")[0] ||
+      "viewer";
     setQuestions((prev) => [
       ...prev,
       {
         id: Date.now().toString(),
-        fromUser: user?.username || "viewer",
+        fromUser: safeUsername,
         question: newQuestion.trim(),
         answered: false,
       },

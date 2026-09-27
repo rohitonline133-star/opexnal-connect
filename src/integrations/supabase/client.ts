@@ -426,7 +426,8 @@ export const supabase = {
   storage: {
     from: (bucket: string) => new StorageBucketClient(bucket),
   },
-  from: <T = Record<string, unknown>>(tableName: string) => new QueryBuilder<T>(tableName),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: <T = any>(tableName: string) => new QueryBuilder<T>(tableName),
   rpc: async (func: string, params?: Record<string, unknown>) => {
     return { data: "success", error: null };
   },

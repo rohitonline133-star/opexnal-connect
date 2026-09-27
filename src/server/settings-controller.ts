@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { GoogleGenAI } from "@google/genai";
+import { opexAiGateway } from "./ai/gateway";
 import Stripe from "stripe";
 import * as archiver from "archiver";
 import sharp from "sharp";
@@ -47,18 +47,23 @@ export const settingsRouter = Router();
 settingsRouter.post("/ai/moderate-comment", async (req: Request, res: Response) => {
   try {
     const { commentText } = req.body;
-    const geminiApiKey = process.env["GEMINI_API_KEY"];
-    if (!geminiApiKey) {
-      throw new Error("GEMINI_API_KEY missing");
+    if (!commentText || typeof commentText !== "string") {
+      return res.status(400).json({ error: "commentText is required" });
     }
-    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: `Moderate this comment for hate speech or spam: "${commentText}". Return JSON { "flagged": boolean, "reason": string }.`,
+
+    const modResult = await opexAiGateway.moderate(
+      { content: commentText, contentType: "comment" },
+      { endpoint: "/ai/moderate-comment" },
+    );
+
+    return res.json({
+      success: true,
+      result: JSON.stringify(modResult.result),
+      flagged: modResult.result.flagged,
+      provider: modResult.provider,
     });
-    res.json({ success: true, result: response.text });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    res.status(500).json({ error: message });
+    return res.status(500).json({ error: message });
   }
 });

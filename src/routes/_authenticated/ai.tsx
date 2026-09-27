@@ -89,11 +89,16 @@ function AIPage() {
   const [attachedImage, setAttachedImage] = useState<{ base64: string; mime: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const usernameDisplay =
+    (user?.user_metadata?.["username"] as string | undefined) ||
+    user?.email?.split("@")[0] ||
+    "";
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       sender: "ai",
-      text: `Namaste & welcome ${user?.username ? `@${user.username}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, analyze images, and optimize your creator profile in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
+      text: `Namaste & welcome ${usernameDisplay ? `@${usernameDisplay}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, analyze images, and optimize your creator profile in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
       timestamp: "Just now",
     },
   ]);

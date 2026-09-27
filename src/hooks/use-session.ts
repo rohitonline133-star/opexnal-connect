@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { AuthSession, AuthUser } from "@/lib/auth-client";
 import { supabase } from "@/integrations/supabase/client";
+
+export type Session =
+  | AuthSession
+  | {
+      access_token: string;
+      user: { id: string; email?: string; [key: string]: unknown } | null;
+    };
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -31,7 +38,7 @@ export function useSession() {
 
   return {
     session,
-    user: session?.user ?? null,
+    user: (session?.user as (AuthUser & { id: string }) | null) ?? null,
     loading,
   };
 }
