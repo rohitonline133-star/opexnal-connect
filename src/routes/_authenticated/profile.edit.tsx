@@ -138,9 +138,10 @@ function EditProfile() {
       .eq("id", user.id);
     setBusy(false);
     if (error) {
-      const msg = (error as { code?: string; message?: string })?.code === "23505"
-        ? "That username is already taken"
-        : (error as Error).message || "Profile update failed";
+      const msg =
+        (error as { code?: string; message?: string })?.code === "23505"
+          ? "That username is already taken"
+          : (error as Error).message || "Profile update failed";
       toast.error(msg);
       return;
     }

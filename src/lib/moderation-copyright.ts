@@ -206,28 +206,20 @@ export async function submitContentReport({
   targetType: "post" | "user" | "story" | "comment" | "message" | "reel";
   reason: string;
   details?: string;
-}): Promise<{ success: boolean; id: string }> {
+}): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from("content_reports")
-      .insert({
-        reporter_id: reporterId,
-        target_id: targetId,
-        target_type: targetType,
-        reason,
-        details,
-        status: "pending",
-      })
-      .select("id")
-      .single();
+    await supabase.from("content_reports").insert({
+      reporter_id: reporterId,
+      target_id: targetId,
+      target_type: targetType,
+      reason,
+      details,
+      status: "pending",
+    });
 
-    if (!error && data) {
-      return { success: true, id: data.id };
-    }
+    return true;
   } catch (err) {
     console.warn("Could not insert report to DB, saving locally fallback", err);
+    return true;
   }
-
-  const fallbackId = `rep_${Date.now()}`;
-  return { success: true, id: fallbackId };
 }

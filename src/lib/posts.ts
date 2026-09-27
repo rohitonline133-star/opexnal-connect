@@ -361,9 +361,15 @@ async function decorate(
       : Promise.resolve({ data: [] as { post_id: string }[] }),
   ]);
 
-  const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
-  const liked = new Set(((likesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id));
-  const saved = new Set(((savesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id));
+  const authors = new Map(
+    ((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]),
+  );
+  const liked = new Set(
+    ((likesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id),
+  );
+  const saved = new Set(
+    ((savesRes.data ?? []) as Array<{ post_id: string }>).map((r) => r.post_id),
+  );
 
   return rows.map((postItem: PostRow & { post_media: PostMediaRow[] }): FeedPost => {
     const { post_media, ...post } = postItem;
@@ -648,8 +654,10 @@ export async function recordShare(postId: string, userId: string, channel = "lin
 
 export type CommentWithAuthor = CommentRow & { author: FeedAuthor | null; liked: boolean };
 
+const memoryCommentsStore = new Map<string, CommentWithAuthor[]>();
+
 export async function getComments(postId: string, viewerId?: string | null) {
-  let localComments: CommentWithAuthor[] = [];
+  let localComments: CommentWithAuthor[] = memoryCommentsStore.get(postId) || [];
   if (typeof window !== "undefined") {
     try {
       const raw = localStorage.getItem(`${LOCAL_COMMENTS_KEY}_${postId}`);
@@ -684,8 +692,12 @@ export async function getComments(postId: string, viewerId?: string | null) {
           : Promise.resolve({ data: [] as { comment_id: string }[] }),
       ]);
 
-      const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
-      const liked = new Set(((likesRes.data ?? []) as Array<{ comment_id: string }>).map((r) => r.comment_id));
+      const authors = new Map(
+        ((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]),
+      );
+      const liked = new Set(
+        ((likesRes.data ?? []) as Array<{ comment_id: string }>).map((r) => r.comment_id),
+      );
 
       const remoteDecorated = rows.map((row: CommentRow): CommentWithAuthor => ({
         ...row,
@@ -706,9 +718,9 @@ export async function addComment(input: {
   userId: string;
   body: string;
   parentId?: string | null;
-}) {
+}): Promise<CommentWithAuthor> {
   const newComment: CommentWithAuthor = {
-    id: `local_comment_${Date.now()}`,
+    id: `local_comment_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     post_id: input.postId,
     user_id: input.userId,
     body: input.body.trim(),
@@ -725,6 +737,10 @@ export async function addComment(input: {
     },
     liked: false,
   };
+
+  const currentMem = memoryCommentsStore.get(input.postId) || [];
+  currentMem.push(newComment);
+  memoryCommentsStore.set(input.postId, currentMem);
 
   if (typeof window !== "undefined") {
     try {
@@ -747,6 +763,8 @@ export async function addComment(input: {
   } catch {
     // handled locally
   }
+
+  return newComment;
 }
 
 export async function deleteComment(commentId: string) {

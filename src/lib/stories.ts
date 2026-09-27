@@ -166,8 +166,12 @@ async function decorateStories(rows: StoryRow[], viewerId: string) {
       ),
   ]);
 
-  const authors = new Map(((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]));
-  const seen = new Set(((viewsRes.data ?? []) as Array<{ story_id: string }>).map((v) => v.story_id));
+  const authors = new Map(
+    ((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]),
+  );
+  const seen = new Set(
+    ((viewsRes.data ?? []) as Array<{ story_id: string }>).map((v) => v.story_id),
+  );
 
   return rows.map((row: StoryRow): Story => ({
     ...row,

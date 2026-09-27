@@ -113,13 +113,6 @@ function Explore() {
     "trending" | "people" | "reels" | "tags" | "audio" | "places"
   >("trending");
 
-  // Recent Searches
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    "alex_creator",
-    "#aesthetics",
-    "Mumbai, India",
-  ]);
-
   // Modals for Detail Views
   const [selectedAudio, setSelectedAudio] = useState<(typeof CURATED_AUDIO)[0] | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<(typeof CURATED_PLACES)[0] | null>(null);

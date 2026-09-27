@@ -320,7 +320,7 @@ function StoryViewer() {
 
           {showViewers && (
             <ul className={cn("mt-3 max-h-48 space-y-3 overflow-y-auto")}>
-              {(viewersQuery.data ?? []).map((entry: { viewer: any; created_at: string }) => (
+              {(viewersQuery.data ?? []).map((entry) => (
                 <li key={entry.viewer.id} className="flex items-center gap-3">
                   <ProfileAvatar
                     path={entry.viewer.avatar_url}

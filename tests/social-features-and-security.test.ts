@@ -16,11 +16,7 @@ import {
   setMessageReaction,
   getMessageReactions,
 } from "../src/lib/messages.ts";
-import {
-  getUserStories,
-  getStoryHighlights,
-  saveStoryHighlight,
-} from "../src/lib/stories.ts";
+import { getUserStories, getStoryHighlights, saveStoryHighlight } from "../src/lib/stories.ts";
 import {
   checkContentSafety,
   scanMediaForCopyright,
@@ -73,7 +69,10 @@ describe("Live Social Workflows & Data Integrity", () => {
     assert.strictEqual(newComment.user_id, authorId);
 
     const comments = await getComments(testPostId);
-    assert.ok(comments.some((c) => c.id === newComment.id), "New comment must be in comments list");
+    assert.ok(
+      comments.some((c) => c.id === newComment.id),
+      "New comment must be in comments list",
+    );
   });
 
   test("Direct messaging: message transmission, history, and emoji reactions", async () => {
@@ -172,13 +171,13 @@ describe("Defensive Authorization & IDOR Security Audit", () => {
     assert.strictEqual(
       authorizeDeletion(targetPost, attackerViewerId),
       false,
-      "Mallory must NOT be authorized to delete Bob's post"
+      "Mallory must NOT be authorized to delete Bob's post",
     );
 
     assert.strictEqual(
       authorizeDeletion(targetPost, "usr_bob_owner"),
       true,
-      "Owner Bob MUST be authorized to delete their own post"
+      "Owner Bob MUST be authorized to delete their own post",
     );
   });
 
@@ -190,7 +189,7 @@ describe("Defensive Authorization & IDOR Security Audit", () => {
 
     function processSettingsUpdate(
       session: { id: string },
-      incomingPayload: { targetUserId?: string; isPrivate: boolean }
+      incomingPayload: { targetUserId?: string; isPrivate: boolean },
     ) {
       // Defensive pattern: Discard untrusted incoming targetUserId, strictly bind to session.id
       const effectiveUserId = session.id;
@@ -210,7 +209,7 @@ describe("Defensive Authorization & IDOR Security Audit", () => {
     assert.strictEqual(
       result.userId,
       "usr_legit_user_55",
-      "Update must strictly target session user, never attacker-specified victim"
+      "Update must strictly target session user, never attacker-specified victim",
     );
   });
 });

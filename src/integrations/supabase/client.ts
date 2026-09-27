@@ -12,18 +12,22 @@ export type { Database } from "./types";
 
 // In-memory/localStorage seed store for client-side local cache
 const LOCAL_STORE_PREFIX = "opexnal_db_";
+const memoryTables = new Map<string, Record<string, unknown>[]>();
 
 function getLocalTable(table: string): Record<string, unknown>[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") {
+    return memoryTables.get(table) || [];
+  }
   try {
     const raw = localStorage.getItem(LOCAL_STORE_PREFIX + table);
-    return raw ? JSON.parse(raw) : [];
+    return raw ? JSON.parse(raw) : memoryTables.get(table) || [];
   } catch {
-    return [];
+    return memoryTables.get(table) || [];
   }
 }
 
 function setLocalTable(table: string, data: Record<string, unknown>[]) {
+  memoryTables.set(table, data);
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(LOCAL_STORE_PREFIX + table, JSON.stringify(data));
@@ -422,7 +426,7 @@ export const supabase = {
   storage: {
     from: (bucket: string) => new StorageBucketClient(bucket),
   },
-  from: <T = any>(tableName: string) => new QueryBuilder<T>(tableName),
+  from: <T = Record<string, unknown>>(tableName: string) => new QueryBuilder<T>(tableName),
   rpc: async (func: string, params?: Record<string, unknown>) => {
     return { data: "success", error: null };
   },

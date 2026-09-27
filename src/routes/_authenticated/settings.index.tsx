@@ -140,7 +140,9 @@ function Settings() {
 
   const username =
     profile?.username ||
-    (user as any)?.user_metadata?.["username"] ||
+    (typeof user?.user_metadata?.["username"] === "string"
+      ? user.user_metadata["username"]
+      : undefined) ||
     user?.email?.split("@")[0] ||
     "user";
 

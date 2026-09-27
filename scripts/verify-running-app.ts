@@ -7,7 +7,7 @@ async function checkRoute(path: string, expectedStatus: number = 200) {
   console.log(`Route [${path}] status: ${res.status}`);
   assert.ok(
     res.status === expectedStatus || (expectedStatus === 200 && res.status === 307),
-    `Expected status ${expectedStatus} for ${path}, got ${res.status}`
+    `Expected status ${expectedStatus} for ${path}, got ${res.status}`,
   );
   return res;
 }

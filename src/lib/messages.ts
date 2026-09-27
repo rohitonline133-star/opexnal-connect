@@ -94,7 +94,10 @@ export async function listConversations(userId: string) {
           .order("created_at", { ascending: false }),
       ]);
 
-      const memberRows = (memberRes.data ?? []) as Array<{ conversation_id: string; user_id: string }>;
+      const memberRows = (memberRes.data ?? []) as Array<{
+        conversation_id: string;
+        user_id: string;
+      }>;
       const otherIds = Array.from(
         new Set(memberRows.filter((m) => m.user_id !== userId).map((m) => m.user_id)),
       );
@@ -107,13 +110,22 @@ export async function listConversations(userId: string) {
       const profileMap = new Map(((profiles ?? []) as Array<FeedAuthor>).map((p) => [p.id, p]));
 
       const lastMessage = new Map<string, { body: string; created_at: string }>();
-      const msgRows = (msgRes.data ?? []) as Array<{ conversation_id: string; body: string; created_at: string }>;
+      const msgRows = (msgRes.data ?? []) as Array<{
+        conversation_id: string;
+        body: string;
+        created_at: string;
+      }>;
       for (const m of msgRows) {
         if (!lastMessage.has(m.conversation_id)) {
           lastMessage.set(m.conversation_id, { body: m.body, created_at: m.created_at });
         }
       }
-      const readMap = new Map((memberships as Array<{ conversation_id: string; last_read_at: string }>).map((m) => [m.conversation_id, m.last_read_at]));
+      const readMap = new Map(
+        (memberships as Array<{ conversation_id: string; last_read_at: string }>).map((m) => [
+          m.conversation_id,
+          m.last_read_at,
+        ]),
+      );
 
       const convRows = (convRes.data ?? []) as Array<{ id: string; last_message_at: string }>;
       return convRows
@@ -128,7 +140,9 @@ export async function listConversations(userId: string) {
               .filter((m) => m.conversation_id === c.id && m.user_id !== userId)
               .map((m) => profileMap.get(m.user_id))
               .filter((p): p is FeedAuthor => Boolean(p)),
-            unread: Boolean(last && lastRead && new Date(last.created_at) > new Date(String(lastRead))),
+            unread: Boolean(
+              last && lastRead && new Date(last.created_at) > new Date(String(lastRead)),
+            ),
           };
         })
         .sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : -1));
@@ -218,19 +232,65 @@ export async function getConversationPeers(
   return [];
 }
 
-export async function sendMessage(conversationId: string, senderId: string, body: string) {
+export type SendMessagePayload = {
+  conversationId: string;
+  sender: { id: string; username?: string; avatar_url?: string | null };
+  text: string;
+};
+
+export type SentMessageResult = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  text: string;
+  created_at: string;
+};
+
+export async function sendMessage(
+  conversationIdOrPayload: string | SendMessagePayload,
+  senderId?: string,
+  body?: string,
+): Promise<SentMessageResult> {
+  let convId: string;
+  let sId: string;
+  let textBody: string;
+
+  if (typeof conversationIdOrPayload === "object") {
+    convId = conversationIdOrPayload.conversationId;
+    sId = conversationIdOrPayload.sender.id;
+    textBody = conversationIdOrPayload.text;
+  } else {
+    convId = conversationIdOrPayload;
+    sId = senderId || "user_maya";
+    textBody = body || "";
+  }
+
   const { data: authData } = await supabase.auth.getUser();
-  const effectiveSenderId = authData.user?.id || senderId;
+  const effectiveSenderId = authData?.user?.id || sId;
+  const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
 
   const { error } = await supabase.from("messages").insert({
-    conversation_id: conversationId,
+    id: messageId,
+    conversation_id: convId,
     sender_id: effectiveSenderId,
-    body: body.trim(),
+    body: textBody.trim(),
+    created_at: now,
   });
 
   if (error) {
     throw error;
   }
+
+  return {
+    id: messageId,
+    conversation_id: convId,
+    sender_id: effectiveSenderId,
+    body: textBody.trim(),
+    text: textBody.trim(),
+    created_at: now,
+  };
 }
 
 export async function deleteMessage(messageId: string) {
