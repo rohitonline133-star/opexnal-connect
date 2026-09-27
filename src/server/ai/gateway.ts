@@ -79,7 +79,9 @@ export class OpexAiGateway {
         },
         options,
       );
-      throw new Error(`Too many requests. Please retry in ${Math.ceil(rateCheck.resetMs / 1000)}s.`);
+      throw new Error(
+        `Too many requests. Please retry in ${Math.ceil(rateCheck.resetMs / 1000)}s.`,
+      );
     }
 
     // 2. Input Safety & Prompt Injection Guard
@@ -128,7 +130,10 @@ export class OpexAiGateway {
     } catch (err: unknown) {
       cb?.recordFailure();
       const errorMsg = err instanceof Error ? err.message : String(err);
-      console.warn(`[OPEX-AI] Provider '${provider.id}' failed, activating autonomous fallback:`, errorMsg);
+      console.warn(
+        `[OPEX-AI] Provider '${provider.id}' failed, activating autonomous fallback:`,
+        errorMsg,
+      );
 
       // Graceful failover to Opexnal native local runtime
       outputResponse = await this.fallbackEngine.generate(request);

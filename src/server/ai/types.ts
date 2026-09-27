@@ -9,10 +9,12 @@ export type AiRole = "user" | "model" | "system";
 
 export interface AiMessagePart {
   text?: string | undefined;
-  inlineData?: {
-    mimeType: string;
-    data: string; // base64
-  } | undefined;
+  inlineData?:
+    | {
+        mimeType: string;
+        data: string; // base64
+      }
+    | undefined;
 }
 
 export interface AiMessage {
@@ -34,11 +36,13 @@ export interface GenerateResponse {
   text: string;
   provider: string;
   model: string;
-  usage?: {
-    promptTokens?: number | undefined;
-    completionTokens?: number | undefined;
-    totalTokens?: number | undefined;
-  } | undefined;
+  usage?:
+    | {
+        promptTokens?: number | undefined;
+        completionTokens?: number | undefined;
+        totalTokens?: number | undefined;
+      }
+    | undefined;
   finishReason?: string | undefined;
 }
 

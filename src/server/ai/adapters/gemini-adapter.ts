@@ -150,7 +150,7 @@ Respond ONLY with a JSON object in this exact schema:
 
     try {
       const response = await client.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: this.defaultModel,
         contents: [{ role: "user", parts: [{ text: prompt }] }] as never,
         config: {
           temperature: 0.1,

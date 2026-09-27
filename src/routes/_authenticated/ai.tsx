@@ -90,9 +90,7 @@ function AIPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const usernameDisplay =
-    (user?.user_metadata?.["username"] as string | undefined) ||
-    user?.email?.split("@")[0] ||
-    "";
+    (user?.user_metadata?.["username"] as string | undefined) || user?.email?.split("@")[0] || "";
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
