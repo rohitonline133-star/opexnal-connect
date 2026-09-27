@@ -535,6 +535,16 @@ export async function saveSettings(
   return updated;
 }
 
+export async function updateSettings(
+  userIdOrPatch: string | Partial<OpexnalSettings> | undefined,
+  maybePatch?: Partial<OpexnalSettings>,
+): Promise<OpexnalSettings> {
+  if (typeof userIdOrPatch === "string") {
+    return saveSettings(maybePatch || {}, userIdOrPatch);
+  }
+  return saveSettings(userIdOrPatch || {}, undefined);
+}
+
 /**
  * Item specification for setting searchable items across all categories
  */

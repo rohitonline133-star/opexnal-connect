@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { handleAiRequest } from "./server/ai/http-handler";
+import { handleAuthApiRequest } from "./server/auth-handler";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -51,6 +52,9 @@ export default {
       const url = new URL(request.url);
       if (url.pathname.startsWith("/api/ai/")) {
         return await handleAiRequest(request);
+      }
+      if (url.pathname.startsWith("/api/auth/") || url.pathname.startsWith("/api/v1/")) {
+        return await handleAuthApiRequest(request);
       }
 
       const handler = await getServerEntry();

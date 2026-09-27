@@ -14,17 +14,36 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
+import { Route as AuthenticatedArchiveRouteImport } from './routes/_authenticated/archive'
+import { Route as AuthenticatedCloseFriendsRouteImport } from './routes/_authenticated/close-friends'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
+import { Route as AuthenticatedCreatorRouteImport } from './routes/_authenticated/creator'
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedLiveRouteImport } from './routes/_authenticated/live'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReelsRouteImport } from './routes/_authenticated/reels'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as Auth2faRouteImport } from './routes/auth.2fa'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthRecoveryRouteImport } from './routes/auth.recovery'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthSessionsRouteImport } from './routes/auth.sessions'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedPPostIdRouteImport } from './routes/_authenticated/p.$postId'
 import { Route as AuthenticatedProfileEditRouteImport } from './routes/_authenticated/profile.edit'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedSettingsMediaRouteImport } from './routes/_authenticated/settings.media'
+import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings.notifications'
+import { Route as AuthenticatedSettingsPasswordRouteImport } from './routes/_authenticated/settings.password'
 import { Route as AuthenticatedSettingsPrivacyRouteImport } from './routes/_authenticated/settings.privacy'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
 import { Route as AuthenticatedStoriesUserIdRouteImport } from './routes/_authenticated/stories.$userId'
@@ -56,14 +75,35 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
   id: '/ai',
   path: '/ai',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedArchiveRoute = AuthenticatedArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCloseFriendsRoute =
+  AuthenticatedCloseFriendsRouteImport.update({
+    id: '/close-friends',
+    path: '/close-friends',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCreateRoute = AuthenticatedCreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCreatorRoute = AuthenticatedCreatorRouteImport.update({
+  id: '/creator',
+  path: '/creator',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
@@ -71,9 +111,19 @@ const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLiveRoute = AuthenticatedLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -85,6 +135,51 @@ const AuthenticatedReelsRoute = AuthenticatedReelsRouteImport.update({
   id: '/reels',
   path: '/reels',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const Auth2faRoute = Auth2faRouteImport.update({
+  id: '/2fa',
+  path: '/2fa',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRecoveryRoute = AuthRecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSessionsRoute = AuthSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedMessagesIndexRoute =
   AuthenticatedMessagesIndexRouteImport.update({
@@ -113,6 +208,30 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsAccountRoute =
+  AuthenticatedSettingsAccountRouteImport.update({
+    id: '/settings/account',
+    path: '/settings/account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsMediaRoute =
+  AuthenticatedSettingsMediaRouteImport.update({
+    id: '/settings/media',
+    path: '/settings/media',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsNotificationsRoute =
+  AuthenticatedSettingsNotificationsRouteImport.update({
+    id: '/settings/notifications',
+    path: '/settings/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsPasswordRoute =
+  AuthenticatedSettingsPasswordRouteImport.update({
+    id: '/settings/password',
+    path: '/settings/password',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsPrivacyRoute =
@@ -151,18 +270,37 @@ const AuthenticatedUUsernameRoute = AuthenticatedUUsernameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/archive': typeof AuthenticatedArchiveRoute
+  '/close-friends': typeof AuthenticatedCloseFriendsRoute
   '/create': typeof AuthenticatedCreateRoute
+  '/creator': typeof AuthenticatedCreatorRoute
   '/explore': typeof AuthenticatedExploreRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/live': typeof AuthenticatedLiveRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/reels': typeof AuthenticatedReelsRoute
+  '/auth/2fa': typeof Auth2faRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recovery': typeof AuthRecoveryRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sessions': typeof AuthSessionsRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth/': typeof AuthIndexRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/media': typeof AuthenticatedSettingsMediaRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/password': typeof AuthenticatedSettingsPasswordRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
@@ -174,18 +312,36 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/ai': typeof AuthenticatedAiRoute
+  '/archive': typeof AuthenticatedArchiveRoute
+  '/close-friends': typeof AuthenticatedCloseFriendsRoute
   '/create': typeof AuthenticatedCreateRoute
+  '/creator': typeof AuthenticatedCreatorRoute
   '/explore': typeof AuthenticatedExploreRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/live': typeof AuthenticatedLiveRoute
   '/profile': typeof AuthenticatedProfileRouteWithChildren
   '/reels': typeof AuthenticatedReelsRoute
+  '/auth/2fa': typeof Auth2faRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recovery': typeof AuthRecoveryRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sessions': typeof AuthSessionsRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth': typeof AuthIndexRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/p/$postId': typeof AuthenticatedPPostIdRoute
   '/profile/edit': typeof AuthenticatedProfileEditRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/media': typeof AuthenticatedSettingsMediaRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/password': typeof AuthenticatedSettingsPasswordRoute
   '/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
@@ -199,18 +355,37 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/archive': typeof AuthenticatedArchiveRoute
+  '/_authenticated/close-friends': typeof AuthenticatedCloseFriendsRoute
   '/_authenticated/create': typeof AuthenticatedCreateRoute
+  '/_authenticated/creator': typeof AuthenticatedCreatorRoute
   '/_authenticated/explore': typeof AuthenticatedExploreRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/live': typeof AuthenticatedLiveRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRouteWithChildren
   '/_authenticated/reels': typeof AuthenticatedReelsRoute
+  '/auth/2fa': typeof Auth2faRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/recovery': typeof AuthRecoveryRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/sessions': typeof AuthSessionsRoute
+  '/auth/signup': typeof AuthSignupRoute
+  '/auth/verify': typeof AuthVerifyRoute
+  '/auth/': typeof AuthIndexRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/p/$postId': typeof AuthenticatedPPostIdRoute
   '/_authenticated/profile/edit': typeof AuthenticatedProfileEditRoute
+  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/_authenticated/settings/media': typeof AuthenticatedSettingsMediaRoute
+  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/settings/password': typeof AuthenticatedSettingsPasswordRoute
   '/_authenticated/settings/privacy': typeof AuthenticatedSettingsPrivacyRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/_authenticated/stories/$userId': typeof AuthenticatedStoriesUserIdRoute
@@ -227,15 +402,34 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/activity'
+    | '/admin'
     | '/ai'
+    | '/archive'
+    | '/close-friends'
     | '/create'
+    | '/creator'
     | '/explore'
+    | '/help'
     | '/home'
+    | '/live'
     | '/profile'
     | '/reels'
+    | '/auth/2fa'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recovery'
+    | '/auth/reset-password'
+    | '/auth/sessions'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth/'
     | '/messages/$conversationId'
     | '/p/$postId'
     | '/profile/edit'
+    | '/settings/account'
+    | '/settings/media'
+    | '/settings/notifications'
+    | '/settings/password'
     | '/settings/privacy'
     | '/settings/security'
     | '/stories/$userId'
@@ -247,18 +441,36 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/reset-password'
     | '/activity'
+    | '/admin'
     | '/ai'
+    | '/archive'
+    | '/close-friends'
     | '/create'
+    | '/creator'
     | '/explore'
+    | '/help'
     | '/home'
+    | '/live'
     | '/profile'
     | '/reels'
+    | '/auth/2fa'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recovery'
+    | '/auth/reset-password'
+    | '/auth/sessions'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth'
     | '/messages/$conversationId'
     | '/p/$postId'
     | '/profile/edit'
+    | '/settings/account'
+    | '/settings/media'
+    | '/settings/notifications'
+    | '/settings/password'
     | '/settings/privacy'
     | '/settings/security'
     | '/stories/$userId'
@@ -274,15 +486,34 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/activity'
+    | '/_authenticated/admin'
     | '/_authenticated/ai'
+    | '/_authenticated/archive'
+    | '/_authenticated/close-friends'
     | '/_authenticated/create'
+    | '/_authenticated/creator'
     | '/_authenticated/explore'
+    | '/_authenticated/help'
     | '/_authenticated/home'
+    | '/_authenticated/live'
     | '/_authenticated/profile'
     | '/_authenticated/reels'
+    | '/auth/2fa'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/recovery'
+    | '/auth/reset-password'
+    | '/auth/sessions'
+    | '/auth/signup'
+    | '/auth/verify'
+    | '/auth/'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/p/$postId'
     | '/_authenticated/profile/edit'
+    | '/_authenticated/settings/account'
+    | '/_authenticated/settings/media'
+    | '/_authenticated/settings/notifications'
+    | '/_authenticated/settings/password'
     | '/_authenticated/settings/privacy'
     | '/_authenticated/settings/security'
     | '/_authenticated/stories/$userId'
@@ -296,7 +527,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
@@ -337,11 +568,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ai': {
       id: '/_authenticated/ai'
       path: '/ai'
       fullPath: '/ai'
       preLoaderRoute: typeof AuthenticatedAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/archive': {
+      id: '/_authenticated/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof AuthenticatedArchiveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/close-friends': {
+      id: '/_authenticated/close-friends'
+      path: '/close-friends'
+      fullPath: '/close-friends'
+      preLoaderRoute: typeof AuthenticatedCloseFriendsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/create': {
@@ -351,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/creator': {
+      id: '/_authenticated/creator'
+      path: '/creator'
+      fullPath: '/creator'
+      preLoaderRoute: typeof AuthenticatedCreatorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/explore': {
       id: '/_authenticated/explore'
       path: '/explore'
@@ -358,11 +617,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExploreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/live': {
+      id: '/_authenticated/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof AuthenticatedLiveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -378,6 +651,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/reels'
       preLoaderRoute: typeof AuthenticatedReelsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/2fa': {
+      id: '/auth/2fa'
+      path: '/2fa'
+      fullPath: '/auth/2fa'
+      preLoaderRoute: typeof Auth2faRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/recovery': {
+      id: '/auth/recovery'
+      path: '/recovery'
+      fullPath: '/auth/recovery'
+      preLoaderRoute: typeof AuthRecoveryRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/sessions': {
+      id: '/auth/sessions'
+      path: '/sessions'
+      fullPath: '/auth/sessions'
+      preLoaderRoute: typeof AuthSessionsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/messages/': {
       id: '/_authenticated/messages/'
@@ -412,6 +748,34 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/account': {
+      id: '/_authenticated/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/media': {
+      id: '/_authenticated/settings/media'
+      path: '/settings/media'
+      fullPath: '/settings/media'
+      preLoaderRoute: typeof AuthenticatedSettingsMediaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/notifications': {
+      id: '/_authenticated/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/password': {
+      id: '/_authenticated/settings/password'
+      path: '/settings/password'
+      fullPath: '/settings/password'
+      preLoaderRoute: typeof AuthenticatedSettingsPasswordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/privacy': {
@@ -472,14 +836,24 @@ const AuthenticatedProfileRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedArchiveRoute: typeof AuthenticatedArchiveRoute
+  AuthenticatedCloseFriendsRoute: typeof AuthenticatedCloseFriendsRoute
   AuthenticatedCreateRoute: typeof AuthenticatedCreateRoute
+  AuthenticatedCreatorRoute: typeof AuthenticatedCreatorRoute
   AuthenticatedExploreRoute: typeof AuthenticatedExploreRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedLiveRoute: typeof AuthenticatedLiveRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRouteWithChildren
   AuthenticatedReelsRoute: typeof AuthenticatedReelsRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedPPostIdRoute: typeof AuthenticatedPPostIdRoute
+  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsMediaRoute: typeof AuthenticatedSettingsMediaRoute
+  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
+  AuthenticatedSettingsPasswordRoute: typeof AuthenticatedSettingsPasswordRoute
   AuthenticatedSettingsPrivacyRoute: typeof AuthenticatedSettingsPrivacyRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
   AuthenticatedStoriesUserIdRoute: typeof AuthenticatedStoriesUserIdRoute
@@ -492,15 +866,26 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedArchiveRoute: AuthenticatedArchiveRoute,
+  AuthenticatedCloseFriendsRoute: AuthenticatedCloseFriendsRoute,
   AuthenticatedCreateRoute: AuthenticatedCreateRoute,
+  AuthenticatedCreatorRoute: AuthenticatedCreatorRoute,
   AuthenticatedExploreRoute: AuthenticatedExploreRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedLiveRoute: AuthenticatedLiveRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRouteWithChildren,
   AuthenticatedReelsRoute: AuthenticatedReelsRoute,
   AuthenticatedMessagesConversationIdRoute:
     AuthenticatedMessagesConversationIdRoute,
   AuthenticatedPPostIdRoute: AuthenticatedPPostIdRoute,
+  AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
+  AuthenticatedSettingsMediaRoute: AuthenticatedSettingsMediaRoute,
+  AuthenticatedSettingsNotificationsRoute:
+    AuthenticatedSettingsNotificationsRoute,
+  AuthenticatedSettingsPasswordRoute: AuthenticatedSettingsPasswordRoute,
   AuthenticatedSettingsPrivacyRoute: AuthenticatedSettingsPrivacyRoute,
   AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
   AuthenticatedStoriesUserIdRoute: AuthenticatedStoriesUserIdRoute,
@@ -514,10 +899,36 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  Auth2faRoute: typeof Auth2faRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRecoveryRoute: typeof AuthRecoveryRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSessionsRoute: typeof AuthSessionsRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyRoute: typeof AuthVerifyRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  Auth2faRoute: Auth2faRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRecoveryRoute: AuthRecoveryRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSessionsRoute: AuthSessionsRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyRoute: AuthVerifyRoute,
+  AuthIndexRoute: AuthIndexRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
