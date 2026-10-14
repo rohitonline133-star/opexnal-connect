@@ -42,17 +42,19 @@ export const DEFAULT_SESSION: AuthSession = {
   access_token: "opexnal_demo_jwt_token_user_maya",
   userId: "user_maya",
   user: DEFAULT_USER,
-  expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  expiresAt: 1893456000000,
 };
 
 type AuthListener = (event: string, session: AuthSession | null) => void;
 
 class AuthClient {
   private listeners: Set<AuthListener> = new Set();
-  private memorySession: AuthSession | null = null;
-  private memoryUser: AuthUser | null = null;
+  private memorySession: AuthSession | null = DEFAULT_SESSION;
+  private memoryUser: AuthUser | null = DEFAULT_USER;
 
   constructor() {
+    this.memoryUser = DEFAULT_USER;
+    this.memorySession = DEFAULT_SESSION;
     if (typeof window !== "undefined") {
       try {
         const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
@@ -62,8 +64,6 @@ class AuthClient {
           this.memoryUser = JSON.parse(storedUser);
         } else {
           // Initialize with default demo session for rich interactive preview
-          this.memoryUser = DEFAULT_USER;
-          this.memorySession = DEFAULT_SESSION;
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(DEFAULT_USER));
           localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(DEFAULT_SESSION));
         }

@@ -97,8 +97,8 @@ export const SEED_POSTS: FeedPost[] = [
     saves_count: 14,
     shares_count: 8,
     comments_enabled: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    created_at: "2026-10-14T08:15:00.000Z",
+    updated_at: "2026-10-14T08:15:00.000Z",
     author: SEED_AUTHORS["user_maya"]!,
     liked: false,
     saved: false,
@@ -114,7 +114,7 @@ export const SEED_POSTS: FeedPost[] = [
         height: 600,
         duration_seconds: null,
         position: 0,
-        created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        created_at: "2026-10-14T08:15:00.000Z",
       },
     ],
   },
@@ -132,8 +132,8 @@ export const SEED_POSTS: FeedPost[] = [
     saves_count: 35,
     shares_count: 19,
     comments_enabled: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    created_at: "2026-10-14T06:00:00.000Z",
+    updated_at: "2026-10-14T06:00:00.000Z",
     author: SEED_AUTHORS["user_zenith"]!,
     liked: false,
     saved: false,
@@ -149,7 +149,7 @@ export const SEED_POSTS: FeedPost[] = [
         height: 800,
         duration_seconds: null,
         position: 0,
-        created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+        created_at: "2026-10-14T06:00:00.000Z",
       },
     ],
   },
@@ -167,8 +167,8 @@ export const SEED_POSTS: FeedPost[] = [
     saves_count: 72,
     shares_count: 43,
     comments_enabled: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
+    created_at: "2026-10-14T03:00:00.000Z",
+    updated_at: "2026-10-14T03:00:00.000Z",
     author: SEED_AUTHORS["user_alex"]!,
     liked: false,
     saved: false,
@@ -184,7 +184,7 @@ export const SEED_POSTS: FeedPost[] = [
         height: 600,
         duration_seconds: null,
         position: 0,
-        created_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
+        created_at: "2026-10-14T03:00:00.000Z",
       },
     ],
   },
@@ -202,8 +202,8 @@ export const SEED_POSTS: FeedPost[] = [
     saves_count: 22,
     shares_count: 15,
     comments_enabled: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 600).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 600).toISOString(),
+    created_at: "2026-10-13T23:00:00.000Z",
+    updated_at: "2026-10-13T23:00:00.000Z",
     author: SEED_AUTHORS["user_rohit"]!,
     liked: false,
     saved: false,
@@ -219,7 +219,7 @@ export const SEED_POSTS: FeedPost[] = [
         height: 600,
         duration_seconds: null,
         position: 0,
-        created_at: new Date(Date.now() - 1000 * 60 * 600).toISOString(),
+        created_at: "2026-10-13T23:00:00.000Z",
       },
     ],
   },
@@ -237,8 +237,8 @@ export const SEED_POSTS: FeedPost[] = [
     saves_count: 88,
     shares_count: 61,
     comments_enabled: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 800).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 800).toISOString(),
+    created_at: "2026-10-13T19:40:00.000Z",
+    updated_at: "2026-10-13T19:40:00.000Z",
     author: SEED_AUTHORS["user_zenith"]!,
     liked: false,
     saved: false,
@@ -254,7 +254,7 @@ export const SEED_POSTS: FeedPost[] = [
         height: 1280,
         duration_seconds: 15,
         position: 0,
-        created_at: new Date(Date.now() - 1000 * 60 * 800).toISOString(),
+        created_at: "2026-10-13T19:40:00.000Z",
       },
     ],
   },
@@ -872,8 +872,9 @@ export function formatCount(value: number) {
 }
 
 export function timeAgo(iso: string) {
-  const seconds = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s`;
+  const diffMs = Math.max(0, Date.now() - new Date(iso).getTime());
+  const seconds = Math.floor(diffMs / 1000);
+  if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);

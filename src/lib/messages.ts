@@ -16,7 +16,7 @@ export type ConversationSummary = {
 const SEED_CONVERSATIONS: ConversationSummary[] = [
   {
     id: "conv_maya",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    lastMessageAt: "2026-10-14T08:45:00.000Z",
     lastMessage: "Hey! Loved your latest post on the feed. Are you going to the creator meetup?",
     others: [
       {
@@ -32,7 +32,7 @@ const SEED_CONVERSATIONS: ConversationSummary[] = [
   },
   {
     id: "conv_zenith",
-    lastMessageAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    lastMessageAt: "2026-10-14T07:00:00.000Z",
     lastMessage: "The new motion graphics shader is ready for testing! Check it out when you can.",
     others: [
       {
