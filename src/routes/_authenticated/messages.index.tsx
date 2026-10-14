@@ -205,7 +205,10 @@ function Inbox() {
                         {conversation.lastMessage ?? "No messages yet"}
                       </p>
                     </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                    <span
+                      className="shrink-0 text-xs text-muted-foreground"
+                      suppressHydrationWarning
+                    >
                       {timeAgo(conversation.lastMessageAt)}
                     </span>
                   </Link>

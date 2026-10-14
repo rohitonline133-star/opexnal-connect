@@ -117,16 +117,23 @@ function Explore() {
   const [selectedAudio, setSelectedAudio] = useState<(typeof CURATED_AUDIO)[0] | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<(typeof CURATED_PLACES)[0] | null>(null);
 
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    if (typeof window === "undefined")
-      return ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+  const [recentSearches, setRecentSearches] = useState<string[]>([
+    "maya_codes",
+    "aesthetics",
+    "creatorlife",
+    "reelsindia",
+  ]);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem("opexnal_recent_searches");
-      return raw ? JSON.parse(raw) : ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+      if (raw) {
+        setRecentSearches(JSON.parse(raw));
+      }
     } catch {
-      return ["maya_codes", "aesthetics", "creatorlife", "reelsindia"];
+      // Ignore localStorage errors
     }
-  });
+  }, []);
 
   const saveSearchTerm = (termToSave: string) => {
     const clean = termToSave.trim();

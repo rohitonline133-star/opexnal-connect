@@ -234,6 +234,7 @@ function Conversation() {
                         "mt-1 text-[10px] text-right",
                         mine ? "text-primary-foreground/70" : "text-muted-foreground",
                       )}
+                      suppressHydrationWarning
                     >
                       {timeAgo(message.created_at)}
                     </p>

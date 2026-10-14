@@ -242,7 +242,9 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
           <p className="text-sm text-muted-foreground flex-1">Unknown author</p>
         )}
 
-        <span className="text-xs text-muted-foreground mr-1">{timeAgo(post.created_at)}</span>
+        <span className="text-xs text-muted-foreground mr-1" suppressHydrationWarning>
+          {timeAgo(post.created_at)}
+        </span>
 
         {/* 3-Dots Action Button */}
         <button

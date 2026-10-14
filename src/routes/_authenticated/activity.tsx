@@ -238,7 +238,10 @@ function Activity() {
                               <BadgeCheck className="h-3.5 w-3.5 text-primary" />
                             )}
                           </p>
-                          <p className="truncate text-[11px] text-muted-foreground">
+                          <p
+                            className="truncate text-[11px] text-muted-foreground"
+                            suppressHydrationWarning
+                          >
                             Requested {timeAgo(req.created_at)}
                           </p>
                         </div>
@@ -300,7 +303,7 @@ function Activity() {
                             </span>{" "}
                             liked your post
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground" suppressHydrationWarning>
                             {timeAgo(interaction.created_at)}
                           </p>
                         </div>
@@ -341,7 +344,7 @@ function Activity() {
                               <BadgeCheck className="h-3.5 w-3.5 text-primary" />
                             )}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground" suppressHydrationWarning>
                             Followed {timeAgo(item.created_at)}
                           </p>
                         </div>

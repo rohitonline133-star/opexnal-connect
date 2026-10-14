@@ -604,7 +604,7 @@ function ReelCommentsDrawer({
                     <span className="font-semibold mr-1">@{c.author?.username || "user"}</span>
                     <span>{c.body}</span>
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-[10px] text-muted-foreground mt-0.5" suppressHydrationWarning>
                     {timeAgo(c.created_at)}
                   </p>
                 </div>

@@ -26,9 +26,9 @@ export const SEED_PROFILES: Record<string, Profile> = {
     allow_tags_from: "everyone",
     show_activity_status: true,
     country_code: "IN",
-    last_active_at: new Date().toISOString(),
+    last_active_at: "2026-01-01T00:00:00Z",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: new Date().toISOString(),
+    updated_at: "2026-01-01T00:00:00Z",
   },
   user_zenith: {
     id: "user_zenith",
@@ -52,9 +52,9 @@ export const SEED_PROFILES: Record<string, Profile> = {
     allow_tags_from: "everyone",
     show_activity_status: true,
     country_code: "JP",
-    last_active_at: new Date().toISOString(),
+    last_active_at: "2026-01-01T00:00:00Z",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: new Date().toISOString(),
+    updated_at: "2026-01-01T00:00:00Z",
   },
   user_alex: {
     id: "user_alex",
@@ -78,9 +78,9 @@ export const SEED_PROFILES: Record<string, Profile> = {
     allow_tags_from: "everyone",
     show_activity_status: true,
     country_code: "IS",
-    last_active_at: new Date().toISOString(),
+    last_active_at: "2026-01-01T00:00:00Z",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: new Date().toISOString(),
+    updated_at: "2026-01-01T00:00:00Z",
   },
   user_rohit: {
     id: "user_rohit",
@@ -104,9 +104,9 @@ export const SEED_PROFILES: Record<string, Profile> = {
     allow_tags_from: "everyone",
     show_activity_status: true,
     country_code: "IN",
-    last_active_at: new Date().toISOString(),
+    last_active_at: "2026-01-01T00:00:00Z",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: new Date().toISOString(),
+    updated_at: "2026-01-01T00:00:00Z",
   },
 };
 

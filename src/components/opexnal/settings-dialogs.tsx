@@ -200,9 +200,19 @@ export function SettingsDialogContainer({
 }
 
 function PersonalDetailsModal({ username, onClose }: { username: string; onClose: () => void }) {
-  const [email, setEmail] = useState(() => localStorage.getItem("opexnal_user_email") || "");
-  const [phone, setPhone] = useState(() => localStorage.getItem("opexnal_user_phone") || "");
-  const [birthday, setBirthday] = useState(() => localStorage.getItem("opexnal_user_dob") || "");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birthday, setBirthday] = useState("");
+
+  useEffect(() => {
+    try {
+      setEmail(localStorage.getItem("opexnal_user_email") || "");
+      setPhone(localStorage.getItem("opexnal_user_phone") || "");
+      setBirthday(localStorage.getItem("opexnal_user_dob") || "");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function save() {
     localStorage.setItem("opexnal_user_email", email);
@@ -303,9 +313,15 @@ function AccountStatusModal({ username, onClose }: { username: string; onClose: 
 }
 
 function AccountsCenterModal({ username, onClose }: { username: string; onClose: () => void }) {
-  const [crossPost, setCrossPost] = useState(
-    () => localStorage.getItem("opexnal_crosspost") === "true",
-  );
+  const [crossPost, setCrossPost] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCrossPost(localStorage.getItem("opexnal_crosspost") === "true");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function toggleCrossPost(checked: boolean) {
     setCrossPost(checked);
@@ -376,9 +392,15 @@ function AccountsCenterModal({ username, onClose }: { username: string; onClose:
 }
 
 function AdPreferencesModal({ onClose }: { onClose: () => void }) {
-  const [personalized, setPersonalized] = useState(
-    () => localStorage.getItem("opexnal_personalized_ads") !== "false",
-  );
+  const [personalized, setPersonalized] = useState(true);
+
+  useEffect(() => {
+    try {
+      setPersonalized(localStorage.getItem("opexnal_personalized_ads") !== "false");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function toggle(val: boolean) {
     setPersonalized(val);
@@ -511,12 +533,17 @@ function ArchiveModal({ onClose }: { onClose: () => void }) {
 }
 
 function TimeSpentModal({ onClose }: { onClose: () => void }) {
-  const [reminderMin, setReminderMin] = useState(
-    () => localStorage.getItem("opexnal_time_reminder") || "30",
-  );
-  const [breakEnabled, setBreakEnabled] = useState(
-    () => localStorage.getItem("opexnal_break_reminders") !== "false",
-  );
+  const [reminderMin, setReminderMin] = useState("30");
+  const [breakEnabled, setBreakEnabled] = useState(true);
+
+  useEffect(() => {
+    try {
+      setReminderMin(localStorage.getItem("opexnal_time_reminder") || "30");
+      setBreakEnabled(localStorage.getItem("opexnal_break_reminders") !== "false");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function save() {
     localStorage.setItem("opexnal_time_reminder", reminderMin);
@@ -581,9 +608,15 @@ function TimeSpentModal({ onClose }: { onClose: () => void }) {
 }
 
 function NotificationsModal({ onClose }: { onClose: () => void }) {
-  const [pauseAll, setPauseAll] = useState(
-    () => localStorage.getItem("opexnal_notif_pause") === "true",
-  );
+  const [pauseAll, setPauseAll] = useState(false);
+
+  useEffect(() => {
+    try {
+      setPauseAll(localStorage.getItem("opexnal_notif_pause") === "true");
+    } catch {
+      // ignore
+    }
+  }, []);
   const [likes, setLikes] = useState(true);
   const [comments, setComments] = useState(true);
   const [messages, setMessages] = useState(true);
@@ -733,7 +766,15 @@ function BrandedContentModal({ onClose }: { onClose: () => void }) {
 }
 
 function AccountTypeModal({ onClose }: { onClose: () => void }) {
-  const [type, setType] = useState(() => localStorage.getItem("opexnal_account_type") || "Creator");
+  const [type, setType] = useState("Creator");
+
+  useEffect(() => {
+    try {
+      setType(localStorage.getItem("opexnal_account_type") || "Creator");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function selectType(newType: string) {
     setType(newType);
@@ -1316,9 +1357,15 @@ function ContentPreferencesModal({ onClose }: { onClose: () => void }) {
 }
 
 function LikeCountsModal({ onClose }: { onClose: () => void }) {
-  const [hideLikes, setHideLikes] = useState(
-    () => localStorage.getItem("opexnal_hide_likes") === "true",
-  );
+  const [hideLikes, setHideLikes] = useState(false);
+
+  useEffect(() => {
+    try {
+      setHideLikes(localStorage.getItem("opexnal_hide_likes") === "true");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function toggle(val: boolean) {
     setHideLikes(val);
@@ -1478,7 +1525,15 @@ function AccessibilityCaptionsModal({ onClose }: { onClose: () => void }) {
 }
 
 function LanguageRegionModal({ onClose }: { onClose: () => void }) {
-  const [lang, setLang] = useState(() => localStorage.getItem("opexnal_lang") || "English");
+  const [lang, setLang] = useState("English");
+
+  useEffect(() => {
+    try {
+      setLang(localStorage.getItem("opexnal_lang") || "English");
+    } catch {
+      // ignore
+    }
+  }, []);
 
   function select(l: string) {
     setLang(l);

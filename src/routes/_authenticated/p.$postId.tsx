@@ -122,7 +122,7 @@ function PostPage() {
                     {comment.body}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>{timeAgo(comment.created_at)}</span>
+                    <span suppressHydrationWarning>{timeAgo(comment.created_at)}</span>
                     {comment.likes_count > 0 && (
                       <span>{formatCount(comment.likes_count)} likes</span>
                     )}

@@ -26,7 +26,13 @@ export function ShareProfileDialog({
   displayName,
 }: ShareProfileDialogProps) {
   const [qrUrl, setQrUrl] = useState<string>("");
-  const profileUrl = typeof window !== "undefined" ? `${window.location.origin}/u/${username}` : "";
+  const [profileUrl, setProfileUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setProfileUrl(`${window.location.origin}/u/${username}`);
+    }
+  }, [username]);
 
   useEffect(() => {
     if (!open || !profileUrl) return;

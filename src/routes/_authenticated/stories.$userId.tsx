@@ -214,7 +214,7 @@ function StoryViewer() {
           <p className="truncate text-sm font-semibold text-white">
             {current.author?.username ?? "user"}
           </p>
-          <p className="text-xs text-white/60">
+          <p className="text-xs text-white/60" suppressHydrationWarning>
             {timeAgo(current.created_at)} · {timeLeft(current.expires_at)}
           </p>
         </div>
@@ -328,7 +328,9 @@ function StoryViewer() {
                     className="h-8 w-8"
                   />
                   <span className="text-sm text-white">{entry.viewer.username}</span>
-                  <span className="ml-auto text-xs text-white/50">{timeAgo(entry.created_at)}</span>
+                  <span className="ml-auto text-xs text-white/50" suppressHydrationWarning>
+                    {timeAgo(entry.created_at)}
+                  </span>
                 </li>
               ))}
               {(viewersQuery.data ?? []).length === 0 && !viewersQuery.isLoading && (
