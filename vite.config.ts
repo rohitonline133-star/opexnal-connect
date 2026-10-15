@@ -6,6 +6,11 @@ export default defineConfig({
     preset: "node-server",
   },
   vite: {
+    server: {
+      host: "0.0.0.0",
+      port: 3000,
+      allowedHosts: true,
+    },
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "./src"),

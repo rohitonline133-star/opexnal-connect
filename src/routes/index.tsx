@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/")({
-  ssr: false,
   beforeLoad: async () => {
     try {
       const { data } = await supabase.auth.getSession();
