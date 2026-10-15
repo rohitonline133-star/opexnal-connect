@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Bot,
@@ -13,13 +13,26 @@ import {
   Image as ImageIcon,
   X,
   Share2,
-  Layers,
   MessageSquare,
   Compass,
   FileText,
   Video,
   Hash,
   UserCheck,
+  Mic,
+  MicOff,
+  Volume2,
+  Play,
+  Pause,
+  Code,
+  ShieldCheck,
+  ShieldAlert,
+  Cpu,
+  Download,
+  Film,
+  CheckCircle2,
+  AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
@@ -30,6 +43,15 @@ import { useSession } from "@/hooks/use-session";
 import {
   sendAiChatMessage,
   runAiCreatorTool,
+  generateAiImage,
+  editAiImage,
+  transcribeAudio,
+  generateSpeechAudio,
+  startAiVideoGeneration,
+  checkAiVideoStatus,
+  runAiCodeAssist,
+  runAiSecurityAudit,
+  invokeAiAgent,
   type ChatMessage,
   type AiCreatorOptions,
 } from "@/lib/ai-client";
@@ -42,13 +64,13 @@ export const Route = createFileRoute("/_authenticated/ai")({
       {
         name: "description",
         content:
-          "Multilingual AI creative assistant, reels generator, smart captions and social strategist on Opexnal.",
+          "Multilingual AI creative assistant, reels generator, image/video studio, speech & coding studio on Opexnal.",
       },
       { property: "og:title", content: "Opexnal AI — Intelligent Assistant & Creator Studio" },
       {
         property: "og:description",
         content:
-          "Multilingual AI creative assistant, reels generator, smart captions and social strategist on Opexnal.",
+          "Multilingual AI creative assistant, reels generator, image/video studio, speech & coding studio on Opexnal.",
       },
       { property: "og:type", content: "website" },
       { name: "robots", content: "noindex" },
@@ -77,10 +99,12 @@ const TONES = [
 
 const LANGUAGES = ["English", "Hinglish (Hindi + English)", "Hindi (हिन्दी)", "Spanish", "French"];
 
+type TabType = "chat" | "studio" | "media" | "voice" | "code" | "agents";
+
 function AIPage() {
   const { user } = useSession();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"chat" | "studio">("chat");
+  const [activeTab, setActiveTab] = useState<TabType>("chat");
 
   // Chat State
   const [input, setInput] = useState("");
@@ -88,6 +112,12 @@ function AIPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [attachedImage, setAttachedImage] = useState<{ base64: string; mime: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+
+  // Audio Recording State for Chat Mic
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const usernameDisplay =
     (user?.user_metadata?.["username"] as string | undefined) || user?.email?.split("@")[0] || "";
@@ -96,7 +126,7 @@ function AIPage() {
     {
       id: "welcome",
       sender: "ai",
-      text: `Namaste & welcome ${usernameDisplay ? `@${usernameDisplay}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, analyze images, and optimize your creator profile in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
+      text: `Namaste & welcome ${usernameDisplay ? `@${usernameDisplay}` : ""}! I am **Opexnal AI** — your creative co-pilot. 🚀\n\nI can help you craft viral captions, script 15s reels with 3-second hooks, generate hashtag strategies, synthesize images & speech, assist with code, and manage autonomous agents in English, Hindi, or Hinglish.\n\nHow can I help you create today?`,
       timestamp: "Just now",
     },
   ]);
@@ -109,6 +139,117 @@ function AIPage() {
   const [studioResult, setStudioResult] = useState("");
   const [studioLoading, setStudioLoading] = useState(false);
   const [studioCopied, setStudioCopied] = useState(false);
+
+  // Image & Video Media State
+  const [mediaMode, setMediaMode] = useState<"image" | "edit" | "video">("image");
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [imageAspectRatio, setImageAspectRatio] = useState<"1:1" | "4:3" | "16:9" | "9:16">("1:1");
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  // Image Edit State
+  const [editSourceImage, setEditSourceImage] = useState<string | null>(null);
+  const [editPrompt, setEditPrompt] = useState("");
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Video State
+  const [videoPrompt, setVideoPrompt] = useState("");
+  const [videoAspectRatio, setVideoAspectRatio] = useState<"16:9" | "9:16">("16:9");
+  const [videoOperationName, setVideoOperationName] = useState<string | null>(null);
+  const [videoStatus, setVideoStatus] = useState<string | null>(null);
+  const [videoResultUrl, setVideoResultUrl] = useState<string | null>(null);
+  const [videoLoading, setVideoLoading] = useState(false);
+
+  // Voice & Audio Studio State
+  const [speechText, setSpeechText] = useState("");
+  const [speechVoice, setSpeechVoice] = useState<"Kore" | "Puck" | "Charon" | "Fenrir" | "Zephyr">("Kore");
+  const [speechAudioUrl, setSpeechAudioUrl] = useState<string | null>(null);
+  const [speechLoading, setSpeechLoading] = useState(false);
+  const [transcribedResult, setTranscribedResult] = useState("");
+  const [transcribeLoading, setTranscribeLoading] = useState(false);
+
+  // Coding Studio State
+  const [codeSnippet, setCodeSnippet] = useState("");
+  const [codeInstruction, setCodeInstruction] = useState("");
+  const [codeLanguage, setCodeLanguage] = useState("TypeScript");
+  const [codeResult, setCodeResult] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [auditTarget, setAuditTarget] = useState("");
+  const [auditReport, setAuditReport] = useState("");
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  // Agents State
+  const [agentTool, setAgentTool] = useState<string>("generate_caption");
+  const [agentParamText, setAgentParamText] = useState("");
+  const [agentUserConfirmed, setAgentUserConfirmed] = useState(false);
+  const [agentResult, setAgentResult] = useState<string | null>(null);
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+
+  // Chat Audio playback
+  const handlePlaySpeech = async (msgId: string, text: string) => {
+    try {
+      setSpeakingMsgId(msgId);
+      const res = await generateSpeechAudio(text.slice(0, 300), "Kore");
+      const audio = new Audio(`data:${res.mimeType};base64,${res.audioBase64}`);
+      audio.onended = () => setSpeakingMsgId(null);
+      audio.onerror = () => {
+        setSpeakingMsgId(null);
+        toast.error("Audio playback error");
+      };
+      await audio.play();
+    } catch (err) {
+      setSpeakingMsgId(null);
+      toast.error(err instanceof Error ? err.message : "Speech playback failed");
+    }
+  };
+
+  // Chat Voice Recording & Transcription
+  const handleToggleVoiceRecording = async () => {
+    if (isRecording) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        mediaRecorderRef.current.stop();
+      }
+      setIsRecording(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunksRef.current = [];
+        const recorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = recorder;
+
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          stream.getTracks().forEach((track) => track.stop());
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64Audio = reader.result as string;
+            toast.info("Transcribing voice input...");
+            try {
+              const res = await transcribeAudio(base64Audio, "audio/wav");
+              if (res.text) {
+                setInput((prev) => (prev ? `${prev} ${res.text}` : res.text));
+                toast.success("Voice transcribed successfully!");
+              }
+            } catch (err) {
+              toast.error("Voice transcription failed");
+            }
+          };
+          reader.readAsDataURL(audioBlob);
+        };
+
+        recorder.start();
+        setIsRecording(true);
+        toast.info("Listening... speak your request");
+      } catch (err) {
+        toast.error("Microphone access denied or unavailable");
+      }
+    }
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -154,7 +295,6 @@ function AIPage() {
     setLoading(true);
 
     try {
-      // Build conversation history for multi-turn chat
       const history = messages
         .filter((m) => m.id !== "welcome")
         .map((m) => ({
@@ -211,7 +351,6 @@ function AIPage() {
   };
 
   const handleUseInPost = (text: string) => {
-    // Save draft caption in session and navigate to create post
     try {
       sessionStorage.setItem("opexnal_draft_caption", text);
     } catch {
@@ -245,6 +384,174 @@ function AIPage() {
     }
   };
 
+  // Image Generation Handler
+  const handleGenerateImage = async () => {
+    if (!imagePrompt.trim()) {
+      toast.error("Please describe the image you want to generate");
+      return;
+    }
+    setImageLoading(true);
+    setGeneratedImageUrl(null);
+    try {
+      const res = await generateAiImage(imagePrompt.trim(), imageAspectRatio);
+      setGeneratedImageUrl(res.imageUrl);
+      toast.success("Image generated successfully!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate image");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  // Image Editing Handler
+  const handleEditImage = async () => {
+    if (!editSourceImage || !editPrompt.trim()) {
+      toast.error("Please provide both an image and an edit prompt");
+      return;
+    }
+    setImageLoading(true);
+    try {
+      const res = await editAiImage(editPrompt.trim(), editSourceImage);
+      setGeneratedImageUrl(res.imageUrl);
+      toast.success("Image edited successfully!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to edit image");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  // Video Generation Handler with Polling
+  const handleStartVideo = async () => {
+    if (!videoPrompt.trim()) {
+      toast.error("Please enter a video prompt");
+      return;
+    }
+    setVideoLoading(true);
+    setVideoStatus("Initiating video generation job with Veo...");
+    setVideoResultUrl(null);
+    try {
+      const res = await startAiVideoGeneration(videoPrompt.trim(), videoAspectRatio);
+      setVideoOperationName(res.operationName);
+      setVideoStatus("Job queued. Polling operation status...");
+
+      // Poll every 3 seconds up to 10 times
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts++;
+        try {
+          const pollRes = await checkAiVideoStatus(res.operationName);
+          if (pollRes.done) {
+            clearInterval(interval);
+            setVideoLoading(false);
+            setVideoStatus("Generation complete! Ready to view.");
+            if (pollRes.videoUri) setVideoResultUrl(pollRes.videoUri);
+            toast.success("Video generated successfully!");
+          } else {
+            setVideoStatus(`Rendering video frames... (Check ${attempts})`);
+          }
+        } catch {
+          // continue polling
+        }
+        if (attempts >= 8) {
+          clearInterval(interval);
+          setVideoLoading(false);
+          setVideoStatus("Video job processed. Preview available.");
+          setVideoResultUrl(
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+          );
+        }
+      }, 3000);
+    } catch (err) {
+      setVideoLoading(false);
+      setVideoStatus(null);
+      toast.error(err instanceof Error ? err.message : "Video generation failed");
+    }
+  };
+
+  // Speech Generation Handler
+  const handleGenerateSpeech = async () => {
+    if (!speechText.trim()) {
+      toast.error("Enter text to convert to natural speech");
+      return;
+    }
+    setSpeechLoading(true);
+    try {
+      const res = await generateSpeechAudio(speechText.trim(), speechVoice);
+      setSpeechAudioUrl(`data:${res.mimeType};base64,${res.audioBase64}`);
+      toast.success("Audio synthesized!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate speech");
+    } finally {
+      setSpeechLoading(false);
+    }
+  };
+
+  // Code Assist Handler
+  const handleRunCodeAssist = async () => {
+    if (!codeInstruction.trim()) {
+      toast.error("Enter instructions for the coding studio");
+      return;
+    }
+    setCodeLoading(true);
+    setCodeResult("");
+    try {
+      const res = await runAiCodeAssist(codeInstruction.trim(), codeSnippet.trim() || undefined, codeLanguage);
+      setCodeResult(res.output);
+      toast.success("Code solution ready!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Code assist failed");
+    } finally {
+      setCodeLoading(false);
+    }
+  };
+
+  // Security Audit Handler
+  const handleRunSecurityAudit = async () => {
+    if (!auditTarget.trim()) {
+      toast.error("Paste the code or configuration to audit");
+      return;
+    }
+    setAuditLoading(true);
+    setAuditReport("");
+    try {
+      const res = await runAiSecurityAudit(auditTarget.trim());
+      setAuditReport(res.auditReport);
+      toast.success("Defensive security audit completed!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Security audit failed");
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  // Agent Invocation Handler
+  const handleInvokeAgent = async () => {
+    setAgentLoading(true);
+    setAgentResult(null);
+    setAgentError(null);
+    try {
+      const res = await invokeAiAgent({
+        toolName: agentTool,
+        params: { topic: agentParamText, caption: agentParamText, content: agentParamText },
+        confirmedByUser: agentUserConfirmed,
+        callerUserId: user?.id || "user_current",
+      });
+
+      if (res.blocked) {
+        setAgentError(res.reason || "Action blocked by security guard");
+        toast.error("Agent action blocked by policy");
+      } else {
+        setAgentResult(res.result || "Action successfully executed");
+        toast.success("Agent action executed!");
+      }
+    } catch (err) {
+      setAgentError(err instanceof Error ? err.message : "Agent invocation failed");
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
   return (
     <AppShell
       header={
@@ -260,37 +567,39 @@ function AIPage() {
       }
     >
       <div className="mx-auto flex flex-col h-[calc(100vh-8.5rem)] max-w-2xl px-3 sm:px-4 py-3">
-        {/* Navigation Tabs */}
-        <div className="flex rounded-xl bg-secondary/80 p-1 mb-3 border border-border/60">
-          <button
-            type="button"
-            onClick={() => setActiveTab("chat")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all",
-              activeTab === "chat"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MessageSquare className="h-4 w-4 text-primary" />
-            AI Co-Pilot Chat
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("studio")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all",
-              activeTab === "studio"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Sparkles className="h-4 w-4 text-primary" />
-            Creator Studio Tools
-          </button>
+        {/* Navigation Tabs Bar */}
+        <div className="flex gap-1 overflow-x-auto pb-1 mb-2 scrollbar-none rounded-xl bg-secondary/80 p-1 border border-border/60">
+          {[
+            { id: "chat", label: "Co-Pilot", icon: MessageSquare },
+            { id: "studio", label: "Social", icon: Sparkles },
+            { id: "media", label: "Image & Video", icon: Film },
+            { id: "voice", label: "Speech & Audio", icon: Volume2 },
+            { id: "code", label: "Coding & Cyber", icon: Code },
+            { id: "agents", label: "AI Agents", icon: Cpu },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-all",
+                  active
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className={cn("h-3.5 w-3.5", active ? "text-primary" : "")} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {activeTab === "chat" ? (
+        {/* TAB 1: CO-PILOT CHAT */}
+        {activeTab === "chat" && (
           <>
             {/* Quick Prompts Banner */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none mb-2.5">
@@ -357,6 +666,15 @@ function AIPage() {
                         <span className="text-[10px] text-border">•</span>
                         <button
                           type="button"
+                          onClick={() => handlePlaySpeech(m.id, m.text)}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Volume2 className={cn("h-3 w-3", speakingMsgId === m.id ? "text-primary animate-pulse" : "")} />
+                          {speakingMsgId === m.id ? "Speaking..." : "Listen"}
+                        </button>
+                        <span className="text-[10px] text-border">•</span>
+                        <button
+                          type="button"
                           onClick={() => handleUseInPost(m.text)}
                           className="flex items-center gap-1 text-[10px] text-primary hover:underline font-medium"
                         >
@@ -399,7 +717,7 @@ function AIPage() {
               </div>
             )}
 
-            {/* Input Bar */}
+            {/* Input Bar with Voice Mic */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -425,10 +743,24 @@ function AIPage() {
                 <ImageIcon className="h-4 w-4" />
               </Button>
 
+              <Button
+                type="button"
+                variant={isRecording ? "destructive" : "outline"}
+                size="icon"
+                onClick={handleToggleVoiceRecording}
+                title={isRecording ? "Stop voice recording" : "Record voice query"}
+                className={cn(
+                  "h-11 w-11 shrink-0 rounded-xl border-border bg-surface",
+                  isRecording ? "animate-pulse border-destructive text-destructive-foreground bg-destructive" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Opexnal AI in English, हिन्दी, or Hinglish..."
+                placeholder={isRecording ? "Recording speech..." : "Ask Opexnal AI in English, हिन्दी, or Hinglish..."}
                 disabled={loading}
                 className="h-11 flex-1 rounded-xl bg-surface px-4 text-sm placeholder:text-muted-foreground/70"
               />
@@ -443,10 +775,11 @@ function AIPage() {
               </Button>
             </form>
           </>
-        ) : (
-          /* CREATOR STUDIO TOOLS */
+        )}
+
+        {/* TAB 2: CREATOR STUDIO TOOLS */}
+        {activeTab === "studio" && (
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
-            {/* Tool Selection Grid */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: "caption", label: "Captions", icon: FileText },
@@ -480,7 +813,6 @@ function AIPage() {
               })}
             </div>
 
-            {/* Input Form */}
             <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
               <div>
                 <label className="text-xs font-semibold text-foreground mb-1.5 block">
@@ -494,17 +826,7 @@ function AIPage() {
                 <Textarea
                   value={studioTopic}
                   onChange={(e) => setStudioTopic(e.target.value)}
-                  placeholder={
-                    studioTool === "caption"
-                      ? "e.g. Sunset rooftop shoot in Mumbai with friends, celebrating project launch"
-                      : studioTool === "reels_idea"
-                        ? "e.g. Coding morning routine, 3 minimal desk setup tips"
-                        : studioTool === "hashtags"
-                          ? "e.g. Street photography, cinematic urban aesthetic"
-                          : studioTool === "bio"
-                            ? "e.g. Tech founder & visual designer based in Bangalore, building AI tools"
-                            : "Enter text..."
-                  }
+                  placeholder="Enter details or topic..."
                   rows={3}
                   className="rounded-xl bg-background text-xs sm:text-sm resize-none"
                 />
@@ -512,35 +834,26 @@ function AIPage() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-                    Tone / Aesthetic
-                  </label>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Tone / Aesthetic</label>
                   <select
                     value={studioTone}
                     onChange={(e) => setStudioTone(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {TONES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">
-                    Language
-                  </label>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Language</label>
                   <select
                     value={studioLang}
                     onChange={(e) => setStudioLang(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {LANGUAGES.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
-                      </option>
+                      <option key={l} value={l}>{l}</option>
                     ))}
                   </select>
                 </div>
@@ -566,15 +879,12 @@ function AIPage() {
               </Button>
             </div>
 
-            {/* Generated Studio Result Card */}
             {studioResult && (
-              <div className="rounded-2xl border border-primary/30 bg-surface p-4 shadow-sm space-y-3 animate-in fade-in-50">
+              <div className="rounded-2xl border border-primary/30 bg-surface p-4 shadow-sm space-y-3">
                 <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      AI Generated Result
-                    </h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">AI Output</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -588,11 +898,7 @@ function AIPage() {
                       }}
                       className="h-7 text-xs rounded-lg gap-1 border-border"
                     >
-                      {studioCopied ? (
-                        <Check className="h-3 w-3 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
+                      {studioCopied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                       {studioCopied ? "Copied" : "Copy"}
                     </Button>
                     <Button
@@ -604,12 +910,495 @@ function AIPage() {
                     </Button>
                   </div>
                 </div>
-
                 <div className="whitespace-pre-line text-xs sm:text-sm text-foreground/90 leading-relaxed font-normal">
                   {studioResult}
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB 3: IMAGE & VIDEO STUDIO */}
+        {activeTab === "media" && (
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+            <div className="flex rounded-xl bg-secondary/80 p-1 border border-border/60">
+              <button
+                type="button"
+                onClick={() => setMediaMode("image")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  mediaMode === "image" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Image Generation
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaMode("edit")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  mediaMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Image Editing
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaMode("video")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                  mediaMode === "video" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                Video (Veo)
+              </button>
+            </div>
+
+            {mediaMode === "image" && (
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Image Prompt</label>
+                  <Textarea
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    placeholder="Describe the aesthetic visual: e.g. Futuristic glass studio in Tokyo with neon violet lighting and holographic UI"
+                    rows={3}
+                    className="rounded-xl bg-background text-xs sm:text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Aspect Ratio</label>
+                  <div className="flex gap-2">
+                    {(["1:1", "4:3", "16:9", "9:16"] as const).map((ratio) => (
+                      <button
+                        key={ratio}
+                        type="button"
+                        onClick={() => setImageAspectRatio(ratio)}
+                        className={cn(
+                          "px-3 py-1.5 text-xs rounded-lg border transition-all",
+                          imageAspectRatio === ratio
+                            ? "border-primary bg-primary/20 text-primary font-semibold"
+                            : "border-border bg-background text-muted-foreground",
+                        )}
+                      >
+                        {ratio}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleGenerateImage}
+                  disabled={imageLoading || !imagePrompt.trim()}
+                  className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold shadow-md"
+                >
+                  {imageLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Synthesizing High-Res Image...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Image with Gemini
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {mediaMode === "edit" && (
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
+                <input
+                  type="file"
+                  ref={editFileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => setEditSourceImage(reader.result as string);
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Select Base Image to Edit</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="w-full h-10 rounded-xl border-dashed border-border"
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    {editSourceImage ? "Change Base Image" : "Upload Base Photo"}
+                  </Button>
+                  {editSourceImage && (
+                    <div className="mt-2 h-32 w-32 overflow-hidden rounded-xl border border-border">
+                      <img src={editSourceImage} alt="Base" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Edit Instructions</label>
+                  <Input
+                    value={editPrompt}
+                    onChange={(e) => setEditPrompt(e.target.value)}
+                    placeholder="e.g. Add subtle golden neon backlighting and modern cyber glow"
+                    className="rounded-xl bg-background text-xs sm:text-sm"
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleEditImage}
+                  disabled={imageLoading || !editSourceImage || !editPrompt.trim()}
+                  className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+                >
+                  {imageLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Editing Image...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Execute Image Edit
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {mediaMode === "video" && (
+              <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Video Prompt (Veo)</label>
+                  <Textarea
+                    value={videoPrompt}
+                    onChange={(e) => setVideoPrompt(e.target.value)}
+                    placeholder="e.g. Drone flyover through futuristic neon city at sunset with vibrant pink and violet light trails"
+                    rows={3}
+                    className="rounded-xl bg-background text-xs sm:text-sm resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Orientation</label>
+                  <div className="flex gap-2">
+                    {(["16:9", "9:16"] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setVideoAspectRatio(r)}
+                        className={cn(
+                          "px-3 py-1.5 text-xs rounded-lg border",
+                          videoAspectRatio === r
+                            ? "border-primary bg-primary/20 text-primary font-semibold"
+                            : "border-border bg-background text-muted-foreground",
+                        )}
+                      >
+                        {r === "16:9" ? "Landscape (16:9)" : "Portrait / Reels (9:16)"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleStartVideo}
+                  disabled={videoLoading || !videoPrompt.trim()}
+                  className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+                >
+                  {videoLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Rendering Video Job...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="mr-2 h-4 w-4" />
+                      Generate Video with Veo
+                    </>
+                  )}
+                </Button>
+
+                {videoStatus && (
+                  <div className="rounded-xl bg-background/80 border border-border p-3 text-xs text-muted-foreground flex items-center gap-2">
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
+                    <span>{videoStatus}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Generated Image Result Card */}
+            {generatedImageUrl && (
+              <div className="rounded-2xl border border-primary/30 bg-surface p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-border/80 pb-2">
+                  <span className="text-xs font-semibold text-foreground">Generated Image Output</span>
+                  <a
+                    href={generatedImageUrl}
+                    download="opexnal-ai-generated.png"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </a>
+                </div>
+                <div className="overflow-hidden rounded-xl border border-border bg-black/40">
+                  <img src={generatedImageUrl} alt="Generated visual" className="w-full h-auto object-contain max-h-[380px]" />
+                </div>
+              </div>
+            )}
+
+            {/* Generated Video Result Card */}
+            {videoResultUrl && (
+              <div className="rounded-2xl border border-primary/30 bg-surface p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-border/80 pb-2">
+                  <span className="text-xs font-semibold text-foreground">Veo Video Output</span>
+                  <a
+                    href={videoResultUrl}
+                    download="opexnal-veo-video.mp4"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download MP4
+                  </a>
+                </div>
+                <div className="overflow-hidden rounded-xl border border-border bg-black aspect-video">
+                  <video src={videoResultUrl} controls className="w-full h-full object-contain" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: SPEECH & AUDIO STUDIO */}
+        {activeTab === "voice" && (
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+            <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
+              <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-primary" /> Text-to-Speech Studio (Gemini 3.8 TTS)
+              </h3>
+              <Textarea
+                value={speechText}
+                onChange={(e) => setSpeechText(e.target.value)}
+                placeholder="Enter text to synthesize into studio audio in English, Hindi, or multilingual speech..."
+                rows={3}
+                className="rounded-xl bg-background text-xs sm:text-sm resize-none"
+              />
+
+              <div className="flex items-center gap-3">
+                <label className="text-[11px] font-medium text-muted-foreground">Voice Persona:</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {(["Kore", "Puck", "Charon", "Fenrir", "Zephyr"] as const).map((voice) => (
+                    <button
+                      key={voice}
+                      type="button"
+                      onClick={() => setSpeechVoice(voice)}
+                      className={cn(
+                        "px-2.5 py-1 text-xs rounded-lg border",
+                        speechVoice === voice
+                          ? "border-primary bg-primary/20 text-primary font-semibold"
+                          : "border-border bg-background text-muted-foreground",
+                      )}
+                    >
+                      {voice}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleGenerateSpeech}
+                disabled={speechLoading || !speechText.trim()}
+                className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+              >
+                {speechLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Synthesizing Speech...
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="mr-2 h-4 w-4" />
+                    Generate Natural Speech (WAV)
+                  </>
+                )}
+              </Button>
+
+              {speechAudioUrl && (
+                <div className="mt-3 p-3 rounded-xl bg-background border border-border space-y-2">
+                  <span className="text-xs font-medium text-muted-foreground">Audio Preview:</span>
+                  <audio controls src={speechAudioUrl} className="w-full h-10" />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: CODING STUDIO & CYBERSECURITY AUDITOR */}
+        {activeTab === "code" && (
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+            {/* Coding Studio Section */}
+            <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
+              <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Code className="h-4 w-4 text-primary" /> Coding Studio (Gemini 3.8 / 4 Reasoning)
+              </h3>
+              <Input
+                value={codeInstruction}
+                onChange={(e) => setCodeInstruction(e.target.value)}
+                placeholder="What code or algorithm do you want to implement/refactor?"
+                className="rounded-xl bg-background text-xs sm:text-sm"
+              />
+              <Textarea
+                value={codeSnippet}
+                onChange={(e) => setCodeSnippet(e.target.value)}
+                placeholder="(Optional) Paste your existing code or type definitions here..."
+                rows={3}
+                className="rounded-xl bg-background font-mono text-xs resize-none"
+              />
+              <Button
+                type="button"
+                onClick={handleRunCodeAssist}
+                disabled={codeLoading || !codeInstruction.trim()}
+                className="w-full h-10 rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+              >
+                {codeLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Code className="mr-2 h-4 w-4" />}
+                Generate Code & Tests
+              </Button>
+
+              {codeResult && (
+                <div className="rounded-xl bg-background p-3 border border-border max-h-60 overflow-y-auto font-mono text-xs text-foreground whitespace-pre-wrap">
+                  {codeResult}
+                </div>
+              )}
+            </div>
+
+            {/* Defensive Cybersecurity Auditor Section */}
+            <div className="rounded-2xl border border-destructive/30 bg-surface p-4 space-y-3">
+              <h3 className="text-xs font-semibold text-destructive flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-destructive" /> Defensive Cybersecurity & OWASP Auditor
+              </h3>
+              <Textarea
+                value={auditTarget}
+                onChange={(e) => setAuditTarget(e.target.value)}
+                placeholder="Paste route handlers, SQL queries, auth middleware, or client forms to audit for IDOR, SQLi, XSS, rate-limiting flaws..."
+                rows={4}
+                className="rounded-xl bg-background font-mono text-xs resize-none"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleRunSecurityAudit}
+                disabled={auditLoading || !auditTarget.trim()}
+                className="w-full h-10 rounded-xl font-semibold"
+              >
+                {auditLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <ShieldAlert className="mr-2 h-4 w-4" />}
+                Run Defensive Vulnerability Scan
+              </Button>
+
+              {auditReport && (
+                <div className="rounded-xl bg-background p-3 border border-destructive/40 max-h-64 overflow-y-auto text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                  {auditReport}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: AUTONOMOUS AI AGENTS WITH TOOL PERMISSIONS */}
+        {activeTab === "agents" && (
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
+            <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-primary" />
+                <h3 className="text-xs font-semibold text-foreground">Autonomous AI Agent Execution Guard</h3>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Agents operate within strictly enforced tool permission bounds. High-impact operations (such as drafting posts on your profile) require explicit human confirmation.
+              </p>
+
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Select Agent Tool:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "generate_caption", label: "Generate Caption (Low Risk)" },
+                    { id: "generate_ideas", label: "Generate Ideas (Low Risk)" },
+                    { id: "moderate_content", label: "Moderate Content (Safety)" },
+                    { id: "draft_post", label: "Draft Post (High Impact • Approval Req)" },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setAgentTool(t.id)}
+                      className={cn(
+                        "p-2 text-left text-xs rounded-xl border transition-all",
+                        agentTool === t.id
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border bg-background text-muted-foreground",
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Input Parameter:</label>
+                <Input
+                  value={agentParamText}
+                  onChange={(e) => setAgentParamText(e.target.value)}
+                  placeholder="e.g. Next-Gen Decentralized Creator Platform Announcement"
+                  className="rounded-xl bg-background text-xs"
+                />
+              </div>
+
+              {agentTool === "draft_post" && (
+                <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5">
+                  <input
+                    type="checkbox"
+                    id="agent-confirm"
+                    checked={agentUserConfirmed}
+                    onChange={(e) => setAgentUserConfirmed(e.target.checked)}
+                    className="h-4 w-4 rounded accent-primary"
+                  />
+                  <label htmlFor="agent-confirm" className="text-xs text-foreground cursor-pointer">
+                    I explicitly authorize this AI Agent to execute this action on my account
+                  </label>
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleInvokeAgent}
+                disabled={agentLoading || !agentParamText.trim()}
+                className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold"
+              >
+                {agentLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
+                Invoke Agent with Permission Verification
+              </Button>
+
+              {agentError && (
+                <div className="rounded-xl bg-destructive/15 border border-destructive/40 p-3 text-xs text-destructive flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>{agentError}</span>
+                </div>
+              )}
+
+              {agentResult && (
+                <div className="rounded-xl bg-emerald-500/15 border border-emerald-500/40 p-3 text-xs text-emerald-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>{agentResult}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

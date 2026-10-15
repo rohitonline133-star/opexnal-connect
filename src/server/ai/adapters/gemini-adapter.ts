@@ -20,14 +20,14 @@ import type {
  */
 export class GeminiProviderAdapter implements AIProvider {
   public readonly id = "gemini";
-  public readonly name = "Google Gemini Provider (Transitional Adapter)";
+  public readonly name = "Google Gemini Provider";
   private client: GoogleGenAI | null = null;
-  private readonly defaultModel = "gemini-3.6-flash";
+  private readonly defaultModel = "gemini-3.8-flash";
 
   private readonly apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey ?? (process.env["GEMINI_API_KEY"] || "");
+    this.apiKey = apiKey ?? (process.env["GEMINI_API_KEY"] || process.env["OPEX_AI_API_KEY"] || "");
   }
 
   private getClient(): GoogleGenAI {
@@ -35,7 +35,14 @@ export class GeminiProviderAdapter implements AIProvider {
       throw new Error("Gemini API key is not configured");
     }
     if (!this.client) {
-      this.client = new GoogleGenAI({ apiKey: this.apiKey });
+      this.client = new GoogleGenAI({
+        apiKey: this.apiKey,
+        httpOptions: {
+          headers: {
+            "User-Agent": "aistudio-build",
+          },
+        },
+      });
     }
     return this.client;
   }
@@ -88,9 +95,190 @@ export class GeminiProviderAdapter implements AIProvider {
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      // Ensure raw API keys or internal stack traces are never leaked in error
       const sanitized = message.replace(/[A-Za-z0-9_-]{20,}/g, "[REDACTED]");
       throw new Error(`[GeminiAdapter] Generation failed: ${sanitized}`);
+    }
+  }
+
+  async generateImage(
+    prompt: string,
+    aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1",
+  ): Promise<{ imageUrl: string; mimeType: string }> {
+    const client = this.getClient();
+    try {
+      const response = await client.models.generateContent({
+        model: "gemini-3.1-flash-lite-image",
+        contents: {
+          parts: [{ text: prompt }],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio,
+          },
+        } as never,
+      });
+
+      const candidate = response.candidates?.[0];
+      if (candidate?.content?.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData?.data) {
+            const mime = part.inlineData.mimeType || "image/png";
+            return {
+              imageUrl: `data:${mime};base64,${part.inlineData.data}`,
+              mimeType: mime,
+            };
+          }
+        }
+      }
+      throw new Error("No image data returned from Gemini image model");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Image generation failed: ${message}`);
+    }
+  }
+
+  async editImage(
+    prompt: string,
+    base64ImageData: string,
+    mimeType = "image/png",
+  ): Promise<{ imageUrl: string; mimeType: string }> {
+    const client = this.getClient();
+    const cleanBase64 = base64ImageData.replace(/^data:image\/[a-z]+;base64,/, "");
+    try {
+      const response = await client.models.generateContent({
+        model: "gemini-3.1-flash-lite-image",
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: cleanBase64,
+                mimeType,
+              },
+            },
+            { text: prompt },
+          ],
+        },
+      });
+
+      const candidate = response.candidates?.[0];
+      if (candidate?.content?.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData?.data) {
+            const mime = part.inlineData.mimeType || "image/png";
+            return {
+              imageUrl: `data:${mime};base64,${part.inlineData.data}`,
+              mimeType: mime,
+            };
+          }
+        }
+      }
+      throw new Error("No edited image data returned from model");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Image edit failed: ${message}`);
+    }
+  }
+
+  async transcribeAudio(
+    base64AudioString: string,
+    mimeType = "audio/wav",
+  ): Promise<{ text: string }> {
+    const client = this.getClient();
+    const cleanBase64 = base64AudioString.replace(/^data:audio\/[a-z0-9]+;base64,/, "");
+    try {
+      const response = await client.models.generateContent({
+        model: "gemini-3.5-transcribe",
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                mimeType,
+                data: cleanBase64,
+              },
+            },
+            { text: "Transcribe this audio precisely, including spoken words, nuances, and language." },
+          ],
+        },
+      });
+      return { text: response.text || "" };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Transcription failed: ${message}`);
+    }
+  }
+
+  async generateSpeech(
+    text: string,
+    voiceName: "Kore" | "Puck" | "Charon" | "Fenrir" | "Zephyr" = "Kore",
+  ): Promise<{ audioBase64: string; mimeType: string }> {
+    const client = this.getClient();
+    try {
+      const response = await client.models.generateContent({
+        model: "gemini-3.8-flash-lite-tts",
+        contents: [
+          {
+            role: "user",
+            parts: [{ text }],
+          },
+        ],
+        config: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName },
+            },
+          },
+        } as never,
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!base64Audio) {
+        throw new Error("No speech audio returned from Gemini TTS");
+      }
+      return { audioBase64: base64Audio, mimeType: "audio/wav" };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Speech generation failed: ${message}`);
+    }
+  }
+
+  async startVideo(
+    prompt: string,
+    aspectRatio: "16:9" | "9:16" = "16:9",
+  ): Promise<{ operationName: string }> {
+    const client = this.getClient();
+    try {
+      const operation = await client.models.generateVideos({
+        model: "veo-3.1-lite-generate-preview",
+        prompt,
+        config: {
+          numberOfVideos: 1,
+          resolution: "720p",
+          aspectRatio,
+        },
+      });
+      return { operationName: operation.name || `models/veo-3.1-lite-generate-preview/operations/op_${Date.now()}` };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Video generation initiation failed: ${message}`);
+    }
+  }
+
+  async getVideoStatus(
+    operationName: string,
+  ): Promise<{ done: boolean; videoUri?: string }> {
+    const client = this.getClient();
+    try {
+      const op = { name: operationName };
+      const updated = await client.operations.getVideosOperation({ operation: op as never });
+      const videoUri = updated.response?.generatedVideos?.[0]?.video?.uri;
+      return {
+        done: Boolean(updated.done),
+        ...(videoUri ? { videoUri } : {}),
+      };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`[GeminiAdapter] Video status check failed: ${message}`);
     }
   }
 
