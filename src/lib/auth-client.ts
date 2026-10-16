@@ -1,16 +1,10 @@
-import { createClient, type Session, type User } from "@supabase/supabase-js";
-
 export type AuthUser = {
   id: string;
   email: string;
   username: string;
   displayName: string;
   avatarUrl?: string;
-  user_metadata?: {
-    username?: string;
-    full_name?: string;
-    avatar_url?: string;
-  };
+  user_metadata?: { username?: string; full_name?: string; avatar_url?: string };
 };
 
 export type AuthSession = {
@@ -22,176 +16,139 @@ export type AuthSession = {
 };
 
 type AuthListener = (event: string, session: AuthSession | null) => void;
+type ApiUser = { id: string; username: string; email: string; displayName?: string; display_name?: string; avatarUrl?: string; avatar_url?: string };
+type ApiSessionResponse = { user?: ApiUser; accessToken?: string; expiresIn?: number; error?: string; message?: string };
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  "";
-
-const supabaseAuth =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      })
-    : null;
-
-function mapUser(user: User): AuthUser {
-  const username =
-    typeof user.user_metadata?.username === "string"
-      ? user.user_metadata.username
-      : (user.email?.split("@")[0] ?? "user");
-  const displayName =
-    typeof user.user_metadata?.full_name === "string"
-      ? user.user_metadata.full_name
-      : username;
-  const avatarUrl =
-    typeof user.user_metadata?.avatar_url === "string"
-      ? user.user_metadata.avatar_url
-      : undefined;
-
-  return {
-    id: user.id,
-    email: user.email ?? "",
-    username,
-    displayName,
-    ...(avatarUrl ? { avatarUrl } : {}),
-    user_metadata: {
-      username,
-      full_name: displayName,
-      ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
-    },
-  };
-}
-
+const apiBase = (import.meta.env.VITE_OPEXNAL_API_URL || "").replace(/\/+$/, "");
+const TOKEN_KEY = "opexnal_access_token";
+const USER_KEY = "opexnal_auth_user";
+const listeners = new Set<AuthListener>();
 let currentAccessToken = "";
 
-function mapSession(session: Session | null): AuthSession | null {
-  currentAccessToken = session?.access_token ?? "";
-  if (!session) return null;
-  const user = mapUser(session.user);
+function apiUrl(path: string) { return (apiBase || "") + "/api/v1" + path; }
+function mapUser(user: ApiUser): AuthUser {
+  const username = user.username || user.email.split("@")[0] || "user";
+  const displayName = user.displayName || user.display_name || username;
+  const avatarUrl = user.avatarUrl || user.avatar_url;
   return {
-    token: session.access_token,
-    access_token: session.access_token,
-    userId: session.user.id,
-    user,
-    expiresAt: (session.expires_at ?? 0) * 1000,
+    id: user.id, email: user.email, username, displayName,
+    ...(avatarUrl ? { avatarUrl } : {}),
+    user_metadata: { username, full_name: displayName, ...(avatarUrl ? { avatar_url: avatarUrl } : {}) },
   };
 }
-
-function unavailableError(): Error {
-  return new Error(
-    "Opexnal authentication is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the deployment environment.",
-  );
+function readStoredUser(): AuthUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch { return null; }
+}
+function createSession(token: string, user: AuthUser, expiresIn = 3600): AuthSession {
+  currentAccessToken = token;
+  if (typeof window !== "undefined") {
+    window.sessionStorage.setItem(TOKEN_KEY, token);
+    window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    window.sessionStorage.setItem("opexnal_token_expires_at", String(Date.now() + expiresIn * 1000));
+  }
+  return { token, access_token: token, userId: user.id, user, expiresAt: Date.now() + expiresIn * 1000 };
+}
+function clearSession() {
+  currentAccessToken = "";
+  if (typeof window !== "undefined") {
+    window.sessionStorage.removeItem(TOKEN_KEY);
+    window.sessionStorage.removeItem(USER_KEY);
+    window.sessionStorage.removeItem("opexnal_token_expires_at");
+  }
+}
+function notify(event: string, session: AuthSession | null) { for (const listener of listeners) listener(event, session); }
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (!headers.has("Content-Type") && init.body) headers.set("Content-Type", "application/json");
+  const token = currentAccessToken || (typeof window !== "undefined" ? window.sessionStorage.getItem(TOKEN_KEY) || "" : "");
+  if (token && !headers.has("Authorization")) headers.set("Authorization", "Bearer " + token);
+  let response: Response;
+  try { response = await fetch(apiUrl(path), { ...init, headers }); }
+  catch { throw new Error("Opexnal API could not be reached. Configure VITE_OPEXNAL_API_URL and deploy the independent backend."); }
+  const body = (await response.json().catch(() => ({}))) as T & { error?: string };
+  if (!response.ok) throw new Error(body.error || "Opexnal API request failed.");
+  return body;
 }
 
 class AuthClient {
   getAuthHeader(): Record<string, string> {
-    // Set by getSession() or the Supabase auth-state listener; never invent tokens.
-    return currentAccessToken ? { Authorization: `Bearer ${currentAccessToken}` } : {};
+    const token = currentAccessToken || (typeof window !== "undefined" ? window.sessionStorage.getItem(TOKEN_KEY) || "" : "");
+    return token ? { Authorization: "Bearer " + token } : {};
   }
 
   async getUser(): Promise<{ data: { user: AuthUser | null }; error: Error | null }> {
-    if (!supabaseAuth) return { data: { user: null }, error: unavailableError() };
-    const { data, error } = await supabaseAuth.auth.getUser();
-    return {
-      data: { user: data.user ? mapUser(data.user) : null },
-      error: error ?? null,
-    };
+    try {
+      const result = await request<{ user: ApiUser }>("/auth/me");
+      return { data: { user: mapUser(result.user) }, error: null };
+    } catch (error) {
+      if (error instanceof Error && /Invalid or expired|Authentication required|Account not found/i.test(error.message)) clearSession();
+      return { data: { user: null }, error: error instanceof Error ? error : new Error("Unable to load account.") };
+    }
   }
 
   async getSession(): Promise<{ data: { session: AuthSession | null }; error: Error | null }> {
-    if (!supabaseAuth) return { data: { session: null }, error: unavailableError() };
-    const { data, error } = await supabaseAuth.auth.getSession();
-    return { data: { session: mapSession(data.session) }, error: error ?? null };
+    if (typeof window === "undefined") return { data: { session: null }, error: null };
+    const token = window.sessionStorage.getItem(TOKEN_KEY) || "";
+    const expiresAt = Number(window.sessionStorage.getItem("opexnal_token_expires_at") || "0");
+    const user = readStoredUser();
+    if (!token || !user || !expiresAt || expiresAt <= Date.now()) {
+      clearSession();
+      return { data: { session: null }, error: null };
+    }
+    currentAccessToken = token;
+    return { data: { session: { token, access_token: token, userId: user.id, user, expiresAt } }, error: null };
   }
 
   async signInWithPassword(params: { email?: string; password?: string }): Promise<{
     data: { user: AuthUser; session: AuthSession; requires2fa?: boolean } | null;
     error: Error | null;
   }> {
-    if (!supabaseAuth) return { data: null, error: unavailableError() };
-    const identity = (params.email ?? "").trim();
-    const password = params.password ?? "";
-    if (!identity || !password) {
-      return { data: null, error: new Error("Email/username and password are required.") };
-    }
-
-    let email = identity;
-    if (!identity.includes("@")) {
-      const { data: profile, error: profileError } = await supabaseAuth
-        .from("profiles")
-        .select("email")
-        .eq("username", identity.toLowerCase())
-        .maybeSingle();
-      if (profileError || !profile || typeof profile.email !== "string") {
-        return { data: null, error: new Error("Invalid email/username or password.") };
-      }
-      email = profile.email;
-    }
-
-    const { data, error } = await supabaseAuth.auth.signInWithPassword({ email, password });
-    if (error || !data.user || !data.session) {
-      return { data: null, error: new Error("Invalid email/username or password.") };
-    }
-    const session = mapSession(data.session);
-    if (!session) return { data: null, error: new Error("Authentication session was not created.") };
-    return { data: { user: mapUser(data.user), session }, error: null };
+    const identity = (params.email || "").trim();
+    const password = params.password || "";
+    if (!identity || !password) return { data: null, error: new Error("Email/username and password are required.") };
+    try {
+      const result = await request<ApiSessionResponse>("/auth/login", { method: "POST", body: JSON.stringify({ identity, password }) });
+      if (!result.user || !result.accessToken) return { data: null, error: new Error("The API did not return a valid login session.") };
+      const user = mapUser(result.user);
+      const session = createSession(result.accessToken, user, result.expiresIn || 3600);
+      notify("SIGNED_IN", session);
+      return { data: { user, session }, error: null };
+    } catch (error) { return { data: null, error: error instanceof Error ? error : new Error("Login failed.") }; }
   }
 
   async signUp(params: {
-    email: string;
-    password: string;
-    options?: { data?: { username?: string; full_name?: string } };
-  }): Promise<{
-    data: { user: AuthUser; session: AuthSession | null } | null;
-    error: Error | null;
-  }> {
-    if (!supabaseAuth) return { data: null, error: unavailableError() };
+    email: string; password: string; options?: { data?: { username?: string; full_name?: string } };
+  }): Promise<{ data: { user: AuthUser; session: AuthSession | null } | null; error: Error | null }> {
     const email = params.email.trim().toLowerCase();
-    const username = (params.options?.data?.username ?? email.split("@")[0] ?? "")
-      .trim()
-      .toLowerCase();
-    if (!email.includes("@") || !username) {
-      return { data: null, error: new Error("A valid email and username are required.") };
-    }
-
-    const { data, error } = await supabaseAuth.auth.signUp({
-      email,
-      password: params.password,
-      options: {
-        data: {
-          username,
-          full_name: params.options?.data?.full_name ?? username,
-        },
-      },
-    });
-    if (error || !data.user) {
-      return { data: null, error: error ?? new Error("Account registration failed.") };
-    }
-    return { data: { user: mapUser(data.user), session: mapSession(data.session) }, error: null };
+    const username = (params.options?.data?.username || email.split("@")[0] || "").trim().toLowerCase();
+    if (!email.includes("@") || !username) return { data: null, error: new Error("A valid email and username are required.") };
+    try {
+      const result = await request<{ user: ApiUser; message?: string }>("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ email, username, password: params.password, displayName: params.options?.data?.full_name || username }),
+      });
+      if (!result.user) return { data: null, error: new Error("Registration failed.") };
+      return { data: { user: mapUser(result.user), session: null }, error: null };
+    } catch (error) { return { data: null, error: error instanceof Error ? error : new Error("Registration failed.") }; }
   }
 
   async signOut(): Promise<{ error: Error | null }> {
-    if (!supabaseAuth) return { error: unavailableError() };
-    const { error } = await supabaseAuth.auth.signOut();
-    return { error: error ?? null };
+    try { await request("/auth/logout", { method: "POST", body: JSON.stringify({}) }); }
+    catch { /* Always clear local credentials, even if the API is offline. */ }
+    clearSession();
+    notify("SIGNED_OUT", null);
+    return { error: null };
   }
 
   onAuthStateChange(callback: AuthListener) {
-    if (!supabaseAuth) {
-      return { data: { subscription: { unsubscribe: () => undefined } } };
-    }
-    const { data } = supabaseAuth.auth.onAuthStateChange((event, session) => {
-      callback(event, mapSession(session));
-    });
-    return { data: { subscription: data.subscription } };
+    listeners.add(callback);
+    return { data: { subscription: { unsubscribe: () => listeners.delete(callback) } } };
   }
 }
 
 export const authClient = new AuthClient();
-export const isSupabaseAuthConfigured = Boolean(supabaseAuth);
+export const isOpexnalApiConfigured = Boolean(apiBase);
