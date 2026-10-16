@@ -87,8 +87,7 @@ function LoginPage() {
           setPhoneOtpSent(true);
           toast.success(data.message || "Verification code sent to your phone");
         } catch {
-          setPhoneOtpSent(true);
-          toast.info("Verification code sent! (Use test code: 123456)");
+          setErrorMessage("Could not request verification. Please try again.");
         } finally {
           setLoading(false);
         }
@@ -115,12 +114,7 @@ function LoginPage() {
           setErrorMessage(data.error || "Invalid verification code");
         }
       } catch {
-        if (phoneOtp.trim() === "123456") {
-          toast.success("Phone verified! Welcome back.");
-          navigate({ to: search.redirect || "/home", replace: true });
-        } else {
-          setErrorMessage("Failed to verify code. Please try again.");
-        }
+        setErrorMessage("Failed to verify code. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -193,12 +187,7 @@ function LoginPage() {
         setErrorMessage(data.error || "Invalid authentication code");
       }
     } catch {
-      if (twoFactorCode.trim().length >= 6) {
-        toast.success("Two-Factor Verified! Welcome back.");
-        navigate({ to: search.redirect || "/home", replace: true });
-      } else {
-        setErrorMessage("Invalid two-factor authentication code");
-      }
+      setErrorMessage("Two-factor verification is unavailable. Please try again later.");
     } finally {
       setLoading(false);
     }

@@ -11,17 +11,11 @@
  */
 
 import {
-  requestOtp,
   verifyOtp,
   evaluatePasswordStrength,
-  generateTotpSecret,
-  getSessionsForUser,
-  revokeSession,
-  revokeAllSessions,
   submitAccountRecoveryRequest,
   getRecoveryStatus,
   recordSecurityAudit,
-  getSecurityAuditLogs,
   type RecoveryReason,
 } from "../lib/account-security";
 import { getHomeFeed } from "../lib/posts";
@@ -51,8 +45,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!destination || destination.trim().length < 3) {
         return jsonResponse({ error: "Valid phone number or email is required" }, 400);
       }
-      const result = requestOtp(destination, body.phone ? "phone" : "email");
-      return jsonResponse(result, result.success ? 200 : 429);
+      // No verified SMS/email delivery provider is wired into this endpoint yet.
+      // Do not claim a code was sent when the user cannot actually receive it.
+      return jsonResponse(
+        { error: "OTP delivery is not configured. Verification is temporarily unavailable." },
+        503,
+      );
     }
 
     // 2. Phone / Email OTP Verify
@@ -93,9 +91,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 4. 2FA Setup
     if (pathname === "/api/auth/2fa/setup" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as { username?: string };
-      const setup = generateTotpSecret(body.username || "user");
-      return jsonResponse(setup);
+      // Do not expose unbound TOTP secrets/backup codes without an authenticated
+      // account and durable, encrypted per-user storage.
+      return jsonResponse(
+        { error: "Two-factor setup is not configured securely on the server yet." },
+        503,
+      );
     }
 
     // 5. 2FA Verify
@@ -108,54 +109,27 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!token) {
         return jsonResponse({ error: "2FA token or backup code is required" }, 400);
       }
-      // Valid if 6 digits or valid backup code format (XXXX-XXXX)
-      const isValidFormat =
-        /^\d{6}$/.test(token) || (/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(token) && token.length === 9);
-      if (!isValidFormat && token !== "123456") {
-        return jsonResponse({ error: "Invalid two-factor code format" }, 400);
-      }
-      recordSecurityAudit(
-        body.userId || "user_maya",
-        "MFA_ENABLED",
-        "Two-factor challenge verified successfully.",
+      // Fail closed: there is no trusted per-user TOTP secret verifier or
+      // single-use backup-code verifier wired to this endpoint yet.
+      return jsonResponse(
+        { error: "Two-factor verification is not configured on the server yet." },
+        503,
       );
-      return jsonResponse({
-        success: true,
-        message: "Two-factor authentication verified.",
-      });
     }
 
-    // 6. Active Device Sessions List
-    if (pathname === "/api/auth/sessions" && method === "GET") {
-      const authHeader = request.headers.get("authorization") || "";
-      const userId = authHeader.includes("user_")
-        ? authHeader.split("user_")[1]?.split(" ")[0] || "user_maya"
-        : "user_maya";
-      const sessions = getSessionsForUser(userId);
-      return jsonResponse({ sessions });
-    }
-
-    // 7. Revoke Session
-    if (pathname === "/api/auth/sessions/revoke" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        sessionId?: string;
-      };
-      if (!body.sessionId) {
-        return jsonResponse({ error: "sessionId is required" }, 400);
-      }
-      revokeSession(body.userId || "user_maya", body.sessionId);
-      return jsonResponse({ success: true, message: "Session revoked" });
-    }
-
-    // 8. Revoke All Sessions
-    if (pathname === "/api/auth/sessions/revoke-all" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        keepCurrent?: boolean;
-      };
-      const count = revokeAllSessions(body.userId || "user_maya", body.keepCurrent !== false);
-      return jsonResponse({ success: true, revokedCount: count });
+    // 6-8. Session management
+    // These handlers previously trusted client-supplied IDs and fabricated
+    // demo sessions. Until a verified server-side session identity store is
+    // connected, fail closed rather than disclose or mutate another user's sessions.
+    if (
+      (pathname === "/api/auth/sessions" && method === "GET") ||
+      (pathname === "/api/auth/sessions/revoke" && method === "POST") ||
+      (pathname === "/api/auth/sessions/revoke-all" && method === "POST")
+    ) {
+      return jsonResponse(
+        { error: "Secure server-side session management is not configured yet." },
+        503,
+      );
     }
 
     // 9. Account Recovery Request
@@ -195,8 +169,9 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 11. Security Audit Logs
     if (pathname === "/api/auth/security-logs" && method === "GET") {
-      const logs = getSecurityAuditLogs();
-      return jsonResponse({ logs });
+      // Security logs contain sensitive account activity. This route has no
+      // trusted server-side identity check yet, so do not expose them publicly.
+      return jsonResponse({ error: "Authentication is required." }, 401);
     }
 
     // 12. Password Reset Confirm
@@ -218,16 +193,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
           400,
         );
       }
-      recordSecurityAudit(
-        "user_maya",
-        "PASSWORD_RESET_COMPLETED",
-        "Password changed and verified. Previous active sessions rotated.",
+      // Fail closed: this handler does not validate a single-use, expiring
+      // reset token against a real account before claiming the password changed.
+      return jsonResponse(
+        { error: "Password reset is not configured securely on the server yet." },
+        503,
       );
-      revokeAllSessions("user_maya", false);
-      return jsonResponse({
-        success: true,
-        message: "Password reset successfully. Please log in with your new credentials.",
-      });
     }
 
     // 13. Feed and Stories Fallback API endpoints
