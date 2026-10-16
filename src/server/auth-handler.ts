@@ -13,7 +13,6 @@
 import {
   verifyOtp,
   evaluatePasswordStrength,
-  generateTotpSecret,
   submitAccountRecoveryRequest,
   getRecoveryStatus,
   recordSecurityAudit,
@@ -92,9 +91,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 4. 2FA Setup
     if (pathname === "/api/auth/2fa/setup" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as { username?: string };
-      const setup = generateTotpSecret(body.username || "user");
-      return jsonResponse(setup);
+      // Do not expose unbound TOTP secrets/backup codes without an authenticated
+      // account and durable, encrypted per-user storage.
+      return jsonResponse(
+        { error: "Two-factor setup is not configured securely on the server yet." },
+        503,
+      );
     }
 
     // 5. 2FA Verify
