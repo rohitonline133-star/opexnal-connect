@@ -174,7 +174,7 @@ class QueryBuilder<T = unknown> {
   async execute(): Promise<QueryResult<T>> {
     try {
       // First-party API owns posts and stories. Never silently substitute local demo data.
-      const apiBase = (import.meta.env.VITE_OPEXNAL_API_URL || "").replace(/\/+$/, "");
+      const apiBase = (import.meta.env["VITE_OPEXNAL_API_URL"] || "").replace(/\/+$/, "");
       if ((this.tableName === "posts" && this.operation === "select") ||
           (this.tableName === "stories" && this.operation === "select")) {
         if (!apiBase) {
