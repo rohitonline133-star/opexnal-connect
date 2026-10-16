@@ -16,6 +16,7 @@ import {
   generateTotpSecret,
   getSessionsForUser,
   revokeSession,
+  revokeAllSessions,
   submitAccountRecoveryRequest,
   getRecoveryStatus,
   recordSecurityAudit,
@@ -117,37 +118,19 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       );
     }
 
-    // 6. Active Device Sessions List
-    if (pathname === "/api/auth/sessions" && method === "GET") {
-      const authHeader = request.headers.get("authorization") || "";
-      const userId = authHeader.includes("user_")
-        ? authHeader.split("user_")[1]?.split(" ")[0] || "user_maya"
-        : "user_maya";
-      const sessions = getSessionsForUser(userId);
-      return jsonResponse({ sessions });
-    }
-
-    // 7. Revoke Session
-    if (pathname === "/api/auth/sessions/revoke" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        sessionId?: string;
-      };
-      if (!body.sessionId) {
-        return jsonResponse({ error: "sessionId is required" }, 400);
-      }
-      revokeSession(body.userId || "user_maya", body.sessionId);
-      return jsonResponse({ success: true, message: "Session revoked" });
-    }
-
-    // 8. Revoke All Sessions
-    if (pathname === "/api/auth/sessions/revoke-all" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        keepCurrent?: boolean;
-      };
-      const count = revokeAllSessions(body.userId || "user_maya", body.keepCurrent !== false);
-      return jsonResponse({ success: true, revokedCount: count });
+    // 6-8. Session management
+    // These handlers previously trusted client-supplied IDs and fabricated
+    // demo sessions. Until a verified server-side session identity store is
+    // connected, fail closed rather than disclose or mutate another user's sessions.
+    if (
+      (pathname === "/api/auth/sessions" && method === "GET") ||
+      (pathname === "/api/auth/sessions/revoke" && method === "POST") ||
+      (pathname === "/api/auth/sessions/revoke-all" && method === "POST")
+    ) {
+      return jsonResponse(
+        { error: "Secure server-side session management is not configured yet." },
+        503,
+      );
     }
 
     // 9. Account Recovery Request
