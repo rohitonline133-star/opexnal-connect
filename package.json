@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "backend:start": "node backend/server.js",
-    "backend:dev": "node --watch backend/server.js"
+    "backend:dev": "node --watch backend/server.js",
+    "backend:check": "node --check backend/server.js"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
