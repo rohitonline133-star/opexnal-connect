@@ -15,7 +15,6 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
-import { lovable } from "@/integrations/lovable";
 
 const loginSearchSchema = z.object({
   redirect: z.string().optional(),
@@ -195,33 +194,8 @@ function LoginPage() {
 
   const handleOAuth = async (provider: "google" | "apple") => {
     setOauthLoading(provider);
-    setErrorMessage(null);
-    try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin + (search.redirect || "/home"),
-      });
-
-      if (result?.error) {
-        const msg = result.error.message || `Failed to authenticate with ${provider}`;
-        setErrorMessage(msg);
-        toast.error(msg);
-        return;
-      }
-
-      if (result?.redirected) return;
-
-      const { data } = await authClient.getUser();
-      if (data?.user) {
-        toast.success("Signed in successfully!");
-        navigate({ to: search.redirect || "/home", replace: true });
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : `Failed to connect with ${provider}`;
-      setErrorMessage(msg);
-      toast.error(msg);
-    } finally {
-      setOauthLoading(null);
-    }
+    setErrorMessage(`\u0053ign-in with ${provider} is not enabled on the independent Opexnal API yet. Use email/username and password for now.`);
+    setOauthLoading(null);
   };
 
   return (
