@@ -130,8 +130,7 @@ function SignupPage() {
       return;
     }
 
-    // Production signup uses Supabase Auth email confirmation. Phone-only
-    // signup remains unavailable until a real SMS provider is configured.
+    // Independent API signup currently accepts email/password. Email verification delivery is not wired yet.
     if (!contact.includes("@")) {
       setErrorMessage("Email signup is required for now. Phone verification is not configured yet.");
       return;
@@ -158,7 +157,7 @@ function SignupPage() {
       } else {
         setAwaitingEmailVerification(true);
         setStep("welcome");
-        toast.info("Check your email and confirm your account before signing in.");
+        toast.info("Account created. Email verification delivery is not configured yet.");
       }
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Registration failed.");
@@ -245,7 +244,7 @@ function SignupPage() {
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
             ? awaitingEmailVerification
-              ? "Check your inbox for the Supabase confirmation link. Verify your email, then log in."
+              ? "Account created, but email verification delivery is not configured yet. Please do not treat this account as verified."
               : "Your account is active. Start sharing and connecting."
             : step === "verify_otp"
               ? `We sent a 6-digit confirmation code to ${emailOrPhone}`
