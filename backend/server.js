@@ -85,7 +85,7 @@ function publicUser(row) {
   return { id: row.id, username: row.username, email: row.email, displayName: row.display_name, avatarUrl: row.avatar_url, createdAt: row.created_at };
 }
 function validUsername(value) { return typeof value === "string" && /^[a-zA-Z0-9._]{3,30}$/.test(value); }
-function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value); }
+function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
 function validPassword(value) { return typeof value === "string" && value.length >= 12 && value.length <= 128; }
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "opexnal-api", databaseConfigured: Boolean(pool), websocket: true }));
