@@ -1,0 +1,30 @@
+name: Opexnal Build Checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "independent-backend-*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Backend syntax
+        run: npm run backend:check
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
