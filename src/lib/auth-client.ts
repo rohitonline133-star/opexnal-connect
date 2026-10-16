@@ -19,7 +19,7 @@ type AuthListener = (event: string, session: AuthSession | null) => void;
 type ApiUser = { id: string; username: string; email: string; displayName?: string; display_name?: string; avatarUrl?: string; avatar_url?: string };
 type ApiSessionResponse = { user?: ApiUser; accessToken?: string; expiresIn?: number; error?: string; message?: string };
 
-const apiBase = (import.meta.env.VITE_OPEXNAL_API_URL || "").replace(/\/+$/, "");
+const apiBase = (import.meta.env["VITE_OPEXNAL_API_URL"] || "").replace(/\/+$/, "");
 const TOKEN_KEY = "opexnal_access_token";
 const USER_KEY = "opexnal_auth_user";
 const listeners = new Set<AuthListener>();
