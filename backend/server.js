@@ -213,7 +213,7 @@ server.on("upgrade", (req, socket, head) => {
     const claims = jwt.verify(token, jwtSecret, { algorithms: ["HS256"], issuer: "opexnal-api", audience: "opexnal-app" });
     if (!claims || typeof claims !== "object" || typeof claims.sub !== "string") throw new Error("Invalid token");
     wss.handleUpgrade(req, socket, head, (ws) => { ws.userId = claims.sub; wss.emit("connection", ws, req); });
-  } catch { socket.write("HTTP/1.1 401 Unauthorized\\r\\nConnection: close\\r\\n\\r\\n"); socket.destroy(); }
+  } catch { socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n"); socket.destroy(); }
 });
 wss.on("connection", (ws) => {
   const userSockets = socketsByUser.get(ws.userId) || new Set();
