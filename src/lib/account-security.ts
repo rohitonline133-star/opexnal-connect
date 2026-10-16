@@ -475,11 +475,11 @@ export function submitAccountRecoveryRequest(params: {
     reason: params.reason,
     status: isTakeover ? "manual_review" : "approved",
     contactEmail: params.contactEmail,
-    contactPhone: params.contactPhone,
-    token: !isTakeover ? token : undefined,
+    ...(params.contactPhone ? { contactPhone: params.contactPhone } : {}),
+    ...(!isTakeover ? { token } : {}),
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
     createdAt: Date.now(),
-    notes: params.additionalDetails,
+    ...(params.additionalDetails ? { notes: params.additionalDetails } : {}),
   };
 
   recoveryTickets.set(ticketId, ticket);
