@@ -68,7 +68,10 @@ function mapUser(user: User): AuthUser {
   };
 }
 
+let currentAccessToken = "";
+
 function mapSession(session: Session | null): AuthSession | null {
+  currentAccessToken = session?.access_token ?? "";
   if (!session) return null;
   const user = mapUser(session.user);
   return {
@@ -88,9 +91,8 @@ function unavailableError(): Error {
 
 class AuthClient {
   getAuthHeader(): Record<string, string> {
-    // The actual access token is obtained asynchronously from Supabase.
-    // Do not invent a token or trust a localStorage user object.
-    return {};
+    // Set by getSession() or the Supabase auth-state listener; never invent tokens.
+    return currentAccessToken ? { Authorization: `Bearer ${currentAccessToken}` } : {};
   }
 
   async getUser(): Promise<{ data: { user: AuthUser | null }; error: Error | null }> {
