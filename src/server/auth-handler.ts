@@ -148,8 +148,8 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
         identityInput: body.identityInput,
         reason: body.reason || "forgot_password",
         contactEmail: body.contactEmail,
-        contactPhone: body.contactPhone,
-        additionalDetails: body.additionalDetails,
+        ...(body.contactPhone ? { contactPhone: body.contactPhone } : {}),
+        ...(body.additionalDetails ? { additionalDetails: body.additionalDetails } : {}),
       });
       return jsonResponse(res);
     }
@@ -203,7 +203,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 13. Feed and Stories Fallback API endpoints
     if (pathname === "/api/v1/posts/feed" && method === "GET") {
-      const feed = await getHomeFeed({ limit: 10 });
+      const feed = await getHomeFeed("user_maya", null, 10);
       return jsonResponse(feed);
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
