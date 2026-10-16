@@ -11,7 +11,7 @@ const { Pool } = pg;
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ noServer: true });
-const port = Number(process.env.API_PORT || 4000);
+const port = Number(process.env.PORT || process.env.API_PORT || 4000);
 const jwtSecret = process.env.JWT_SECRET || "";
 const databaseUrl = process.env.DATABASE_URL || "";
 const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000").split(",").map((v) => v.trim());
