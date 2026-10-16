@@ -11,17 +11,14 @@
  */
 
 import {
-  requestOtp,
   verifyOtp,
   evaluatePasswordStrength,
   generateTotpSecret,
   getSessionsForUser,
   revokeSession,
-  revokeAllSessions,
   submitAccountRecoveryRequest,
   getRecoveryStatus,
   recordSecurityAudit,
-  getSecurityAuditLogs,
   type RecoveryReason,
 } from "../lib/account-security";
 import { getHomeFeed } from "../lib/posts";
