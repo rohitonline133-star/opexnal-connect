@@ -51,8 +51,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!destination || destination.trim().length < 3) {
         return jsonResponse({ error: "Valid phone number or email is required" }, 400);
       }
-      const result = requestOtp(destination, body.phone ? "phone" : "email");
-      return jsonResponse(result, result.success ? 200 : 429);
+      // No verified SMS/email delivery provider is wired into this endpoint yet.
+      // Do not claim a code was sent when the user cannot actually receive it.
+      return jsonResponse(
+        { error: "OTP delivery is not configured. Verification is temporarily unavailable." },
+        503,
+      );
     }
 
     // 2. Phone / Email OTP Verify
@@ -108,21 +112,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!token) {
         return jsonResponse({ error: "2FA token or backup code is required" }, 400);
       }
-      // Valid if 6 digits or valid backup code format (XXXX-XXXX)
-      const isValidFormat =
-        /^\d{6}$/.test(token) || (/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(token) && token.length === 9);
-      if (!isValidFormat && token !== "123456") {
-        return jsonResponse({ error: "Invalid two-factor code format" }, 400);
-      }
-      recordSecurityAudit(
-        body.userId || "user_maya",
-        "MFA_ENABLED",
-        "Two-factor challenge verified successfully.",
+      // Fail closed: there is no trusted per-user TOTP secret verifier or
+      // single-use backup-code verifier wired to this endpoint yet.
+      return jsonResponse(
+        { error: "Two-factor verification is not configured on the server yet." },
+        503,
       );
-      return jsonResponse({
-        success: true,
-        message: "Two-factor authentication verified.",
-      });
     }
 
     // 6. Active Device Sessions List
@@ -195,8 +190,9 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 11. Security Audit Logs
     if (pathname === "/api/auth/security-logs" && method === "GET") {
-      const logs = getSecurityAuditLogs();
-      return jsonResponse({ logs });
+      // Security logs contain sensitive account activity. This route has no
+      // trusted server-side identity check yet, so do not expose them publicly.
+      return jsonResponse({ error: "Authentication is required." }, 401);
     }
 
     // 12. Password Reset Confirm
@@ -218,16 +214,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
           400,
         );
       }
-      recordSecurityAudit(
-        "user_maya",
-        "PASSWORD_RESET_COMPLETED",
-        "Password changed and verified. Previous active sessions rotated.",
+      // Fail closed: this handler does not validate a single-use, expiring
+      // reset token against a real account before claiming the password changed.
+      return jsonResponse(
+        { error: "Password reset is not configured securely on the server yet." },
+        503,
       );
-      revokeAllSessions("user_maya", false);
-      return jsonResponse({
-        success: true,
-        message: "Password reset successfully. Please log in with your new credentials.",
-      });
     }
 
     // 13. Feed and Stories Fallback API endpoints
