@@ -54,6 +54,7 @@ function SignupPage() {
   const [step, setStep] = useState<"details" | "verify_otp" | "welcome">("details");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [awaitingEmailVerification, setAwaitingEmailVerification] = useState(false);
 
   // Evaluation & Validation states
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">(
@@ -129,22 +130,38 @@ function SignupPage() {
       return;
     }
 
-    // Request verification OTP
+    // Production signup uses Supabase Auth email confirmation. Phone-only
+    // signup remains unavailable until a real SMS provider is configured.
+    if (!contact.includes("@")) {
+      setErrorMessage("Email signup is required for now. Phone verification is not configured yet.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: contact }),
+      const { data, error } = await authClient.signUp({
+        email: contact,
+        password,
+        options: {
+          data: { username: username.trim(), full_name: fullName.trim() },
+        },
       });
-      const data = await res.json();
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.success(data.message || "Verification code sent! (Use test code: 123456)");
-    } catch {
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.info("Verification code sent! (Use test code: 123456)");
+      if (error || !data?.user) {
+        setErrorMessage(error?.message || "Account registration failed.");
+        return;
+      }
+
+      if (data.session) {
+        setAwaitingEmailVerification(false);
+        setStep("welcome");
+        toast.success("Account created successfully.");
+      } else {
+        setAwaitingEmailVerification(true);
+        setStep("welcome");
+        toast.info("Check your email and confirm your account before signing in.");
+      }
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Registration failed.");
     } finally {
       setLoading(false);
     }
@@ -168,7 +185,7 @@ function SignupPage() {
         body: JSON.stringify({ email: emailOrPhone.trim(), code: otpCode.trim() }),
       });
       const verifyData = await verifyRes.json();
-      if (!verifyRes.ok && otpCode.trim() !== "123456") {
+      if (!verifyRes.ok) {
         setErrorMessage(verifyData.error || "Invalid verification code");
         setLoading(false);
         return;
@@ -227,7 +244,9 @@ function SignupPage() {
         </h2>
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
-            ? "Your account is active. Start sharing and connecting."
+            ? awaitingEmailVerification
+              ? "Check your inbox for the Supabase confirmation link. Verify your email, then log in."
+              : "Your account is active. Start sharing and connecting."
             : step === "verify_otp"
               ? `We sent a 6-digit confirmation code to ${emailOrPhone}`
               : "Join millions sharing stories, reels and creative ideas"}
