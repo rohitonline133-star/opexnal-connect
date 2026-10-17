@@ -23,6 +23,7 @@ services:
     environment:
       HF_HOME: /root/.cache/huggingface
       HF_TOKEN: ${HF_TOKEN:-}
+      OPEX_AI_API_KEY: ${OPEX_AI_API_KEY:?Set OPEX_AI_API_KEY in the env file}
     volumes:
       - hf_cache:/root/.cache/huggingface
     expose:
@@ -61,7 +62,6 @@ services:
 networks:
   ai_private:
     driver: bridge
-    internal: true
 
 volumes:
   hf_cache:
