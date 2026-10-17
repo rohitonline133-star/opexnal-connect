@@ -158,6 +158,15 @@ export interface OpexnalSettings {
   autoSaveOriginalMedia: boolean;
   autoGenerateCaptions: boolean;
   highContrastMode: boolean;
+  /** Legacy settings-page compatibility fields. */
+  highContrastText: boolean;
+  reducedMotion: boolean;
+  advancedCommentFiltering: boolean;
+  customBlockedWords: string[];
+  highQualityUploads: boolean;
+  autoPlayVideosOnCellular: boolean;
+  saveStoryToCameraRoll: boolean;
+  storyReplyPermission: "everyone" | "following" | "off";
   appLanguage: string;
   autoTranslateCaptions: boolean;
 
@@ -372,6 +381,14 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   autoSaveOriginalMedia: true,
   autoGenerateCaptions: true,
   highContrastMode: false,
+  highContrastText: false,
+  reducedMotion: false,
+  advancedCommentFiltering: true,
+  customBlockedWords: [],
+  highQualityUploads: true,
+  autoPlayVideosOnCellular: true,
+  saveStoryToCameraRoll: false,
+  storyReplyPermission: "everyone",
   appLanguage: "en",
   autoTranslateCaptions: true,
 
@@ -468,7 +485,7 @@ const STORAGE_KEY = "opexnal_master_settings_v3";
 /**
  * Retrieves the unified settings object with deep merge and Supabase profile synchronization.
  */
-export function getStoredSettings(): OpexnalSettings {
+export function getStoredSettings(_userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
