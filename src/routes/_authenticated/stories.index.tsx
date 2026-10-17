@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { StoryTray } from "@/components/opexnal/story-tray";
+import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/stories/")({
   head: () => ({
@@ -14,13 +15,15 @@ export const Route = createFileRoute("/_authenticated/stories/")({
 
 function StoriesIndexPage() {
   const navigate = useNavigate();
+  const { user, session } = useSession();
+  const viewerId = user?.id ?? session?.userId ?? "";
 
   return (
     <AppShell activeTab="home">
       <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
         <ScreenHeader title="Stories" showBack onBack={() => navigate({ to: "/home" })} />
         <div className="p-4 space-y-4">
-          <StoryTray />
+          <StoryTray viewerId={viewerId} />
           <p className="text-xs text-gray-400 text-center pt-8">
             Stories automatically expire after 24 hours. Tap an avatar above to view their story
             moments.
