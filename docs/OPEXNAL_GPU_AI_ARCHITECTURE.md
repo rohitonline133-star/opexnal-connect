@@ -8,7 +8,7 @@ This repository now has a GPU inference Compose stack in `deploy/ai-gpu/compose.
 - No published public ports for either model service.
 - API-key protection on the vLLM endpoint.
 
-**This is deployment configuration, not a running server.** It does not buy/provision GPUs, configure DNS, install the host driver, pull model weights, or prove successful inference. The Opexnal app adapter currently expects its configured endpoint to behave like Ollama for health checks and uses one endpoint for chat and embeddings. Therefore this GPU stack is not yet a drop-in replacement for the existing app configuration. The adapter must be updated and tested to support a separate vLLM chat endpoint and Ollama embeddings endpoint before wiring it into production.
+**This is deployment configuration, not a running server.** It does not buy/provision GPUs, configure DNS, install the host driver, pull model weights, or prove successful inference. The adapter has now been updated on this draft branch to support a separate vLLM chat endpoint and Ollama `/api/embed` endpoint. This code has not yet passed CI, and this Compose file intentionally contains model services only (not the Opexnal web app or HTTPS reverse proxy). Do not call this production-integrated until CI passes and the app is attached to the same private network or another authenticated private network path is configured.
 
 ## Hardware tiers (practical, not rack-scale)
 - **Development / smoke test:** one NVIDIA GPU with enough VRAM for the chosen quantized model; 16 GB VRAM is a reasonable starting target for a 7B AWQ model, but actual usage depends on context length, batch size, CUDA/vLLM versions, and concurrent users.
@@ -33,7 +33,7 @@ docker compose --env-file deploy/ai-gpu/.env -f deploy/ai-gpu/compose.yaml up -d
 docker compose --env-file deploy/ai-gpu/.env -f deploy/ai-gpu/compose.yaml ps
 docker compose --env-file deploy/ai-gpu/.env -f deploy/ai-gpu/compose.yaml logs -f vllm
 ```
-After vLLM becomes healthy, test real inference from inside the private network (do not expose the endpoint publicly). Pull the embedding model with `docker compose --env-file deploy/ai-gpu/.env -f deploy/ai-gpu/compose.yaml exec embeddings ollama pull nomic-embed-text`.
+After vLLM becomes healthy, pull the embedding model with `docker compose --env-file deploy/ai-gpu/.env -f deploy/ai-gpu/compose.yaml exec embeddings ollama pull nomic-embed-text`. The Opexnal app runtime must set `OPEX_AI_MODEL_ENDPOINT=http://vllm:8000/v1`, `OPEX_AI_MODEL_NAME=opexnal-qwen-7b`, `OPEX_AI_API_KEY` to the same secret as the vLLM service, `OPEX_AI_EMBEDDING_ENDPOINT=http://embeddings:11434`, and `OPEX_AI_EMBEDDING_MODEL=nomic-embed-text`. These internal hostnames only resolve for containers attached to this Compose network. The app is not part of this Compose file yet, so production wiring requires joining the app to this private network or using a securely configured private network path. Test real inference from the app before directing users to it.
 
 ## Phased architecture
 1. **Single GPU inference:** vLLM + quantized instruct model; measure latency, tokens/sec, VRAM and error rates.
@@ -48,3 +48,4 @@ After vLLM becomes healthy, test real inference from inside the private network 
 - Model licenses and acceptable-use terms must be reviewed before commercial launch.
 - A healthy container is not proof of a good model response. Run an authenticated inference request and app-level test.
 - Current CI has failed automated tests; fix those failures before production release.
+\n\n## Current deployment blockers\n- The GPU services Compose stack does not provision a cloud VM or install GPU drivers/toolkit.\n- The Opexnal web app is not yet included in this Compose stack, so internal service DNS is not reachable from a separate Vercel deployment.\n- GitHub Actions automated tests currently fail (12 failures in the observed run); do not merge or deploy as production until fixed and rerun.\n
