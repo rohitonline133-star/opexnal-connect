@@ -20,15 +20,15 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Backend syntax
+        run: npm run backend:check
+      - name: Generate routes and build production app
+        run: npm run build
       - name: TypeScript check
         run: npm run typecheck
       - name: Lint
         run: npm run lint
       - name: Automated tests
         run: npm test
-      - name: Backend syntax
-        run: npm run backend:check
-      - name: Production build
-        run: npm run build
       - name: Build production Docker image
         run: docker build --pull -t opexnal-connect:ci .
