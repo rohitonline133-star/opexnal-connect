@@ -22,7 +22,7 @@ export class GeminiProviderAdapter implements AIProvider {
   public readonly id = "gemini";
   public readonly name = "Google Gemini Provider";
   private client: GoogleGenAI | null = null;
-  private readonly defaultModel = "gemini-3.8-flash";
+  private readonly defaultModel = process.env["GEMINI_MODEL"] || "gemini-2.5-flash";
 
   private readonly apiKey: string;
 
