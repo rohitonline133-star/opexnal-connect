@@ -15,7 +15,6 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
-import { lovable } from "@/integrations/lovable";
 
 const loginSearchSchema = z.object({
   redirect: z.string().optional(),
@@ -87,8 +86,7 @@ function LoginPage() {
           setPhoneOtpSent(true);
           toast.success(data.message || "Verification code sent to your phone");
         } catch {
-          setPhoneOtpSent(true);
-          toast.info("Verification code sent! (Use test code: 123456)");
+          setErrorMessage("Could not request verification. Please try again.");
         } finally {
           setLoading(false);
         }
@@ -115,12 +113,7 @@ function LoginPage() {
           setErrorMessage(data.error || "Invalid verification code");
         }
       } catch {
-        if (phoneOtp.trim() === "123456") {
-          toast.success("Phone verified! Welcome back.");
-          navigate({ to: search.redirect || "/home", replace: true });
-        } else {
-          setErrorMessage("Failed to verify code. Please try again.");
-        }
+        setErrorMessage("Failed to verify code. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -193,12 +186,7 @@ function LoginPage() {
         setErrorMessage(data.error || "Invalid authentication code");
       }
     } catch {
-      if (twoFactorCode.trim().length >= 6) {
-        toast.success("Two-Factor Verified! Welcome back.");
-        navigate({ to: search.redirect || "/home", replace: true });
-      } else {
-        setErrorMessage("Invalid two-factor authentication code");
-      }
+      setErrorMessage("Two-factor verification is unavailable. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -206,33 +194,8 @@ function LoginPage() {
 
   const handleOAuth = async (provider: "google" | "apple") => {
     setOauthLoading(provider);
-    setErrorMessage(null);
-    try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin + (search.redirect || "/home"),
-      });
-
-      if (result?.error) {
-        const msg = result.error.message || `Failed to authenticate with ${provider}`;
-        setErrorMessage(msg);
-        toast.error(msg);
-        return;
-      }
-
-      if (result?.redirected) return;
-
-      const { data } = await authClient.getUser();
-      if (data?.user) {
-        toast.success("Signed in successfully!");
-        navigate({ to: search.redirect || "/home", replace: true });
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : `Failed to connect with ${provider}`;
-      setErrorMessage(msg);
-      toast.error(msg);
-    } finally {
-      setOauthLoading(null);
-    }
+    setErrorMessage(`\u0053ign-in with ${provider} is not enabled on the independent Opexnal API yet. Use email/username and password for now.`);
+    setOauthLoading(null);
   };
 
   return (

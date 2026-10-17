@@ -173,30 +173,34 @@ class QueryBuilder<T = unknown> {
 
   async execute(): Promise<QueryResult<T>> {
     try {
-      // First attempt first-party API endpoint if available
-      if (this.tableName === "posts" && this.operation === "select") {
-        const res = await fetch("/api/v1/posts/feed", {
-          headers: authClient.getAuthHeader(),
-        });
-        if (res.ok) {
-          const json = (await res.json()) as { posts?: Record<string, unknown>[] };
-          let rows: Record<string, unknown>[] = json.posts || [];
-          for (const f of this.filters) {
-            rows = rows.filter(f);
-          }
-          if (this.limitCount) rows = rows.slice(0, this.limitCount);
-          return { data: rows as unknown as T, error: null };
+      // First-party API owns posts and stories. Never silently substitute local demo data.
+      const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+      const apiBase = (viteEnv?.["VITE_OPEXNAL_API_URL"] || "").replace(/\/+$/, "");
+      if ((this.tableName === "posts" && this.operation === "select") ||
+          (this.tableName === "stories" && this.operation === "select")) {
+        if (!apiBase) {
+          return { data: null, error: new Error("Independent Opexnal API is not configured. Set VITE_OPEXNAL_API_URL.") };
         }
-      }
-
-      if (this.tableName === "stories" && this.operation === "select") {
-        const res = await fetch("/api/v1/stories/tray", {
-          headers: authClient.getAuthHeader(),
-        });
-        if (res.ok) {
-          const json = (await res.json()) as { tray?: unknown };
-          return { data: (json.tray || []) as unknown as T, error: null };
+        const endpoint = this.tableName === "posts" ? "/api/v1/posts/feed" : "/api/v1/stories";
+        const res = await fetch(apiBase + endpoint, { headers: authClient.getAuthHeader() });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({ error: "API request failed" }))) as { error?: string };
+          return { data: null, error: new Error(body.error || "Independent Opexnal API request failed.") };
         }
+        const json = (await res.json()) as { posts?: Record<string, unknown>[]; stories?: Record<string, unknown>[] };
+        let rows = this.tableName === "posts" ? (json.posts || []) : (json.stories || []);
+        for (const filter of this.filters) rows = rows.filter(filter);
+        if (this.orderField) {
+          const field = this.orderField;
+          const ascending = this.orderAscending;
+          rows.sort((left, right) => {
+            const a = String(left[field] ?? "");
+            const b = String(right[field] ?? "");
+            return a < b ? (ascending ? -1 : 1) : a > b ? (ascending ? 1 : -1) : 0;
+          });
+        }
+        if (this.limitCount) rows = rows.slice(0, this.limitCount);
+        return { data: rows as unknown as T, error: null };
       }
 
       // Local persistent table fallback

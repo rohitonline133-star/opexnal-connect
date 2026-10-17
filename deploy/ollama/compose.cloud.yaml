@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ../../.env.production
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      OPEX_AI_PROVIDER: self_hosted
+      OPEX_AI_MODEL_ENDPOINT: http://ollama:11434/v1
+      OPEX_AI_MODEL_NAME: llama3.2:1b
+      OPEX_AI_EMBEDDING_MODEL: nomic-embed-text
+    expose:
+      - "3000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - opexnal_ollama_models:/root/.ollama
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - app_net
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  opexnal_ollama_models:
+  caddy_data:
+  caddy_config:

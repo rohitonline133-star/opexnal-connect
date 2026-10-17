@@ -80,13 +80,20 @@ describe("Authentication & Account Security Engine", () => {
     assert.strictEqual(invalidCheck.valid, false);
     assert.ok(invalidCheck.error?.includes("Invalid code"));
 
-    // Valid check (123456 test bypass)
-    const validCheck = verifyOtp(testDestination, "123456");
-    assert.strictEqual(validCheck.valid, true);
+    // Fixed OTP bypasses are intentionally disabled. A guessed/default code must
+    // never authenticate a user; only the cryptographically generated code is valid.
+    const defaultCodeCheck = verifyOtp(testDestination, "123456");
+    assert.strictEqual(defaultCodeCheck.valid, false);
+    assert.ok(defaultCodeCheck.error?.includes("Invalid code"));
 
-    // Single-use: once verified, code is consumed and cannot be reused
-    const reuseCheck = verifyOtp(testDestination, "123456");
-    assert.strictEqual(reuseCheck.valid, false);
+    // Repeated incorrect attempts must be rejected and remain bounded.
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const result = verifyOtp(testDestination, "999999");
+      assert.strictEqual(result.valid, false);
+    }
+    const lockedCheck = verifyOtp(testDestination, "123456");
+    assert.strictEqual(lockedCheck.valid, false);
+    assert.ok(lockedCheck.error?.includes("Too many failed attempts"));
   });
 
   // 4. Two-Factor Authentication & Backup Codes

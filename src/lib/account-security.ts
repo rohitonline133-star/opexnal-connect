@@ -215,6 +215,18 @@ export interface OtpRecord {
   createdAt: number;
 }
 
+function secureRandomInt(maxExclusive: number): number {
+  if (!Number.isSafeInteger(maxExclusive) || maxExclusive <= 0) {
+    throw new Error("maxExclusive must be a positive safe integer");
+  }
+  const limit = Math.floor(0x1_0000_0000 / maxExclusive) * maxExclusive;
+  const value = new Uint32Array(1);
+  do {
+    globalThis.crypto.getRandomValues(value);
+  } while (value[0]! >= limit);
+  return value[0]! % maxExclusive;
+}
+
 const otpStore = new Map<string, OtpRecord>();
 const cooldownStore = new Map<string, number>();
 
@@ -240,7 +252,7 @@ export function requestOtp(
   }
 
   // Generate 6 digit crypto random OTP
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = (100000 + secureRandomInt(900000)).toString();
 
   otpStore.set(destClean, {
     code,
@@ -257,7 +269,7 @@ export function requestOtp(
   return {
     success: true,
     cooldownRemainingMs: OTP_RESEND_COOLDOWN_MS,
-    message: `Verification code sent to ${destination}. Code expires in 5 minutes. (Test code: ${code})`,
+    message: `A verification code was generated for ${destination}. Code expires in 5 minutes.`,
   };
 }
 
@@ -291,8 +303,8 @@ export function verifyOtp(
 
   record.attempts += 1;
 
-  // Validate candidate code (support 123456 as dev bypass)
-  const isCorrect = record.code === candidateCode.trim() || candidateCode.trim() === "123456";
+  // Never accept a fixed development bypass code in production authentication.
+  const isCorrect = record.code === candidateCode.trim();
   if (!isCorrect) {
     const remaining = record.maxAttempts - record.attempts;
     return {
@@ -317,8 +329,8 @@ export function generateBackupCodes(count = 8): string[] {
     let part1 = "";
     let part2 = "";
     for (let j = 0; j < 4; j++) {
-      part1 += chars[Math.floor(Math.random() * chars.length)];
-      part2 += chars[Math.floor(Math.random() * chars.length)];
+      part1 += chars[secureRandomInt(chars.length)];
+      part2 += chars[secureRandomInt(chars.length)];
     }
     codes.push(`${part1}-${part2}`);
   }
@@ -333,7 +345,7 @@ export function generateTotpSecret(username: string): {
   const baseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   let secret = "";
   for (let i = 0; i < 32; i++) {
-    secret += baseChars[Math.floor(Math.random() * baseChars.length)];
+    secret += baseChars[secureRandomInt(baseChars.length)];
   }
 
   const encodedUser = encodeURIComponent(username || "user");
@@ -463,11 +475,11 @@ export function submitAccountRecoveryRequest(params: {
     reason: params.reason,
     status: isTakeover ? "manual_review" : "approved",
     contactEmail: params.contactEmail,
-    contactPhone: params.contactPhone,
-    token: !isTakeover ? token : undefined,
+    ...(params.contactPhone ? { contactPhone: params.contactPhone } : {}),
+    ...(!isTakeover ? { token } : {}),
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
     createdAt: Date.now(),
-    notes: params.additionalDetails,
+    ...(params.additionalDetails ? { notes: params.additionalDetails } : {}),
   };
 
   recoveryTickets.set(ticketId, ticket);
