@@ -25,11 +25,13 @@ export class SelfHostedProviderAdapter implements AIProvider {
   private readonly endpoint: string;
   private readonly apiKey: string;
   private readonly model: string;
+  private readonly embeddingEndpoint: string;
 
   constructor(endpoint?: string, apiKey?: string, model?: string) {
     this.endpoint = endpoint ?? (process.env["OPEX_AI_MODEL_ENDPOINT"] || "");
     this.apiKey = apiKey ?? (process.env["OPEX_AI_API_KEY"] || "");
     this.model = model ?? (process.env["OPEX_AI_MODEL_NAME"] || "opexnal-llama-3-8b");
+    this.embeddingEndpoint = process.env["OPEX_AI_EMBEDDING_ENDPOINT"] || this.endpoint;
   }
 
   public isConfigured(): boolean {
@@ -131,32 +133,43 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     const embeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"] || "nomic-embed-text";
-    const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/embeddings`, {
+    const ollamaEmbedding = this.embeddingEndpoint.includes(":11434");
+    const embeddingUrl = ollamaEmbedding
+      ? `${this.embeddingEndpoint.replace(/\/$/, "").replace(/\/v1$/, "")}/api/embed`
+      : `${this.embeddingEndpoint.replace(/\/$/, "")}/embeddings`;
+    const embeddingHeaders = ollamaEmbedding
+      ? { "Content-Type": "application/json", "User-Agent": "Opexnal-AI-Gateway/1.0" }
+      : this.getHeaders();
+    const res = await fetch(embeddingUrl, {
       method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify({ model: embeddingModel, input: texts }),
-      signal: AbortSignal.timeout(15000),
+      headers: embeddingHeaders,
+      body: JSON.stringify(ollamaEmbedding
+        ? { model: embeddingModel, input: texts }
+        : { model: embeddingModel, input: texts }),
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!res.ok) {
       throw new Error(`OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned HTTP ${res.status}.`);
     }
 
-    const data = (await res.json()) as { data?: Array<{ embedding: number[] }> };
-    if (!data.data || data.data.length !== texts.length || data.data.some((item) => !Array.isArray(item.embedding) || item.embedding.length === 0)) {
+    const data = (await res.json()) as {
+      data?: Array<{ embedding: number[] }>;
+      embeddings?: number[][];
+    };
+    const vectors = ollamaEmbedding
+      ? data.embeddings
+      : data.data?.map((item) => item.embedding);
+    if (!vectors || vectors.length !== texts.length || vectors.some((vector) => !Array.isArray(vector) || vector.length === 0)) {
       throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned an invalid response.");
     }
 
-    const dimensions = data.data[0]?.embedding.length ?? 0;
-    if (data.data.some((item) => item.embedding.length !== dimensions)) {
+    const dimensions = vectors[0]?.length ?? 0;
+    if (vectors.some((vector) => vector.length !== dimensions)) {
       throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding dimensions do not match.");
     }
 
-    return {
-      embeddings: data.data.map((item) => item.embedding),
-      dimensions,
-      provider: this.id,
-    };
+    return { embeddings: vectors, dimensions, provider: this.id };
   }
 
   async moderate(request: ModerationRequest): Promise<ModerationResponse> {
@@ -198,12 +211,17 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     try {
-      // Ollama's health/list endpoint lives at /api/tags, not /v1/health.
-      const base = this.endpoint.replace(/\/$/, "").replace(/\/v1$/, "");
-      const res = await fetch(`${base}/api/tags`, {
+      // When a separate embedding endpoint is configured, chat runs on vLLM;
+      // otherwise retain the Ollama-compatible /api/tags health probe.
+      const separateEmbeddingEndpoint = Boolean(process.env["OPEX_AI_EMBEDDING_ENDPOINT"]);
+      const base = this.endpoint.replace(/\/$/, "");
+      const healthUrl = separateEmbeddingEndpoint
+        ? `${base}/models`
+        : `${base.replace(/\/v1$/, "")}/api/tags`;
+      const res = await fetch(healthUrl, {
         method: "GET",
         headers: this.getHeaders(),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(5000),
       });
 
       const healthRes: HealthCheckResult = {
