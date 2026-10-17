@@ -1,25 +1,20 @@
 import type { AIProvider } from "./provider-interface";
-import { GeminiProviderAdapter } from "./adapters/gemini-adapter";
 import { SelfHostedProviderAdapter } from "./adapters/self-hosted-adapter";
 import { OpexnalAutonomousRuntimeAdapter } from "./adapters/opexnal-runtime-adapter";
 import { CircuitBreaker } from "./circuit-breaker";
 
 /**
- * OPEX AI Model Router & Orchestrator
- *
- * Directs traffic across model providers based on configuration, health, and circuit state.
- * Allows seamless hot-switching between Gemini, Self-Hosted clusters, and Opexnal native runtime.
+ * Opexnal AI routes inference only to an Opexnal-controlled model server.
+ * A deterministic runtime is registered for explicit non-generative utilities,
+ * but is never presented as a real language model response.
  */
 export class ModelRouter {
   private providers = new Map<string, AIProvider>();
   private circuitBreakers = new Map<string, CircuitBreaker>();
-  private autonomousFallback: OpexnalAutonomousRuntimeAdapter;
 
   constructor() {
-    this.autonomousFallback = new OpexnalAutonomousRuntimeAdapter();
-    this.registerProvider(this.autonomousFallback);
-    this.registerProvider(new GeminiProviderAdapter());
     this.registerProvider(new SelfHostedProviderAdapter());
+    this.registerProvider(new OpexnalAutonomousRuntimeAdapter());
   }
 
   public registerProvider(provider: AIProvider): void {
@@ -34,31 +29,20 @@ export class ModelRouter {
   }
 
   /**
-   * Selects the most appropriate provider based on configuration and availability.
+   * Fail closed: never silently route user prompts to a third-party provider
+   * or deterministic placeholder when the Opexnal model server is unavailable.
    */
   public resolveProvider(): AIProvider {
-    const configTarget = (process.env["OPEX_AI_PROVIDER"] || "gemini").toLowerCase();
-
-    // 1. If explicit self-hosted target
-    if (configTarget === "self_hosted" || configTarget === "selfhosted") {
-      const selfHosted = this.providers.get("self_hosted") as SelfHostedProviderAdapter | undefined;
-      const cb = this.circuitBreakers.get("self_hosted");
-      if (selfHosted?.isConfigured() && cb?.canExecute()) {
-        return selfHosted;
-      }
+    const selfHosted = this.providers.get("self_hosted") as SelfHostedProviderAdapter | undefined;
+    if (!selfHosted?.isConfigured()) {
+      throw new Error("OPEX_AI_MODEL_UNAVAILABLE: Configure OPEX_AI_MODEL_ENDPOINT to your Opexnal-hosted model server.");
     }
 
-    // 2. If Gemini target (current transitional default)
-    if (configTarget === "gemini") {
-      const gemini = this.providers.get("gemini") as GeminiProviderAdapter | undefined;
-      const cb = this.circuitBreakers.get("gemini");
-      if (gemini?.isConfigured() && cb?.canExecute()) {
-        return gemini;
-      }
+    const breaker = this.circuitBreakers.get("self_hosted");
+    if (breaker && !breaker.canExecute()) {
+      throw new Error("OPEX_AI_MODEL_UNAVAILABLE: Opexnal model server circuit breaker is open; retry after recovery.");
     }
-
-    // 3. Always fallback to the Opexnal Autonomous Runtime
-    return this.autonomousFallback;
+    return selfHosted;
   }
 
   public getProvider(id: string): AIProvider | undefined {
