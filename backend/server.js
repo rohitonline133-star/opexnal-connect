@@ -88,7 +88,15 @@ function validUsername(value) { return typeof value === "string" && /^[a-zA-Z0-9
 function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
 function validPassword(value) { return typeof value === "string" && value.length >= 12 && value.length <= 128; }
 
-app.get("/health", (_req, res) => res.json({ status: "ok", service: "opexnal-api", databaseConfigured: Boolean(pool), websocket: true }));
+app.get("/health", async (_req, res) => {
+  if (!pool) return res.status(503).json({ status: "not_ready", service: "opexnal-api", reason: "database_not_configured" });
+  try {
+    await pool.query("SELECT 1");
+    return res.json({ status: "ok", service: "opexnal-api", database: "connected", websocket: true });
+  } catch {
+    return res.status(503).json({ status: "not_ready", service: "opexnal-api", reason: "database_unavailable" });
+  }
+});
 
 app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   try {
