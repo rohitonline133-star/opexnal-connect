@@ -89,7 +89,10 @@ export class SelfHostedProviderAdapter implements AIProvider {
         usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
       };
 
-      const reply = data.choices?.[0]?.message?.content || "";
+      const reply = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!reply) {
+        throw new Error("OPEX_AI_MODEL_UNAVAILABLE: inference server returned an empty model response.");
+      }
       const result: GenerateResponse = {
         text: reply,
         provider: this.id,
@@ -195,7 +198,9 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     try {
-      const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/health`, {
+      // Ollama's health/list endpoint lives at /api/tags, not /v1/health.
+      const base = this.endpoint.replace(/\/$/, "").replace(/\/v1$/, "");
+      const res = await fetch(`${base}/api/tags`, {
         method: "GET",
         headers: this.getHeaders(),
         signal: AbortSignal.timeout(3000),
