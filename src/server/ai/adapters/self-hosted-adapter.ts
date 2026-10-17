@@ -123,37 +123,35 @@ export class SelfHostedProviderAdapter implements AIProvider {
 
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     const texts = Array.isArray(request.text) ? request.text : [request.text];
-    if (this.isConfigured()) {
-      try {
-        const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/embeddings`, {
-          method: "POST",
-          headers: this.getHeaders(),
-          body: JSON.stringify({
-            model: "opexnal-embed-v1",
-            input: texts,
-          }),
-        });
-        if (res.ok) {
-          const data = (await res.json()) as {
-            data?: Array<{ embedding: number[] }>;
-          };
-          if (data.data) {
-            return {
-              embeddings: data.data.map((d) => d.embedding),
-              dimensions: data.data[0]?.embedding?.length || 384,
-              provider: this.id,
-            };
-          }
-        }
-      } catch {
-        // fall through to pseudo embeddings
-      }
+    if (!this.isConfigured()) {
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.");
     }
 
-    const dims = 128;
+    const embeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"] || "nomic-embed-text";
+    const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/embeddings`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({ model: embeddingModel, input: texts }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      throw new Error(`OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned HTTP ${res.status}.`);
+    }
+
+    const data = (await res.json()) as { data?: Array<{ embedding: number[] }> };
+    if (!data.data || data.data.length !== texts.length || data.data.some((item) => !Array.isArray(item.embedding) || item.embedding.length === 0)) {
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned an invalid response.");
+    }
+
+    const dimensions = data.data[0]?.embedding.length ?? 0;
+    if (data.data.some((item) => item.embedding.length !== dimensions)) {
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding dimensions do not match.");
+    }
+
     return {
-      embeddings: texts.map(() => new Array(dims).fill(0.01)),
-      dimensions: dims,
+      embeddings: data.data.map((item) => item.embedding),
+      dimensions,
       provider: this.id,
     };
   }
