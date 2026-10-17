@@ -20,7 +20,12 @@ const socketsByUser = new Map();
 const attempts = new Map();
 const scrypt = promisify(scryptCallback);
 
-if (jwtSecret.length < 32) console.warn("JWT_SECRET must be a unique random value of at least 32 characters.");
+if (jwtSecret.length < 32) {
+  console.warn("JWT_SECRET must be a unique random value of at least 32 characters.");
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Refusing to start in production without a JWT_SECRET of at least 32 characters.");
+  }
+}
 if (!pool) console.warn("DATABASE_URL is missing; API will return 503 for database-backed routes.");
 
 app.disable("x-powered-by");
@@ -46,6 +51,13 @@ function dbRequired(_req, res, next) {
 }
 function rateLimit(key, max = 10, windowMs = 60_000) {
   const now = Date.now();
+  // Keep the in-process fallback bounded; use Redis/shared storage for multi-instance production.
+  if (attempts.size > 10_000) {
+    for (const [attemptKey, record] of attempts) {
+      if (record.resetAt <= now) attempts.delete(attemptKey);
+    }
+  }
+  if (attempts.size >= 20_000 && !attempts.has(key)) return false;
   const old = attempts.get(key);
   if (!old || old.resetAt <= now) { attempts.set(key, { count: 1, resetAt: now + windowMs }); return true; }
   old.count += 1;
