@@ -3,11 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_OPEXNAL_API_URL: ${VITE_OPEXNAL_API_URL:-http://localhost:4000}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3000
-      VITE_OPEXNAL_API_URL: ${VITE_OPEXNAL_API_URL:-http://localhost:4000}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
