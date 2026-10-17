@@ -729,15 +729,26 @@ Output format:
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal AI Gateway error";
+    const modelUnavailable = message.includes("OPEX_AI_MODEL_UNAVAILABLE");
     const status = message.includes("Too many requests")
       ? 429
       : message.includes("rejected by Opexnal Safety")
         ? 400
-        : 500;
+        : modelUnavailable
+          ? 503
+          : 500;
 
-    return new Response(JSON.stringify({ error: message }), {
-      status,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: modelUnavailable
+          ? "Opexnal's own AI model server is not configured or is currently unavailable."
+          : message,
+        code: modelUnavailable ? "OPEX_AI_MODEL_UNAVAILABLE" : undefined,
+      }),
+      {
+        status,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 }
