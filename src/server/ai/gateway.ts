@@ -134,14 +134,11 @@ export class OpexAiGateway {
     } catch (err: unknown) {
       cb?.recordFailure();
       const errorMsg = err instanceof Error ? err.message : String(err);
-      console.warn(
-        `[OPEX-AI] Provider '${provider.id}' failed, activating autonomous fallback:`,
-        errorMsg,
-      );
+      console.error(`[OPEX-AI] Opexnal-hosted model inference failed: ${errorMsg}`);
 
-      // Graceful failover to Opexnal native local runtime
-      outputResponse = await this.fallbackEngine.generate(request);
-      outputResponse.provider = `${this.fallbackEngine.id}_fallback`;
+      // Do not disguise a deterministic placeholder as a real AI response.
+      // A selected first-party model must either answer or return an error.
+      throw new Error("OPEX_AI_MODEL_UNAVAILABLE: The Opexnal-hosted model did not return a response.");
     }
 
     // 4. Output Sanitization
