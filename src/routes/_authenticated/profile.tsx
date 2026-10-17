@@ -39,9 +39,7 @@ function CurrentUserProfileRedirect() {
 
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
-    } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
-    } else {
+    } else if (!user?.id) {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }
   }, [loading, isLoading, profile, user, navigate]);
