@@ -36,10 +36,10 @@ Protect it with `chmod 600 .env.production`. Confirm all non-AI required variabl
 ## 3. Start the stack
 
 ```bash
-docker compose -f deploy/ollama/compose.cloud.yaml up -d --build
-docker compose -f deploy/ollama/compose.cloud.yaml ps
-docker compose -f deploy/ollama/compose.cloud.yaml exec ollama ollama pull llama3.2:1b
-docker compose -f deploy/ollama/compose.cloud.yaml exec ollama ollama pull nomic-embed-text
+docker compose --env-file .env.production -f deploy/ollama/compose.cloud.yaml up -d --build
+docker compose --env-file .env.production -f deploy/ollama/compose.cloud.yaml ps
+docker compose --env-file .env.production -f deploy/ollama/compose.cloud.yaml exec ollama ollama pull llama3.2:1b
+docker compose --env-file .env.production -f deploy/ollama/compose.cloud.yaml exec ollama ollama pull nomic-embed-text
 ```
 
 The app waits for the Ollama container health check, but the model must still be downloaded before a real inference test. For a first run, watch resource use with `docker stats`.
