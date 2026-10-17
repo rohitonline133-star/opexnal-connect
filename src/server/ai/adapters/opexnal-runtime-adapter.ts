@@ -161,17 +161,12 @@ export class TokenBucketRateLimiter {
 **Architectural Considerations**:
 - Precision in-memory token bucket prevents burst amplification.
 - Clean zero-overhead design suitable for Node.js event loop.`;
+    } else if (/^(hi|hey|hello|hii+|hy|namaste|नमस्ते|हाय)[!.\s]*$/i.test(userPrompt.trim())) {
+      text = "Namaste! 👋 Main Opexnal AI hoon. Aap kaise ho? Aaj kis cheez mein help chahiye—caption, reel idea, hashtags, bio, ya koi aur sawaal?";
+    } else if (/(kya kar rahe ho|what are you doing|kaise ho|how are you)/i.test(userPrompt)) {
+      text = "Main yahin hoon—Opexnal par aapki help ke liye ready! 😊 Aap jo bhi poochhna chaho, seedha batao. Caption, reel script, hashtags ya normal sawaal—main Hinglish mein jawab dene ki koshish karunga.";
     } else {
-      text = `Namaste! I am **OPEX AI**, your independent creative co-pilot on Opexnal. 🚀
-
-Here is how I can supercharge your creator journey:
-- ✍️ **Viral Captions & Hooks**: Get personalized caption variants with tailored CTAs.
-- 🎬 **Reel & Video Storyboards**: Structure 15s-60s videos with high-retention 3-second hooks.
-- 🏷️ **Hashtag Matrix**: Intelligent volume and niche targeting.
-- 🛡️ **Safety & Moderation**: Instant comment filtering and brand safety protection.
-- 🌐 **Multilingual Mastery**: Native support for English, Hindi, and natural Hinglish.
-
-Tell me what you're working on, and let's create something extraordinary!`;
+      text = "Abhi real AI provider se response nahi mila, isliye local fallback active hai. Yeh fallback har tarah ke sawaalon ka jawab nahi de sakta. Admin ko Vercel par GEMINI_API_KEY aur AI provider configuration check karni hogi. Aapka message receive hua hai, lekin yeh generated AI response nahi hai.";
     }
 
     return {
