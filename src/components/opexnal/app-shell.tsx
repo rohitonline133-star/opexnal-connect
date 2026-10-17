@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Home, Search, PlusSquare, Bell, User, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,14 +12,21 @@ const tabs = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-export function AppShell({ children, header }: { children: ReactNode; header?: ReactNode }) {
+export function AppShell({
+  children,
+  header,
+  activeTab: _activeTab,
+}: {
+  children: ReactNode;
+  header?: ReactNode;
+  activeTab?: string;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
       {header}
       <main className="flex-1 pb-24">{children}</main>
-
       <nav
         aria-label="Primary"
         className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto flex w-full max-w-md items-center justify-around border-t border-border bg-background/95 px-2 pt-2 backdrop-blur"
@@ -53,14 +60,32 @@ export function ScreenHeader({
   title,
   left,
   right,
+  showBack = false,
+  onBack,
 }: {
   title: ReactNode;
   left?: ReactNode;
   right?: ReactNode;
+  showBack?: boolean;
+  onBack?: () => void | Promise<void>;
 }) {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur">
-      <div className="flex w-16 items-center">{left}</div>
+      <div className="flex w-16 items-center gap-1">
+        {showBack && (
+          <button
+            type="button"
+            aria-label="Go back"
+            onClick={() => (onBack ? void onBack() : navigate({ to: "/home" }))}
+            className="rounded-md px-2 py-1 text-sm hover:bg-muted"
+          >
+            ← Back
+          </button>
+        )}
+        {left}
+      </div>
       <h1 className="truncate text-base font-semibold">{title}</h1>
       <div className="flex w-16 items-center justify-end gap-1">{right}</div>
     </header>
