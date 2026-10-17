@@ -1,0 +1,68 @@
+# GPU inference stack for a GPU-equipped Linux host.
+# Prerequisites: Docker Engine, Compose v2, NVIDIA driver, NVIDIA Container Toolkit.
+# No model/API ports are published to the public internet.
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    restart: unless-stopped
+    command:
+      - --model
+      - ${OPEX_AI_HF_MODEL:-Qwen/Qwen2.5-7B-Instruct-AWQ}
+      - --served-model-name
+      - ${OPEX_AI_MODEL_NAME:-opexnal-qwen-7b}
+      - --quantization
+      - awq
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --max-model-len
+      - ${OPEX_AI_MAX_MODEL_LEN:-8192}
+      - --api-key
+      - ${OPEX_AI_API_KEY:?Set a long random OPEX_AI_API_KEY in .env}
+    environment:
+      HF_HOME: /root/.cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    expose:
+      - "8000"
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks: [ai_private]
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,os; req=urllib.request.Request('http://127.0.0.1:8000/v1/models', headers={'Authorization':'Bearer '+os.environ.get('OPEX_AI_API_KEY','')}); urllib.request.urlopen(req, timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  embeddings:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - embedding_models:/root/.ollama
+    expose:
+      - "11434"
+    networks: [ai_private]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  ai_private:
+    driver: bridge
+    internal: true
+
+volumes:
+  hf_cache:
+  embedding_models:
