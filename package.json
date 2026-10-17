@@ -9,7 +9,7 @@
     "start": "node .output/server/index.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "lint": "eslint .",
+    "lint": "prettier --write . && eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/**/*.test.ts",
