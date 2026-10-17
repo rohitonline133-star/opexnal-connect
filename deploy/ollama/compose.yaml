@@ -1,0 +1,19 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: opexnal-ollama
+    restart: unless-stopped
+    # Keep model inference private; do not expose this port to the public internet.
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - opexnal_ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  opexnal_ollama_models:
