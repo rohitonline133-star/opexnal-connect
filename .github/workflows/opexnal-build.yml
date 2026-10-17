@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +22,37 @@ jobs:
         run: npm install
       - name: Backend syntax
         run: npm run backend:check
-      - name: Generate routes and build production app
+      - name: Production build
+        run: npm run build
+      - name: Build production Docker image
+        run: docker build --pull -t opexnal-connect:ci .
+
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Generate TanStack route types
         run: npm run build
       - name: TypeScript check
         run: npm run typecheck
+
+  lint-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
       - name: Lint
         run: npm run lint
       - name: Automated tests
         run: npm test
-      - name: Build production Docker image
-        run: docker build --pull -t opexnal-connect:ci .
