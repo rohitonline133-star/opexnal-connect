@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import type { AuthSession, AuthUser } from "@/lib/auth-client";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Session =
-  | AuthSession
-  | {
-      access_token: string;
-      user: { id: string; email?: string; [key: string]: unknown } | null;
-    };
+export type Session = {
+  access_token: string;
+  token?: string;
+  userId?: string;
+  expiresAt?: number;
+  user: (AuthUser & { id: string }) | { id: string; email?: string; [key: string]: unknown } | null;
+};
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -15,18 +16,15 @@ export function useSession() {
 
   useEffect(() => {
     let active = true;
-
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
-
-      setSession(nextSession);
+      setSession(nextSession as Session | null);
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-
-      setSession(data.session);
+      setSession(data.session as Session | null);
       setLoading(false);
     });
 
