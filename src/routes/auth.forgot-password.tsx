@@ -37,6 +37,7 @@ function ForgotPasswordPage() {
       const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [cooldown, codeSent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
