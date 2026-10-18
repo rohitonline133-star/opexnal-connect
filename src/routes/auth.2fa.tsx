@@ -33,8 +33,8 @@ export const Route = createFileRoute("/auth/2fa")({
 });
 
 function TwoFactorPage() {
-  const { session } = useSession();
-  const username = session?.user?.username || "user_maya";
+  const { session, user } = useSession();
+  const username = user?.username || "user_maya";
 
   const [step, setStep] = useState<"intro" | "setup" | "backup_codes" | "completed">("intro");
   const [secret, setSecret] = useState("");
@@ -89,7 +89,7 @@ function TwoFactorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: session?.userId || "user_maya",
+          userId: user?.id || "user_maya",
           token: verificationCode.trim(),
         }),
       });
@@ -100,9 +100,10 @@ function TwoFactorPage() {
       }
       setStep("backup_codes");
       toast.success("Two-Factor Authentication successfully verified!");
-    } catch {
-      setStep("backup_codes");
-      toast.success("Two-Factor Authentication verified!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Two-factor verification failed.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

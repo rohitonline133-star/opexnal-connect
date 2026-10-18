@@ -111,7 +111,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       // Valid if 6 digits or valid backup code format (XXXX-XXXX)
       const isValidFormat =
         /^\d{6}$/.test(token) || (/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(token) && token.length === 9);
-      if (!isValidFormat && token !== "123456") {
+      if (!isValidFormat) {
         return jsonResponse({ error: "Invalid two-factor code format" }, 400);
       }
       recordSecurityAudit(

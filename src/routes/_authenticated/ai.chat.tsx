@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bot, Send, Sparkles, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
+import { OpexAiLogo } from "@/components/opexnal/logo";
 import { useSession } from "@/hooks/use-session";
 import { sendAiChatMessage, type ChatMessage } from "@/lib/ai-client";
 
@@ -18,13 +19,13 @@ export const Route = createFileRoute("/_authenticated/ai/chat")({
 
 function AiChatPage() {
   const navigate = useNavigate();
-  const { session } = useSession();
+  useSession();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "intro",
-      role: "assistant",
-      content:
-        "Hello! I am your Opexnal AI co-pilot. Ask me for viral reels hooks, caption variations, or visual composition concepts.",
+      sender: "ai",
+      text:
+        "Hello! I am your Opex AI co-pilot. Ask me for viral reels hooks, caption variations, or visual composition concepts.",
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -38,8 +39,8 @@ function AiChatPage() {
 
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}`,
-      role: "user",
-      content: prompt,
+      sender: "user",
+      text: prompt,
       timestamp: new Date().toISOString(),
     };
 
@@ -48,14 +49,17 @@ function AiChatPage() {
     setLoading(true);
 
     try {
-      const history = messages.map((m) => ({ role: m.role, text: m.content }));
-      const res = await sendAiChatMessage(prompt, history);
+      const history = [...messages, userMsg].map((m) => ({
+        role: (m.sender === "user" ? "user" : "model") as "user" | "model",
+        content: m.text,
+      }));
+      const resText = await sendAiChatMessage({ messages: history, prompt });
       setMessages((prev) => [
         ...prev,
         {
           id: `asst_${Date.now()}`,
-          role: "assistant",
-          content: res.text,
+          sender: "ai",
+          text: resText,
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -69,33 +73,38 @@ function AiChatPage() {
   return (
     <AppShell activeTab="ai">
       <div className="min-h-screen bg-black text-white pb-28 max-w-xl mx-auto flex flex-col">
-        <ScreenHeader title="Opex AI Co-Pilot" showBack onBack={() => navigate({ to: "/ai" })} />
+        <ScreenHeader
+          title={
+            <div className="flex items-center gap-2">
+              <OpexAiLogo size={20} />
+              <span>Opex AI Co-Pilot</span>
+            </div>
+          }
+          showBack
+          onBack={() => navigate({ to: "/ai" })}
+        />
 
         <div className="flex-1 p-4 space-y-3 overflow-y-auto">
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex items-start gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}
+              className={`flex items-start gap-2.5 ${m.sender === "user" ? "flex-row-reverse" : ""}`}
             >
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 ${
-                  m.role === "user" ? "bg-purple-600" : "bg-[#1f1f1f] text-[#8B5CF6]"
+                  m.sender === "user" ? "bg-purple-600" : "bg-[#1f1f1f]"
                 }`}
               >
-                {m.role === "user" ? (
-                  <User className="w-3.5 h-3.5" />
-                ) : (
-                  <Bot className="w-3.5 h-3.5" />
-                )}
+                {m.sender === "user" ? <User className="w-3.5 h-3.5" /> : <OpexAiLogo size={20} />}
               </div>
               <div
                 className={`max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
-                  m.role === "user"
+                  m.sender === "user"
                     ? "bg-[#8B5CF6] text-white rounded-tr-none"
                     : "bg-[#141414] border border-[#222] text-gray-200 rounded-tl-none whitespace-pre-line"
                 }`}
               >
-                {m.content}
+                {m.text}
               </div>
             </div>
           ))}

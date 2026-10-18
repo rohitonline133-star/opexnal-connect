@@ -25,3 +25,37 @@ export function OpexnalMark({ className }: { className?: string }) {
     </span>
   );
 }
+
+/**
+ * Official Opex AI Eagle Logo
+ * Displays the complete majestic eagle with both wings symmetrically spread,
+ * preserving natural aspect ratio without distortion or cropping.
+ */
+export function OpexAiLogo({
+  className,
+  size = 32,
+  alt = "Opex AI official eagle logo",
+}: {
+  className?: string;
+  size?: number;
+  alt?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative inline-flex items-center justify-center overflow-hidden shrink-0 select-none",
+        className,
+      )}
+      style={{ width: size, height: size }}
+    >
+      <img
+        src="/assets/opex-ai-eagle.svg"
+        alt={alt}
+        width={size}
+        height={size}
+        className="h-full w-full object-contain pointer-events-none"
+        loading="eager"
+      />
+    </div>
+  );
+}

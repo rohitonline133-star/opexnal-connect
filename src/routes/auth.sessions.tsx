@@ -31,8 +31,9 @@ export const Route = createFileRoute("/auth/sessions")({
 });
 
 function SessionsPage() {
-  const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const { session, user } = useSession();
+  const token = session?.access_token || "";
+  const userId = user?.id || "user_maya";
 
   const [sessions, setSessions] = useState<DeviceSessionRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ function SessionsPage() {
     const load = async () => {
       try {
         const res = await fetch("/api/auth/sessions", {
-          headers: { Authorization: `Bearer ${session?.token || "user_maya"}` },
+          headers: { Authorization: `Bearer ${token || "user_maya"}` },
         });
         const data = await res.json();
         if (isMounted) setSessions(data.sessions || []);
@@ -58,7 +59,7 @@ function SessionsPage() {
     return () => {
       isMounted = false;
     };
-  }, [session?.token, userId]);
+  }, [token, userId]);
 
   const handleRevokeSingle = async (sessionId: string) => {
     setActionLoading(sessionId);

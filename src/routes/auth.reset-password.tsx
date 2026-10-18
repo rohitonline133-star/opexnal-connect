@@ -83,10 +83,10 @@ function ResetPasswordPage() {
 
       setIsSuccess(true);
       toast.success("Password changed successfully! Previous sessions revoked.");
-    } catch {
-      // Fallback
-      setIsSuccess(true);
-      toast.success("Password updated successfully!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Password reset failed. Please try again.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

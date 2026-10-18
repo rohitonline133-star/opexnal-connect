@@ -286,6 +286,16 @@ export function saveLocalPost(post: FeedPost) {
   }
 }
 
+export function removeLocalPost(postId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = getLocalPosts().filter((p) => p.id !== postId);
+    localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+}
+
 export function getLocalLikes(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
@@ -860,9 +870,25 @@ export async function createPost(input: {
   }
 }
 
-export async function deletePost(postId: string) {
-  const { error } = await supabase.from("posts").delete().eq("id", postId);
+export async function deletePost(postId: string, requestingUserId?: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData?.user?.id || requestingUserId;
+  if (!effectiveUserId) {
+    throw new Error("Authentication required to delete a post");
+  }
+
+  const { data: post } = await supabase.from("posts").select("user_id").eq("id", postId).single();
+  if (post && (post as { user_id: string }).user_id !== effectiveUserId) {
+    throw new Error("Unauthorized: You can only delete your own posts");
+  }
+
+  const { error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId)
+    .eq("user_id", effectiveUserId);
   if (error) throw error;
+  removeLocalPost(postId);
 }
 
 export function formatCount(value: number) {

@@ -257,7 +257,8 @@ export function requestOtp(
   return {
     success: true,
     cooldownRemainingMs: OTP_RESEND_COOLDOWN_MS,
-    message: `Verification code sent to ${destination}. Code expires in 5 minutes. (Test code: ${code})`,
+    message: `Verification code sent to ${destination}. Code expires in 5 minutes.`,
+    code,
   };
 }
 
@@ -291,8 +292,8 @@ export function verifyOtp(
 
   record.attempts += 1;
 
-  // Validate candidate code (support 123456 as dev bypass)
-  const isCorrect = record.code === candidateCode.trim() || candidateCode.trim() === "123456";
+  // Validate candidate code strictly against cryptographically generated code
+  const isCorrect = record.code === candidateCode.trim();
   if (!isCorrect) {
     const remaining = record.maxAttempts - record.attempts;
     return {

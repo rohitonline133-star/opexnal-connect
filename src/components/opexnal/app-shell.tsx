@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, PlusSquare, Bell, User, Clapperboard } from "lucide-react";
+import { Home, Search, PlusSquare, Bell, User, Clapperboard, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -12,7 +12,15 @@ const tabs = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
-export function AppShell({ children, header }: { children: ReactNode; header?: ReactNode }) {
+export function AppShell({
+  children,
+  header,
+  activeTab,
+}: {
+  children: ReactNode;
+  header?: ReactNode;
+  activeTab?: string;
+}) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -26,7 +34,10 @@ export function AppShell({ children, header }: { children: ReactNode; header?: R
       >
         {tabs.map(({ to, label, icon: Icon, ...rest }) => {
           const primary = "primary" in rest && rest.primary;
-          const active = pathname === to || pathname.startsWith(`${to}/`);
+          const active =
+            (activeTab && to === `/${activeTab}`) ||
+            pathname === to ||
+            pathname.startsWith(`${to}/`);
           return (
             <Link
               key={to}
@@ -53,14 +64,30 @@ export function ScreenHeader({
   title,
   left,
   right,
+  showBack,
+  onBack,
 }: {
   title: ReactNode;
   left?: ReactNode;
   right?: ReactNode;
+  showBack?: boolean;
+  onBack?: () => void | Promise<void>;
 }) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur">
-      <div className="flex w-16 items-center">{left}</div>
+      <div className="flex w-16 items-center">
+        {left ||
+          (showBack && (
+            <button
+              type="button"
+              onClick={() => (onBack ? onBack() : window.history.back())}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          ))}
+      </div>
       <h1 className="truncate text-base font-semibold">{title}</h1>
       <div className="flex w-16 items-center justify-end gap-1">{right}</div>
     </header>

@@ -293,8 +293,17 @@ export async function sendMessage(
   };
 }
 
-export async function deleteMessage(messageId: string) {
-  const { error } = await supabase.from("messages").delete().eq("id", messageId);
+export async function deleteMessage(messageId: string, requestingUserId?: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData?.user?.id || requestingUserId;
+  if (!effectiveUserId) {
+    throw new Error("Authentication required to delete a message");
+  }
+  const { error } = await supabase
+    .from("messages")
+    .delete()
+    .eq("id", messageId)
+    .eq("sender_id", effectiveUserId);
   if (error) throw error;
 }
 

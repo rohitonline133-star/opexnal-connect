@@ -73,20 +73,36 @@ describe("Authentication & Account Security Engine", () => {
 
   test("OTP protection: validates correct code and rejects invalid attempts with attempt limits", () => {
     const testDestination = "user_otp_check@opexnal.test";
-    requestOtp(testDestination, "email");
+    const req = requestOtp(testDestination, "email");
+    assert.strictEqual(req.success, true);
+    assert.ok(req.code, "requestOtp must return generated OTP code");
 
     // Invalid attempt
     const invalidCheck = verifyOtp(testDestination, "000000");
     assert.strictEqual(invalidCheck.valid, false);
     assert.ok(invalidCheck.error?.includes("Invalid code"));
 
-    // Valid check (123456 test bypass)
-    const validCheck = verifyOtp(testDestination, "123456");
+    // Valid check using actual generated OTP
+    const validCheck = verifyOtp(testDestination, req.code);
     assert.strictEqual(validCheck.valid, true);
 
     // Single-use: once verified, code is consumed and cannot be reused
-    const reuseCheck = verifyOtp(testDestination, "123456");
+    const reuseCheck = verifyOtp(testDestination, req.code);
     assert.strictEqual(reuseCheck.valid, false);
+  });
+
+  test("OTP protection: strictly rejects backdoor codes like 123456 when actual code differs", () => {
+    const testDestination = "user_no_bypass@opexnal.test";
+    const req = requestOtp(testDestination, "email");
+    assert.strictEqual(req.success, true);
+    if (req.code !== "123456") {
+      const bypassAttempt = verifyOtp(testDestination, "123456");
+      assert.strictEqual(
+        bypassAttempt.valid,
+        false,
+        "Hardcoded 123456 code must NOT bypass OTP verification",
+      );
+    }
   });
 
   // 4. Two-Factor Authentication & Backup Codes

@@ -138,13 +138,18 @@ function SignupPage() {
         body: JSON.stringify({ email: contact }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.error || "Failed to send verification code");
+        toast.error(data.error || "Failed to send verification code");
+        return;
+      }
       setOtpSent(true);
       setStep("verify_otp");
-      toast.success(data.message || "Verification code sent! (Use test code: 123456)");
-    } catch {
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.info("Verification code sent! (Use test code: 123456)");
+      toast.success(data.message || "Verification code sent!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to send verification code";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -168,7 +173,7 @@ function SignupPage() {
         body: JSON.stringify({ email: emailOrPhone.trim(), code: otpCode.trim() }),
       });
       const verifyData = await verifyRes.json();
-      if (!verifyRes.ok && otpCode.trim() !== "123456") {
+      if (!verifyRes.ok) {
         setErrorMessage(verifyData.error || "Invalid verification code");
         setLoading(false);
         return;
@@ -443,7 +448,7 @@ function SignupPage() {
             </span>
             <input
               type="text"
-              placeholder="6-digit code (e.g. 123456)"
+              placeholder="Enter 6-digit code"
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value)}
               disabled={loading}

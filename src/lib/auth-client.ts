@@ -49,12 +49,12 @@ type AuthListener = (event: string, session: AuthSession | null) => void;
 
 class AuthClient {
   private listeners: Set<AuthListener> = new Set();
-  private memorySession: AuthSession | null = DEFAULT_SESSION;
-  private memoryUser: AuthUser | null = DEFAULT_USER;
+  private memorySession: AuthSession | null = null;
+  private memoryUser: AuthUser | null = null;
 
   constructor() {
-    this.memoryUser = DEFAULT_USER;
-    this.memorySession = DEFAULT_SESSION;
+    this.memoryUser = null;
+    this.memorySession = null;
     if (typeof window !== "undefined") {
       try {
         const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
@@ -62,16 +62,31 @@ class AuthClient {
         if (storedSession && storedUser) {
           this.memorySession = JSON.parse(storedSession);
           this.memoryUser = JSON.parse(storedUser);
-        } else {
-          // Initialize with default demo session for rich interactive preview
-          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(DEFAULT_USER));
-          localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(DEFAULT_SESSION));
         }
       } catch {
-        this.memoryUser = DEFAULT_USER;
-        this.memorySession = DEFAULT_SESSION;
+        this.memoryUser = null;
+        this.memorySession = null;
       }
     }
+  }
+
+  setSession(session: AuthSession | null) {
+    this.memorySession = session;
+    this.memoryUser = session ? session.user : null;
+    if (typeof window !== "undefined") {
+      try {
+        if (session) {
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
+          localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+        } else {
+          localStorage.removeItem(AUTH_USER_KEY);
+          localStorage.removeItem(AUTH_SESSION_KEY);
+        }
+      } catch {
+        // storage quota
+      }
+    }
+    this.notify(session ? "SIGNED_IN" : "SIGNED_OUT", session);
   }
 
   private notify(event: string, session: AuthSession | null) {

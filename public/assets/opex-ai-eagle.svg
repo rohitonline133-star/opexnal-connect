@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="opex-eagle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9333EA" />
+      <stop offset="50%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="opex-eagle-accent" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C084FC" />
+      <stop offset="100%" stop-color="#F472B6" />
+    </linearGradient>
+  </defs>
+  <!-- Background Badge -->
+  <rect width="100" height="100" rx="22" fill="#0E0E17" />
+  <rect x="2" y="2" width="96" height="96" rx="20" stroke="url(#opex-eagle-grad)" stroke-width="1.5" stroke-opacity="0.4" />
+  
+  <!-- Symmetrical Eagle Wings & Head (Both Wings Fully Displayed) -->
+  <g id="eagle-insignia">
+    <!-- Left Wing Feathers -->
+    <path d="M 50 48 C 42 38 28 28 12 32 C 16 38 24 42 32 44 C 22 44 14 48 10 56 C 16 57 24 57 32 55 C 24 58 18 64 16 72 C 24 69 34 65 42 58 Z" fill="url(#opex-eagle-grad)" opacity="0.95" />
+    <path d="M 48 52 C 40 45 30 38 20 40 C 26 44 32 46 38 48 C 28 50 22 56 20 62 C 28 60 36 57 44 54 Z" fill="url(#opex-eagle-accent)" opacity="0.8" />
+    
+    <!-- Right Wing Feathers (Mirroring Left Wing) -->
+    <path d="M 50 48 C 58 38 72 28 88 32 C 84 38 76 42 68 44 C 78 44 86 48 90 56 C 84 57 76 57 68 55 C 76 58 82 64 84 72 C 76 69 66 65 58 58 Z" fill="url(#opex-eagle-grad)" opacity="0.95" />
+    <path d="M 52 52 C 60 45 70 38 80 40 C 74 44 68 46 62 48 C 72 50 78 56 80 62 C 72 60 64 57 56 54 Z" fill="url(#opex-eagle-accent)" opacity="0.8" />
+    
+    <!-- Eagle Body & Tail -->
+    <path d="M 45 52 L 50 78 L 55 52 Z" fill="url(#opex-eagle-accent)" />
+    <polygon points="50,84 46,74 54,74" fill="#F472B6" />
+    
+    <!-- Eagle Head & Sharp Beak -->
+    <path d="M 50 22 C 46 22 43 25 43 30 C 43 33 45 36 47 38 L 50 46 L 53 38 C 55 36 57 33 57 30 C 57 25 54 22 50 22 Z" fill="#FFFFFF" />
+    <!-- Beak -->
+    <path d="M 50 36 L 47 43 L 53 43 Z" fill="#FBBF24" />
+    <path d="M 50 44 L 48 48 L 52 48 Z" fill="#F59E0B" />
+    
+    <!-- Eyes -->
+    <circle cx="47" cy="30" r="1.5" fill="#0E0E17" />
+    <circle cx="53" cy="30" r="1.5" fill="#0E0E17" />
+  </g>
+</svg>

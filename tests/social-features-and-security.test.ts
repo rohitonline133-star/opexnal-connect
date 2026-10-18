@@ -212,4 +212,23 @@ describe("Defensive Authorization & IDOR Security Audit", () => {
       "Update must strictly target session user, never attacker-specified victim",
     );
   });
+
+  test("IDOR regression: deletePost and deleteMessage reject unauthenticated callers", async () => {
+    const { deletePost } = await import("../src/lib/posts.ts");
+    const { deleteMessage } = await import("../src/lib/messages.ts");
+
+    await assert.rejects(
+      async () => {
+        await deletePost("any_post_id", undefined);
+      },
+      { message: /Authentication required to delete a post/ },
+    );
+
+    await assert.rejects(
+      async () => {
+        await deleteMessage("any_msg_id", undefined);
+      },
+      { message: /Authentication required to delete a message/ },
+    );
+  });
 });

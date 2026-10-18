@@ -137,6 +137,8 @@ export interface OpexnalSettings {
   allowPostSharingToStories: boolean;
   allowReelsSharing: boolean;
   allowStoryResharing: boolean;
+  saveStoryToCameraRoll: boolean;
+  storyReplyPermission: "everyone" | "following" | "off";
   allowReelsRemix: boolean;
   allowReuseAudio: boolean;
   allowReelsDownloads: boolean;
@@ -353,6 +355,8 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   allowPostSharingToStories: true,
   allowReelsSharing: true,
   allowStoryResharing: true,
+  saveStoryToCameraRoll: false,
+  storyReplyPermission: "everyone",
   allowReelsRemix: true,
   allowReuseAudio: true,
   allowReelsDownloads: true,
@@ -499,7 +503,10 @@ export async function saveSettings(
   }
 
   // Synchronize applicable privacy & profile columns with Supabase if userId is authenticated
-  if (userId) {
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData?.user?.id || userId;
+
+  if (effectiveUserId) {
     try {
       const profileUpdates: {
         is_private?: boolean;
@@ -520,7 +527,7 @@ export async function saveSettings(
         profileUpdates.account_type = patch.accountType;
 
       if (Object.keys(profileUpdates).length > 0) {
-        await supabase.from("profiles").update(profileUpdates).eq("id", userId);
+        await supabase.from("profiles").update(profileUpdates).eq("id", effectiveUserId);
       }
     } catch {
       // non-fatal fallback

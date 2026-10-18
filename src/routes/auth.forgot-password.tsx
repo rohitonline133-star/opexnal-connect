@@ -33,10 +33,9 @@ function ForgotPasswordPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (cooldown > 0 && codeSent) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (!codeSent || cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
   }, [cooldown, codeSent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,13 +56,18 @@ function ForgotPasswordPage() {
         body: JSON.stringify({ email: target }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.error || "Failed to send reset instructions");
+        toast.error(data.error || "Failed to send reset instructions");
+        return;
+      }
       setCodeSent(true);
       setCooldown(60);
-      toast.success(data.message || "Reset instructions sent! (Use test code: 123456)");
-    } catch {
-      setCodeSent(true);
-      setCooldown(60);
-      toast.info("Password reset code sent! (Use test code: 123456)");
+      toast.success(data.message || "Reset instructions sent to your contact address");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to send reset instructions";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

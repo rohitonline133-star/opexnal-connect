@@ -34,10 +34,9 @@ function VerifyPage() {
   const [verified, setVerified] = useState(false);
 
   useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
   }, [cooldown]);
 
   const handleResend = async () => {
@@ -61,9 +60,10 @@ function VerifyPage() {
       }
       setCooldown(60);
       toast.success(data.message || "A new verification code has been sent!");
-    } catch {
-      setCooldown(60);
-      toast.info("Verification code sent! (Use test code: 123456)");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to resend code";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ function VerifyPage() {
         body: JSON.stringify({ [type]: contact.trim(), code: code.trim() }),
       });
       const data = await res.json();
-      if (!res.ok && code.trim() !== "123456") {
+      if (!res.ok) {
         setErrorMessage(data.error || "Invalid verification code");
         return;
       }
@@ -94,16 +94,10 @@ function VerifyPage() {
       setTimeout(() => {
         navigate({ to: search.redirect || "/home", replace: true });
       }, 1500);
-    } catch {
-      if (code.trim() === "123456") {
-        setVerified(true);
-        toast.success("Contact successfully verified!");
-        setTimeout(() => {
-          navigate({ to: search.redirect || "/home", replace: true });
-        }, 1500);
-      } else {
-        setErrorMessage("Verification failed. Please try again.");
-      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Verification failed. Please try again.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

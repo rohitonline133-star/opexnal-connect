@@ -7,15 +7,16 @@ import { getStoryTray } from "@/lib/stories";
 import { initialsFor } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
-export function StoryTray({ viewerId }: { viewerId: string }) {
+export function StoryTray({ viewerId = "" }: { viewerId?: string | null }) {
+  const currentViewerId = viewerId || "";
   const { data, isLoading } = useQuery({
-    queryKey: ["story-tray", viewerId],
-    queryFn: () => getStoryTray(viewerId),
+    queryKey: ["story-tray", currentViewerId],
+    queryFn: () => getStoryTray(currentViewerId),
   });
 
   const groups = data ?? [];
-  const mine = groups.find((g) => g.author.id === viewerId);
-  const others = groups.filter((g) => g.author.id !== viewerId);
+  const mine = currentViewerId ? groups.find((g) => g.author.id === currentViewerId) : null;
+  const others = currentViewerId ? groups.filter((g) => g.author.id !== currentViewerId) : groups;
 
   return (
     <div className="border-b border-border">
