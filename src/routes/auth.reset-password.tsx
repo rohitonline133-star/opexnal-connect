@@ -35,7 +35,6 @@ function ResetPasswordPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
-  const [codeOrToken, setCodeOrToken] = useState(search.token || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -145,7 +144,9 @@ function ResetPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleReset} className="w-full space-y-3.5">
-          {/* Reset Code or Token */}
+          <p className="rounded-xl border border-[#262626] bg-[#121212] p-3 text-xs text-gray-400">
+            This page only works after opening the password reset link sent by the authentication provider in this browser.
+          </p>
           <div className="relative flex items-center">
             <span className="absolute left-4 text-gray-400">
               <KeyRound size={18} />
