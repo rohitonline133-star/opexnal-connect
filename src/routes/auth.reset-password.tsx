@@ -35,6 +35,7 @@ function ResetPasswordPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
+  const [codeOrToken, setCodeOrToken] = useState(search.token || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
