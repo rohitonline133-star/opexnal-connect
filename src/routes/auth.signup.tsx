@@ -54,6 +54,7 @@ function SignupPage() {
   const [step, setStep] = useState<"details" | "verify_otp" | "welcome">("details");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
 
   // Evaluation & Validation states
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">(
@@ -72,15 +73,9 @@ function SignupPage() {
       setUsernameStatus("idle");
       return;
     }
-    setUsernameStatus("checking");
-    setTimeout(() => {
-      // Reserved demo check
-      if (["admin", "system", "root", "instagram", "meta"].includes(clean)) {
-        setUsernameStatus("taken");
-      } else {
-        setUsernameStatus("available");
-      }
-    }, 250);
+    // Availability cannot be verified locally. Do not claim a username is free
+    // until the configured authentication/database provider checks it server-side.
+    setUsernameStatus("idle");
   };
 
   const handleInitialSubmit = async (e: React.FormEvent) => {
@@ -98,10 +93,6 @@ function SignupPage() {
     }
     if (!username.trim() || username.length < 3) {
       setErrorMessage("Username must be at least 3 characters.");
-      return;
-    }
-    if (usernameStatus === "taken") {
-      setErrorMessage("This username is already taken. Please choose another.");
       return;
     }
     if (!birthday) {
@@ -129,27 +120,45 @@ function SignupPage() {
       return;
     }
 
-    // Request verification OTP
+    // Create the account through the configured Supabase Auth provider.
+    // Do not report success until the provider confirms the account exists.
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: contact }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Failed to send verification code");
-        toast.error(data.error || "Failed to send verification code");
+      if (!contact.includes("@")) {
+        setErrorMessage("Use an email address for signup. Phone OTP signup is not configured.");
         return;
       }
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.success(data.message || "Verification code sent!");
+
+      const { data, error } = await authClient.signUp({
+        email: contact.toLowerCase(),
+        password,
+        options: {
+          data: {
+            username: username.trim().toLowerCase(),
+            full_name: fullName.trim(),
+            display_name: fullName.trim(),
+          },
+        },
+      });
+
+      if (error || !data?.user) {
+        const message = error?.message || "The authentication provider did not create the account.";
+        setErrorMessage(message);
+        toast.error(message);
+        return;
+      }
+
+      setRequiresEmailConfirmation(!data.session);
+      setStep("welcome");
+      toast.success(
+        data.session
+          ? "Account created and signed in."
+          : "Account created. Check your email to confirm it before signing in.",
+      );
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to send verification code";
-      setErrorMessage(msg);
-      toast.error(msg);
+      const message = err instanceof Error ? err.message : "Registration failed";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -306,16 +315,9 @@ function SignupPage() {
               {usernameStatus === "taken" && <XCircle className="w-4 h-4 text-rose-400" />}
             </div>
           </div>
-          {usernameStatus === "available" && (
-            <p className="text-[11px] text-emerald-400 pl-1 font-medium">
-              @{username} is available!
-            </p>
-          )}
-          {usernameStatus === "taken" && (
-            <p className="text-[11px] text-rose-400 pl-1 font-medium">
-              @{username} is already taken.
-            </p>
-          )}
+          <p className="text-[11px] text-gray-500 pl-1 font-medium">
+            Username availability must be verified by the server during account creation.
+          </p>
 
           {/* Birthday / Age verification */}
           <div className="relative flex items-center">
@@ -424,7 +426,7 @@ function SignupPage() {
             className="w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Continue to Verification</span>
+            <span>Create Account</span>
           </button>
         </form>
       )}
@@ -484,19 +486,20 @@ function SignupPage() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Welcome, {fullName}!</h3>
+            <h3 className="text-lg font-bold text-white">{requiresEmailConfirmation ? "Confirm your email" : `Welcome, ${fullName}!`}</h3>
             <p className="text-xs text-gray-400 mt-1">
-              Your profile @{username} is all set up. Get ready to explore creator communities and
-              share moments.
+              {requiresEmailConfirmation
+                ? `We sent a confirmation link to ${emailOrPhone}. Open it before signing in.`
+                : `Your account @{username} is created. You can now explore Opexnal.`}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => navigate({ to: search.redirect || "/home", replace: true })}
+            onClick={() => navigate({ to: requiresEmailConfirmation ? "/auth/login" : search.redirect || "/home", replace: true })}
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg"
           >
-            Go to Your Feed
+            {requiresEmailConfirmation ? "Go to Login" : "Go to Your Feed"}
           </button>
         </div>
       )}

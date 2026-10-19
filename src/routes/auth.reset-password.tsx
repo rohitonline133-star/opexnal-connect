@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
+import { authClient } from "@/lib/auth-client";
 
 const resetPasswordSearchSchema = z.object({
   token: z.string().optional(),
@@ -34,7 +35,6 @@ function ResetPasswordPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
-  const [codeOrToken, setCodeOrToken] = useState(search.token || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -49,11 +49,6 @@ function ResetPasswordPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!codeOrToken.trim()) {
-      setErrorMessage("Please enter your verification code or reset token.");
-      return;
-    }
-
     if (!passwordEval.isValid) {
       setErrorMessage(passwordEval.errors[0] || "Password does not meet complexity standards.");
       return;
@@ -66,23 +61,21 @@ function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/password-reset/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          newPassword,
-          code: codeOrToken.trim(),
-        }),
-      });
+      const { data: sessionData, error: sessionError } = await authClient.getSession();
+      if (sessionError || !sessionData.session) {
+        setErrorMessage("Open the reset link from your email in this browser. The recovery session is missing or expired.");
+        return;
+      }
 
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Password reset failed. Token may be expired.");
+      const { error } = await authClient.updatePassword(newPassword);
+      if (error) {
+        setErrorMessage(error.message);
+        toast.error(error.message);
         return;
       }
 
       setIsSuccess(true);
-      toast.success("Password changed successfully! Previous sessions revoked.");
+      toast.success("Password updated by the authentication provider.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Password reset failed. Please try again.";
       setErrorMessage(msg);
@@ -151,7 +144,9 @@ function ResetPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleReset} className="w-full space-y-3.5">
-          {/* Reset Code or Token */}
+          <p className="rounded-xl border border-[#262626] bg-[#121212] p-3 text-xs text-gray-400">
+            This page only works after opening the password reset link sent by the authentication provider in this browser.
+          </p>
           <div className="relative flex items-center">
             <span className="absolute left-4 text-gray-400">
               <KeyRound size={18} />

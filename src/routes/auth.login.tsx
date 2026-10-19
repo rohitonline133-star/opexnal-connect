@@ -64,64 +64,9 @@ function LoginPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    // 1. Phone login flow
+    // Phone OTP is not wired to a real SMS provider. Never accept the mock endpoint as authentication.
     if (authMethod === "phone") {
-      if (!phoneNumber.trim()) {
-        setErrorMessage("Please enter your mobile phone number.");
-        return;
-      }
-
-      if (!phoneOtpSent) {
-        setLoading(true);
-        try {
-          const res = await fetch("/api/auth/phone/otp/request", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: phoneNumber.trim() }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            setErrorMessage(data.error || "Failed to send verification SMS");
-            return;
-          }
-          setPhoneOtpSent(true);
-          toast.success(data.message || "Verification code sent to your phone");
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Failed to send verification SMS";
-          setErrorMessage(msg);
-          toast.error(msg);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      if (!phoneOtp.trim()) {
-        setErrorMessage("Please enter the 6-digit verification code");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const res = await fetch("/api/auth/phone/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber.trim(), code: phoneOtp.trim() }),
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          toast.success("Phone verified! Welcome back.");
-          navigate({ to: search.redirect || "/home", replace: true });
-        } else {
-          setErrorMessage(data.error || "Invalid verification code");
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Failed to verify code. Please try again.";
-        setErrorMessage(msg);
-        toast.error(msg);
-      } finally {
-        setLoading(false);
-      }
+      setErrorMessage("Phone OTP login is not configured with a real SMS provider. Use your registered email and password.");
       return;
     }
 
@@ -146,13 +91,6 @@ function LoginPage() {
       if (error) {
         setErrorMessage(error.message);
         toast.error(error.message);
-        return;
-      }
-
-      if (data?.requires2fa) {
-        setRequires2fa(true);
-        setPendingUserId(data.user?.id || null);
-        toast.info("Two-factor authentication required for this account");
         return;
       }
 
@@ -250,7 +188,7 @@ function LoginPage() {
         <p className="text-xs text-gray-400 font-medium">
           {requires2fa
             ? "Enter code from your Authenticator app or a single-use backup code"
-            : "Log in with your email, username or registered phone"}
+            : "Log in with your registered email and password"}
         </p>
       </div>
 
