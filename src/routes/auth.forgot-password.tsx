@@ -10,6 +10,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => ({
@@ -50,20 +51,22 @@ function ForgotPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: target }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Failed to send reset instructions");
-        toast.error(data.error || "Failed to send reset instructions");
+      if (!target.includes("@")) {
+        setErrorMessage("Enter the email address registered to your account. Username/phone recovery is not configured.");
+        return;
+      }
+      const { error } = await authClient.resetPasswordForEmail(
+        target,
+        window.location.origin + "/auth/reset-password",
+      );
+      if (error) {
+        setErrorMessage(error.message);
+        toast.error(error.message);
         return;
       }
       setCodeSent(true);
       setCooldown(60);
-      toast.success(data.message || "Reset instructions sent to your contact address");
+      toast.success("If the account exists, Supabase will send a password reset email.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to send reset instructions";
       setErrorMessage(msg);
@@ -91,7 +94,7 @@ function ForgotPasswordPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Trouble Logging In?</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Enter your email, username, or phone number and we'll send you a secure reset code to get
+          Enter your registered email address and we'll send a secure password reset link to get
           back into your account.
         </p>
       </div>
@@ -111,7 +114,7 @@ function ForgotPasswordPage() {
           <div className="p-3.5 bg-emerald-950/50 border border-emerald-800/60 rounded-xl text-emerald-200 text-xs flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-semibold">Reset Code Dispatched</p>
+              <p className="font-semibold">Reset Email Requested</p>
               <p className="text-emerald-300 text-[11px] leading-relaxed">
                 If an account exists matching <strong className="text-white">{identity}</strong>, a
                 one-time verification link and code has been dispatched.
@@ -123,7 +126,7 @@ function ForgotPasswordPage() {
             to="/auth/reset-password"
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2"
           >
-            Enter Code & Reset Password
+            Open Reset Link
           </Link>
 
           <div className="flex justify-between items-center text-xs pt-1">
@@ -149,7 +152,7 @@ function ForgotPasswordPage() {
             </span>
             <input
               type="text"
-              placeholder="Email, username, or phone number"
+              placeholder="Registered email address"
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
               disabled={loading}
@@ -164,7 +167,7 @@ function ForgotPasswordPage() {
             disabled={loading}
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Login Link & Code"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Password Reset Link"}
           </button>
 
           <div className="p-3 bg-[#121212] border border-[#222222] rounded-xl flex items-start gap-2.5 text-xs text-gray-400">
