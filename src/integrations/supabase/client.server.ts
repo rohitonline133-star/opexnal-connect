@@ -33,19 +33,14 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL =
-    process.env["SUPABASE_URL"] ||
-    process.env["VITE_SUPABASE_URL"] ||
-    (process.env["SUPABASE_PROJECT_ID"]
-      ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
-      : undefined) ||
-    "https://cvzloydcxjjpjydzjyhw.supabase.co";
-  const SUPABASE_SERVICE_ROLE_KEY =
-    process.env["SUPABASE_SERVICE_ROLE_KEY"] || "mock-service-role-key";
+  // Never silently fall back to a hard-coded project URL or placeholder service-role key.
+  // This client bypasses Row Level Security, so missing credentials must fail closed.
+  const SUPABASE_URL = process.env["SUPABASE_URL"];
+  const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
 
-  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
-    console.warn(
-      "[Supabase Admin] Supabase service role credentials not found in env. Running with fallback credentials for preview.",
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      "Supabase admin client is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server.",
     );
   }
 
