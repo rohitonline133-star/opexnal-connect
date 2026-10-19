@@ -39,17 +39,22 @@ function CurrentUserProfileRedirect() {
 
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
-    } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
-    } else {
+    } else if (!user?.id) {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }
   }, [loading, isLoading, profile, user, navigate]);
 
   return (
     <AppShell activeTab="profile">
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
+        {loading || isLoading ? (
+          <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">Your profile has not been created yet.</p>
+            <p className="max-w-md text-xs text-muted-foreground">Opexnal will not redirect you to another user’s profile. Please complete profile setup or contact support.</p>
+          </>
+        )}
       </div>
     </AppShell>
   );
