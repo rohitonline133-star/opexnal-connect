@@ -94,13 +94,6 @@ function LoginPage() {
         return;
       }
 
-      if (data?.requires2fa) {
-        setRequires2fa(true);
-        setPendingUserId(data.user?.id || null);
-        toast.info("Two-factor authentication required for this account");
-        return;
-      }
-
       if (data?.session) {
         toast.success("Signed in successfully! Welcome to Opexnal.");
         navigate({ to: search.redirect || "/home", replace: true });
@@ -195,7 +188,7 @@ function LoginPage() {
         <p className="text-xs text-gray-400 font-medium">
           {requires2fa
             ? "Enter code from your Authenticator app or a single-use backup code"
-            : "Log in with your email, username or registered phone"}
+            : "Log in with your registered email and password"}
         </p>
       </div>
 
