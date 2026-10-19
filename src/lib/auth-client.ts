@@ -60,8 +60,25 @@ class AuthClient {
         const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
         const storedUser = localStorage.getItem(AUTH_USER_KEY);
         if (storedSession && storedUser) {
-          this.memorySession = JSON.parse(storedSession);
-          this.memoryUser = JSON.parse(storedUser);
+          const session = JSON.parse(storedSession) as AuthSession;
+          const user = JSON.parse(storedUser) as AuthUser;
+          // Older builds wrote locally fabricated "opexnal_jwt_*" tokens.
+          // They are not server-issued credentials and must never unlock the app.
+          const isRealSession =
+            typeof session.token === "string" &&
+            !session.token.startsWith("opexnal_jwt_") &&
+            !session.token.startsWith("opexnal_demo_") &&
+            Number.isFinite(session.expiresAt) &&
+            session.expiresAt > Date.now() &&
+            typeof user.id === "string" &&
+            user.id.length > 0;
+          if (isRealSession) {
+            this.memorySession = session;
+            this.memoryUser = user;
+          } else {
+            localStorage.removeItem(AUTH_USER_KEY);
+            localStorage.removeItem(AUTH_SESSION_KEY);
+          }
         }
       } catch {
         this.memoryUser = null;
@@ -125,54 +142,19 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession; requires2fa?: boolean } | null;
     error: Error | null;
   }> {
-    const emailOrUsername = (params.email || "").trim();
-    if (!emailOrUsername) {
-      return { data: null, error: new Error("Email or username is required") };
+    const identity = (params.email || "").trim();
+    if (!identity || !params.password) {
+      return { data: null, error: new Error("Email/username and password are required") };
     }
 
-    const username = emailOrUsername.includes("@")
-      ? emailOrUsername.split("@")[0] || "user"
-      : emailOrUsername;
-    const userId = `user_${username.toLowerCase().replace(/[^a-z0-9_]/g, "_")}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email: emailOrUsername.includes("@") ? emailOrUsername : `${username}@opexnal.local`,
-      username,
-      displayName: username
-        .split("_")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: username,
-      },
+    // Do not manufacture a local session from arbitrary credentials. Authentication
+    // must be completed by a configured identity provider/server before navigation.
+    return {
+      data: null,
+      error: new Error(
+        "Login is not connected to a verified authentication provider yet. No session was created.",
+      ),
     };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
-      }
-    }
-
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
   }
 
   async signUp(params: {
@@ -183,50 +165,17 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession } | null;
     error: Error | null;
   }> {
-    const email = params.email.trim();
-    const rawUsername =
-      params.options?.data?.username ||
-      (email.includes("@") ? email.split("@")[0] : email) ||
-      "user";
-    const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
-    const displayName = params.options?.data?.full_name || username;
-    const userId = `user_${username}_${Date.now().toString(36)}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email,
-      username,
-      displayName,
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: displayName,
-      },
-    };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
-      }
+    if (!params.email.trim() || !params.password) {
+      return { data: null, error: new Error("Email and password are required") };
     }
 
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
+    // Signup must not pretend to create a real account without a verified backend.
+    return {
+      data: null,
+      error: new Error(
+        "Sign-up is not connected to a verified authentication provider yet. No account or session was created.",
+      ),
+    };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
