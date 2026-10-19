@@ -72,15 +72,9 @@ function SignupPage() {
       setUsernameStatus("idle");
       return;
     }
-    setUsernameStatus("checking");
-    setTimeout(() => {
-      // Reserved demo check
-      if (["admin", "system", "root", "instagram", "meta"].includes(clean)) {
-        setUsernameStatus("taken");
-      } else {
-        setUsernameStatus("available");
-      }
-    }, 250);
+    // Availability cannot be verified locally. Do not claim a username is free
+    // until the configured authentication/database provider checks it server-side.
+    setUsernameStatus("idle");
   };
 
   const handleInitialSubmit = async (e: React.FormEvent) => {
@@ -98,10 +92,6 @@ function SignupPage() {
     }
     if (!username.trim() || username.length < 3) {
       setErrorMessage("Username must be at least 3 characters.");
-      return;
-    }
-    if (usernameStatus === "taken") {
-      setErrorMessage("This username is already taken. Please choose another.");
       return;
     }
     if (!birthday) {
@@ -306,16 +296,9 @@ function SignupPage() {
               {usernameStatus === "taken" && <XCircle className="w-4 h-4 text-rose-400" />}
             </div>
           </div>
-          {usernameStatus === "available" && (
-            <p className="text-[11px] text-emerald-400 pl-1 font-medium">
-              @{username} is available!
-            </p>
-          )}
-          {usernameStatus === "taken" && (
-            <p className="text-[11px] text-rose-400 pl-1 font-medium">
-              @{username} is already taken.
-            </p>
-          )}
+          <p className="text-[11px] text-gray-500 pl-1 font-medium">
+            Username availability must be verified by the server during account creation.
+          </p>
 
           {/* Birthday / Age verification */}
           <div className="relative flex items-center">
