@@ -54,6 +54,7 @@ function SignupPage() {
   const [step, setStep] = useState<"details" | "verify_otp" | "welcome">("details");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
 
   // Evaluation & Validation states
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">(
@@ -147,6 +148,7 @@ function SignupPage() {
         return;
       }
 
+      setRequiresEmailConfirmation(!data.session);
       setStep("welcome");
       toast.success(
         data.session
@@ -484,19 +486,20 @@ function SignupPage() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Welcome, {fullName}!</h3>
+            <h3 className="text-lg font-bold text-white">{requiresEmailConfirmation ? "Confirm your email" : `Welcome, ${fullName}!`}</h3>
             <p className="text-xs text-gray-400 mt-1">
-              Your profile @{username} is all set up. Get ready to explore creator communities and
-              share moments.
+              {requiresEmailConfirmation
+                ? `We sent a confirmation link to ${emailOrPhone}. Open it before signing in.`
+                : `Your account @{username} is created. You can now explore Opexnal.`}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => navigate({ to: search.redirect || "/home", replace: true })}
+            onClick={() => navigate({ to: requiresEmailConfirmation ? "/auth/login" : search.redirect || "/home", replace: true })}
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg"
           >
-            Go to Your Feed
+            {requiresEmailConfirmation ? "Go to Login" : "Go to Your Feed"}
           </button>
         </div>
       )}
