@@ -400,27 +400,9 @@ export const supabase = {
       authClient.onAuthStateChange(callback),
     updateUser: async (attributes: { password?: string }) => {
       if (attributes.password) {
-        try {
-          const res = await fetch("/api/v1/auth/password-reset/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              newPassword: attributes.password,
-              code: "verified_session_reset",
-            }),
-          });
-          if (!res.ok) {
-            const b = (await res.json().catch(() => ({ error: "Password update failed" }))) as {
-              error?: string;
-            };
-            return { data: null, error: new Error(b.error || "Update failed") };
-          }
-          return { data: { user: {} }, error: null };
-        } catch (e: unknown) {
-          return { data: null, error: e instanceof Error ? e : new Error("Network error") };
-        }
+        return authClient.updatePassword(attributes.password);
       }
-      return { data: null, error: null };
+      return { data: null, error: new Error("No supported user attributes were provided.") };
     },
   },
   storage: {
