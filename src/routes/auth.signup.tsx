@@ -119,27 +119,44 @@ function SignupPage() {
       return;
     }
 
-    // Request verification OTP
+    // Create the account through the configured Supabase Auth provider.
+    // Do not report success until the provider confirms the account exists.
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: contact }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Failed to send verification code");
-        toast.error(data.error || "Failed to send verification code");
+      if (!contact.includes("@")) {
+        setErrorMessage("Use an email address for signup. Phone OTP signup is not configured.");
         return;
       }
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.success(data.message || "Verification code sent!");
+
+      const { data, error } = await authClient.signUp({
+        email: contact.toLowerCase(),
+        password,
+        options: {
+          data: {
+            username: username.trim().toLowerCase(),
+            full_name: fullName.trim(),
+            display_name: fullName.trim(),
+          },
+        },
+      });
+
+      if (error || !data?.user) {
+        const message = error?.message || "The authentication provider did not create the account.";
+        setErrorMessage(message);
+        toast.error(message);
+        return;
+      }
+
+      setStep("welcome");
+      toast.success(
+        data.session
+          ? "Account created and signed in."
+          : "Account created. Check your email to confirm it before signing in.",
+      );
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to send verification code";
-      setErrorMessage(msg);
-      toast.error(msg);
+      const message = err instanceof Error ? err.message : "Registration failed";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -407,7 +424,7 @@ function SignupPage() {
             className="w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Continue to Verification</span>
+            <span>Create Account</span>
           </button>
         </form>
       )}
