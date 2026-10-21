@@ -1,0 +1,47 @@
+name: Validate Opexnal
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - independent-backend-20261016
+      - "ci/**"
+      - "security/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The repository currently has no committed npm lockfile, so npm ci is not available.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Check independent API JavaScript syntax
+        run: npm run backend:check
+
+      - name: Type-check application
+        run: npm run typecheck
+
+      - name: Run automated tests
+        run: npm test
+
+      - name: Build frontend
+        run: npm run build
