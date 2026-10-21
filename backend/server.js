@@ -152,6 +152,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
 });
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   try {
+    if (!rateLimit("create-post:" + req.user.id, 20)) return res.status(429).json({ error: "Too many posts created. Try again later." });
     const { caption = "", mediaUrl = null, mediaType = "image" } = req.body || {};
     if (typeof caption !== "string" || caption.length > 2200 || !["image", "video", "text"].includes(mediaType) || (mediaUrl !== null && (typeof mediaUrl !== "string" || mediaUrl.length > 2048))) return res.status(400).json({ error: "Invalid post payload." });
     if (mediaType !== "text" && !mediaUrl) return res.status(400).json({ error: "mediaUrl is required for image/video posts." });
@@ -167,6 +168,7 @@ app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
 });
 app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
+    if (!rateLimit("create-story:" + req.user.id, 30)) return res.status(429).json({ error: "Too many stories created. Try again later." });
     const { mediaUrl, mediaType = "image" } = req.body || {};
     if (typeof mediaUrl !== "string" || mediaUrl.length > 2048 || !["image", "video"].includes(mediaType)) return res.status(400).json({ error: "Valid mediaUrl and image/video mediaType are required." });
     const result = await pool.query("INSERT INTO stories (id,user_id,media_url,media_type,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL '24 hours') RETURNING *", [randomUUID(), req.user.id, mediaUrl, mediaType]);
@@ -187,6 +189,7 @@ app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, 
   } catch (error) { next(error); }
 });
 app.post("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
+  if (!rateLimit("create-conversation:" + req.user.id, 20)) return res.status(429).json({ error: "Too many conversations created. Try again later." });
   const client = await pool.connect();
   try {
     const { recipientId } = req.body || {};
@@ -212,6 +215,7 @@ app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req
 });
 app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
   try {
+    if (!rateLimit("send-message:" + req.user.id, 60)) return res.status(429).json({ error: "Too many messages sent. Try again later." });
     const body = req.body?.body;
     const conversationId = req.params.conversationId;
     if (typeof body !== "string" || !body.trim() || body.length > 5000) return res.status(400).json({ error: "Message must contain 1–5000 characters." });
