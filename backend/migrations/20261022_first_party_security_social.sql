@@ -28,6 +28,18 @@ CREATE TABLE IF NOT EXISTS follows (
   CHECK (follower_id <> following_id)
 );
 CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS follow_requests (
+  id UUID PRIMARY KEY,
+  requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','rejected')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (requester_id, target_id),
+  CHECK (requester_id <> target_id)
+);
+CREATE INDEX IF NOT EXISTS follow_requests_target_idx
+  ON follow_requests (target_id, created_at DESC) WHERE status='pending';
 ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_visibility_check;
 ALTER TABLE posts ADD CONSTRAINT posts_visibility_check CHECK (visibility IN ('public','followers','private'));
 ALTER TABLE stories DROP CONSTRAINT IF EXISTS stories_visibility_check;
