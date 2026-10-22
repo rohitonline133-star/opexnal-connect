@@ -123,6 +123,19 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
+  // The current identity extractor only parses client-controlled token text.
+  // Do not expose paid/provider-backed AI actions until a canonical verifier is wired.
+  if (
+    url.pathname === "/api/ai/chat" ||
+    url.pathname === "/api/ai/creator-tools" ||
+    url.pathname === "/api/ai/moderate"
+  ) {
+    return new Response(
+      JSON.stringify({ error: "AI actions are temporarily unavailable until verified server-side authentication is integrated." }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   // 3. Payload size check
   const contentLength = Number(request.headers.get("content-length") || "0");
   if (contentLength > RateLimiter.MAX_PAYLOAD_BYTES) {
