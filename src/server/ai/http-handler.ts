@@ -59,16 +59,25 @@ function extractClientIp(request: Request): string {
   return request.headers.get("cf-connecting-ip") || "127.0.0.1";
 }
 
-function extractUserId(request: Request): string | undefined {
-  const auth = request.headers.get("authorization");
-  if (auth && auth.startsWith("Bearer ")) {
-    const token = auth.slice(7);
-    if (token.startsWith("opexnal_jwt_") || token.startsWith("opexnal_demo_")) {
-      const parts = token.split("_");
-      return parts.slice(2).join("_") || undefined;
-    }
-  }
-  return undefined;
+async function verifyUserWithFirstPartyApi(request: Request): Promise<string | null> {
+  const authorization = request.headers.get("authorization") || "";
+  if (!authorization.startsWith("Bearer ")) return null;
+  const apiOrigin = process.env["OPEXNAL_API_URL"];
+  if (!apiOrigin) throw new Error("OPEXNAL_API_URL is not configured on the AI server.");
+
+  const target = new URL("/api/v1/auth/me", apiOrigin);
+  const response = await fetch(target, {
+    headers: { Authorization: authorization },
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (response.status === 401 || response.status === 403) return null;
+  if (!response.ok) throw new Error("The first-party authentication API is unavailable.");
+
+  const payload = (await response.json().catch(() => ({}))) as {
+    user?: { id?: string };
+  };
+  return typeof payload.user?.id === "string" ? payload.user.id : null;
 }
 
 /**
@@ -85,9 +94,9 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     return new Response(null, {
       status: 204,
       headers: {
-        "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Opex-Correlation-Id",
+        Vary: "Origin",
       },
     });
   }
@@ -123,20 +132,33 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  // The current identity extractor only parses client-controlled token text.
-  // Do not expose paid/provider-backed AI actions until a canonical verifier is wired.
-  if (
-    url.pathname === "/api/ai/chat" ||
-    url.pathname === "/api/ai/creator-tools" ||
-    url.pathname === "/api/ai/moderate"
-  ) {
-    return new Response(
-      JSON.stringify({
-        error:
-          "AI actions are temporarily unavailable until verified server-side authentication is integrated.",
-      }),
-      { status: 503, headers: { "Content-Type": "application/json" } },
-    );
+  const protectedAiRoute = [
+    "/api/ai/chat",
+    "/api/ai/creator-tools",
+    "/api/ai/moderate",
+  ].includes(url.pathname);
+  let verifiedUserId: string | undefined;
+  if (protectedAiRoute) {
+    if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
+    }
+    try {
+      verifiedUserId = (await verifyUserWithFirstPartyApi(request)) || undefined;
+    } catch {
+      return new Response(JSON.stringify({ error: "First-party authentication verification is unavailable." }), {
+        status: 503,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
+    }
+    if (!verifiedUserId) {
+      return new Response(JSON.stringify({ error: "Invalid or expired session." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
+    }
   }
 
   // 3. Payload size check
@@ -151,7 +173,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
   }
 
   const clientIp = extractClientIp(request);
-  const userId = extractUserId(request);
+  const userId = verifiedUserId;
   const rawBody = await parseRequestBody(request);
 
   try {
