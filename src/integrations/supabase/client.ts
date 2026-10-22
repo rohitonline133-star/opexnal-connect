@@ -177,26 +177,36 @@ class QueryBuilder<T = unknown> {
       if (this.tableName === "posts" && this.operation === "select") {
         const res = await fetch("/api/v1/posts/feed", {
           headers: authClient.getAuthHeader(),
+          cache: "no-store",
         });
-        if (res.ok) {
-          const json = (await res.json()) as { posts?: Record<string, unknown>[] };
-          let rows: Record<string, unknown>[] = json.posts || [];
-          for (const f of this.filters) {
-            rows = rows.filter(f);
-          }
-          if (this.limitCount) rows = rows.slice(0, this.limitCount);
-          return { data: rows as unknown as T, error: null };
+        if (!res.ok) {
+          return {
+            data: null,
+            error: new Error(`Feed request failed with status ${res.status}.`),
+          };
         }
+        const json = (await res.json()) as { posts?: Record<string, unknown>[] };
+        let rows: Record<string, unknown>[] = json.posts || [];
+        for (const f of this.filters) {
+          rows = rows.filter(f);
+        }
+        if (this.limitCount) rows = rows.slice(0, this.limitCount);
+        return { data: rows as unknown as T, error: null };
       }
 
       if (this.tableName === "stories" && this.operation === "select") {
-        const res = await fetch("/api/v1/stories/tray", {
+        const res = await fetch("/api/v1/stories", {
           headers: authClient.getAuthHeader(),
+          cache: "no-store",
         });
-        if (res.ok) {
-          const json = (await res.json()) as { tray?: unknown };
-          return { data: (json.tray || []) as unknown as T, error: null };
+        if (!res.ok) {
+          return {
+            data: null,
+            error: new Error(`Stories request failed with status ${res.status}.`),
+          };
         }
+        const json = (await res.json()) as { stories?: unknown[] };
+        return { data: (json.stories || []) as unknown as T, error: null };
       }
 
       // Local persistent table fallback
