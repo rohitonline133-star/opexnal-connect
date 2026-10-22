@@ -83,6 +83,7 @@ CREATE INDEX IF NOT EXISTS close_friends_friend_idx ON close_friends (friend_id,
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS caption TEXT NOT NULL DEFAULT '';
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS width INTEGER;
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS height INTEGER;
+ALTER TABLE stories ALTER COLUMN visibility TYPE VARCHAR(20);
 ALTER TABLE stories DROP CONSTRAINT IF EXISTS stories_visibility_check;
 ALTER TABLE stories ADD CONSTRAINT stories_visibility_check CHECK (visibility IN ('public','followers','close_friends','private'));
 CREATE TABLE IF NOT EXISTS story_views (
