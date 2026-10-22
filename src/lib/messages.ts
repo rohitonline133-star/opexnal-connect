@@ -150,14 +150,12 @@ export async function markConversationRead(conversationId: string, userId: strin
   );
 }
 
+/** Local-only reaction state is development-only; production reactions use the API below. */
 const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
-
 const memoryMessageReactions: Record<string, string> = {};
 
 export function getMessageReactions(): Record<string, string> {
-  if (typeof window === "undefined") {
-    return memoryMessageReactions;
-  }
+  if (!import.meta.env.DEV || typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGE_REACTIONS_KEY);
     return raw ? JSON.parse(raw) : memoryMessageReactions;
@@ -167,6 +165,7 @@ export function getMessageReactions(): Record<string, string> {
 }
 
 export function setMessageReaction(messageId: string, emoji: string) {
+  if (!import.meta.env.DEV) return;
   memoryMessageReactions[messageId] = emoji;
   if (typeof window === "undefined") return;
   try {
@@ -174,7 +173,24 @@ export function setMessageReaction(messageId: string, emoji: string) {
     current[messageId] = emoji;
     localStorage.setItem(LOCAL_MESSAGE_REACTIONS_KEY, JSON.stringify(current));
   } catch {
-    // ignore
+    // Development-only convenience state.
   }
 }
 
+export async function fetchMessageReactions(conversationId: string) {
+  const payload = await messagesApiRequest<{
+    reactions?: Array<{ message_id: string; emoji: string }>;
+  }>(`/api/v1/messages/${encodeURIComponent(conversationId)}/reactions`);
+  return Object.fromEntries((payload.reactions || []).map((reaction) => [reaction.message_id, reaction.emoji]));
+}
+
+export async function updateMessageReaction(messageId: string, emoji: string) {
+  await messagesApiRequest<{ reaction: { message_id: string; emoji: string } | null }>(
+    `/api/v1/messages/${encodeURIComponent(messageId)}/reaction`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emoji }),
+    },
+  );
+}
