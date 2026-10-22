@@ -462,6 +462,9 @@ export async function updateSettings(
   maybePatch?: Partial<OpexnalSettings>,
 ): Promise<OpexnalSettings> {
   if (typeof userIdOrPatch === "string") {
+    if (!userIdOrPatch.trim()) {
+      throw new Error("A verified user is required to update account settings.");
+    }
     return saveSettings(maybePatch || {}, userIdOrPatch);
   }
   return saveSettings(userIdOrPatch || {}, undefined);
