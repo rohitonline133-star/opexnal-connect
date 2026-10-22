@@ -35,7 +35,7 @@ function SettingsHiddenWordsPage() {
   const [hideOffensive, setHideOffensive] = useState(settings?.hideOffensiveComments ?? true);
   const [advancedFilter, setAdvancedFilter] = useState(settings?.advancedCommentFiltering ?? true);
   const [customWords, setCustomWords] = useState<string[]>(
-    settings?.customBlockedWords ?? ["scam", "dm me for promo", "free crypto"],
+    settings?.customKeywordFilter ?? ["scam", "dm me for promo", "free crypto"],
   );
   const [wordInput, setWordInput] = useState("");
 
@@ -57,7 +57,7 @@ function SettingsHiddenWordsPage() {
       return updateSettings(userId, {
         hideOffensiveComments: hideOffensive,
         advancedCommentFiltering: advancedFilter,
-        customBlockedWords: customWords,
+        customKeywordFilter: customWords,
       });
     },
     onSuccess: () => {
