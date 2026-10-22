@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
