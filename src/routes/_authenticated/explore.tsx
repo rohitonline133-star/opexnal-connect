@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
 import { cn } from "@/lib/utils";
@@ -194,7 +195,7 @@ function Explore() {
   const suggestedCreatorsQuery = useQuery<ExploreProfile[]>({
     queryKey: ["suggested-creators", user?.id],
     queryFn: async () => {
-      const response = await fetch("/api/v1/users/search?limit=10", {
+      const response = await fetch(apiUrl("/api/v1/users/search?limit=10", {
         headers: authClient.getAuthHeader(),
         cache: "no-store",
       });
@@ -213,7 +214,7 @@ function Explore() {
   async function handleQuickFollow(targetId: string, targetUsername: string) {
     if (!user) return;
     try {
-      const response = await fetch(`/api/v1/users/${encodeURIComponent(targetId)}/follow`, {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(targetId)}/follow`, {
         method: "POST",
         headers: authClient.getAuthHeader(),
         cache: "no-store",
