@@ -679,7 +679,37 @@ app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
-    const result = await pool.query("SELECT p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url, p.caption, p.media_url, p.media_type, p.created_at, (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count, EXISTS(SELECT 1 FROM post_likes l WHERE l.post_id=p.id AND l.user_id=$1) AS liked_by_me FROM posts p JOIN users u ON u.id=p.user_id WHERE p.visibility='public' OR p.user_id=$1 ORDER BY p.created_at DESC LIMIT $2", [req.user.id, limit]);
+    const result = await pool.query(
+      `SELECT
+        p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
+        p.caption, p.media_url, p.media_type, p.visibility, p.created_at, p.updated_at,
+        (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count,
+        (SELECT COUNT(*) FROM post_comments c WHERE c.post_id=p.id) AS comments_count,
+        (SELECT COUNT(*) FROM post_saves s WHERE s.post_id=p.id) AS saves_count,
+        (SELECT COUNT(*) FROM post_shares sh WHERE sh.post_id=p.id) AS shares_count,
+        EXISTS(SELECT 1 FROM post_likes l WHERE l.post_id=p.id AND l.user_id=$1) AS liked_by_me,
+        EXISTS(SELECT 1 FROM post_saves s WHERE s.post_id=p.id AND s.user_id=$1) AS saved_by_me,
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', pm.id, 'post_id', pm.post_id, 'user_id', pm.user_id,
+            'storage_path', pm.storage_path, 'media_type', pm.media_type,
+            'width', pm.width, 'height', pm.height, 'duration_seconds', pm.duration_seconds,
+            'position', pm.position, 'created_at', pm.created_at
+          ) ORDER BY pm.position) FROM post_media pm WHERE pm.post_id=p.id),
+          CASE WHEN p.media_url IS NOT NULL THEN json_build_array(json_build_object(
+            'id', p.id || '-media', 'post_id', p.id, 'user_id', p.user_id,
+            'storage_path', p.media_url, 'media_type', p.media_type,
+            'width', NULL, 'height', NULL, 'duration_seconds', NULL,
+            'position', 0, 'created_at', p.created_at
+          )) ELSE '[]'::json END
+        ) AS media
+      FROM posts p
+      JOIN users u ON u.id=p.user_id
+      WHERE p.visibility='public' OR p.user_id=$1
+      ORDER BY p.created_at DESC
+      LIMIT $2`,
+      [req.user.id, limit],
+    );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
 });
