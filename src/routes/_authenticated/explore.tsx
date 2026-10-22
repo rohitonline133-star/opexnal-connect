@@ -41,7 +41,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
 import { cn } from "@/lib/utils";
