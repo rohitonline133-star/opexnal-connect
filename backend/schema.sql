@@ -23,6 +23,14 @@ CREATE TABLE IF NOT EXISTS follows (
   CHECK (follower_id <> following_id)
 );
 CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS close_friends (
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (owner_id, friend_id),
+  CHECK (owner_id <> friend_id)
+);
+CREATE INDEX IF NOT EXISTS close_friends_friend_idx ON close_friends (friend_id, owner_id);
 CREATE TABLE IF NOT EXISTS follow_requests (
   id UUID PRIMARY KEY,
   requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -155,11 +163,26 @@ CREATE TABLE IF NOT EXISTS comment_likes (
 CREATE TABLE IF NOT EXISTS stories (
   id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   media_url TEXT NOT NULL, media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video')),
-  visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','followers','private')),
+  visibility VARCHAR(20) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','followers','close_friends','private')),
+  caption TEXT NOT NULL DEFAULT '', width INTEGER, height INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '24 hours')
 );
 CREATE INDEX IF NOT EXISTS stories_expiry_idx ON stories (expires_at DESC);
 CREATE INDEX IF NOT EXISTS stories_user_expiry_idx ON stories (user_id, expires_at DESC);
+CREATE TABLE IF NOT EXISTS story_views (
+  story_id UUID NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+  viewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (story_id, viewer_id)
+);
+CREATE INDEX IF NOT EXISTS story_views_story_idx ON story_views (story_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS story_mutes (
+  muter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  muted_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (muter_id, muted_id),
+  CHECK (muter_id <> muted_id)
+);
 CREATE TABLE IF NOT EXISTS conversations (id UUID PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 CREATE TABLE IF NOT EXISTS conversation_members (
   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
