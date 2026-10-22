@@ -1170,7 +1170,14 @@ app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, n
 
 app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const result = await pool.query("SELECT s.id,s.user_id AS author_id,u.username,u.avatar_url,s.media_url,s.media_type,s.created_at,s.expires_at FROM stories s JOIN users u ON u.id=s.user_id WHERE s.expires_at > NOW() AND (s.visibility='public' OR s.user_id=$1) ORDER BY s.created_at DESC LIMIT 100", [req.user.id]);
+    const result = await pool.query(
+      `SELECT s.id,s.user_id AS author_id,u.username,u.display_name,u.avatar_url,s.media_url,s.media_type,s.visibility,s.created_at,s.expires_at
+       FROM stories s JOIN users u ON u.id=s.user_id
+       WHERE s.expires_at > NOW()
+         AND (s.visibility='public' OR s.user_id=$1 OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=s.user_id)))
+       ORDER BY s.created_at DESC LIMIT 100`,
+      [req.user.id],
+    );
     res.json({ stories: result.rows });
   } catch (error) { next(error); }
 });
