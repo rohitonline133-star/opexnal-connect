@@ -150,7 +150,7 @@ function Conversation() {
     setSelectedMessage(null);
     if (!message) return;
     try {
-      const response = await fetch(apiUrl("/api/v1/reports", {
+      const response = await fetch(apiUrl("/api/v1/reports"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
