@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS follows (
 CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
 ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_visibility_check;
 ALTER TABLE posts ADD CONSTRAINT posts_visibility_check CHECK (visibility IN ('public','followers','private'));
+ALTER TABLE stories DROP CONSTRAINT IF EXISTS stories_visibility_check;
+ALTER TABLE stories ADD CONSTRAINT stories_visibility_check CHECK (visibility IN ('public','followers','private'));
 
 -- Idempotent migration for existing Opexnal PostgreSQL deployments.
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS location_name VARCHAR(120);
