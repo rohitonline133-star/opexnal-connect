@@ -102,7 +102,7 @@ export function CloseFriendsPage() {
     let active = true;
     const params = new URLSearchParams({ limit: "30" });
     if (search.trim()) params.set("q", search.trim());
-    fetch(`/api/v1/users/search?${params.toString()}`, {
+    fetch(`/api/v1/users/me/followers?${params.toString()}`, {
       headers: authClient.getAuthHeader(),
       cache: "no-store",
     })
