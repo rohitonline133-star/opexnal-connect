@@ -142,8 +142,17 @@ class AuthClient {
           full_name: typeof user.displayName === "string" ? user.displayName : user.username,
         },
       };
-      this.memoryUser = verifiedUser;
-      this.memorySession = { ...session, user: verifiedUser };
+      const changed =
+        session.user.username !== verifiedUser.username ||
+        session.user.displayName !== verifiedUser.displayName ||
+        session.user.avatarUrl !== verifiedUser.avatarUrl ||
+        session.user.email !== verifiedUser.email;
+      if (changed) {
+        this.setSession({ ...session, user: verifiedUser });
+      } else {
+        this.memoryUser = verifiedUser;
+        this.memorySession = { ...session, user: verifiedUser };
+      }
       return { data: { user: verifiedUser }, error: null };
     } catch {
       return { data: { user: null }, error: new Error("Could not reach Opexnal's authentication API.") };
