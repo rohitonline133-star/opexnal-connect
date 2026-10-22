@@ -1484,28 +1484,50 @@ app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, n
 });
 
 app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
+  const targetUserId = typeof req.query.userId === "string" ? req.query.userId : null;
   try {
     const result = await pool.query(
-      `SELECT s.id,s.user_id AS author_id,u.username,u.display_name,u.avatar_url,s.media_url,s.media_type,s.visibility,s.created_at,s.expires_at
+      `SELECT s.id,s.user_id AS author_id,u.username,u.display_name,u.avatar_url,
+        s.media_url,s.media_type,s.visibility,s.caption,s.width,s.height,s.created_at,s.expires_at
        FROM stories s JOIN users u ON u.id=s.user_id
        WHERE s.expires_at > NOW()
-         AND (s.visibility='public' OR s.user_id=$1 OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=s.user_id)))
-       ORDER BY s.created_at DESC LIMIT 100`,
-      [req.user.id],
+         AND ($2::uuid IS NULL OR s.user_id=$2)
+         AND (
+           s.user_id=$1
+           OR (s.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=s.user_id)))
+           OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=s.user_id))
+           OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$1))
+         )
+       ORDER BY s.created_at ASC LIMIT 100`,
+      [req.user.id, targetUserId],
     );
-    res.json({ stories: result.rows });
-  } catch (error) { next(error); }
+    return res.json({ stories: result.rows });
+  } catch (error) {
+    return next(error);
+  }
 });
+
 app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const { mediaUrl, mediaType = "image", visibility = "public" } = req.body || {};
+    const {
+      mediaUrl,
+      mediaType = "image",
+      visibility = "public",
+      caption = "",
+      width = null,
+      height = null,
+    } = req.body || {};
     if (
       typeof mediaUrl !== "string" ||
       mediaUrl.length > 2048 ||
       !["image", "video"].includes(mediaType) ||
-      !["public", "followers", "private"].includes(visibility)
+      !["public", "followers", "close_friends", "private"].includes(visibility) ||
+      typeof caption !== "string" ||
+      caption.length > 500 ||
+      (width !== null && (!Number.isInteger(width) || width < 1 || width > 30000)) ||
+      (height !== null && (!Number.isInteger(height) || height < 1 || height > 30000))
     ) {
-      return res.status(400).json({ error: "Valid uploaded mediaUrl, mediaType, and visibility are required." });
+      return res.status(400).json({ error: "Invalid story payload." });
     }
     const prefix = "/api/v1/storage/";
     if (!mediaUrl.startsWith(prefix)) {
@@ -1518,14 +1540,111 @@ app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => 
     );
     if (!media.rowCount) return res.status(403).json({ error: "You can only attach media you uploaded." });
     const result = await pool.query(
-      "INSERT INTO stories (id,user_id,media_url,media_type,visibility,expires_at) VALUES ($1,$2,$3,$4,$5,NOW()+INTERVAL '24 hours') RETURNING *",
-      [randomUUID(), req.user.id, mediaUrl, mediaType, visibility],
+      "INSERT INTO stories (id,user_id,media_url,media_type,visibility,caption,width,height,expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW()+INTERVAL '24 hours') RETURNING *",
+      [randomUUID(), req.user.id, mediaUrl, mediaType, visibility, caption.trim(), width, height],
     );
     return res.status(201).json({ story: result.rows[0] });
   } catch (error) {
     return next(error);
   }
 });
+
+app.delete("/api/v1/stories/:storyId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM stories WHERE id=$1 AND user_id=$2 RETURNING media_url",
+      [req.params.storyId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Story not found or not owned by this account." });
+    const storagePath = result.rows[0].media_url;
+    const objectKey = storagePath.replace("/api/v1/storage/", "");
+    if (mediaKeyPattern.test(objectKey)) {
+      const references = await pool.query(
+        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) LIMIT 1",
+        [storagePath],
+      );
+      if (!references.rowCount) {
+        await pool.query("UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2", [objectKey, req.user.id]);
+        try { unlinkSync(path.join(mediaRoot, objectKey)); } catch {}
+      }
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/stories/:storyId/view", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const story = await pool.query(
+      `SELECT s.id,s.user_id,s.visibility,u.is_private
+       FROM stories s JOIN users u ON u.id=s.user_id
+       WHERE s.id=$1 AND s.expires_at>NOW()
+         AND (s.user_id=$2
+           OR (s.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)))
+           OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))
+           OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))
+       LIMIT 1`,
+      [req.params.storyId, req.user.id],
+    );
+    if (!story.rowCount) return res.status(404).json({ error: "Story not found or not visible to this account." });
+    await pool.query(
+      "INSERT INTO story_views (story_id,viewer_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.params.storyId, req.user.id],
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/stories/:storyId/viewers", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const story = await pool.query("SELECT id FROM stories WHERE id=$1 AND user_id=$2 LIMIT 1", [req.params.storyId, req.user.id]);
+    if (!story.rowCount) return res.status(404).json({ error: "Story not found or not owned by this account." });
+    const result = await pool.query(
+      `SELECT v.viewer_id,v.created_at,u.username,u.display_name,u.avatar_url
+       FROM story_views v JOIN users u ON u.id=v.viewer_id
+       WHERE v.story_id=$1 ORDER BY v.created_at DESC LIMIT 500`,
+      [req.params.storyId],
+    );
+    return res.json({ viewers: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/users/:userId/story-muted", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT 1 FROM story_mutes WHERE muter_id=$1 AND muted_id=$2 LIMIT 1",
+      [req.user.id, req.params.userId],
+    );
+    return res.json({ muted: Boolean(result.rowCount) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (req, res, next) => {
+  if (req.user.id === req.params.userId) return res.status(400).json({ error: "You cannot mute your own stories." });
+  try {
+    await pool.query("INSERT INTO story_mutes (muter_id,muted_id) VALUES ($1,$2) ON CONFLICT DO NOTHING", [req.user.id, req.params.userId]);
+    return res.json({ muted: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM story_mutes WHERE muter_id=$1 AND muted_id=$2", [req.user.id, req.params.userId]);
+    return res.json({ muted: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
