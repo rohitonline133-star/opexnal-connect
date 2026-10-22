@@ -24,20 +24,21 @@ function SettingsAccountPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const userId = session?.userId || session?.user?.id || "";
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["settings", userId],
     queryFn: () => getStoredSettings(userId),
+    enabled: Boolean(userId),
   });
 
   const [email, setEmail] = useState(
-    settings?.email || session?.user?.email || "maya@opexnal.local",
+    settings?.email || session?.user?.email || "",
   );
   const [phone, setPhone] = useState(settings?.phone || "+91 98765 43210");
   const [dob, setDob] = useState(settings?.dateOfBirth || "2000-05-15");
   const [recoveryEmail, setRecoveryEmail] = useState(
-    settings?.recoveryEmail || "maya.backup@gmail.com",
+    settings?.recoveryEmail || "",
   );
 
   const saveMutation = useMutation({
