@@ -82,12 +82,10 @@ export function evaluatePasswordStrength(password: string, username = ""): Passw
   }
 
   // Length check
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long.");
-  } else if (password.length >= 12) {
-    score += 35;
+  if (password.length < 12) {
+    errors.push("Password must be at least 12 characters long.");
   } else {
-    score += 20;
+    score += 35;
   }
 
   // Complexity checks
