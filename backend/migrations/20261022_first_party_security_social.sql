@@ -28,6 +28,33 @@ CREATE TABLE IF NOT EXISTS follows (
   CHECK (follower_id <> following_id)
 );
 CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS close_friends (
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (owner_id, friend_id),
+  CHECK (owner_id <> friend_id)
+);
+CREATE INDEX IF NOT EXISTS close_friends_friend_idx ON close_friends (friend_id, owner_id);
+ALTER TABLE stories ADD COLUMN IF NOT EXISTS caption TEXT NOT NULL DEFAULT '';
+ALTER TABLE stories ADD COLUMN IF NOT EXISTS width INTEGER;
+ALTER TABLE stories ADD COLUMN IF NOT EXISTS height INTEGER;
+ALTER TABLE stories DROP CONSTRAINT IF EXISTS stories_visibility_check;
+ALTER TABLE stories ADD CONSTRAINT stories_visibility_check CHECK (visibility IN ('public','followers','close_friends','private'));
+CREATE TABLE IF NOT EXISTS story_views (
+  story_id UUID NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+  viewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (story_id, viewer_id)
+);
+CREATE INDEX IF NOT EXISTS story_views_story_idx ON story_views (story_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS story_mutes (
+  muter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  muted_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (muter_id, muted_id),
+  CHECK (muter_id <> muted_id)
+);
 CREATE TABLE IF NOT EXISTS follow_requests (
   id UUID PRIMARY KEY,
   requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
