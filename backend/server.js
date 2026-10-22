@@ -685,12 +685,42 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
 });
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const { caption = "", mediaUrl = null, mediaType = "image" } = req.body || {};
-    if (typeof caption !== "string" || caption.length > 2200 || !["image", "video", "text"].includes(mediaType) || (mediaUrl !== null && (typeof mediaUrl !== "string" || mediaUrl.length > 2048))) return res.status(400).json({ error: "Invalid post payload." });
-    if (mediaType !== "text" && !mediaUrl) return res.status(400).json({ error: "mediaUrl is required for image/video posts." });
-    const result = await pool.query("INSERT INTO posts (id,user_id,caption,media_url,media_type) VALUES ($1,$2,$3,$4,$5) RETURNING *", [randomUUID(), req.user.id, caption, mediaUrl, mediaType]);
-    res.status(201).json({ post: result.rows[0] });
-  } catch (error) { next(error); }
+    const { caption = "", mediaUrl = null, mediaType = "image", visibility = "public" } = req.body || {};
+    if (
+      typeof caption !== "string" ||
+      caption.length > 2200 ||
+      !["image", "video", "text"].includes(mediaType) ||
+      !["public", "private"].includes(visibility) ||
+      (mediaUrl !== null && (typeof mediaUrl !== "string" || mediaUrl.length > 2048))
+    ) {
+      return res.status(400).json({ error: "Invalid post payload." });
+    }
+    if (mediaType !== "text" && !mediaUrl) {
+      return res.status(400).json({ error: "Upload media before creating an image/video post." });
+    }
+    if (mediaType === "text" && mediaUrl !== null) {
+      return res.status(400).json({ error: "Text posts cannot include a media URL." });
+    }
+    if (mediaUrl !== null) {
+      const prefix = "/api/v1/storage/";
+      if (!mediaUrl.startsWith(prefix)) {
+        return res.status(400).json({ error: "Post media must be uploaded to Opexnal storage first." });
+      }
+      const objectKey = mediaUrl.slice(prefix.length);
+      const media = await pool.query(
+        "SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1",
+        [objectKey, req.user.id],
+      );
+      if (!media.rowCount) return res.status(403).json({ error: "You can only attach media you uploaded." });
+    }
+    const result = await pool.query(
+      "INSERT INTO posts (id,user_id,caption,media_url,media_type,visibility) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+      [randomUUID(), req.user.id, caption, mediaUrl, mediaType, visibility],
+    );
+    return res.status(201).json({ post: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
 });
 app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -700,11 +730,33 @@ app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
 });
 app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const { mediaUrl, mediaType = "image" } = req.body || {};
-    if (typeof mediaUrl !== "string" || mediaUrl.length > 2048 || !["image", "video"].includes(mediaType)) return res.status(400).json({ error: "Valid mediaUrl and image/video mediaType are required." });
-    const result = await pool.query("INSERT INTO stories (id,user_id,media_url,media_type,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL '24 hours') RETURNING *", [randomUUID(), req.user.id, mediaUrl, mediaType]);
-    res.status(201).json({ story: result.rows[0] });
-  } catch (error) { next(error); }
+    const { mediaUrl, mediaType = "image", visibility = "public" } = req.body || {};
+    if (
+      typeof mediaUrl !== "string" ||
+      mediaUrl.length > 2048 ||
+      !["image", "video"].includes(mediaType) ||
+      !["public", "private"].includes(visibility)
+    ) {
+      return res.status(400).json({ error: "Valid uploaded mediaUrl, mediaType, and visibility are required." });
+    }
+    const prefix = "/api/v1/storage/";
+    if (!mediaUrl.startsWith(prefix)) {
+      return res.status(400).json({ error: "Story media must be uploaded to Opexnal storage first." });
+    }
+    const objectKey = mediaUrl.slice(prefix.length);
+    const media = await pool.query(
+      "SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1",
+      [objectKey, req.user.id],
+    );
+    if (!media.rowCount) return res.status(403).json({ error: "You can only attach media you uploaded." });
+    const result = await pool.query(
+      "INSERT INTO stories (id,user_id,media_url,media_type,visibility,expires_at) VALUES ($1,$2,$3,$4,$5,NOW()+INTERVAL '24 hours') RETURNING *",
+      [randomUUID(), req.user.id, mediaUrl, mediaType, visibility],
+    );
+    return res.status(201).json({ story: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
 });
 app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
