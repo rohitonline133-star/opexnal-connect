@@ -62,6 +62,20 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE INDEX IF NOT EXISTS posts_feed_idx ON posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_user_feed_idx ON posts (user_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS post_media (
+  id UUID PRIMARY KEY,
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  storage_path TEXT NOT NULL,
+  media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video')),
+  width INTEGER CHECK (width IS NULL OR width > 0),
+  height INTEGER CHECK (height IS NULL OR height > 0),
+  duration_seconds NUMERIC(8,2) CHECK (duration_seconds IS NULL OR duration_seconds >= 0),
+  position INTEGER NOT NULL DEFAULT 0 CHECK (position >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, position)
+);
+CREATE INDEX IF NOT EXISTS post_media_post_idx ON post_media (post_id, position);
 CREATE TABLE IF NOT EXISTS media_objects (
   id UUID PRIMARY KEY,
   owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
