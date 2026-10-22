@@ -52,30 +52,8 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       );
     }
 
-    // 2. Phone / Email OTP Verify
     if (pathname === "/api/auth/phone/otp/verify" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        phone?: string;
-        email?: string;
-        code?: string;
-      };
-      const destination = body.phone || body.email;
-      const code = body.code || "";
-      if (!destination || !code) {
-        return jsonResponse({ error: "Destination and verification code are required" }, 400);
-      }
-      const result = verifyOtp(destination, code);
-      if (!result.valid) {
-        return jsonResponse({ error: result.error || "Invalid code" }, 400);
-      }
-      const userId = `user_${destination.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 20)}`;
-      recordSecurityAudit(userId, "LOGIN_SUCCESS", `Logged in via verified OTP code.`);
-      return jsonResponse({
-        success: true,
-        message: "Verification successful",
-        token: `opex_session_${Date.now()}_${userId}`,
-        userId,
-      });
+      return jsonResponse({ error: "OTP login is disabled until real delivery and verified server sessions are configured." }, 503);
     }
 
     // 3. Password Strength Inspection Endpoint
@@ -88,71 +66,24 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       return jsonResponse(evaluation);
     }
 
-    // 4. 2FA Setup
     if (pathname === "/api/auth/2fa/setup" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as { username?: string };
-      const setup = generateTotpSecret(body.username || "user");
-      return jsonResponse(setup);
+      return jsonResponse({ error: "Two-factor setup is unavailable until a verified account and persistent secret storage are configured." }, 503);
     }
 
-    // 5. 2FA Verify
     if (pathname === "/api/auth/2fa/verify" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        token?: string;
-      };
-      const token = (body.token || "").trim();
-      if (!token) {
-        return jsonResponse({ error: "2FA token or backup code is required" }, 400);
-      }
-      // Valid if 6 digits or valid backup code format (XXXX-XXXX)
-      const isValidFormat =
-        /^\d{6}$/.test(token) || (/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(token) && token.length === 9);
-      if (!isValidFormat) {
-        return jsonResponse({ error: "Invalid two-factor code format" }, 400);
-      }
-      recordSecurityAudit(
-        body.userId || "user_maya",
-        "MFA_ENABLED",
-        "Two-factor challenge verified successfully.",
-      );
-      return jsonResponse({
-        success: true,
-        message: "Two-factor authentication verified.",
-      });
+      return jsonResponse({ error: "Two-factor verification is unavailable until a real login challenge and TOTP validation are configured." }, 503);
     }
 
-    // 6. Active Device Sessions List
     if (pathname === "/api/auth/sessions" && method === "GET") {
-      const authHeader = request.headers.get("authorization") || "";
-      const userId = authHeader.includes("user_")
-        ? authHeader.split("user_")[1]?.split(" ")[0] || "user_maya"
-        : "user_maya";
-      const sessions = getSessionsForUser(userId);
-      return jsonResponse({ sessions });
+      return jsonResponse({ error: "Session listing requires verified server-side authentication." }, 503);
     }
 
-    // 7. Revoke Session
     if (pathname === "/api/auth/sessions/revoke" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        sessionId?: string;
-      };
-      if (!body.sessionId) {
-        return jsonResponse({ error: "sessionId is required" }, 400);
-      }
-      revokeSession(body.userId || "user_maya", body.sessionId);
-      return jsonResponse({ success: true, message: "Session revoked" });
+      return jsonResponse({ error: "Session revocation is unavailable until durable server-side sessions are configured." }, 503);
     }
 
-    // 8. Revoke All Sessions
     if (pathname === "/api/auth/sessions/revoke-all" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        userId?: string;
-        keepCurrent?: boolean;
-      };
-      const count = revokeAllSessions(body.userId || "user_maya", body.keepCurrent !== false);
-      return jsonResponse({ success: true, revokedCount: count });
+      return jsonResponse({ error: "Session revocation is unavailable until durable server-side sessions are configured." }, 503);
     }
 
     // 9. Account Recovery Request
