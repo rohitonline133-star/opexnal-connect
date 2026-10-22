@@ -1044,6 +1044,49 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
   }
 });
 
+app.get("/api/v1/users/me/close-friends", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      profileSelect + " JOIN close_friends cf ON cf.friend_id=u.id WHERE cf.owner_id=$1 ORDER BY cf.created_at DESC LIMIT 500",
+      [req.user.id],
+    );
+    return res.json({ profiles: result.rows.map(publicProfile) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/users/me/close-friends/:friendId", dbRequired, authRequired, async (req, res, next) => {
+  if (req.params.friendId === req.user.id) return res.status(400).json({ error: "You cannot add yourself to Close Friends." });
+  try {
+    const friend = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1", [req.params.friendId]);
+    if (!friend.rowCount) return res.status(404).json({ error: "User not found." });
+    const followsOwner = await pool.query(
+      "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
+      [req.params.friendId, req.user.id],
+    );
+    if (!followsOwner.rowCount) {
+      return res.status(400).json({ error: "Only people who follow your account can be added to Close Friends." });
+    }
+    await pool.query(
+      "INSERT INTO close_friends (owner_id,friend_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.friendId],
+    );
+    return res.json({ added: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/users/me/close-friends/:friendId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM close_friends WHERE owner_id=$1 AND friend_id=$2", [req.user.id, req.params.friendId]);
+    return res.json({ removed: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
