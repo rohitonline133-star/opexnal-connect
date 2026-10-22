@@ -178,14 +178,3 @@ export function setMessageReaction(messageId: string, emoji: string) {
   }
 }
 
-export async function markConversationRead(conversationId: string, userId: string) {
-  try {
-    await supabase
-      .from("conversation_members")
-      .update({ last_read_at: new Date().toISOString() })
-      .eq("conversation_id", conversationId)
-      .eq("user_id", userId);
-  } catch {
-    // ignore
-  }
-}
