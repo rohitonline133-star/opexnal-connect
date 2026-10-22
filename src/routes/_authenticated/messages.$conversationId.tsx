@@ -36,7 +36,7 @@ import {
   updateMessageReaction,
   type Message,
 } from "@/lib/messages";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/messages/$conversationId")({
