@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
 
 const resetPasswordSearchSchema = z.object({
@@ -66,7 +67,7 @@ function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/password-reset/confirm", {
+      const res = await fetch(apiUrl("/api/v1/auth/password-reset/confirm"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
