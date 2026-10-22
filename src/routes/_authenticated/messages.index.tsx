@@ -84,7 +84,7 @@ function Inbox() {
     const uname = recipientUsername.trim().replace(/^@/, "");
     if (!uname || !user?.id) return;
     try {
-      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(uname)}`, {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(uname)}`), {
         headers: authClient.getAuthHeader(),
         cache: "no-store",
       });
