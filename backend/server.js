@@ -153,7 +153,7 @@ async function authRequired(req, res, next) {
 
   try {
     const activeSession = await pool.query(
-      "SELECT id FROM auth_sessions WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL AND expires_at > NOW()",
+      "SELECT s.id FROM auth_sessions s JOIN users u ON u.id=s.user_id WHERE s.id=$1 AND s.user_id=$2 AND s.revoked_at IS NULL AND s.expires_at > NOW() AND u.is_deactivated=FALSE",
       [claims.jti, claims.sub],
     );
     if (!activeSession.rowCount) {
@@ -210,6 +210,23 @@ async function issueToken(user, req) {
     },
   );
 }
+async function adminRequired(req, res, next) {
+  try {
+    const result = await pool.query(
+      "SELECT role FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1",
+      [req.user.id],
+    );
+    const role = result.rows[0]?.role;
+    if (!["admin", "moderator"].includes(role)) {
+      return res.status(403).json({ error: "Administrator permission is required." });
+    }
+    req.user.role = role;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+}
+
 function publicUser(row) {
   return { id: row.id, username: row.username, email: row.email, displayName: row.display_name, avatarUrl: row.avatar_url, createdAt: row.created_at };
 }
@@ -843,6 +860,142 @@ const profileSelect = `
     (SELECT COUNT(*) FROM follows f WHERE f.follower_id=u.id) AS following_count
   FROM users u
 `;
+
+app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => {
+  const targetType = req.body?.targetType;
+  const targetId = typeof req.body?.targetId === "string" ? req.body.targetId : "";
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  const details = typeof req.body?.details === "string" ? req.body.details.trim() : "";
+  if (
+    !["post", "comment", "user", "story"].includes(targetType) ||
+    !/^[0-9a-f-]{36}$/i.test(targetId) ||
+    !["spam", "harassment", "impersonation", "hate", "nudity", "violence", "scam", "other"].includes(reason) ||
+    details.length > 2000
+  ) {
+    return res.status(400).json({ error: "Invalid report payload." });
+  }
+  if (!rateLimit("report:" + req.user.id, 20)) {
+    return res.status(429).json({ error: "Too many reports. Try again later." });
+  }
+  const tables = { post: "posts", comment: "post_comments", user: "users", story: "stories" };
+  try {
+    const target = await pool.query(`SELECT id FROM ${tables[targetType]} WHERE id=$1 LIMIT 1`, [targetId]);
+    if (!target.rowCount) return res.status(404).json({ error: "Report target not found." });
+    const result = await pool.query(
+      "INSERT INTO content_reports (id,reporter_id,target_type,target_id,reason,details) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,status,created_at",
+      [randomUUID(), req.user.id, targetType, targetId, reason, details || null],
+    );
+    return res.status(201).json({ report: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/admin/reports", dbRequired, authRequired, adminRequired, async (req, res, next) => {
+  const status = typeof req.query.status === "string" ? req.query.status : "pending";
+  if (!["pending", "reviewed", "actioned", "dismissed", "all"].includes(status)) {
+    return res.status(400).json({ error: "Invalid report status filter." });
+  }
+  try {
+    const result = await pool.query(
+      `SELECT r.id,r.reporter_id,r.target_type,r.target_id,r.reason,r.details,r.status,r.reviewed_by,r.reviewed_at,r.action_notes,r.created_at,
+        reporter.username AS reporter_username,
+        CASE r.target_type
+          WHEN 'post' THEN (SELECT p.caption FROM posts p WHERE p.id=r.target_id)
+          WHEN 'comment' THEN (SELECT c.body FROM post_comments c WHERE c.id=r.target_id)
+          WHEN 'user' THEN (SELECT u.username FROM users u WHERE u.id=r.target_id)
+          WHEN 'story' THEN (SELECT s.caption FROM stories s WHERE s.id=r.target_id)
+        END AS target_summary
+       FROM content_reports r JOIN users reporter ON reporter.id=r.reporter_id
+       WHERE ($1='all' OR r.status=$1)
+       ORDER BY r.created_at DESC LIMIT 200`,
+      [status],
+    );
+    return res.json({ reports: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/admin/reports/:reportId", dbRequired, authRequired, adminRequired, async (req, res, next) => {
+  const status = req.body?.status;
+  const actionNotes = typeof req.body?.actionNotes === "string" ? req.body.actionNotes.trim() : "";
+  if (!["reviewed", "actioned", "dismissed"].includes(status) || actionNotes.length > 1000) {
+    return res.status(400).json({ error: "Invalid report action." });
+  }
+  try {
+    const result = await pool.query(
+      "UPDATE content_reports SET status=$1,reviewed_by=$2,reviewed_at=NOW(),action_notes=$3 WHERE id=$4 RETURNING id,status",
+      [status, req.user.id, actionNotes || null, req.params.reportId],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Report not found." });
+    await pool.query(
+      "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'report',$4,$5::jsonb,$6)",
+      [randomUUID(), req.user.id, "report." + status, req.params.reportId, JSON.stringify({ status }), req.ip || null],
+    );
+    return res.json({ report: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/admin/users", dbRequired, authRequired, adminRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT u.id,u.username,u.email,u.display_name,u.role,u.is_private,u.is_deactivated,u.email_verified,u.created_at,
+        (SELECT COUNT(*) FROM posts p WHERE p.user_id=u.id) AS posts_count
+       FROM users u ORDER BY u.created_at DESC LIMIT 200`,
+    );
+    return res.json({ users: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/admin/users/:userId/status", dbRequired, authRequired, adminRequired, async (req, res, next) => {
+  const isDeactivated = req.body?.isDeactivated;
+  if (typeof isDeactivated !== "boolean") return res.status(400).json({ error: "isDeactivated must be boolean." });
+  if (req.params.userId === req.user.id && isDeactivated) return res.status(400).json({ error: "You cannot deactivate your own administrator account." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      "UPDATE users SET is_deactivated=$1,updated_at=NOW() WHERE id=$2 RETURNING id,username,is_deactivated",
+      [isDeactivated, req.params.userId],
+    );
+    if (!result.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found." });
+    }
+    if (isDeactivated) {
+      await client.query("UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL", [req.params.userId]);
+    }
+    await client.query(
+      "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'user',$4,$5::jsonb,$6)",
+      [randomUUID(), req.user.id, isDeactivated ? "user.deactivate" : "user.reactivate", req.params.userId, JSON.stringify({ isDeactivated }), req.ip || null],
+    );
+    await client.query("COMMIT");
+    return res.json({ user: result.rows[0] });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/v1/admin/security-logs", dbRequired, authRequired, adminRequired, async (req, res, next) => {
+  const limit = Math.min(Math.max(Number(req.query.limit || 100), 1), 200);
+  try {
+    const result = await pool.query(
+      "SELECT id,actor_id,action,target_type,target_id,metadata,ip_address,created_at FROM audit_logs ORDER BY created_at DESC LIMIT $1",
+      [limit],
+    );
+    return res.json({ logs: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 app.get("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => {
   try {
