@@ -25,11 +25,12 @@ function SettingsNotificationsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const userId = session?.userId || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
     queryFn: () => getStoredSettings(userId),
+    enabled: Boolean(userId),
   });
 
   const [pauseAll, setPauseAll] = useState(settings?.pauseAllNotifications ?? false);
