@@ -4,7 +4,14 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY, username VARCHAR(30) NOT NULL UNIQUE CHECK (username ~ '^[a-zA-Z0-9._]{3,30}$'),
   email VARCHAR(254) NOT NULL UNIQUE, password_hash TEXT NOT NULL, display_name VARCHAR(80) NOT NULL,
-  avatar_url TEXT, email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  avatar_url TEXT, bio TEXT NOT NULL DEFAULT '', website TEXT, location VARCHAR(120),
+  locale VARCHAR(12) NOT NULL DEFAULT 'en', timezone VARCHAR(80) NOT NULL DEFAULT 'UTC',
+  country_code CHAR(2), is_private BOOLEAN NOT NULL DEFAULT TRUE, is_deactivated BOOLEAN NOT NULL DEFAULT FALSE,
+  account_type VARCHAR(20) NOT NULL DEFAULT 'personal' CHECK (account_type IN ('personal','creator','business')),
+  allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_mentions_from IN ('everyone','followers','none')),
+  allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_tags_from IN ('everyone','followers','none')),
+  show_activity_status BOOLEAN NOT NULL DEFAULT FALSE,
+  email_verified BOOLEAN NOT NULL DEFAULT FALSE, last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS users_created_at_idx ON users (created_at DESC);
