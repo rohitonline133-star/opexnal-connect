@@ -27,13 +27,15 @@ import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
 import { timeAgo } from "@/lib/posts";
 import {
+  deleteMessage,
+  fetchMessageReactions,
   getConversationPeers,
   getMessages,
   markConversationRead,
   sendMessage,
+  updateMessageReaction,
   type Message,
 } from "@/lib/messages";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/messages/$conversationId")({
@@ -63,12 +65,20 @@ function Conversation() {
   // Message Actions state
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const [reactionsMap, setReactionsMap] = useState<Record<string, string>>({});
 
   const messagesQuery = useQuery({
     queryKey: ["messages", conversationId],
     queryFn: () => getMessages(conversationId),
+    refetchInterval: 5000,
   });
+
+  const reactionsQuery = useQuery({
+    queryKey: ["message-reactions", conversationId, user?.id],
+    queryFn: () => fetchMessageReactions(conversationId),
+    enabled: Boolean(user?.id),
+    refetchInterval: 5000,
+  });
+  const reactionsMap = reactionsQuery.data || {};
 
   const peersQuery = useQuery({
     queryKey: ["conversation-peers", conversationId, user?.id],
@@ -84,25 +94,6 @@ function Conversation() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQuery.data?.length]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel(`messages:${conversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey: ["messages", conversationId] }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversationId, queryClient]);
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -122,13 +113,15 @@ function Conversation() {
 
   const peer = peersQuery.data?.[0];
 
-  const handleReact = (msgId: string, emoji: string) => {
-    setReactionsMap((prev) => ({
-      ...prev,
-      [msgId]: prev[msgId] === emoji ? "" : emoji,
-    }));
+  const handleReact = async (msgId: string, emoji: string) => {
+    const nextEmoji = reactionsMap[msgId] === emoji ? "" : emoji;
     setSelectedMessage(null);
-    toast.success(`Reacted ${emoji}`);
+    try {
+      await updateMessageReaction(msgId, nextEmoji);
+      await queryClient.invalidateQueries({ queryKey: ["message-reactions", conversationId, user?.id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update reaction.");
+    }
   };
 
   const handleCopyMessage = (text: string) => {
@@ -137,14 +130,43 @@ function Conversation() {
     toast.success("Message copied to clipboard");
   };
 
-  const handleUnsendMessage = (msgId: string) => {
+  const handleUnsendMessage = async (msgId: string) => {
     setSelectedMessage(null);
-    toast.success("Message unsent");
+    if (!user?.id) return;
+    try {
+      await deleteMessage(msgId, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
+      toast.success("Message unsent");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not unsend this message.");
+    }
   };
 
-  const handleReportMessage = () => {
+  const handleReportMessage = async () => {
+    const message = selectedMessage;
     setSelectedMessage(null);
-    toast.success("Message reported to moderation queue");
+    if (!message) return;
+    try {
+      const response = await fetch("/api/v1/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({
+          targetType: "message",
+          targetId: message.id,
+          reason: "other",
+          details: "Reported from direct messages.",
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Message report failed.");
+      toast.success("Message reported to moderation queue");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Message report failed.");
+    }
   };
 
   return (
@@ -344,7 +366,7 @@ function Conversation() {
             {selectedMessage?.sender_id === user?.id ? (
               <button
                 type="button"
-                onClick={() => selectedMessage && handleUnsendMessage(selectedMessage.id)}
+                onClick={() => selectedMessage && void handleUnsendMessage(selectedMessage.id)}
                 className="w-full flex items-center gap-3 p-2.5 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
