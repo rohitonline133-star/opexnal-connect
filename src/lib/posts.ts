@@ -1,4 +1,5 @@
 import { authClient, supabase } from "@/integrations/supabase/client";
+import { getProfileById } from "@/lib/profile";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
@@ -492,6 +493,23 @@ async function fetchApiFeed(limit = 100, cursor?: string | null): Promise<FeedPo
   return (payload.posts || []).map(mapApiPost);
 }
 
+async function fetchApiUserPosts(
+  userId: string,
+  limit = 100,
+  cursor?: string | null,
+): Promise<FeedPost[]> {
+  const profile = await getProfileById(userId);
+  if (!profile) return [];
+  const params = new URLSearchParams({
+    limit: String(Math.min(Math.max(limit, 1), 100)),
+  });
+  if (cursor) params.set("cursor", cursor);
+  const payload = await apiRequest<{ posts?: ApiPostRecord[] }>(
+    `/api/v1/users/${encodeURIComponent(profile.username)}/posts?${params.toString()}`,
+  );
+  return (payload.posts || []).map(mapApiPost);
+}
+
 export async function getHomeFeed(
   viewerId: string,
   cursor?: string | null,
@@ -545,7 +563,7 @@ export async function getReelsFeed(viewerId: string, limit = 30) {
 
 export async function getPostsByUser(userId: string, viewerId?: string | null) {
   try {
-    return (await fetchApiFeed(100)).filter((post) => post.user_id === userId);
+    return await fetchApiUserPosts(userId, 100);
   } catch {
     if (!import.meta.env.DEV) return [];
     return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
@@ -562,11 +580,21 @@ export async function getUserPostsPage(
   cursor?: string | null,
   limit = GRID_PAGE_SIZE,
 ) {
-  const all = await getPostsByUser(userId, viewerId);
-  const sliced = cursor ? all.filter((post) => post.created_at < cursor) : all;
-  const items = sliced.slice(0, limit);
-  const last = items[items.length - 1];
-  return { items, nextCursor: sliced.length > limit && last ? last.created_at : null };
+  try {
+    const all = await fetchApiUserPosts(userId, Math.min(limit + 1, 100), cursor);
+    const items = all.slice(0, limit);
+    const last = items[items.length - 1];
+    return { items, nextCursor: all.length > limit && last ? last.created_at : null };
+  } catch {
+    if (!import.meta.env.DEV) return { items: [], nextCursor: null };
+    const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
+      (post) => post.user_id === userId,
+    );
+    const sliced = cursor ? all.filter((post) => post.created_at < cursor) : all;
+    const items = sliced.slice(0, limit);
+    const last = items[items.length - 1];
+    return { items, nextCursor: sliced.length > limit && last ? last.created_at : null };
+  }
 }
 
 export async function getSavedPosts(_viewerId: string) {
