@@ -55,17 +55,14 @@ class AuthClient {
   constructor() {
     this.memoryUser = null;
     this.memorySession = null;
+    // Previously persisted client-generated tokens are not proof of identity.
+    // Clear them instead of restoring an unverified local session.
     if (typeof window !== "undefined") {
       try {
-        const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
-        const storedUser = localStorage.getItem(AUTH_USER_KEY);
-        if (storedSession && storedUser) {
-          this.memorySession = JSON.parse(storedSession);
-          this.memoryUser = JSON.parse(storedUser);
-        }
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_SESSION_KEY);
       } catch {
-        this.memoryUser = null;
-        this.memorySession = null;
+        // Storage may be unavailable; authentication still fails closed.
       }
     }
   }
