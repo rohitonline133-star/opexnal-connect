@@ -78,6 +78,38 @@ CREATE TABLE IF NOT EXISTS post_likes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (user_id, post_id)
 );
 CREATE INDEX IF NOT EXISTS post_likes_post_idx ON post_likes (post_id);
+CREATE TABLE IF NOT EXISTS post_saves (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, post_id)
+);
+CREATE INDEX IF NOT EXISTS post_saves_post_idx ON post_saves (post_id);
+CREATE TABLE IF NOT EXISTS post_shares (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  channel VARCHAR(40) NOT NULL DEFAULT 'link',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS post_comments (
+  id UUID PRIMARY KEY,
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES post_comments(id) ON DELETE CASCADE,
+  body VARCHAR(2000) NOT NULL CHECK (length(trim(body)) > 0),
+  likes_count INTEGER NOT NULL DEFAULT 0 CHECK (likes_count >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS post_comments_post_idx ON post_comments (post_id, created_at ASC);
+CREATE TABLE IF NOT EXISTS comment_likes (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  comment_id UUID NOT NULL REFERENCES post_comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, comment_id)
+);
+
 CREATE TABLE IF NOT EXISTS stories (
   id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   media_url TEXT NOT NULL, media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video')),
