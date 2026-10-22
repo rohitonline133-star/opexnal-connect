@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/integrations/supabase/client";
 import { getProfileByUsername, initialsFor, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 import { openDirectConversation } from "@/lib/messages";
@@ -81,61 +81,55 @@ function PublicProfile() {
     queryKey: ["relationship", user?.id, profile?.id],
     enabled: Boolean(user?.id && profile?.id) && !isSelf,
     queryFn: async () => {
-      const [follow, request] = await Promise.all([
-        supabase
-          .from("follows")
-          .select("follower_id")
-          .eq("follower_id", user!.id)
-          .eq("following_id", profile!.id)
-          .maybeSingle(),
-        supabase
-          .from("follow_requests")
-          .select("id")
-          .eq("requester_id", user!.id)
-          .eq("target_id", profile!.id)
-          .maybeSingle(),
-      ]);
-      return { following: Boolean(follow.data), requested: Boolean(request.data) };
+      const response = await fetch(
+        `/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`,
+        { headers: authClient.getAuthHeader(), cache: "no-store" },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        isFollowing?: boolean;
+        requestPending?: boolean;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "Could not load relationship status.");
+      return { following: Boolean(payload.isFollowing), requested: Boolean(payload.requestPending) };
     },
   });
 
   async function toggleFollow() {
     if (!user || !profile) return;
-    if (relationship?.following) {
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", user.id)
-        .eq("following_id", profile.id);
-      if (error) {
-        toast.error(error.message);
-        return;
+    try {
+      let response: Response;
+      if (relationship?.following) {
+        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`, {
+          method: "DELETE",
+          headers: authClient.getAuthHeader(),
+        });
+      } else if (relationship?.requested) {
+        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`, {
+          method: "DELETE",
+          headers: authClient.getAuthHeader(),
+        });
+      } else {
+        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`, {
+          method: "POST",
+          headers: authClient.getAuthHeader(),
+        });
       }
-      toast.success(`Unfollowed @${profile.username}`);
-    } else if (relationship?.requested) {
-      const { error } = await supabase
-        .from("follow_requests")
-        .delete()
-        .eq("requester_id", user.id)
-        .eq("target_id", profile.id);
-      if (error) {
-        toast.error((error as Error).message || "Could not withdraw request");
-        return;
-      }
-      toast.success("Request withdrawn");
-    } else {
-      const { data, error } = await supabase.rpc("request_follow", { _target_id: profile.id });
-      if (error) {
-        toast.error((error as Error).message || "Could not follow user");
-        return;
-      }
-      toast.success(
-        data === "requested" ? "Follow request sent" : `Following @${profile.username}`,
-      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        status?: string;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "Could not update follow status.");
+      if (relationship?.following) toast.success(`Unfollowed @${profile.username}`);
+      else if (relationship?.requested) toast.success("Follow request withdrawn");
+      else toast.success(payload.status === "requested" ? "Follow request sent" : `Following @${profile.username}`);
+      await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
+      await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update follow status.");
     }
-    await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
-    await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
   }
+
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -143,31 +137,39 @@ function PublicProfile() {
     toast.success("Profile link copied to clipboard");
   };
 
-  const handleBlockUser = () => {
-    const settings = getStoredSettings();
-    saveSettings({
-      blockedUsers: [
-        ...settings.blockedUsers,
-        { id: profile?.id || "u", username, blockedAt: "Just now" },
-      ],
-    });
-    setBlockDialogOpen(false);
-    setMenuOpen(false);
-    toast.success(`Blocked @${username}. They will no longer be able to find your profile.`);
-    navigate({ to: "/explore" });
+  const handleBlockUser = async () => {
+    if (!profile) return;
+    try {
+      const response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/block`, {
+        method: "POST",
+        headers: authClient.getAuthHeader(),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not block this account.");
+      setBlockDialogOpen(false);
+      setMenuOpen(false);
+      toast.success(`Blocked @${username}`);
+      navigate({ to: "/explore" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not block this account.");
+    }
   };
 
-  const handleRestrictUser = () => {
-    const settings = getStoredSettings();
-    saveSettings({
-      restrictedUsers: [
-        ...settings.restrictedUsers,
-        { id: profile?.id || "u", username, restrictedAt: "Just now" },
-      ],
-    });
-    setRestrictDialogOpen(false);
-    setMenuOpen(false);
-    toast.success(`Restricted @${username}. Only they will see new comments on your posts.`);
+  const handleRestrictUser = async () => {
+    if (!profile) return;
+    try {
+      const response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`, {
+        method: "POST",
+        headers: authClient.getAuthHeader(),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not restrict this account.");
+      setRestrictDialogOpen(false);
+      setMenuOpen(false);
+      toast.success(`Restricted @${username}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not restrict this account.");
+    }
   };
 
   const handleReportUser = (reason: string) => {
