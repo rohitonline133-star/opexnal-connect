@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
+import { apiUrl } from "@/lib/api-client";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -112,7 +113,7 @@ export const SEED_PROFILES: Record<string, Profile> = {
 };
 
 async function fetchApiProfile(path: string): Promise<Profile | null> {
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     headers: authClient.getAuthHeader(),
     cache: "no-store",
   });
