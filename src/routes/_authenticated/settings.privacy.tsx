@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/settings/privacy")({
 const audienceOptions = [
   { value: "everyone", label: "Everyone" },
   { value: "followers", label: "People you follow" },
-  { value: "none", label: "No one" },
+  { value: "nobody", label: "No one" },
 ];
 
 function Privacy() {
