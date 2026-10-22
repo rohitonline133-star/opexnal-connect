@@ -1709,8 +1709,17 @@ app.get("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req, 
       `SELECT c.id,c.post_id,c.user_id,c.parent_id,c.body,c.likes_count,c.created_at,c.updated_at,
         u.username,u.display_name,u.avatar_url,
         EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id=c.id AND cl.user_id=$2) AS liked_by_me
-       FROM post_comments c JOIN users u ON u.id=c.user_id
-       WHERE c.post_id=$1 ORDER BY c.created_at ASC LIMIT 200`,
+       FROM post_comments c
+       JOIN users u ON u.id=c.user_id
+       JOIN posts p ON p.id=c.post_id
+       WHERE c.post_id=$1
+         AND (
+           $2=c.user_id OR $2=p.user_id OR NOT EXISTS (
+             SELECT 1 FROM user_restrictions ur
+             WHERE ur.restrictor_id=p.user_id AND ur.restricted_id=c.user_id
+           )
+         )
+       ORDER BY c.created_at ASC LIMIT 200`,
       [post.id, req.user.id],
     );
     return res.json({ comments: result.rows });
