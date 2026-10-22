@@ -4,6 +4,7 @@ import { Loader2, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 
 interface BlockedUser {
   id: string;
@@ -31,7 +32,7 @@ function SettingsBlockedPage() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/v1/users/me/blocked", {
+    fetch(apiUrl("/api/v1/users/me/blocked"), {
       headers: authClient.getAuthHeader(),
       cache: "no-store",
     })
@@ -58,7 +59,7 @@ function SettingsBlockedPage() {
     setActionId(user.id);
     setErrorMessage(null);
     try {
-      const response = await fetch(`/api/v1/users/${encodeURIComponent(user.id)}/block`, {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(user.id)}/block`), {
         method: "DELETE",
         headers: authClient.getAuthHeader(),
       });
