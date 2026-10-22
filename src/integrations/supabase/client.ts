@@ -339,18 +339,44 @@ class StorageBucketClient {
     }
   }
 
-  async createSignedUrl(path: string, _expiresIn = 3600) {
-    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) {
+  async createSignedUrl(path: string, expiresIn = 300) {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
       return { data: { signedUrl: path }, error: null };
     }
-    return { data: { signedUrl: `/api/v1/storage/public/${path}` }, error: null };
+    const objectKey = path.startsWith("/api/v1/storage/")
+      ? path.slice("/api/v1/storage/".length)
+      : path;
+    try {
+      const res = await fetch("/api/v1/storage/signed-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({ path: objectKey, expiresIn }),
+        cache: "no-store",
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        signedUrl?: string;
+        error?: string;
+      };
+      if (!res.ok || !body.signedUrl) {
+        return { data: null, error: new Error(body.error || "Could not create a signed media URL.") };
+      }
+      return { data: { signedUrl: body.signedUrl }, error: null };
+    } catch (error: unknown) {
+      return { data: null, error: error instanceof Error ? error : new Error("Media URL request failed.") };
+    }
   }
 
   getPublicUrl(path: string) {
-    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
       return { data: { publicUrl: path } };
     }
-    return { data: { publicUrl: `/api/v1/storage/public/${path}` } };
+    const objectKey = path.startsWith("/api/v1/storage/")
+      ? path.slice("/api/v1/storage/".length)
+      : path;
+    return { data: { publicUrl: `/api/v1/storage/public/${encodeURIComponent(objectKey)}` } };
   }
 
   async remove(_paths: string[]) {
