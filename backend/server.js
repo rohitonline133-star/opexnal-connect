@@ -170,7 +170,17 @@ function publicUser(row) {
 }
 function validUsername(value) { return typeof value === "string" && /^[a-zA-Z0-9._]{3,30}$/.test(value); }
 function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
-function validPassword(value) { return typeof value === "string" && value.length >= 12 && value.length <= 128; }
+function validPassword(value) {
+  return (
+    typeof value === "string" &&
+    value.length >= 12 &&
+    value.length <= 128 &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /[0-9]/.test(value) &&
+    /[^a-zA-Z0-9]/.test(value)
+  );
+}
 
 app.get("/health", async (_req, res) => {
   if (!pool) return res.status(503).json({ status: "not_ready", service: "opexnal-api", reason: "database_not_configured" });
@@ -278,6 +288,106 @@ app.get("/api/v1/auth/verify-email", dbRequired, async (req, res, next) => {
     client.release();
   }
 });
+app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, next) => {
+  if (!emailTransport || !publicApiUrl) {
+    return res.status(503).json({ error: "Password reset email delivery is not configured." });
+  }
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!validEmail(email)) return res.status(400).json({ error: "A valid email address is required." });
+  if (!rateLimit("password-reset:" + String(req.ip || "unknown"), 5)) {
+    return res.status(429).json({ error: "Too many reset requests. Try again later." });
+  }
+
+  try {
+    const result = await pool.query("SELECT id, email FROM users WHERE email=$1 LIMIT 1", [email]);
+    const user = result.rows[0];
+    // Do not reveal whether an account exists.
+    if (!user) {
+      return res.json({ success: true, message: "If an account exists for that email, reset instructions will be sent." });
+    }
+
+    const rawToken = randomBytes(32).toString("base64url");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    await pool.query(
+      "UPDATE password_reset_tokens SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL",
+      [user.id],
+    );
+    await pool.query(
+      "INSERT INTO password_reset_tokens (id,user_id,token_hash,expires_at) VALUES ($1,$2,$3,NOW()+INTERVAL '30 minutes')",
+      [randomUUID(), user.id, tokenHash],
+    );
+    const resetUrl = new URL("/auth/reset-password", publicApiUrl);
+    resetUrl.searchParams.set("token", rawToken);
+    try {
+      await emailTransport.sendMail({
+        from: smtpFrom,
+        to: user.email,
+        subject: "Reset your Opexnal password",
+        text: `Use this secure link within 30 minutes to reset your Opexnal password: ${resetUrl.toString()}\nIf you did not request a reset, ignore this message.`,
+        html: `<p>Use this secure link within 30 minutes to reset your Opexnal password:</p><p><a href="${resetUrl.toString()}">Reset password</a></p><p>If you did not request a reset, ignore this message.</p>`,
+      });
+    } catch {
+      await pool.query(
+        "UPDATE password_reset_tokens SET used_at=NOW() WHERE token_hash=$1 AND used_at IS NULL",
+        [tokenHash],
+      );
+      return res.status(503).json({ error: "Reset email could not be delivered. Please try again later." });
+    }
+    return res.json({ success: true, message: "If an account exists for that email, reset instructions will be sent." });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, next) => {
+  const rawToken = typeof req.body?.token === "string" ? req.body.token : "";
+  const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  if (!/^[A-Za-z0-9_-]{40,60}$/.test(rawToken)) {
+    return res.status(400).json({ error: "Invalid or expired reset link." });
+  }
+  if (!validPassword(newPassword)) {
+    return res.status(400).json({
+      error: "Password must be 12–128 characters and include lowercase, uppercase, a number, and a symbol.",
+    });
+  }
+  if (!rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10)) {
+    return res.status(429).json({ error: "Too many reset attempts. Try again later." });
+  }
+
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      "SELECT id, user_id FROM password_reset_tokens WHERE token_hash=$1 AND used_at IS NULL AND expires_at>NOW() FOR UPDATE",
+      [tokenHash],
+    );
+    if (!result.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid or expired reset link." });
+    }
+    const reset = result.rows[0];
+    const passwordHash = await hashPassword(newPassword);
+    await client.query(
+      "UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2",
+      [passwordHash, reset.user_id],
+    );
+    await client.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE id=$1", [reset.id]);
+    await client.query(
+      "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL",
+      [reset.user_id],
+    );
+    await client.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL", [reset.user_id]);
+    await client.query("COMMIT");
+    return res.json({ success: true, message: "Password reset successfully. Sign in again with the new password." });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
 app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
   try {
     const { identity, password } = req.body || {};
