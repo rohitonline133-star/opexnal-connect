@@ -1948,48 +1948,198 @@ app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
 });
 app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const result = await pool.query("SELECT c.id,c.created_at FROM conversations c JOIN conversation_members m ON m.conversation_id=c.id WHERE m.user_id=$1 ORDER BY c.created_at DESC LIMIT 100", [req.user.id]);
-    res.json({ conversations: result.rows });
-  } catch (error) { next(error); }
+    const result = await pool.query(
+      `SELECT c.id,c.created_at,c.last_message_at,
+        (SELECT m.body FROM messages m WHERE m.conversation_id=c.id ORDER BY m.created_at DESC LIMIT 1) AS last_message,
+        EXISTS(
+          SELECT 1 FROM messages m
+          JOIN conversation_members cm ON cm.conversation_id=m.conversation_id AND cm.user_id=$1
+          WHERE m.conversation_id=c.id AND m.sender_id<>$1 AND m.created_at>cm.last_read_at
+        ) AS unread,
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id',u.id,'username',u.username,'display_name',u.display_name,'avatar_url',u.avatar_url,'is_verified',FALSE
+          ))
+          FROM conversation_members cm JOIN users u ON u.id=cm.user_id
+          WHERE cm.conversation_id=c.id AND cm.user_id<>$1),
+          '[]'::json
+        ) AS others
+       FROM conversations c
+       JOIN conversation_members mine ON mine.conversation_id=c.id AND mine.user_id=$1
+       ORDER BY c.last_message_at DESC LIMIT 100`,
+      [req.user.id],
+    );
+    return res.json({ conversations: result.rows });
+  } catch (error) {
+    return next(error);
+  }
 });
+
 app.post("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
+  const recipientId = typeof req.body?.recipientId === "string" ? req.body.recipientId : "";
+  if (!recipientId || recipientId === req.user.id) {
+    return res.status(400).json({ error: "A different recipientId is required." });
+  }
   const client = await pool.connect();
   try {
-    const { recipientId } = req.body || {};
-    if (typeof recipientId !== "string" || recipientId === req.user.id) return res.status(400).json({ error: "A different recipientId is required." });
+    const recipient = await client.query(
+      "SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1",
+      [recipientId],
+    );
+    if (!recipient.rowCount) return res.status(404).json({ error: "Recipient not found." });
+    const blocked = await client.query(
+      "SELECT 1 FROM user_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1",
+      [req.user.id, recipientId],
+    );
+    if (blocked.rowCount) return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
+
+    const existing = await client.query(
+      `SELECT mine.conversation_id
+       FROM conversation_members mine
+       JOIN conversation_members other ON other.conversation_id=mine.conversation_id
+       WHERE mine.user_id=$1 AND other.user_id=$2
+         AND (SELECT COUNT(*) FROM conversation_members all_members WHERE all_members.conversation_id=mine.conversation_id)=2
+       ORDER BY mine.joined_at DESC LIMIT 1`,
+      [req.user.id, recipientId],
+    );
+    if (existing.rowCount) return res.json({ conversation: { id: existing.rows[0].conversation_id } });
+
     await client.query("BEGIN");
-    const recipient = await client.query("SELECT id FROM users WHERE id=$1", [recipientId]);
-    if (!recipient.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Recipient not found." }); }
     const conversationId = randomUUID();
     await client.query("INSERT INTO conversations (id) VALUES ($1)", [conversationId]);
-    await client.query("INSERT INTO conversation_members (conversation_id,user_id) VALUES ($1,$2),($1,$3)", [conversationId, req.user.id, recipientId]);
+    await client.query(
+      "INSERT INTO conversation_members (conversation_id,user_id) VALUES ($1,$2),($1,$3)",
+      [conversationId, req.user.id, recipientId],
+    );
     await client.query("COMMIT");
-    res.status(201).json({ conversation: { id: conversationId } });
-  } catch (error) { await client.query("ROLLBACK").catch(() => {}); next(error); }
-  finally { client.release(); }
+    return res.status(201).json({ conversation: { id: conversationId } });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
 });
+
+app.get("/api/v1/messages/:conversationId/members", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const membership = await pool.query(
+      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+      [req.params.conversationId, req.user.id],
+    );
+    if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
+    const result = await pool.query(
+      `SELECT u.id,u.username,u.display_name,u.avatar_url,FALSE AS is_verified
+       FROM conversation_members cm JOIN users u ON u.id=cm.user_id
+       WHERE cm.conversation_id=$1 AND cm.user_id<>$2`,
+      [req.params.conversationId, req.user.id],
+    );
+    return res.json({ members: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/messages/:conversationId/read", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2 RETURNING conversation_id",
+      [req.params.conversationId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Conversation not found." });
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const member = await pool.query("SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2", [req.params.conversationId, req.user.id]);
+    const member = await pool.query(
+      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2",
+      [req.params.conversationId, req.user.id],
+    );
     if (!member.rowCount) return res.status(404).json({ error: "Conversation not found." });
-    const result = await pool.query("SELECT m.id,m.sender_id,m.body,m.created_at FROM messages m WHERE m.conversation_id=$1 ORDER BY m.created_at ASC LIMIT 200", [req.params.conversationId]);
-    res.json({ messages: result.rows });
-  } catch (error) { next(error); }
+    await pool.query(
+      "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
+      [req.params.conversationId, req.user.id],
+    );
+    const result = await pool.query(
+      `SELECT m.id,m.conversation_id,m.sender_id,m.body,m.created_at,
+        u.username AS sender_username,u.display_name AS sender_display_name,u.avatar_url AS sender_avatar_url
+       FROM messages m JOIN users u ON u.id=m.sender_id
+       WHERE m.conversation_id=$1 ORDER BY m.created_at ASC LIMIT 200`,
+      [req.params.conversationId],
+    );
+    return res.json({ messages: result.rows });
+  } catch (error) {
+    return next(error);
+  }
 });
+
 app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
+  const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
+  const conversationId = req.params.conversationId;
+  if (!body || body.length > 5000) return res.status(400).json({ error: "Message must contain 1–5000 characters." });
   try {
-    const body = req.body?.body;
-    const conversationId = req.params.conversationId;
-    if (typeof body !== "string" || !body.trim() || body.length > 5000) return res.status(400).json({ error: "Message must contain 1–5000 characters." });
-    const member = await pool.query("SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2", [conversationId, req.user.id]);
-    if (!member.rowCount) return res.status(404).json({ error: "Conversation not found." });
-    const result = await pool.query("INSERT INTO messages (id,conversation_id,sender_id,body) VALUES ($1,$2,$3,$4) RETURNING id,conversation_id,sender_id,body,created_at", [randomUUID(), conversationId, req.user.id, body.trim()]);
+    const member = await pool.query(
+      "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
+      [conversationId],
+    );
+    if (!member.rowCount || !member.rows.some((row) => row.user_id === req.user.id)) {
+      return res.status(404).json({ error: "Conversation not found." });
+    }
+    const otherIds = member.rows.map((row) => row.user_id).filter((id) => id !== req.user.id);
+    if (otherIds.length) {
+      const blocked = await pool.query(
+        "SELECT 1 FROM user_blocks WHERE (blocker_id=$1 AND blocked_id=ANY($2::uuid[])) OR (blocked_id=$1 AND blocker_id=ANY($2::uuid[])) LIMIT 1",
+        [req.user.id, otherIds],
+      );
+      const restricted = await pool.query(
+        "SELECT 1 FROM user_restrictions WHERE (restrictor_id=$1 AND restricted_id=ANY($2::uuid[])) OR (restricted_id=$1 AND restrictor_id=ANY($2::uuid[])) LIMIT 1",
+        [req.user.id, otherIds],
+      );
+      if (blocked.rowCount || restricted.rowCount) {
+        return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
+      }
+    }
+    const result = await pool.query(
+      "INSERT INTO messages (id,conversation_id,sender_id,body) VALUES ($1,$2,$3,$4) RETURNING id,conversation_id,sender_id,body,created_at",
+      [randomUUID(), conversationId, req.user.id, body],
+    );
     const message = result.rows[0];
-    const members = await pool.query("SELECT user_id FROM conversation_members WHERE conversation_id=$1", [conversationId]);
-    for (const row of members.rows) for (const socket of socketsByUser.get(row.user_id) || []) if (socket.readyState === 1) socket.send(JSON.stringify({ type: "message.created", message }));
-    res.status(201).json({ message });
-  } catch (error) { next(error); }
+    await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [conversationId]);
+    await pool.query(
+      "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
+      [conversationId, req.user.id],
+    );
+    for (const row of member.rows) {
+      if (row.user_id === req.user.id) continue;
+      for (const socket of socketsByUser.get(row.user_id) || []) {
+        if (socket.readyState === 1) socket.send(JSON.stringify({ type: "message.created", message }));
+      }
+    }
+    return res.status(201).json({ message });
+  } catch (error) {
+    return next(error);
+  }
 });
+
+app.delete("/api/v1/messages/:messageId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM messages m USING conversation_members cm
+       WHERE m.id=$1 AND m.sender_id=$2 AND cm.conversation_id=m.conversation_id AND cm.user_id=$2
+       RETURNING m.id`,
+      [req.params.messageId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Message not found or not owned by this account." });
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 
 server.on("upgrade", (req, socket, head) => {
   void (async () => {
