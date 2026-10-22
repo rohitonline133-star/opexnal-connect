@@ -169,7 +169,7 @@ function Explore() {
     queryKey: ["search-people", query],
     enabled: query.length >= 1,
     queryFn: async () => {
-      const response = await fetch(
+      const response = await fetch(apiUrl(
         `/api/v1/users/search?q=${encodeURIComponent(query)}&limit=20`,
         {
           headers: authClient.getAuthHeader(),
