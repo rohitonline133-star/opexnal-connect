@@ -129,25 +129,37 @@ function SignupPage() {
       return;
     }
 
-    // Request verification OTP
+    if (!contact.includes("@")) {
+      setErrorMessage("Phone signup is unavailable until a real SMS verification provider is configured. Please use an email address.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: contact }),
+      const { data, error } = await authClient.signUp({
+        email: contact,
+        password,
+        dateOfBirth: birthday,
+        options: {
+          data: {
+            username: username.trim(),
+            full_name: fullName.trim(),
+          },
+        },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Failed to send verification code");
-        toast.error(data.error || "Failed to send verification code");
+      if (error) {
+        setErrorMessage(error.message);
+        toast.error(error.message);
         return;
       }
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.success(data.message || "Verification code sent!");
+      if (data?.emailVerificationRequired) {
+        setStep("welcome");
+        toast.success("Account created. Check your email to verify it before signing in.");
+        return;
+      }
+      setErrorMessage("The API did not confirm email verification. Please try again later.");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to send verification code";
+      const msg = err instanceof Error ? err.message : "Registration failed";
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -225,14 +237,14 @@ function SignupPage() {
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">
           {step === "welcome"
-            ? "Welcome to Opexnal! 🎉"
+            ? "Check your email"
             : step === "verify_otp"
               ? "Verify Contact"
               : "Create Your Account"}
         </h2>
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
-            ? "Your account is active. Start sharing and connecting."
+            ? "Your account was created. Open the verification link sent to your email before signing in."
             : step === "verify_otp"
               ? `We sent a 6-digit confirmation code to ${emailOrPhone}`
               : "Join millions sharing stories, reels and creative ideas"}
