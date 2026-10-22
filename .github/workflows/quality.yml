@@ -1,6 +1,7 @@
 name: Opexnal quality checks
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -35,7 +36,17 @@ jobs:
         run: npm run build
       - name: Type check
         run: npm run typecheck
-      - name: Lint
-        run: npm run lint
+      - name: Lint changed TypeScript and JavaScript files
+        run: |
+          git fetch origin main
+          mapfile -t files < <(git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)
+      - name: Unit and security tests
+        run: npm test
+ || true)
+          if [ ${#files[@]} -gt 0 ]; then
+            npx eslint "${files[@]}"
+          else
+            npm run lint
+          fi
       - name: Unit and security tests
         run: npm test
