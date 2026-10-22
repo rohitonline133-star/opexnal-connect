@@ -65,7 +65,7 @@ export function CloseFriendsPage() {
     setFavorites(getStoredSettings(user.id).favoriteCreators || []);
     let active = true;
     setLoading(true);
-    fetch(apiUrl("/api/v1/users/me/close-friends", {
+    fetch(apiUrl("/api/v1/users/me/close-friends"), {
       headers: authClient.getAuthHeader(),
       cache: "no-store",
     })
@@ -103,7 +103,7 @@ export function CloseFriendsPage() {
     let active = true;
     const params = new URLSearchParams({ limit: "30" });
     if (search.trim()) params.set("q", search.trim());
-    fetch(apiUrl(`/api/v1/users/me/followers?${params.toString()}`, {
+    fetch(apiUrl(`/api/v1/users/me/followers?${params.toString()}`), {
       headers: authClient.getAuthHeader(),
       cache: "no-store",
     })
