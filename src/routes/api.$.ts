@@ -1,8 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { handleAiRequest } from "@/server/ai/http-handler";
+import { handleAuthApiRequest } from "@/server/auth-handler";
 
 const allowedMethods = new Set(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]);
 
 async function proxyToFirstPartyApi({ request }: { request: Request }) {
+  const incomingUrl = new URL(request.url);
+  if (incomingUrl.pathname.startsWith("/api/ai/")) {
+    return handleAiRequest(request);
+  }
+  if (incomingUrl.pathname.startsWith("/api/auth/")) {
+    return handleAuthApiRequest(request);
+  }
+
   const method = request.method.toUpperCase();
   if (!allowedMethods.has(method)) {
     return Response.json({ error: "Method not allowed." }, { status: 405 });
