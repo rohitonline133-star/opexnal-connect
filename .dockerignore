@@ -1,0 +1,15 @@
+node_modules
+.output
+dist
+build
+coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+*.backup
+.backup-*
+opexnal_v1
+opexnal_pwa_pro

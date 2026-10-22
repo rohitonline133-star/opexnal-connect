@@ -20,6 +20,69 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
+async function proxyFirstPartyApi(request: Request): Promise<Response> {
+  const configuredOrigin = process.env["OPEXNAL_API_URL"] || process.env["VITE_OPEXNAL_API_URL"];
+  if (!configuredOrigin) {
+    return Response.json(
+      {
+        error:
+          "Opexnal's first-party API is not configured. Set OPEXNAL_API_URL on the web server.",
+      },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  let apiOrigin: URL;
+  try {
+    apiOrigin = new URL(configuredOrigin);
+  } catch {
+    return Response.json({ error: "OPEXNAL_API_URL is invalid." }, { status: 503 });
+  }
+  const isLocalHttp =
+    process.env["NODE_ENV"] !== "production" &&
+    apiOrigin.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "::1"].includes(apiOrigin.hostname);
+  if (apiOrigin.protocol !== "https:" && !isLocalHttp) {
+    return Response.json(
+      { error: "The first-party API must use HTTPS outside local development." },
+      { status: 503 },
+    );
+  }
+
+  const incomingUrl = new URL(request.url);
+  const target = new URL(incomingUrl.pathname + incomingUrl.search, apiOrigin);
+  const headers = new Headers(request.headers);
+  for (const header of ["host", "connection", "content-length", "cookie", "origin"]) {
+    headers.delete(header);
+  }
+
+  try {
+    const method = request.method.toUpperCase();
+    const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
+    const requestInit: RequestInit = {
+      method,
+      headers,
+      redirect: "manual",
+      signal: AbortSignal.timeout(15_000),
+    };
+    if (body !== undefined) requestInit.body = body;
+    const upstream = await fetch(target, requestInit);
+    const responseHeaders = new Headers(upstream.headers);
+    responseHeaders.set("Cache-Control", "no-store");
+    responseHeaders.set("X-Content-Type-Options", "nosniff");
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
+    });
+  } catch {
+    return Response.json(
+      { error: "The first-party API could not be reached." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+}
+
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
@@ -53,7 +116,10 @@ export default {
       if (url.pathname.startsWith("/api/ai/")) {
         return await handleAiRequest(request);
       }
-      if (url.pathname.startsWith("/api/auth/") || url.pathname.startsWith("/api/v1/")) {
+      if (url.pathname.startsWith("/api/v1/")) {
+        return await proxyFirstPartyApi(request);
+      }
+      if (url.pathname.startsWith("/api/auth/")) {
         return await handleAuthApiRequest(request);
       }
 

@@ -25,22 +25,23 @@ function SettingsAccessibilityPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const userId = session?.userId || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
     queryFn: () => getStoredSettings(userId),
+    enabled: Boolean(userId),
   });
 
   const [autoCaptions, setAutoCaptions] = useState(settings?.autoGenerateCaptions ?? true);
-  const [highContrast, setHighContrast] = useState(settings?.highContrastText ?? false);
+  const [highContrast, setHighContrast] = useState(settings?.highContrastMode ?? false);
   const [reducedMotion, setReducedMotion] = useState(settings?.reducedMotion ?? false);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return updateSettings(userId, {
         autoGenerateCaptions: autoCaptions,
-        highContrastText: highContrast,
+        highContrastMode: highContrast,
         reducedMotion: reducedMotion,
       });
     },

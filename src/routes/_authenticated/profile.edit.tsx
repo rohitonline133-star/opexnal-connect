@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getProfileById, initialsFor, USERNAME_PATTERN } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
@@ -45,7 +47,15 @@ const formSchema = z.object({
     .toLowerCase()
     .regex(USERNAME_PATTERN, "3–30 characters: lowercase letters, numbers, dots or underscores"),
   bio: z.string().trim().max(160, "Bio must be 160 characters or fewer"),
-  website: z.union([z.literal(""), z.string().trim().url("Enter a valid URL").max(200)]),
+  website: z.union([
+    z.literal(""),
+    z
+      .string()
+      .trim()
+      .url("Enter a valid URL")
+      .max(200)
+      .refine((value) => value.startsWith("https://"), "Website must use HTTPS"),
+  ]),
   account_type: z.enum(["personal", "creator", "business"]),
 });
 
@@ -94,25 +104,33 @@ function EditProfile() {
       return;
     }
     setUploading(true);
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const path = `${user.id}/avatar-${Date.now()}.${extension}`;
-    const { error: uploadError } = await supabase.storage
+    const { data: uploaded, error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (uploadError) {
+      .upload(`${user.id}/avatar`, file, { upsert: false, contentType: file.type });
+    if (uploadError || !uploaded?.path) {
       setUploading(false);
-      toast.error(uploadError.message);
+      toast.error(uploadError?.message || "Avatar upload failed.");
       return;
     }
-    const { error } = await supabase
-      .from("profiles")
-      .update({ avatar_url: path })
-      .eq("id", user.id);
+    try {
+      const response = await fetch(apiUrl("/api/v1/users/me"), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({ avatarUrl: uploaded.path }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Avatar update failed.");
+      await authClient.getUser();
+    } catch (error) {
+      await supabase.storage.from("avatars").remove([uploaded.path]);
+      setUploading(false);
+      toast.error(error instanceof Error ? error.message : "Avatar update failed.");
+      return;
+    }
     setUploading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
     toast.success("Photo updated");
   }
@@ -126,25 +144,30 @@ function EditProfile() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: parsed.data.display_name,
-        username: parsed.data.username,
-        bio: parsed.data.bio,
-        website: parsed.data.website || null,
-        account_type: parsed.data.account_type,
-      })
-      .eq("id", user.id);
-    setBusy(false);
-    if (error) {
-      const msg =
-        (error as { code?: string; message?: string })?.code === "23505"
-          ? "That username is already taken"
-          : (error as Error).message || "Profile update failed";
-      toast.error(msg);
+    try {
+      const response = await fetch(apiUrl("/api/v1/users/me"), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({
+          displayName: parsed.data.display_name,
+          username: parsed.data.username,
+          bio: parsed.data.bio,
+          website: parsed.data.website || null,
+          accountType: parsed.data.account_type,
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Profile update failed.");
+      await authClient.getUser();
+    } catch (error) {
+      setBusy(false);
+      toast.error(error instanceof Error ? error.message : "Profile update failed.");
       return;
     }
+    setBusy(false);
     await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
     toast.success("Profile saved");
     navigate({ to: "/profile" });

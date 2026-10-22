@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
+import { apiUrl } from "@/lib/api-client";
 
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type Message = MessageRow;
@@ -13,223 +15,76 @@ export type ConversationSummary = {
   unread: boolean;
 };
 
-const SEED_CONVERSATIONS: ConversationSummary[] = [
-  {
-    id: "conv_maya",
-    lastMessageAt: "2026-10-14T08:45:00.000Z",
-    lastMessage: "Hey! Loved your latest post on the feed. Are you going to the creator meetup?",
-    others: [
-      {
-        id: "user_maya",
-        username: "maya_codes",
-        display_name: "Maya Chen",
-        avatar_url:
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-        is_verified: true,
-      },
-    ],
-    unread: true,
-  },
-  {
-    id: "conv_zenith",
-    lastMessageAt: "2026-10-14T07:00:00.000Z",
-    lastMessage: "The new motion graphics shader is ready for testing! Check it out when you can.",
-    others: [
-      {
-        id: "user_zenith",
-        username: "zenith_design",
-        display_name: "Zenith Creative",
-        avatar_url:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-        is_verified: true,
-      },
-    ],
-    unread: false,
-  },
-];
-
-const LOCAL_MESSAGES_KEY = "opexnal_local_messages";
-
-function getLocalMessages(conversationId: string): MessageRow[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(`${LOCAL_MESSAGES_KEY}_${conversationId}`);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+async function messagesApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(authClient.getAuthHeader());
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+  const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
+  const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
+  if (!response.ok)
+    throw new Error(payload.error || `Messaging API request failed (${response.status}).`);
+  return payload;
 }
 
-function saveLocalMessage(conversationId: string, msg: MessageRow) {
-  if (typeof window === "undefined") return;
-  try {
-    const current = getLocalMessages(conversationId);
-    current.push(msg);
-    localStorage.setItem(`${LOCAL_MESSAGES_KEY}_${conversationId}`, JSON.stringify(current));
-  } catch {
-    // ignore
+export async function listConversations(userId: string): Promise<ConversationSummary[]> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== userId) {
+    throw new Error("Verified authentication is required to list conversations.");
   }
+  const payload = await messagesApiRequest<{
+    conversations?: Array<{
+      id: string;
+      last_message_at: string;
+      last_message: string | null;
+      unread: boolean;
+      others: FeedAuthor[];
+    }>;
+  }>("/api/v1/messages/conversations");
+  return (payload.conversations || []).map((conversation) => ({
+    id: conversation.id,
+    lastMessageAt: conversation.last_message_at,
+    lastMessage: conversation.last_message,
+    others: conversation.others || [],
+    unread: Boolean(conversation.unread),
+  }));
 }
 
-export async function listConversations(userId: string) {
-  try {
-    const { data: memberships, error } = await supabase
-      .from("conversation_members")
-      .select("conversation_id, last_read_at")
-      .eq("user_id", userId);
-    if (!error && memberships && memberships.length > 0) {
-      const ids = (memberships as Array<{ conversation_id: string; last_read_at: string }>).map(
-        (m) => m.conversation_id,
-      );
-      const [convRes, memberRes, msgRes] = await Promise.all([
-        supabase.from("conversations").select("id, last_message_at").in("id", ids),
-        supabase
-          .from("conversation_members")
-          .select("conversation_id, user_id")
-          .in("conversation_id", ids),
-        supabase
-          .from("messages")
-          .select("conversation_id, body, created_at")
-          .in("conversation_id", ids)
-          .order("created_at", { ascending: false }),
-      ]);
-
-      const memberRows = (memberRes.data ?? []) as Array<{
-        conversation_id: string;
-        user_id: string;
-      }>;
-      const otherIds = Array.from(
-        new Set(memberRows.filter((m) => m.user_id !== userId).map((m) => m.user_id)),
-      );
-      const { data: profiles } = otherIds.length
-        ? await supabase
-            .from("profiles")
-            .select("id, username, display_name, avatar_url, is_verified")
-            .in("id", otherIds)
-        : { data: [] };
-      const profileMap = new Map(((profiles ?? []) as Array<FeedAuthor>).map((p) => [p.id, p]));
-
-      const lastMessage = new Map<string, { body: string; created_at: string }>();
-      const msgRows = (msgRes.data ?? []) as Array<{
-        conversation_id: string;
-        body: string;
-        created_at: string;
-      }>;
-      for (const m of msgRows) {
-        if (!lastMessage.has(m.conversation_id)) {
-          lastMessage.set(m.conversation_id, { body: m.body, created_at: m.created_at });
-        }
-      }
-      const readMap = new Map(
-        (memberships as Array<{ conversation_id: string; last_read_at: string }>).map((m) => [
-          m.conversation_id,
-          m.last_read_at,
-        ]),
-      );
-
-      const convRows = (convRes.data ?? []) as Array<{ id: string; last_message_at: string }>;
-      return convRows
-        .map((c): ConversationSummary => {
-          const last = lastMessage.get(c.id) ?? null;
-          const lastRead = readMap.get(c.id);
-          return {
-            id: c.id,
-            lastMessageAt: c.last_message_at,
-            lastMessage: last?.body ?? null,
-            others: memberRows
-              .filter((m) => m.conversation_id === c.id && m.user_id !== userId)
-              .map((m) => profileMap.get(m.user_id))
-              .filter((p): p is FeedAuthor => Boolean(p)),
-            unread: Boolean(
-              last && lastRead && new Date(last.created_at) > new Date(String(lastRead)),
-            ),
-          };
-        })
-        .sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : -1));
-    }
-  } catch {
-    // Return empty if error or not yet participating in conversations
-  }
-
-  return [];
-}
-
-/** Find an existing 1:1 conversation with `otherId`, or create one. */
+/** Find an existing 1:1 conversation with otherId, or create one on the API. */
 export async function openDirectConversation(userId: string, otherId: string) {
-  const { data: mine } = await supabase
-    .from("conversation_members")
-    .select("conversation_id")
-    .eq("user_id", userId);
-  const memberList = (mine ?? []) as Array<{ conversation_id: string }>;
-  const ids = memberList.map((m) => m.conversation_id);
-
-  if (ids.length > 0) {
-    const { data: shared } = await supabase
-      .from("conversation_members")
-      .select("conversation_id")
-      .eq("user_id", otherId)
-      .in("conversation_id", ids);
-    const candidate = (shared ?? [])[0]?.conversation_id;
-    if (candidate) return candidate;
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== userId) {
+    throw new Error("Verified authentication is required to open a conversation.");
   }
-
-  const { data: conversation, error } = await supabase
-    .from("conversations")
-    .insert({ created_by: userId })
-    .select("id")
-    .single();
-  if (error) throw error;
-
-  const { error: memberError } = await supabase.from("conversation_members").insert([
-    { conversation_id: conversation.id, user_id: userId },
-    { conversation_id: conversation.id, user_id: otherId },
-  ]);
-  if (memberError) throw memberError;
-
-  return conversation.id;
+  const payload = await messagesApiRequest<{ conversation?: { id?: string } }>(
+    "/api/v1/messages/conversations",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipientId: otherId }),
+    },
+  );
+  if (!payload.conversation?.id) throw new Error("The API did not return a conversation.");
+  return payload.conversation.id;
 }
 
 export async function getMessages(conversationId: string): Promise<MessageRow[]> {
-  try {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
-    if (!error && data) {
-      return data;
-    }
-  } catch {
-    // Return empty array
-  }
-  return [];
+  const payload = await messagesApiRequest<{ messages?: MessageRow[] }>(
+    `/api/v1/messages/${encodeURIComponent(conversationId)}`,
+  );
+  return payload.messages || [];
 }
 
 export async function getConversationPeers(
   conversationId: string,
   userId: string,
 ): Promise<FeedAuthor[]> {
-  try {
-    const { data } = await supabase
-      .from("conversation_members")
-      .select("user_id")
-      .eq("conversation_id", conversationId);
-    const memberList = (data ?? []) as Array<{ user_id: string }>;
-    const ids = memberList.map((m) => m.user_id).filter((id) => id !== userId);
-    if (ids.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, avatar_url, is_verified")
-        .in("id", ids);
-      if (profiles && profiles.length > 0) {
-        return profiles as FeedAuthor[];
-      }
-    }
-  } catch {
-    // fallback
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== userId) {
+    throw new Error("Verified authentication is required to load conversation members.");
   }
-
-  return [];
+  const payload = await messagesApiRequest<{ members?: FeedAuthor[] }>(
+    `/api/v1/messages/${encodeURIComponent(conversationId)}/members`,
+  );
+  return payload.members || [];
 }
 
 export type SendMessagePayload = {
@@ -252,69 +107,56 @@ export async function sendMessage(
   senderId?: string,
   body?: string,
 ): Promise<SentMessageResult> {
-  let convId: string;
-  let sId: string;
-  let textBody: string;
-
-  if (typeof conversationIdOrPayload === "object") {
-    convId = conversationIdOrPayload.conversationId;
-    sId = conversationIdOrPayload.sender.id;
-    textBody = conversationIdOrPayload.text;
-  } else {
-    convId = conversationIdOrPayload;
-    sId = senderId || "user_maya";
-    textBody = body || "";
+  const convId =
+    typeof conversationIdOrPayload === "object"
+      ? conversationIdOrPayload.conversationId
+      : conversationIdOrPayload;
+  const textBody =
+    typeof conversationIdOrPayload === "object" ? conversationIdOrPayload.text : body || "";
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user?.id || (senderId && senderId !== data.user.id)) {
+    throw new Error("Verified authentication is required to send a message.");
   }
-
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveSenderId = authData?.user?.id || sId;
-  const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-  const now = new Date().toISOString();
-
-  const { error } = await supabase.from("messages").insert({
-    id: messageId,
-    conversation_id: convId,
-    sender_id: effectiveSenderId,
-    body: textBody.trim(),
-    created_at: now,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return {
-    id: messageId,
-    conversation_id: convId,
-    sender_id: effectiveSenderId,
-    body: textBody.trim(),
-    text: textBody.trim(),
-    created_at: now,
-  };
+  const payload = await messagesApiRequest<{ message?: Omit<SentMessageResult, "text"> }>(
+    `/api/v1/messages/${encodeURIComponent(convId)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: textBody.trim() }),
+    },
+  );
+  if (!payload.message) throw new Error("The API did not return the sent message.");
+  return { ...payload.message, text: payload.message.body };
 }
 
 export async function deleteMessage(messageId: string, requestingUserId?: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData?.user?.id || requestingUserId;
-  if (!effectiveUserId) {
-    throw new Error("Authentication required to delete a message");
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user?.id || (requestingUserId && requestingUserId !== data.user.id)) {
+    throw new Error("Verified authentication is required to delete a message.");
   }
-  const { error } = await supabase
-    .from("messages")
-    .delete()
-    .eq("id", messageId)
-    .eq("sender_id", effectiveUserId);
-  if (error) throw error;
+  await messagesApiRequest<{ success: boolean }>(
+    `/api/v1/messages/${encodeURIComponent(messageId)}`,
+    { method: "DELETE" },
+  );
 }
 
-const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
+export async function markConversationRead(conversationId: string, userId: string) {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== userId) {
+    throw new Error("Verified authentication is required to mark a conversation read.");
+  }
+  await messagesApiRequest<{ success: boolean }>(
+    `/api/v1/messages/${encodeURIComponent(conversationId)}/read`,
+    { method: "POST" },
+  );
+}
 
+/** Local-only reaction state is development-only; production reactions use the API below. */
+const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
 const memoryMessageReactions: Record<string, string> = {};
 
 export function getMessageReactions(): Record<string, string> {
-  if (typeof window === "undefined") {
-    return memoryMessageReactions;
-  }
+  if (!import.meta.env.DEV || typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGE_REACTIONS_KEY);
     return raw ? JSON.parse(raw) : memoryMessageReactions;
@@ -324,6 +166,7 @@ export function getMessageReactions(): Record<string, string> {
 }
 
 export function setMessageReaction(messageId: string, emoji: string) {
+  if (!import.meta.env.DEV) return;
   memoryMessageReactions[messageId] = emoji;
   if (typeof window === "undefined") return;
   try {
@@ -331,18 +174,26 @@ export function setMessageReaction(messageId: string, emoji: string) {
     current[messageId] = emoji;
     localStorage.setItem(LOCAL_MESSAGE_REACTIONS_KEY, JSON.stringify(current));
   } catch {
-    // ignore
+    // Development-only convenience state.
   }
 }
 
-export async function markConversationRead(conversationId: string, userId: string) {
-  try {
-    await supabase
-      .from("conversation_members")
-      .update({ last_read_at: new Date().toISOString() })
-      .eq("conversation_id", conversationId)
-      .eq("user_id", userId);
-  } catch {
-    // ignore
-  }
+export async function fetchMessageReactions(conversationId: string) {
+  const payload = await messagesApiRequest<{
+    reactions?: Array<{ message_id: string; emoji: string }>;
+  }>(`/api/v1/messages/${encodeURIComponent(conversationId)}/reactions`);
+  return Object.fromEntries(
+    (payload.reactions || []).map((reaction) => [reaction.message_id, reaction.emoji]),
+  );
+}
+
+export async function updateMessageReaction(messageId: string, emoji: string) {
+  await messagesApiRequest<{ reaction: { message_id: string; emoji: string } | null }>(
+    `/api/v1/messages/${encodeURIComponent(messageId)}/reaction`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emoji }),
+    },
+  );
 }

@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: opexnal
+      POSTGRES_USER: opexnal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - opexnal_pgdata:/var/lib/postgresql/data
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opexnal -d opexnal"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [opexnal]
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://opexnal:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/opexnal
+      DATABASE_SSL: "false"
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      MEDIA_STORAGE_DIR: /app/media
+      JWT_SECRET: ${JWT_SECRET:?Set a unique JWT_SECRET of at least 32 characters}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:3000}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    volumes:
+      - opexnal_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    networks: [opexnal]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_OPEXNAL_API_URL: ${VITE_OPEXNAL_API_URL:-}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      OPEXNAL_API_URL: http://api:4000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    networks: [opexnal]
+
+networks:
+  opexnal:
+
+volumes:
+  opexnal_pgdata:
+  opexnal_media:

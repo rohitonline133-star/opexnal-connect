@@ -40,11 +40,26 @@ function CurrentUserProfileRedirect() {
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
     } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
+      // Do not redirect an authenticated account to a seeded/demo identity.
+      // Remain here until the real profile is loaded or created.
+      return;
     } else {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }
   }, [loading, isLoading, profile, user, navigate]);
+
+  if (!loading && !isLoading && user?.id && !profile?.username) {
+    return (
+      <AppShell activeTab="profile">
+        <div className="flex min-h-[60vh] items-center justify-center px-6">
+          <p role="status" className="max-w-md text-center text-sm text-muted-foreground">
+            Your profile could not be found yet. Opexnal will not redirect you to another user’s
+            profile.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell activeTab="profile">

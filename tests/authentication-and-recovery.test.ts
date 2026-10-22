@@ -16,10 +16,10 @@ import {
 
 describe("Authentication & Account Security Engine", () => {
   // 1. Password Strength & Breached Password Policy
-  test("Password policy: rejects passwords under 8 characters", () => {
+  test("Password policy: rejects passwords under 12 characters", () => {
     const result = evaluatePasswordStrength("short1");
     assert.strictEqual(result.isValid, false);
-    assert.ok(result.errors.some((e) => e.includes("8 characters")));
+    assert.ok(result.errors.some((e) => e.includes("12 characters")));
   });
 
   test("Password policy: blocks common breached passwords", () => {
@@ -58,24 +58,36 @@ describe("Authentication & Account Security Engine", () => {
   });
 
   // 3. OTP & SIM Risk Protection
-  test("OTP protection: generates code and enforces resend cooldown", () => {
+  test("OTP protection: requires a delivery provider and enforces resend cooldown", async () => {
+    const unconfigured = await requestOtp("no_provider@opexnal.test", "email");
+    assert.strictEqual(unconfigured.success, false);
+    assert.match(unconfigured.message, /delivery is not configured/i);
+
     const testDestination = "tester_sim_guard@opexnal.test";
-    const res1 = requestOtp(testDestination, "email");
+    const deliver = async (
+      _destination: string,
+      _type: "email" | "phone" | "recovery",
+      _code: string,
+    ) => {};
+    const res1 = await requestOtp(testDestination, "email", deliver);
     assert.strictEqual(res1.success, true);
     assert.ok(res1.message.includes("Verification code sent"));
 
     // Immediate second attempt within cooldown must be throttled
-    const res2 = requestOtp(testDestination, "email");
+    const res2 = await requestOtp(testDestination, "email", deliver);
     assert.strictEqual(res2.success, false);
     assert.ok(res2.message.includes("wait"));
     assert.ok(res2.cooldownRemainingMs > 0);
   });
 
-  test("OTP protection: validates correct code and rejects invalid attempts with attempt limits", () => {
+  test("OTP protection: validates correct code and rejects invalid attempts with attempt limits", async () => {
     const testDestination = "user_otp_check@opexnal.test";
-    const req = requestOtp(testDestination, "email");
+    let deliveredCode = "";
+    const req = await requestOtp(testDestination, "email", async (_destination, _type, code) => {
+      deliveredCode = code;
+    });
     assert.strictEqual(req.success, true);
-    assert.ok(req.code, "requestOtp must return generated OTP code");
+    assert.ok(deliveredCode, "delivery callback should receive the code");
 
     // Invalid attempt
     const invalidCheck = verifyOtp(testDestination, "000000");
@@ -83,19 +95,22 @@ describe("Authentication & Account Security Engine", () => {
     assert.ok(invalidCheck.error?.includes("Invalid code"));
 
     // Valid check using actual generated OTP
-    const validCheck = verifyOtp(testDestination, req.code);
+    const validCheck = verifyOtp(testDestination, deliveredCode);
     assert.strictEqual(validCheck.valid, true);
 
     // Single-use: once verified, code is consumed and cannot be reused
-    const reuseCheck = verifyOtp(testDestination, req.code);
+    const reuseCheck = verifyOtp(testDestination, deliveredCode);
     assert.strictEqual(reuseCheck.valid, false);
   });
 
-  test("OTP protection: strictly rejects backdoor codes like 123456 when actual code differs", () => {
+  test("OTP protection: strictly rejects backdoor codes like 123456 when actual code differs", async () => {
     const testDestination = "user_no_bypass@opexnal.test";
-    const req = requestOtp(testDestination, "email");
+    let deliveredCode = "";
+    const req = await requestOtp(testDestination, "email", async (_destination, _type, code) => {
+      deliveredCode = code;
+    });
     assert.strictEqual(req.success, true);
-    if (req.code !== "123456") {
+    if (deliveredCode !== "123456") {
       const bypassAttempt = verifyOtp(testDestination, "123456");
       assert.strictEqual(
         bypassAttempt.valid,

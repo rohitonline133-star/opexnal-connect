@@ -6,6 +6,7 @@ export type Session =
   | AuthSession
   | {
       access_token: string;
+      userId?: string;
       user: { id: string; email?: string; [key: string]: unknown } | null;
     };
 

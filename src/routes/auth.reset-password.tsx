@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
 
 const resetPasswordSearchSchema = z.object({
@@ -66,12 +67,12 @@ function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/password-reset/confirm", {
+      const res = await fetch(apiUrl("/api/v1/auth/password-reset/confirm"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           newPassword,
-          code: codeOrToken.trim(),
+          token: codeOrToken.trim(),
         }),
       });
 
@@ -82,7 +83,7 @@ function ResetPasswordPage() {
       }
 
       setIsSuccess(true);
-      toast.success("Password changed successfully! Previous sessions revoked.");
+      toast.success("Password changed successfully. All sessions have been revoked.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Password reset failed. Please try again.";
       setErrorMessage(msg);
@@ -114,7 +115,7 @@ function ResetPasswordPage() {
         <p className="text-xs text-gray-400 font-medium">
           {isSuccess
             ? "Your account credentials have been updated and all active sessions refreshed."
-            : "Your new password must be at least 8 characters and include letters, numbers & symbols."}
+            : "Your new password must be 12–128 characters and include lowercase, uppercase, numbers, and symbols."}
         </p>
       </div>
 
@@ -136,8 +137,7 @@ function ResetPasswordPage() {
               <span>Security Hardened</span>
             </div>
             <p className="text-emerald-300 text-[11px] leading-relaxed">
-              All other active login sessions on other devices have been automatically logged out to
-              protect your account.
+              All active sessions were revoked. Sign in again on the devices you still use.
             </p>
           </div>
 

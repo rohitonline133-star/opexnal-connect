@@ -7,6 +7,7 @@
  */
 
 import { authClient, AuthUser, AuthSession } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 
 export type { Database } from "./types";
 
@@ -175,31 +176,119 @@ class QueryBuilder<T = unknown> {
     try {
       // First attempt first-party API endpoint if available
       if (this.tableName === "posts" && this.operation === "select") {
-        const res = await fetch("/api/v1/posts/feed", {
+        const res = await fetch(apiUrl("/api/v1/posts/feed"), {
           headers: authClient.getAuthHeader(),
+          cache: "no-store",
         });
-        if (res.ok) {
-          const json = (await res.json()) as { posts?: Record<string, unknown>[] };
-          let rows: Record<string, unknown>[] = json.posts || [];
-          for (const f of this.filters) {
-            rows = rows.filter(f);
-          }
-          if (this.limitCount) rows = rows.slice(0, this.limitCount);
-          return { data: rows as unknown as T, error: null };
+        if (!res.ok) {
+          return {
+            data: null,
+            error: new Error(`Feed request failed with status ${res.status}.`),
+          };
         }
+        const json = (await res.json()) as { posts?: Record<string, unknown>[] };
+        let rows: Record<string, unknown>[] = json.posts || [];
+        for (const f of this.filters) {
+          rows = rows.filter(f);
+        }
+        if (this.limitCount) rows = rows.slice(0, this.limitCount);
+        return { data: rows as unknown as T, error: null };
       }
 
       if (this.tableName === "stories" && this.operation === "select") {
-        const res = await fetch("/api/v1/stories/tray", {
+        const res = await fetch(apiUrl("/api/v1/stories"), {
           headers: authClient.getAuthHeader(),
+          cache: "no-store",
         });
-        if (res.ok) {
-          const json = (await res.json()) as { tray?: unknown };
-          return { data: (json.tray || []) as unknown as T, error: null };
+        if (!res.ok) {
+          return {
+            data: null,
+            error: new Error(`Stories request failed with status ${res.status}.`),
+          };
+        }
+        const json = (await res.json()) as { stories?: unknown[] };
+        return { data: (json.stories || []) as unknown as T, error: null };
+      }
+
+      if (
+        (this.tableName === "posts" || this.tableName === "stories") &&
+        this.operation === "insert"
+      ) {
+        const items = Array.isArray(this.payload) ? this.payload : [this.payload];
+        if (items.length !== 1 || !items[0] || typeof items[0] !== "object") {
+          return {
+            data: null,
+            error: new Error("Only one post or story can be created per request."),
+          };
+        }
+        const item = items[0] as Record<string, unknown>;
+        const mediaUrl =
+          typeof item["media_url"] === "string"
+            ? item["media_url"]
+            : typeof item["mediaUrl"] === "string"
+              ? item["mediaUrl"]
+              : null;
+        const mediaTypeValue = item["media_type"] ?? item["mediaType"];
+        const mediaType =
+          typeof mediaTypeValue === "string"
+            ? mediaTypeValue
+            : this.tableName === "posts" && !mediaUrl
+              ? "text"
+              : "image";
+        const endpoint = this.tableName === "posts" ? "/api/v1/posts" : "/api/v1/stories";
+        try {
+          const response = await fetch(apiUrl(endpoint), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...authClient.getAuthHeader(),
+            },
+            body: JSON.stringify({
+              caption: typeof item["caption"] === "string" ? item["caption"] : "",
+              mediaUrl,
+              mediaType,
+              visibility: item["visibility"] === "private" ? "private" : "public",
+            }),
+            cache: "no-store",
+          });
+          const payload = (await response.json().catch(() => ({}))) as {
+            post?: Record<string, unknown>;
+            story?: Record<string, unknown>;
+            error?: string;
+          };
+          if (!response.ok) {
+            return {
+              data: null,
+              error: new Error(
+                payload.error || `Create request failed with status ${response.status}.`,
+              ),
+            };
+          }
+          const created = this.tableName === "posts" ? payload.post : payload.story;
+          if (!created) {
+            return { data: null, error: new Error("The API returned no created record.") };
+          }
+          return { data: created as unknown as T, error: null };
+        } catch (error: unknown) {
+          return {
+            data: null,
+            error: error instanceof Error ? error : new Error("Create request failed."),
+          };
         }
       }
 
-      // Local persistent table fallback
+      // Browser-local storage is only a development convenience. In production,
+      // unsupported tables must fail explicitly rather than pretending data persisted.
+      if (!import.meta.env.DEV) {
+        return {
+          data: null,
+          error: new Error(
+            `First-party API adapter does not support ${this.operation} on "${this.tableName}". No local data was written.`,
+          ),
+        };
+      }
+
+      // Development-only local persistent table fallback
       let tableData = getLocalTable(this.tableName);
 
       if (this.operation === "insert") {
@@ -309,7 +398,7 @@ class StorageBucketClient {
       formData.append("file", file);
       formData.append("bucket", this.bucket);
 
-      const res = await fetch("/api/v1/storage/upload", {
+      const res = await fetch(apiUrl("/api/v1/storage/upload"), {
         method: "POST",
         headers: authClient.getAuthHeader(),
         body: formData,
@@ -329,22 +418,76 @@ class StorageBucketClient {
     }
   }
 
-  async createSignedUrl(path: string, _expiresIn = 3600) {
-    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) {
+  async createSignedUrl(path: string, expiresIn = 300) {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
       return { data: { signedUrl: path }, error: null };
     }
-    return { data: { signedUrl: `/api/v1/storage/public/${path}` }, error: null };
+    const objectKey = path.startsWith("/api/v1/storage/")
+      ? path.slice("/api/v1/storage/".length)
+      : path;
+    try {
+      const res = await fetch(apiUrl("/api/v1/storage/signed-url"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({ path: objectKey, expiresIn }),
+        cache: "no-store",
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        signedUrl?: string;
+        error?: string;
+      };
+      if (!res.ok || !body.signedUrl) {
+        return {
+          data: null,
+          error: new Error(body.error || "Could not create a signed media URL."),
+        };
+      }
+      return { data: { signedUrl: body.signedUrl }, error: null };
+    } catch (error: unknown) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error("Media URL request failed."),
+      };
+    }
   }
 
   getPublicUrl(path: string) {
-    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("/")) {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
       return { data: { publicUrl: path } };
     }
-    return { data: { publicUrl: `/api/v1/storage/public/${path}` } };
+    const objectKey = path.startsWith("/api/v1/storage/")
+      ? path.slice("/api/v1/storage/".length)
+      : path;
+    return { data: { publicUrl: `/api/v1/storage/public/${encodeURIComponent(objectKey)}` } };
   }
 
-  async remove(_paths: string[]) {
-    return { data: null, error: null };
+  async remove(paths: string[]) {
+    try {
+      await Promise.all(
+        paths.map(async (path) => {
+          const objectKey = path.startsWith("/api/v1/storage/")
+            ? path.slice("/api/v1/storage/".length)
+            : path;
+          const response = await fetch(apiUrl(`/api/v1/storage/${encodeURIComponent(objectKey)}`), {
+            method: "DELETE",
+            headers: authClient.getAuthHeader(),
+          });
+          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          if (!response.ok) {
+            throw new Error(payload.error || `Media delete failed with status ${response.status}.`);
+          }
+        }),
+      );
+      return { data: null, error: null };
+    } catch (error: unknown) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error("Media delete failed."),
+      };
+    }
   }
 }
 
@@ -386,7 +529,12 @@ export const supabase = {
       };
     },
     setSession: async (_tokens: unknown) => {
-      return { data: { session: null }, error: null };
+      return {
+        data: { session: null },
+        error: new Error(
+          "Third-party OAuth sessions are not accepted by Opexnal's first-party authentication backend.",
+        ),
+      };
     },
     signInWithPassword: (params: { email?: string; password?: string }) =>
       authClient.signInWithPassword(params),
@@ -400,27 +548,14 @@ export const supabase = {
       authClient.onAuthStateChange(callback),
     updateUser: async (attributes: { password?: string }) => {
       if (attributes.password) {
-        try {
-          const res = await fetch("/api/v1/auth/password-reset/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              newPassword: attributes.password,
-              code: "verified_session_reset",
-            }),
-          });
-          if (!res.ok) {
-            const b = (await res.json().catch(() => ({ error: "Password update failed" }))) as {
-              error?: string;
-            };
-            return { data: null, error: new Error(b.error || "Update failed") };
-          }
-          return { data: { user: {} }, error: null };
-        } catch (e: unknown) {
-          return { data: null, error: e instanceof Error ? e : new Error("Network error") };
-        }
+        return {
+          data: null,
+          error: new Error(
+            "Password changes are unavailable until verified first-party password-reset tokens are configured.",
+          ),
+        };
       }
-      return { data: null, error: null };
+      return { data: null, error: new Error("Unsupported account update operation.") };
     },
   },
   storage: {
@@ -428,8 +563,13 @@ export const supabase = {
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: <T = any>(tableName: string) => new QueryBuilder<T>(tableName),
-  rpc: async (func: string, params?: Record<string, unknown>) => {
-    return { data: "success", error: null };
+  rpc: async (_func: string, _params?: Record<string, unknown>) => {
+    return {
+      data: null,
+      error: new Error(
+        "RPC is not implemented by the first-party API. No operation was performed.",
+      ),
+    };
   },
   channel: (_name: string) => ({
     on: (..._args: unknown[]) => ({

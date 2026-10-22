@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { UserX, Shield, Search, UserCheck } from "lucide-react";
+import { Loader2, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
+import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
+
+interface BlockedUser {
+  id: string;
+  username: string;
+  display_name: string;
+}
 
 export const Route = createFileRoute("/_authenticated/settings/blocked")({
   head: () => ({
     meta: [
       { title: "Blocked Accounts — Settings — Opexnal" },
       { name: "description", content: "Review and manage blocked profiles on Opexnal." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: SettingsBlockedPage,
@@ -16,54 +25,108 @@ export const Route = createFileRoute("/_authenticated/settings/blocked")({
 
 function SettingsBlockedPage() {
   const navigate = useNavigate();
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [blockedUsers, setBlockedUsers] = useState([
-    { id: "usr_b_1", username: "spambot_99", name: "Crypto Signals Bot" },
-    { id: "usr_b_2", username: "troll_account_44", name: "Anonymous User" },
-  ]);
+  useEffect(() => {
+    let active = true;
+    fetch(apiUrl("/api/v1/users/me/blocked"), {
+      headers: authClient.getAuthHeader(),
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => ({}))) as {
+          profiles?: BlockedUser[];
+          error?: string;
+        };
+        if (!response.ok) throw new Error(payload.error || "Could not load blocked accounts.");
+        if (active) setBlockedUsers(payload.profiles || []);
+      })
+      .catch((error) => {
+        if (active)
+          setErrorMessage(
+            error instanceof Error ? error.message : "Could not load blocked accounts.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const handleUnblock = (id: string, username: string) => {
-    setBlockedUsers((prev) => prev.filter((u) => u.id !== id));
-    toast.success(`Unblocked @${username}`);
-  };
+  async function handleUnblock(user: BlockedUser) {
+    setActionId(user.id);
+    setErrorMessage(null);
+    try {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(user.id)}/block`), {
+        method: "DELETE",
+        headers: authClient.getAuthHeader(),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not unblock account.");
+      setBlockedUsers((previous) => previous.filter((item) => item.id !== user.id));
+      toast.success(`Unblocked @${user.username}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not unblock account.";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setActionId(null);
+    }
+  }
 
   return (
     <AppShell activeTab="profile">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
+      <div className="min-h-screen max-w-xl mx-auto pb-20">
         <ScreenHeader
           title="Blocked Accounts"
           showBack
           onBack={() => navigate({ to: "/settings" })}
         />
-
         <div className="p-4 space-y-4">
-          <p className="text-xs text-gray-400">
-            Blocked accounts cannot see your posts, send messages, or tag your profile. They won't
-            be notified when you block them.
+          <p className="text-xs text-muted-foreground">
+            Blocked accounts cannot follow you or access your profile and posts through Opexnal.
+            They are not notified when you block them.
           </p>
-
-          {blockedUsers.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-xs">
-              <UserCheck className="w-8 h-8 mx-auto mb-2 text-gray-600" />
-              You haven't blocked any accounts.
+          {errorMessage && (
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/40 p-3 text-sm text-destructive"
+            >
+              {errorMessage}
+            </p>
+          )}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : blockedUsers.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              <UserCheck className="mx-auto mb-2 h-8 w-8" />
+              You have not blocked any accounts.
             </div>
           ) : (
             <div className="space-y-2">
               {blockedUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="p-3.5 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5"
                 >
-                  <div>
-                    <span className="text-sm font-semibold text-white">@{user.username}</span>
-                    <p className="text-xs text-gray-400">{user.name}</p>
+                  <div className="min-w-0">
+                    <span className="text-sm font-semibold text-foreground">@{user.username}</span>
+                    <p className="text-xs text-muted-foreground">{user.display_name}</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleUnblock(user.id, user.username)}
-                    className="px-3 py-1.5 bg-[#262626] hover:bg-[#333333] text-white text-xs font-semibold rounded-lg transition"
+                    onClick={() => void handleUnblock(user)}
+                    disabled={actionId === user.id}
+                    className="rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted/70 disabled:opacity-50"
                   >
-                    Unblock
+                    {actionId === user.id ? "Working…" : "Unblock"}
                   </button>
                 </div>
               ))}

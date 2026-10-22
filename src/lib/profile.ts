@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
+import { apiUrl } from "@/lib/api-client";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -110,81 +112,51 @@ export const SEED_PROFILES: Record<string, Profile> = {
   },
 };
 
-export async function getProfileById(id: string): Promise<Profile | null> {
-  try {
-    const { data, error } = await supabase
-      .from<Profile>("profiles")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) return data;
-  } catch {
-    // ignore query error
-  }
-
-  if (SEED_PROFILES[id]) {
-    return SEED_PROFILES[id];
-  }
-
-  // Generic fallback profile if unknown id
-  const name = id.replace(/^user_/, "").replace(/_/g, " ");
-  return {
-    id,
-    username: id.replace(/^user_/, ""),
-    display_name: name.charAt(0).toUpperCase() + name.slice(1),
-    bio: "Creator on Opexnal Connect",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    posts_count: 0,
-    followers_count: 0,
-    following_count: 0,
-    is_verified: false,
-    is_private: false,
-    is_deactivated: false,
-    website: null,
-    location: null,
-    locale: "en",
-    timezone: "UTC",
-    account_type: "personal",
-    allow_mentions_from: "everyone",
-    allow_tags_from: "everyone",
-    show_activity_status: true,
-    country_code: null,
-    last_active_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+async function fetchApiProfile(path: string): Promise<Profile | null> {
+  const response = await fetch(apiUrl(path), {
+    headers: authClient.getAuthHeader(),
+    cache: "no-store",
+  });
+  if (response.status === 404) return null;
+  const payload = (await response.json().catch(() => ({}))) as {
+    profile?: Profile;
+    error?: string;
   };
+  if (!response.ok) throw new Error(payload.error || "Profile request failed.");
+  return payload.profile || null;
+}
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+  if (!id) return null;
+  try {
+    return await fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
+  } catch {
+    if (import.meta.env.DEV) return SEED_PROFILES[id] || null;
+    return null;
+  }
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
-  const clean = username.toLowerCase();
+  const clean = username.trim().toLowerCase();
+  if (!clean) return null;
   try {
-    const { data, error } = await supabase
-      .from<Profile>("profiles")
-      .select("*")
-      .eq("username", clean)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) return data;
+    return await fetchApiProfile(`/api/v1/users/${encodeURIComponent(clean)}`);
   } catch {
-    // ignore
+    if (!import.meta.env.DEV) return null;
+    return (
+      Object.values(SEED_PROFILES).find((profile) => profile.username.toLowerCase() === clean) ||
+      null
+    );
   }
-
-  for (const profile of Object.values(SEED_PROFILES)) {
-    if (profile.username.toLowerCase() === clean) {
-      return profile;
-    }
-  }
-
-  return null;
 }
 
-/** Avatars live in a private bucket; resolve a short-lived signed URL. */
+/** Resolve first-party avatar paths to a short-lived URL. */
 export async function resolveAvatarUrl(path: string | null | undefined) {
   if (!path) return null;
-  if (path.startsWith("http")) return path;
-  const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+  if (path.startsWith("https://") || path.startsWith("http://")) return path;
+  if (path.startsWith("/api/v1/storage/public/")) return path;
+  const { data, error } = await supabase.storage.from("avatars").createSignedUrl(path, 300);
+  if (error) return null;
   return data?.signedUrl ?? null;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -41,7 +41,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
 import { cn } from "@/lib/utils";
@@ -168,17 +169,19 @@ function Explore() {
     queryKey: ["search-people", query],
     enabled: query.length >= 1,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, username, display_name, avatar_url, is_verified, is_private, followers_count, bio",
-        )
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-        .eq("is_deactivated", false)
-        .order("followers_count", { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return (data || []) as unknown as ExploreProfile[];
+      const response = await fetch(
+        apiUrl(`/api/v1/users/search?q=${encodeURIComponent(query)}&limit=20`),
+        {
+          headers: authClient.getAuthHeader(),
+          cache: "no-store",
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        profiles?: ExploreProfile[];
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "People search failed.");
+      return payload.profiles || [];
     },
   });
 
@@ -192,15 +195,16 @@ function Explore() {
   const suggestedCreatorsQuery = useQuery<ExploreProfile[]>({
     queryKey: ["suggested-creators", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, avatar_url, is_verified, is_private, followers_count")
-        .eq("is_deactivated", false)
-        .order("followers_count", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      const list = (data || []) as unknown as ExploreProfile[];
-      return list.filter((p) => p.id !== user?.id);
+      const response = await fetch(apiUrl("/api/v1/users/search?limit=10"), {
+        headers: authClient.getAuthHeader(),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        profiles?: ExploreProfile[];
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "Suggested creators could not be loaded.");
+      return (payload.profiles || []).filter((profile) => profile.id !== user?.id);
     },
   });
 
@@ -210,14 +214,21 @@ function Explore() {
   async function handleQuickFollow(targetId: string, targetUsername: string) {
     if (!user) return;
     try {
-      const { data, error } = await supabase.rpc("request_follow", { _target_id: targetId });
-      if (error) {
-        toast.error((error as Error).message || "Follow failed");
-        return;
-      }
-      toast.success(data === "requested" ? "Follow request sent" : `Following @${targetUsername}`);
-      queryClient.invalidateQueries({ queryKey: ["suggested-creators"] });
-      queryClient.invalidateQueries({ queryKey: ["search-people"] });
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(targetId)}/follow`), {
+        method: "POST",
+        headers: authClient.getAuthHeader(),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        status?: string;
+        error?: string;
+      };
+      if (!response.ok) throw new Error(payload.error || "Follow failed.");
+      toast.success(
+        payload.status === "requested" ? "Follow request sent" : `Following @${targetUsername}`,
+      );
+      await queryClient.invalidateQueries({ queryKey: ["suggested-creators"] });
+      await queryClient.invalidateQueries({ queryKey: ["search-people"] });
     } catch {
       toast.error("Could not complete follow action");
     }

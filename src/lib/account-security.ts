@@ -13,6 +13,25 @@
 
 import { z } from "zod";
 
+function secureRandomInt(maxExclusive: number): number {
+  if (!Number.isSafeInteger(maxExclusive) || maxExclusive < 1 || maxExclusive > 0x100000000) {
+    throw new RangeError("Invalid random integer range.");
+  }
+  const range = 0x100000000;
+  const limit = Math.floor(range / maxExclusive) * maxExclusive;
+  const sample = new Uint32Array(1);
+  do {
+    globalThis.crypto.getRandomValues(sample);
+  } while ((sample[0] ?? range) >= limit);
+  return (sample[0] ?? 0) % maxExclusive;
+}
+
+function secureRandomHex(byteLength: number): string {
+  const bytes = new Uint8Array(byteLength);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 // ============================================================================
 // 1. PASSWORD POLICY & COMPROMISE DETECTION
 // ============================================================================
@@ -63,12 +82,10 @@ export function evaluatePasswordStrength(password: string, username = ""): Passw
   }
 
   // Length check
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long.");
-  } else if (password.length >= 12) {
-    score += 35;
+  if (password.length < 12) {
+    errors.push("Password must be at least 12 characters long.");
   } else {
-    score += 20;
+    score += 35;
   }
 
   // Complexity checks
@@ -222,13 +239,30 @@ const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_OTP_ATTEMPTS = 5;
 
-export function requestOtp(
+export type OtpDelivery = (
+  destination: string,
+  type: "email" | "phone" | "recovery",
+  code: string,
+) => Promise<void>;
+
+export async function requestOtp(
   destination: string,
   type: "email" | "phone" | "recovery" = "email",
-): { success: boolean; cooldownRemainingMs: number; message: string } {
+  deliverCode?: OtpDelivery,
+): Promise<{ success: boolean; cooldownRemainingMs: number; message: string }> {
   const destClean = destination.trim().toLowerCase();
-  const now = Date.now();
+  if (!destClean || destClean.length > 254) {
+    return { success: false, cooldownRemainingMs: 0, message: "A valid destination is required." };
+  }
+  if (!deliverCode) {
+    return {
+      success: false,
+      cooldownRemainingMs: 0,
+      message: "OTP delivery is not configured. No code was sent.",
+    };
+  }
 
+  const now = Date.now();
   const lastSent = cooldownStore.get(destClean) || 0;
   if (now - lastSent < OTP_RESEND_COOLDOWN_MS) {
     const remaining = Math.ceil((OTP_RESEND_COOLDOWN_MS - (now - lastSent)) / 1000);
@@ -239,8 +273,16 @@ export function requestOtp(
     };
   }
 
-  // Generate 6 digit crypto random OTP
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = String(100000 + secureRandomInt(900000));
+  try {
+    await deliverCode(destination, type, code);
+  } catch {
+    return {
+      success: false,
+      cooldownRemainingMs: 0,
+      message: "Verification code delivery failed. Please try again later.",
+    };
+  }
 
   otpStore.set(destClean, {
     code,
@@ -251,14 +293,12 @@ export function requestOtp(
     maxAttempts: MAX_OTP_ATTEMPTS,
     createdAt: now,
   });
-
   cooldownStore.set(destClean, now);
 
   return {
     success: true,
     cooldownRemainingMs: OTP_RESEND_COOLDOWN_MS,
     message: `Verification code sent to ${destination}. Code expires in 5 minutes.`,
-    code,
   };
 }
 
@@ -318,8 +358,8 @@ export function generateBackupCodes(count = 8): string[] {
     let part1 = "";
     let part2 = "";
     for (let j = 0; j < 4; j++) {
-      part1 += chars[Math.floor(Math.random() * chars.length)];
-      part2 += chars[Math.floor(Math.random() * chars.length)];
+      part1 += chars[secureRandomInt(chars.length)];
+      part2 += chars[secureRandomInt(chars.length)];
     }
     codes.push(`${part1}-${part2}`);
   }
@@ -334,7 +374,7 @@ export function generateTotpSecret(username: string): {
   const baseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   let secret = "";
   for (let i = 0; i < 32; i++) {
-    secret += baseChars[Math.floor(Math.random() * baseChars.length)];
+    secret += baseChars[secureRandomInt(baseChars.length)];
   }
 
   const encodedUser = encodeURIComponent(username || "user");
@@ -372,7 +412,7 @@ export function getSessionsForUser(userId: string): DeviceSessionRecord[] {
   // Initial seed sessions for realistic interactive display
   const defaults: DeviceSessionRecord[] = [
     {
-      id: "sess_curr_" + Math.random().toString(36).slice(2, 8),
+      id: "sess_curr_" + secureRandomHex(4),
       userId,
       token: "tok_curr_active",
       device: "MacBook Pro 16",
@@ -386,7 +426,7 @@ export function getSessionsForUser(userId: string): DeviceSessionRecord[] {
       isSuspicious: false,
     },
     {
-      id: "sess_mob_" + Math.random().toString(36).slice(2, 8),
+      id: "sess_mob_" + secureRandomHex(4),
       userId,
       token: "tok_mob_active",
       device: "iPhone 15 Pro",
@@ -452,8 +492,8 @@ export function submitAccountRecoveryRequest(params: {
   contactPhone?: string;
   additionalDetails?: string;
 }): { success: boolean; ticket: RecoveryTicket; message: string } {
-  const ticketId = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-  const token = `oct_${Math.random().toString(36).slice(2, 12)}_${Math.random().toString(36).slice(2, 12)}`;
+  const ticketId = `rec_${secureRandomHex(12)}`;
+  const token = `oct_${secureRandomHex(32)}`;
 
   const isTakeover = params.reason === "account_takeover" || params.reason === "lost_email";
 
@@ -464,11 +504,11 @@ export function submitAccountRecoveryRequest(params: {
     reason: params.reason,
     status: isTakeover ? "manual_review" : "approved",
     contactEmail: params.contactEmail,
-    contactPhone: params.contactPhone,
-    token: !isTakeover ? token : undefined,
+    ...(params.contactPhone ? { contactPhone: params.contactPhone } : {}),
+    ...(!isTakeover ? { token } : {}),
     expiresAt: Date.now() + 24 * 60 * 60 * 1000,
     createdAt: Date.now(),
-    notes: params.additionalDetails,
+    ...(params.additionalDetails ? { notes: params.additionalDetails } : {}),
   };
 
   recoveryTickets.set(ticketId, ticket);
@@ -533,7 +573,7 @@ export function recordSecurityAudit(
   ipAddress?: string,
 ): void {
   const event: SecurityAuditEvent = {
-    id: `sec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    id: `sec_${secureRandomHex(8)}`,
     userId,
     action,
     details,

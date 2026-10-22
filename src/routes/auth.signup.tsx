@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   User,
@@ -17,6 +17,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
 
 const signupSearchSchema = z.object({
@@ -61,26 +62,44 @@ function SignupPage() {
   );
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const usernameCheckSequence = useRef(0);
 
   const passwordEval: PasswordEvaluation = evaluatePasswordStrength(password, username);
 
-  // Check username availability
-  const checkUsername = (val: string) => {
+  // Check username availability against the first-party database.
+  const checkUsername = async (val: string) => {
     const clean = val.toLowerCase().replace(/[^a-z0-9_.]/g, "");
     setUsername(clean);
+    const sequence = ++usernameCheckSequence.current;
     if (clean.length < 3) {
       setUsernameStatus("idle");
       return;
     }
     setUsernameStatus("checking");
-    setTimeout(() => {
-      // Reserved demo check
-      if (["admin", "system", "root", "instagram", "meta"].includes(clean)) {
-        setUsernameStatus("taken");
-      } else {
-        setUsernameStatus("available");
+    try {
+      const response = await fetch(
+        apiUrl(`/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`),
+        { cache: "no-store" },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        available?: boolean;
+        error?: string;
+      };
+      if (sequence !== usernameCheckSequence.current) return;
+      if (!response.ok) {
+        setUsernameStatus("idle");
+        setErrorMessage(payload.error || "Username availability could not be verified.");
+        return;
       }
-    }, 250);
+      setUsernameStatus(payload.available ? "available" : "taken");
+    } catch {
+      if (sequence === usernameCheckSequence.current) {
+        setUsernameStatus("idle");
+        setErrorMessage(
+          "Could not check username availability. The server will validate it during signup.",
+        );
+      }
+    }
   };
 
   const handleInitialSubmit = async (e: React.FormEvent) => {
@@ -129,25 +148,39 @@ function SignupPage() {
       return;
     }
 
-    // Request verification OTP
+    if (!contact.includes("@")) {
+      setErrorMessage(
+        "Phone signup is unavailable until a real SMS verification provider is configured. Please use an email address.",
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: contact }),
+      const { data, error } = await authClient.signUp({
+        email: contact,
+        password,
+        dateOfBirth: birthday,
+        options: {
+          data: {
+            username: username.trim(),
+            full_name: fullName.trim(),
+          },
+        },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorMessage(data.error || "Failed to send verification code");
-        toast.error(data.error || "Failed to send verification code");
+      if (error) {
+        setErrorMessage(error.message);
+        toast.error(error.message);
         return;
       }
-      setOtpSent(true);
-      setStep("verify_otp");
-      toast.success(data.message || "Verification code sent!");
+      if (data?.emailVerificationRequired) {
+        setStep("welcome");
+        toast.success("Account created. Check your email to verify it before signing in.");
+        return;
+      }
+      setErrorMessage("The API did not confirm email verification. Please try again later.");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to send verification code";
+      const msg = err instanceof Error ? err.message : "Registration failed";
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -225,14 +258,14 @@ function SignupPage() {
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">
           {step === "welcome"
-            ? "Welcome to Opexnal! 🎉"
+            ? "Check your email"
             : step === "verify_otp"
               ? "Verify Contact"
               : "Create Your Account"}
         </h2>
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
-            ? "Your account is active. Start sharing and connecting."
+            ? "Your account was created. Open the verification link sent to your email before signing in."
             : step === "verify_otp"
               ? `We sent a 6-digit confirmation code to ${emailOrPhone}`
               : "Join millions sharing stories, reels and creative ideas"}

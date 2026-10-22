@@ -1,3 +1,5 @@
+import { apiUrl } from "@/lib/api-client";
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -22,29 +24,6 @@ export type AuthSession = {
 const AUTH_USER_KEY = "opexnal_auth_user";
 const AUTH_SESSION_KEY = "opexnal_auth_session";
 
-export const DEFAULT_USER: AuthUser = {
-  id: "user_maya",
-  email: "maya@opexnal.local",
-  username: "maya_codes",
-  displayName: "Maya Chen",
-  avatarUrl:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  user_metadata: {
-    username: "maya_codes",
-    full_name: "Maya Chen",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  },
-};
-
-export const DEFAULT_SESSION: AuthSession = {
-  token: "opexnal_demo_jwt_token_user_maya",
-  access_token: "opexnal_demo_jwt_token_user_maya",
-  userId: "user_maya",
-  user: DEFAULT_USER,
-  expiresAt: 1893456000000,
-};
-
 type AuthListener = (event: string, session: AuthSession | null) => void;
 
 class AuthClient {
@@ -55,17 +34,37 @@ class AuthClient {
   constructor() {
     this.memoryUser = null;
     this.memorySession = null;
-    if (typeof window !== "undefined") {
+    if (typeof window === "undefined") return;
+    try {
+      const storedSession = sessionStorage.getItem(AUTH_SESSION_KEY);
+      const storedUser = sessionStorage.getItem(AUTH_USER_KEY);
+      if (!storedSession || !storedUser) return;
+
+      const session = JSON.parse(storedSession) as AuthSession;
+      const user = JSON.parse(storedUser) as AuthUser;
+      const token = session?.token;
+      if (
+        typeof token !== "string" ||
+        !token ||
+        token.startsWith("opexnal_demo_") ||
+        token.startsWith("opexnal_jwt_") ||
+        !session.userId ||
+        session.userId !== user.id ||
+        !Number.isFinite(session.expiresAt) ||
+        session.expiresAt <= Date.now()
+      ) {
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
+        return;
+      }
+      this.memorySession = session;
+      this.memoryUser = user;
+    } catch {
       try {
-        const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
-        const storedUser = localStorage.getItem(AUTH_USER_KEY);
-        if (storedSession && storedUser) {
-          this.memorySession = JSON.parse(storedSession);
-          this.memoryUser = JSON.parse(storedUser);
-        }
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
       } catch {
-        this.memoryUser = null;
-        this.memorySession = null;
+        // Storage may be unavailable; the user remains signed out.
       }
     }
   }
@@ -76,11 +75,11 @@ class AuthClient {
     if (typeof window !== "undefined") {
       try {
         if (session) {
-          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
-          localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+          sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
+          sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
         } else {
-          localStorage.removeItem(AUTH_USER_KEY);
-          localStorage.removeItem(AUTH_SESSION_KEY);
+          sessionStorage.removeItem(AUTH_USER_KEY);
+          sessionStorage.removeItem(AUTH_SESSION_KEY);
         }
       } catch {
         // storage quota
@@ -108,10 +107,70 @@ class AuthClient {
   }
 
   async getUser(): Promise<{ data: { user: AuthUser | null }; error: Error | null }> {
-    return {
-      data: { user: this.memoryUser },
-      error: null,
-    };
+    const session = this.memorySession;
+    if (!session?.token) return { data: { user: null }, error: null };
+    if (session.expiresAt <= Date.now()) {
+      await this.signOut();
+      return { data: { user: null }, error: new Error("Session expired. Please sign in again.") };
+    }
+
+    try {
+      const response = await fetch(apiUrl("/api/v1/auth/me"), {
+        headers: { Authorization: `Bearer ${session.token}` },
+        cache: "no-store",
+      });
+      if (response.status === 401 || response.status === 403 || response.status === 404) {
+        await this.signOut();
+        return {
+          data: { user: null },
+          error: new Error("Your session is no longer valid. Please sign in again."),
+        };
+      }
+      if (!response.ok) {
+        return {
+          data: { user: null },
+          error: new Error("Unable to verify your session with Opexnal's API."),
+        };
+      }
+
+      const payload = (await response.json()) as { user?: Partial<AuthUser> & { id?: string } };
+      const user = payload.user;
+      if (!user || typeof user.id !== "string" || typeof user.username !== "string") {
+        await this.signOut();
+        return {
+          data: { user: null },
+          error: new Error("The API returned an invalid user record."),
+        };
+      }
+      const verifiedUser: AuthUser = {
+        id: user.id,
+        email: typeof user.email === "string" ? user.email : "",
+        username: user.username,
+        displayName: typeof user.displayName === "string" ? user.displayName : user.username,
+        ...(typeof user.avatarUrl === "string" ? { avatarUrl: user.avatarUrl } : {}),
+        user_metadata: {
+          username: user.username,
+          full_name: typeof user.displayName === "string" ? user.displayName : user.username,
+        },
+      };
+      const changed =
+        session.user.username !== verifiedUser.username ||
+        session.user.displayName !== verifiedUser.displayName ||
+        session.user.avatarUrl !== verifiedUser.avatarUrl ||
+        session.user.email !== verifiedUser.email;
+      if (changed) {
+        this.setSession({ ...session, user: verifiedUser });
+      } else {
+        this.memoryUser = verifiedUser;
+        this.memorySession = { ...session, user: verifiedUser };
+      }
+      return { data: { user: verifiedUser }, error: null };
+    } catch {
+      return {
+        data: { user: null },
+        error: new Error("Could not reach Opexnal's authentication API."),
+      };
+    }
   }
 
   async getSession(): Promise<{ data: { session: AuthSession | null }; error: Error | null }> {
@@ -125,125 +184,185 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession; requires2fa?: boolean } | null;
     error: Error | null;
   }> {
-    const emailOrUsername = (params.email || "").trim();
-    if (!emailOrUsername) {
-      return { data: null, error: new Error("Email or username is required") };
+    const identity = params.email?.trim() || "";
+    if (!identity || !params.password) {
+      return { data: null, error: new Error("Email/username and password are required.") };
     }
-
-    const username = emailOrUsername.includes("@")
-      ? emailOrUsername.split("@")[0] || "user"
-      : emailOrUsername;
-    const userId = `user_${username.toLowerCase().replace(/[^a-z0-9_]/g, "_")}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email: emailOrUsername.includes("@") ? emailOrUsername : `${username}@opexnal.local`,
-      username,
-      displayName: username
-        .split("_")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: username,
-      },
-    };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
+    try {
+      const response = await fetch(apiUrl("/api/v1/auth/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identity, password: params.password }),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        accessToken?: string;
+        expiresIn?: number;
+        user?: {
+          id?: string;
+          username?: string;
+          email?: string;
+          displayName?: string;
+          avatarUrl?: string | null;
+        };
+      };
+      if (!response.ok) {
+        return {
+          data: null,
+          error: new Error(payload.error || "Sign in failed."),
+        };
       }
-    }
+      if (
+        typeof payload.accessToken !== "string" ||
+        !payload.accessToken ||
+        !payload.user?.id ||
+        !payload.user.username
+      ) {
+        return {
+          data: null,
+          error: new Error("The authentication API returned an invalid response."),
+        };
+      }
 
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
+      const user: AuthUser = {
+        id: payload.user.id,
+        username: payload.user.username,
+        email: payload.user.email || "",
+        displayName: payload.user.displayName || payload.user.username,
+        ...(payload.user.avatarUrl ? { avatarUrl: payload.user.avatarUrl } : {}),
+        user_metadata: {
+          username: payload.user.username,
+          full_name: payload.user.displayName || payload.user.username,
+        },
+      };
+      const session: AuthSession = {
+        token: payload.accessToken,
+        access_token: payload.accessToken,
+        userId: user.id,
+        user,
+        expiresAt: Date.now() + Math.max(60, payload.expiresIn || 3600) * 1000,
+      };
+      this.setSession(session);
+      return { data: { user, session }, error: null };
+    } catch {
+      return {
+        data: null,
+        error: new Error(
+          "Could not reach Opexnal's authentication API. Check backend deployment and OPEXNAL_API_URL.",
+        ),
+      };
+    }
   }
 
   async signUp(params: {
     email: string;
     password: string;
+    dateOfBirth?: string;
     options?: { data?: { username?: string; full_name?: string } };
   }): Promise<{
-    data: { user: AuthUser; session: AuthSession } | null;
+    data: {
+      user: AuthUser;
+      session: AuthSession | null;
+      emailVerificationRequired?: boolean;
+    } | null;
     error: Error | null;
   }> {
-    const email = params.email.trim();
-    const rawUsername =
-      params.options?.data?.username ||
-      (email.includes("@") ? email.split("@")[0] : email) ||
-      "user";
-    const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
-    const displayName = params.options?.data?.full_name || username;
-    const userId = `user_${username}_${Date.now().toString(36)}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email,
-      username,
-      displayName,
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: displayName,
-      },
-    };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
+    const username = params.options?.data?.username?.trim() || params.email.split("@")[0] || "";
+    try {
+      const response = await fetch(apiUrl("/api/v1/auth/signup"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          email: params.email.trim(),
+          password: params.password,
+          displayName: params.options?.data?.full_name?.trim() || username,
+          dateOfBirth: params.dateOfBirth,
+        }),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        emailVerificationRequired?: boolean;
+        user?: {
+          id?: string;
+          username?: string;
+          email?: string;
+          displayName?: string;
+          avatarUrl?: string | null;
+        };
+      };
+      if (!response.ok) {
+        return { data: null, error: new Error(payload.error || "Signup failed.") };
       }
+      if (!payload.user?.id || !payload.user.username) {
+        return { data: null, error: new Error("The signup API returned an invalid user record.") };
+      }
+      const user: AuthUser = {
+        id: payload.user.id,
+        username: payload.user.username,
+        email: payload.user.email || params.email,
+        displayName: payload.user.displayName || username,
+        ...(payload.user.avatarUrl ? { avatarUrl: payload.user.avatarUrl } : {}),
+        user_metadata: {
+          username: payload.user.username,
+          full_name: payload.user.displayName || username,
+        },
+      };
+      return {
+        data: {
+          user,
+          session: null,
+          emailVerificationRequired: Boolean(payload.emailVerificationRequired),
+        },
+        error: null,
+      };
+    } catch {
+      return {
+        data: null,
+        error: new Error(
+          "Could not reach Opexnal's signup API. Check backend deployment and OPEXNAL_API_URL.",
+        ),
+      };
     }
-
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
+    const token = this.memorySession?.token;
+    let revokeError: Error | null = null;
+    if (token) {
+      try {
+        const response = await fetch(apiUrl("/api/v1/auth/logout"), {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        if (!response.ok && response.status >= 500) {
+          revokeError = new Error(
+            "Signed out locally, but the server could not revoke this session.",
+          );
+        }
+      } catch {
+        revokeError = new Error(
+          "Signed out locally, but server-side session revocation could not be confirmed.",
+        );
+      }
+    }
+
     this.memoryUser = null;
     this.memorySession = null;
-
     if (typeof window !== "undefined") {
       try {
-        localStorage.removeItem(AUTH_USER_KEY);
-        localStorage.removeItem(AUTH_SESSION_KEY);
+        sessionStorage.removeItem(AUTH_USER_KEY);
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
       } catch {
-        // ignore
+        // The in-memory session is still cleared.
       }
     }
 
     this.notify("SIGNED_OUT", null);
-    return { error: null };
+    return { error: revokeError };
   }
 
   onAuthStateChange(callback: AuthListener) {

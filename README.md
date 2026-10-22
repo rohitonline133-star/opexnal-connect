@@ -1234,3 +1234,15 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Self-hosted deployment (first-party API)
+
+The self-hosted stack runs the TanStack web app, the first-party Express API, and PostgreSQL using Docker Compose. It does not require Vercel or Supabase for the API path.
+
+1. Copy `.env.example` to `.env`.
+2. Set a strong unique `POSTGRES_PASSWORD` and a random `JWT_SECRET` of at least 32 characters.
+3. Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` for a mail server you control. Signup is intentionally disabled until email verification delivery is configured.
+4. Set `PUBLIC_API_URL` to the public web origin that users can open (for example, `https://your-domain.example`).
+5. Start the stack with `docker compose --env-file .env -f docker-compose.selfhosted.yml up --build -d`.
+
+The web service proxies `/api/v1/*` to the fixed server-side `OPEXNAL_API_URL`. The PostgreSQL database is not published to the host; only the web service exposes port 3000. Configure TLS/reverse proxy, backups, SMTP, and monitoring before public production use. Existing legacy settings and other feature modules still need migration to the first-party database.

@@ -24,8 +24,7 @@ function AiChatPage() {
     {
       id: "intro",
       sender: "ai",
-      text:
-        "Hello! I am your Opex AI co-pilot. Ask me for viral reels hooks, caption variations, or visual composition concepts.",
+      text: "Hello! I am your Opex AI co-pilot. Ask me for viral reels hooks, caption variations, or visual composition concepts.",
       timestamp: new Date().toISOString(),
     },
   ]);

@@ -1,0 +1,51 @@
+name: Opexnal quality checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - "fix/**"
+      - "security/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check first-party API syntax
+        run: npm run backend:check
+      - name: Production build (generates TanStack route types)
+        run: npm run build
+      - name: Type check
+        run: npm run typecheck
+      - name: Lint changed TypeScript and JavaScript files
+        run: |
+          git fetch origin main
+          files=$(git diff --name-only origin/main...HEAD | grep -E '[.](ts|tsx|js|jsx|mjs|cjs)' || true)
+          if [ -n "$files" ]; then
+            npx eslint $files
+          else
+            npm run lint
+          fi
+      - name: Unit and security tests
+        run: npm test

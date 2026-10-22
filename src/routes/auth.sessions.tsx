@@ -3,19 +3,38 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Laptop,
   Smartphone,
-  ShieldAlert,
   Loader2,
   Trash2,
   LogOut,
-  MapPin,
   Clock,
   ArrowLeft,
-  CheckCircle2,
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-session";
-import { type DeviceSessionRecord } from "@/lib/account-security";
+
+interface ApiDeviceSession {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  revoked: boolean;
+  current: boolean;
+  userAgent: string | null;
+  ipAddress: string | null;
+}
+
+function getAccessToken(session: ReturnType<typeof useSession>["session"]): string {
+  if (!session) return "";
+  if ("token" in session && typeof session.token === "string") return session.token;
+  if ("access_token" in session && typeof session.access_token === "string")
+    return session.access_token;
+  return "";
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleString();
+}
 
 export const Route = createFileRoute("/auth/sessions")({
   head: () => ({
@@ -23,7 +42,7 @@ export const Route = createFileRoute("/auth/sessions")({
       { title: "Active Devices & Login Sessions — Opexnal" },
       {
         name: "description",
-        content: "Inspect active devices, locations, and remotely revoke sessions on Opexnal.",
+        content: "Inspect active devices and revoke sessions on Opexnal.",
       },
     ],
   }),
@@ -31,11 +50,9 @@ export const Route = createFileRoute("/auth/sessions")({
 });
 
 function SessionsPage() {
-  const { session, user } = useSession();
-  const token = session?.access_token || "";
-  const userId = user?.id || "user_maya";
-
-  const [sessions, setSessions] = useState<DeviceSessionRecord[]>([]);
+  const { session } = useSession();
+  const token = getAccessToken(session);
+  const [sessions, setSessions] = useState<ApiDeviceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,58 +60,83 @@ function SessionsPage() {
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
+      if (!token) {
+        if (isMounted) {
+          setErrorMessage("Please sign in to view active sessions.");
+          setLoading(false);
+        }
+        return;
+      }
       try {
-        const res = await fetch("/api/auth/sessions", {
-          headers: { Authorization: `Bearer ${token || "user_maya"}` },
+        const res = await fetch("/api/v1/auth/sessions", {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
         });
-        const data = await res.json();
-        if (isMounted) setSessions(data.sessions || []);
-      } catch {
-        // Fallback
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          sessions?: ApiDeviceSession[];
+        };
+        if (!res.ok) throw new Error(data.error || "Unable to load active sessions.");
+        if (isMounted) {
+          setSessions((data.sessions || []).filter((item) => !item.revoked));
+          setErrorMessage(null);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error ? error.message : "Unable to load active sessions.",
+          );
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
     };
-    load();
+    void load();
     return () => {
       isMounted = false;
     };
-  }, [token, userId]);
+  }, [token]);
 
   const handleRevokeSingle = async (sessionId: string) => {
+    if (!token) return;
     setActionLoading(sessionId);
+    setErrorMessage(null);
     try {
-      const res = await fetch("/api/auth/sessions/revoke", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, sessionId }),
+      const res = await fetch(`/api/v1/auth/sessions/${encodeURIComponent(sessionId)}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-        toast.success("Device session revoked successfully.");
-      }
-    } catch {
-      toast.error("Failed to revoke session.");
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error || "Failed to revoke session.");
+      setSessions((prev) => prev.filter((item) => item.id !== sessionId));
+      toast.success("Device session revoked.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to revoke session.";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleRevokeAll = async () => {
-    if (!window.confirm("Are you sure you want to log out all other devices?")) return;
+    if (!token || !window.confirm("Log out all other devices? This device will stay signed in."))
+      return;
     setActionLoading("all");
+    setErrorMessage(null);
     try {
-      const res = await fetch("/api/auth/sessions/revoke-all", {
+      const res = await fetch("/api/v1/auth/logout-all", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, keepCurrent: true }),
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) {
-        setSessions((prev) => prev.filter((s) => s.isCurrent));
-        toast.success("All other sessions logged out.");
-      }
-    } catch {
-      toast.error("Failed to logout all devices.");
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(data.error || "Failed to revoke other sessions.");
+      setSessions((prev) => prev.filter((item) => item.current));
+      toast.success("All other device sessions were revoked.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to revoke other sessions.";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setActionLoading(null);
     }
@@ -118,7 +160,7 @@ function SessionsPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Where You're Logged In</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Review active devices and revoke access immediately if you see an unfamiliar login.
+          Review active sessions and revoke any device you do not recognize.
         </p>
       </div>
 
@@ -138,64 +180,78 @@ function SessionsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="space-y-2.5">
-            {sessions.map((s) => (
-              <div
-                key={s.id}
-                className="p-3.5 bg-[#121212] border border-[#262626] rounded-xl flex items-start justify-between gap-3 text-xs"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-[#1f1f1f] text-gray-300 shrink-0 mt-0.5">
-                    {s.device.toLowerCase().includes("iphone") ||
-                    s.device.toLowerCase().includes("android") ? (
-                      <Smartphone className="w-4 h-4" />
-                    ) : (
-                      <Laptop className="w-4 h-4" />
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">{s.device}</span>
-                      {s.isCurrent && (
-                        <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-md">
-                          This Device
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-gray-400">
-                      {s.browser} • {s.os}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-500 pt-0.5">
-                      <MapPin className="w-3 h-3 text-gray-400" />
-                      <span>{s.location}</span>
-                      <span>• IP: {s.ipAddress}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {!s.isCurrent && (
-                  <button
-                    type="button"
-                    onClick={() => handleRevokeSingle(s.id)}
-                    disabled={actionLoading === s.id}
-                    className="p-2 text-rose-400 hover:bg-rose-950/40 rounded-lg transition disabled:opacity-50 shrink-0"
-                    title="Revoke session"
+          {sessions.length === 0 ? (
+            <p className="rounded-xl border border-[#262626] bg-[#121212] p-4 text-center text-xs text-gray-400">
+              No active sessions were returned by the server.
+            </p>
+          ) : (
+            <div className="space-y-2.5">
+              {sessions.map((item) => {
+                const userAgent = item.userAgent || "Unknown browser/device";
+                const isMobile = /android|iphone|ipad|mobile/i.test(userAgent);
+                return (
+                  <div
+                    key={item.id}
+                    className="p-3.5 bg-[#121212] border border-[#262626] rounded-xl flex items-start justify-between gap-3 text-xs"
                   >
-                    {actionLoading === s.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-[#1f1f1f] text-gray-300 shrink-0 mt-0.5">
+                        {isMobile ? (
+                          <Smartphone className="w-4 h-4" />
+                        ) : (
+                          <Laptop className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white">
+                            {isMobile ? "Mobile session" : "Browser session"}
+                          </span>
+                          {item.current && (
+                            <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-md">
+                              This Device
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-gray-400 break-all">{userAgent}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-gray-500 pt-0.5">
+                          <Clock className="w-3 h-3 text-gray-400" />
+                          <span>Started {formatDate(item.createdAt)}</span>
+                        </div>
+                        {item.ipAddress && (
+                          <p className="text-[10px] text-gray-500">IP: {item.ipAddress}</p>
+                        )}
+                        <p className="text-[10px] text-gray-500">
+                          Expires {formatDate(item.expiresAt)}
+                        </p>
+                      </div>
+                    </div>
 
-          {sessions.filter((s) => !s.isCurrent).length > 0 && (
+                    {!item.current && (
+                      <button
+                        type="button"
+                        onClick={() => void handleRevokeSingle(item.id)}
+                        disabled={actionLoading === item.id}
+                        className="p-2 text-rose-400 hover:bg-rose-950/40 rounded-lg transition disabled:opacity-50 shrink-0"
+                        title="Revoke session"
+                      >
+                        {actionLoading === item.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {sessions.some((item) => !item.current) && (
             <button
               type="button"
-              onClick={handleRevokeAll}
+              onClick={() => void handleRevokeAll()}
               disabled={actionLoading === "all"}
               className="w-full h-11 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 text-rose-300 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2"
             >
@@ -207,14 +263,6 @@ function SessionsPage() {
               <span>Log Out All Other Devices</span>
             </button>
           )}
-
-          <div className="p-3 bg-[#121212] border border-[#222] rounded-xl text-[11px] text-gray-400 space-y-1">
-            <span className="font-semibold text-gray-300">Defense-in-depth:</span>
-            <p>
-              Revoking a session immediately terminates its bearer token and prevents unauthorized
-              background refreshes.
-            </p>
-          </div>
         </div>
       )}
     </div>
