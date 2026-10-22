@@ -41,7 +41,7 @@ jobs:
       - name: Lint changed TypeScript and JavaScript files
         run: |
           git fetch origin main
-          files=$(git diff --name-only origin/main...HEAD | grep -E '\\.(ts|tsx|js|jsx|mjs|cjs)' || true)
+          files=$(git diff --name-only origin/main...HEAD | grep -E '[.](ts|tsx|js|jsx|mjs|cjs)' || true)
           if [ -n "$files" ]; then
             npx eslint $files
           else
