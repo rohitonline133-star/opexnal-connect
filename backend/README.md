@@ -22,16 +22,16 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations, GET/POST /api/v1/messages/:conversationId.
-- GET /health; WebSocket endpoint /ws?token=<JWT>, emits message.created events.
+- GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
 
 ## Deployment boundary
 
-The frontend and API are separate processes. Deploy the API on a Node.js host that supports long-lived WebSocket connections and configure OPEXNAL_API_URL on the web server to that public HTTPS API origin. The TanStack server proxies /api/v1/* requests to this fixed configured origin; it does not accept user-supplied proxy targets. The current Vercel/TanStack server does not automatically proxy traffic to this Express process. The app's old local-storage adapter is not yet fully migrated to these endpoints; this is not a completed production migration.
+The frontend and API are separate processes. Deploy the API on a Node.js host that supports WebSocket connections and configure OPEXNAL_API_URL on the web server to the API's fixed origin. The TanStack server proxies /api/v1/* requests to that configured origin. The current Vercel environment has not been configured with this API URL, and several legacy data modules still need migration to first-party endpoints; this is not a completed production migration.
 
 ## Not yet production complete
 
 - Email verification uses the configured SMTP server and expiring, single-use hashed tokens. Password reset and phone OTP still need their own delivery and token flows.
-- JWT refresh-token rotation/revocation and durable session management are not implemented.
-- WebSocket authorization currently validates JWT identity; it only broadcasts messages created through authenticated REST routes.
-- Add distributed rate limiting (Redis), request validation, production origin configuration, media storage, security tests, monitoring, backups, and load testing before public launch.
+- Durable access sessions and revocation are implemented; refresh-token rotation is not implemented, and access tokens expire after one hour.
+- WebSocket authorization uses one-time tickets bound to a currently active server-side session; it only broadcasts messages created through authenticated REST routes.
+- Rate limiting is process-local, not distributed. Add Redis rate limiting, stricter request validation, media storage, integration tests, monitoring, backups, and load testing before public launch.
 - Never commit .env or production credentials.
