@@ -1,3 +1,24 @@
+-- Add persistent profile fields for existing databases.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(120);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locale VARCHAR(12) NOT NULL DEFAULT 'en';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(80) NOT NULL DEFAULT 'UTC';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS country_code CHAR(2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_deactivated BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) NOT NULL DEFAULT 'personal';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS show_activity_status BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_account_type_check;
+ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('personal','creator','business'));
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_allow_mentions_from_check;
+ALTER TABLE users ADD CONSTRAINT users_allow_mentions_from_check CHECK (allow_mentions_from IN ('everyone','followers','none'));
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_allow_tags_from_check;
+ALTER TABLE users ADD CONSTRAINT users_allow_tags_from_check CHECK (allow_tags_from IN ('everyone','followers','none'));
+
 -- Add follow graph and follower-only post visibility for existing databases.
 CREATE TABLE IF NOT EXISTS follows (
   follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
