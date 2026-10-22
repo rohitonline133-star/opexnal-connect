@@ -37,6 +37,7 @@ import {
   type Message,
 } from "@/lib/messages";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/messages/$conversationId")({
@@ -149,7 +150,7 @@ function Conversation() {
     setSelectedMessage(null);
     if (!message) return;
     try {
-      const response = await fetch("/api/v1/reports", {
+      const response = await fetch(apiUrl("/api/v1/reports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
