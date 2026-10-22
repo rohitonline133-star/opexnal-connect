@@ -24,6 +24,20 @@ CREATE TABLE IF NOT EXISTS follows (
   CHECK (follower_id <> following_id)
 );
 CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS user_blocks (
+  blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (blocker_id, blocked_id),
+  CHECK (blocker_id <> blocked_id)
+);
+CREATE TABLE IF NOT EXISTS user_restrictions (
+  restrictor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  restricted_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (restrictor_id, restricted_id),
+  CHECK (restrictor_id <> restricted_id)
+);
 CREATE TABLE IF NOT EXISTS close_friends (
   owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
