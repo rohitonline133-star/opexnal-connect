@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { getProfileByUsername, initialsFor, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 import { openDirectConversation } from "@/lib/messages";
