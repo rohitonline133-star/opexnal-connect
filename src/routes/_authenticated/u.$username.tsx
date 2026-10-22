@@ -82,8 +82,7 @@ function PublicProfile() {
     queryKey: ["relationship", user?.id, profile?.id],
     enabled: Boolean(user?.id && profile?.id) && !isSelf,
     queryFn: async () => {
-      const response = await fetch(apiUrl(
-        `/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`,
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`),
         { headers: authClient.getAuthHeader(), cache: "no-store" },
       );
       const payload = (await response.json().catch(() => ({}))) as {
