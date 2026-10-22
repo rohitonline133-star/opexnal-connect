@@ -61,13 +61,14 @@ async function proxyFirstPartyApi(request: Request): Promise<Response> {
     const method = request.method.toUpperCase();
     const body =
       method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
-    const upstream = await fetch(target, {
+    const requestInit: RequestInit = {
       method,
       headers,
-      body,
       redirect: "manual",
       signal: AbortSignal.timeout(15_000),
-    });
+    };
+    if (body !== undefined) requestInit.body = body;
+    const upstream = await fetch(target, requestInit);
     const responseHeaders = new Headers(upstream.headers);
     responseHeaders.set("Cache-Control", "no-store");
     responseHeaders.set("X-Content-Type-Options", "nosniff");
