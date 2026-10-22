@@ -17,6 +17,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
 
 const signupSearchSchema = z.object({
@@ -76,7 +77,7 @@ function SignupPage() {
     }
     setUsernameStatus("checking");
     try {
-      const response = await fetch(
+      const response = await fetch(apiUrl(
         `/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`,
         { cache: "no-store" },
       );
