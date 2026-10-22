@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getProfileById, initialsFor, USERNAME_PATTERN } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
@@ -107,7 +108,7 @@ function EditProfile() {
       return;
     }
     try {
-      const response = await fetch("/api/v1/users/me", {
+      const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -139,7 +140,7 @@ function EditProfile() {
     }
     setBusy(true);
     try {
-      const response = await fetch("/api/v1/users/me", {
+      const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
