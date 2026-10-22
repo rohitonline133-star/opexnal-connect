@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { authClient } from "@/lib/auth-client";
 import { getProfileById } from "@/lib/profile";
 import type { Database } from "@/integrations/supabase/types";
+import { apiUrl } from "@/lib/api-client";
 
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PostMediaRow = Database["public"]["Tables"]["post_media"]["Row"];
@@ -477,7 +478,7 @@ function mapApiPost(row: ApiPostRecord): FeedPost {
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(authClient.getAuthHeader());
   new Headers(init.headers).forEach((value, key) => headers.set(key, value));
-  const response = await fetch(path, { ...init, headers, cache: "no-store" });
+  const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
   const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
   if (!response.ok) throw new Error(payload.error || `Opexnal API request failed (${response.status}).`);
   return payload;
