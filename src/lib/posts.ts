@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { authClient, supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
@@ -396,331 +396,268 @@ async function decorate(
 export const FEED_PAGE_SIZE = 10;
 
 /** Home feed: posts from people the viewer follows, plus their own. */
+type ApiPostRecord = {
+  id: string;
+  author_id?: string;
+  user_id?: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string | null;
+  caption?: string;
+  visibility?: "public" | "private";
+  location_name?: string | null;
+  comments_enabled?: boolean;
+  created_at: string;
+  updated_at?: string;
+  like_count?: number | string;
+  comments_count?: number | string;
+  saves_count?: number | string;
+  shares_count?: number | string;
+  liked_by_me?: boolean;
+  saved_by_me?: boolean;
+  media_url?: string | null;
+  media_type?: "image" | "video" | "text";
+  media?: PostMediaRow[];
+};
+
+function mapApiPost(row: ApiPostRecord): FeedPost {
+  const authorId = row.author_id || row.user_id || "";
+  const mediaRows: PostMediaRow[] = Array.isArray(row.media)
+    ? row.media
+    : row.media_url
+      ? [
+          {
+            id: `${row.id}-media`,
+            post_id: row.id,
+            user_id: authorId,
+            storage_path: row.media_url,
+            media_type: row.media_type === "video" ? "video" : "image",
+            width: null,
+            height: null,
+            duration_seconds: null,
+            position: 0,
+            created_at: row.created_at,
+          },
+        ]
+      : [];
+  const post = {
+    id: row.id,
+    user_id: authorId,
+    caption: row.caption || "",
+    comments_count: Number(row.comments_count || 0),
+    comments_enabled: row.comments_enabled !== false,
+    created_at: row.created_at,
+    updated_at: row.updated_at || row.created_at,
+    likes_count: Number(row.like_count || 0),
+    location_lat: null,
+    location_lng: null,
+    location_name: row.location_name || null,
+    saves_count: Number(row.saves_count || 0),
+    shares_count: Number(row.shares_count || 0),
+    visibility: row.visibility === "private" ? "private" : "public",
+    media: mediaRows,
+    author: authorId
+      ? {
+          id: authorId,
+          username: row.username || "unknown",
+          display_name: row.display_name || row.username || "Unknown user",
+          avatar_url: row.avatar_url || null,
+          is_verified: false,
+        }
+      : null,
+    liked: Boolean(row.liked_by_me),
+    saved: Boolean(row.saved_by_me),
+  };
+  return post as unknown as FeedPost;
+}
+
+async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(authClient.getAuthHeader());
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+  const response = await fetch(path, { ...init, headers, cache: "no-store" });
+  const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
+  if (!response.ok) throw new Error(payload.error || `Opexnal API request failed (${response.status}).`);
+  return payload;
+}
+
+async function fetchApiFeed(limit = 100): Promise<FeedPost[]> {
+  const payload = await apiRequest<{ posts?: ApiPostRecord[] }>(
+    `/api/v1/posts/feed?limit=${Math.min(Math.max(limit, 1), 100)}`,
+  );
+  return (payload.posts || []).map(mapApiPost);
+}
+
 export async function getHomeFeed(
   viewerId: string,
   cursor?: string | null,
   limit = FEED_PAGE_SIZE,
 ) {
   try {
-    const { data: following } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", viewerId);
-
-    const followingRows = (following ?? []) as Array<{ following_id: string }>;
-    const ids = [viewerId, ...followingRows.map((f) => f.following_id)];
-
-    let query = supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .in("user_id", ids)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (cursor) query = query.lt("created_at", cursor);
-
-    const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      const items = await decorate((data ?? []) as never, viewerId);
-      const local = getLocalPosts();
-      const combined = decorateWithLocalState([...local, ...items], viewerId);
-      const last = combined[combined.length - 1];
-      return {
-        items: combined.slice(0, limit),
-        nextCursor: combined.length >= limit && last ? last.created_at : null,
-      };
-    }
+    const all = await fetchApiFeed(100);
+    const visible = all.filter((post) => post.visibility === "public" || post.user_id === viewerId);
+    const sliced = cursor ? visible.filter((post) => post.created_at < cursor) : visible;
+    const items = sliced.slice(0, limit);
+    const last = items[items.length - 1];
+    return {
+      items,
+      nextCursor: sliced.length > limit && last ? last.created_at : null,
+    };
   } catch {
-    // fallback to seed
+    if (!import.meta.env.DEV) return { items: [], nextCursor: null };
+    const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
+    const sliced = cursor ? all.filter((post) => post.created_at < cursor) : all;
+    const items = sliced.slice(0, limit);
+    const last = items[items.length - 1];
+    return { items, nextCursor: sliced.length > limit && last ? last.created_at : null };
   }
-
-  const allFallback = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  const sliced = cursor ? allFallback.filter((p) => p.created_at < cursor) : allFallback;
-  const items = sliced.slice(0, limit);
-  const last = items[items.length - 1];
-  return {
-    items,
-    nextCursor: items.length === limit && last ? last.created_at : null,
-  };
 }
 
-/** Explore: recent public posts from everyone visible to the viewer. */
+/** Explore shows real public posts. Seed content is development-only. */
 export async function getExploreFeed(viewerId?: string | null) {
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .eq("visibility", "public")
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (!error && data && data.length > 0) {
-      const remote = await decorate(data as never, viewerId);
-      return decorateWithLocalState([...getLocalPosts(), ...remote], viewerId);
-    }
+    const posts = await fetchApiFeed(100);
+    return posts.filter((post) => post.visibility === "public");
   } catch {
-    // fallback
+    if (import.meta.env.DEV) {
+      return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
+    }
+    return [];
   }
-
-  return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
 }
 
-/** Reels: recent posts whose media includes a video, visible to the viewer. */
 export async function getReelsFeed(viewerId: string, limit = 30) {
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .order("created_at", { ascending: false })
-      .limit(120);
-    if (!error && data && data.length > 0) {
-      const items = await decorate(data as never, viewerId);
-      const videoItems = items.filter((p) => p.media.some((m) => m.media_type === "video"));
-      if (videoItems.length > 0) {
-        return decorateWithLocalState([...getLocalPosts(), ...videoItems], viewerId).slice(
-          0,
-          limit,
-        );
-      }
-    }
+    const posts = await fetchApiFeed(100);
+    return posts
+      .filter((post) => post.visibility === "public" || post.user_id === viewerId)
+      .filter((post) => post.media.some((item) => item.media_type === "video"))
+      .slice(0, limit);
   } catch {
-    // fallback
+    if (!import.meta.env.DEV) return [];
+    return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId)
+      .filter((post) => post.media.some((item) => item.media_type === "video"))
+      .slice(0, limit);
   }
-
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  return all.filter((p) => p.media.some((m) => m.media_type === "video")).slice(0, limit);
 }
 
 export async function getPostsByUser(userId: string, viewerId?: string | null) {
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    if (!error && data && data.length > 0) {
-      const remote = await decorate(data as never, viewerId);
-      const local = getLocalPosts().filter((p) => p.user_id === userId);
-      return decorateWithLocalState([...local, ...remote], viewerId);
-    }
+    return (await fetchApiFeed(100)).filter((post) => post.user_id === userId);
   } catch {
-    // fallback
+    if (!import.meta.env.DEV) return [];
+    return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
+      (post) => post.user_id === userId,
+    );
   }
-
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  return all.filter((p) => p.user_id === userId);
 }
 
 export const GRID_PAGE_SIZE = 18;
 
-/** Paginated posts for a profile grid; RLS decides what is visible. */
 export async function getUserPostsPage(
   userId: string,
   viewerId?: string | null,
   cursor?: string | null,
   limit = GRID_PAGE_SIZE,
 ) {
-  try {
-    let query = supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (cursor) query = query.lt("created_at", cursor);
-
-    const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      const items = await decorate(data as never, viewerId);
-      const local = getLocalPosts().filter((p) => p.user_id === userId);
-      const combined = decorateWithLocalState([...local, ...items], viewerId);
-      const last = combined[combined.length - 1];
-      return {
-        items: combined,
-        nextCursor: combined.length === limit && last ? last.created_at : null,
-      };
-    }
-  } catch {
-    // fallback
-  }
-
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
-    (p) => p.user_id === userId,
-  );
-  const sliced = cursor ? all.filter((p) => p.created_at < cursor) : all;
+  const all = await getPostsByUser(userId, viewerId);
+  const sliced = cursor ? all.filter((post) => post.created_at < cursor) : all;
   const items = sliced.slice(0, limit);
   const last = items[items.length - 1];
-  return { items, nextCursor: items.length === limit && last ? last.created_at : null };
+  return { items, nextCursor: sliced.length > limit && last ? last.created_at : null };
 }
 
-export async function getSavedPosts(viewerId: string) {
+export async function getSavedPosts(_viewerId: string) {
   try {
-    const { data: saves } = await supabase
-      .from("post_saves")
-      .select("post_id")
-      .eq("user_id", viewerId)
-      .order("created_at", { ascending: false });
-    const saveRows = (saves ?? []) as Array<{ post_id: string }>;
-    const ids = saveRows.map((s) => s.post_id);
-    if (ids.length > 0) {
-      const { data, error } = await supabase.from("posts").select(POST_SELECT).in("id", ids);
-      if (!error && data) {
-        return decorate(data as never, viewerId);
-      }
-    }
+    return (await fetchApiFeed(100)).filter((post) => post.saved);
   } catch {
-    // fallback
+    return import.meta.env.DEV
+      ? decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], _viewerId).filter((post) =>
+          getLocalSaves().has(post.id),
+        )
+      : [];
   }
-
-  const localSavedIds = getLocalSaves();
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  return all.filter((p) => localSavedIds.has(p.id));
 }
 
 export async function getPost(postId: string, viewerId?: string | null) {
   try {
-    const { data, error } = await supabase
-      .from("posts")
-      .select(POST_SELECT)
-      .eq("id", postId)
-      .maybeSingle();
-    if (!error && data) {
-      const [post] = await decorate([data as never], viewerId);
-      return post ?? null;
-    }
+    const payload = await apiRequest<{ post?: ApiPostRecord }>(
+      `/api/v1/posts/${encodeURIComponent(postId)}`,
+    );
+    return payload.post ? mapApiPost(payload.post) : null;
   } catch {
-    // fallback
+    if (!import.meta.env.DEV) return null;
+    return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).find(
+      (post) => post.id === postId,
+    ) ?? null;
   }
-
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  return all.find((p) => p.id === postId) ?? null;
 }
 
 export async function getPostsByHashtag(tag: string, viewerId?: string | null) {
   try {
-    const { data: hashtag } = await supabase
-      .from("hashtags")
-      .select("id")
-      .eq("tag", tag.toLowerCase())
-      .maybeSingle();
-    if (hashtag) {
-      const { data: links } = await supabase
-        .from("post_hashtags")
-        .select("post_id")
-        .eq("hashtag_id", hashtag.id);
-      const linkRows = (links ?? []) as Array<{ post_id: string }>;
-      const ids = linkRows.map((l) => l.post_id);
-      if (ids.length > 0) {
-        const { data, error } = await supabase
-          .from("posts")
-          .select(POST_SELECT)
-          .in("id", ids)
-          .order("created_at", { ascending: false });
-        if (!error && data) {
-          return decorate(data as never, viewerId);
-        }
-      }
-    }
+    const targetTag = tag.toLowerCase().replace(/^#/, "");
+    return (await fetchApiFeed(100)).filter(
+      (post) =>
+        post.visibility === "public" &&
+        extractHashtags(post.caption).includes(targetTag),
+    );
   } catch {
-    // fallback
-  }
-
-  const targetTag = tag.toLowerCase();
-  const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
-  return all.filter((p) => extractHashtags(p.caption).includes(targetTag));
-}
-
-export async function toggleLike(postId: string, userId: string, liked: boolean) {
-  setLocalLike(postId, !liked);
-  try {
-    if (liked) {
-      await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
-    } else {
-      await supabase.from("post_likes").insert({ post_id: postId, user_id: userId });
-    }
-  } catch {
-    // handled locally
+    if (!import.meta.env.DEV) return [];
+    const targetTag = tag.toLowerCase().replace(/^#/, "");
+    return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter((post) =>
+      extractHashtags(post.caption).includes(targetTag),
+    );
   }
 }
 
-export async function toggleSave(postId: string, userId: string, saved: boolean) {
-  setLocalSave(postId, !saved);
-  try {
-    if (saved) {
-      await supabase.from("post_saves").delete().eq("post_id", postId).eq("user_id", userId);
-    } else {
-      await supabase.from("post_saves").insert({ post_id: postId, user_id: userId });
-    }
-  } catch {
-    // handled locally
-  }
+export async function toggleLike(postId: string, _userId: string, liked: boolean) {
+  await apiRequest<{ liked: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/like`, {
+    method: liked ? "DELETE" : "POST",
+  });
 }
 
-export async function recordShare(postId: string, userId: string, channel = "link") {
-  try {
-    await supabase.from("post_shares").insert({ post_id: postId, user_id: userId, channel });
-  } catch {
-    // ignore
-  }
+export async function toggleSave(postId: string, _userId: string, saved: boolean) {
+  await apiRequest<{ saved: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/save`, {
+    method: saved ? "DELETE" : "POST",
+  });
+}
+
+export async function recordShare(postId: string, _userId: string, channel = "link") {
+  await apiRequest<{ success: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/share`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel }),
+  });
 }
 
 export type CommentWithAuthor = CommentRow & { author: FeedAuthor | null; liked: boolean };
 
-const memoryCommentsStore = new Map<string, CommentWithAuthor[]>();
-
-export async function getComments(postId: string, viewerId?: string | null) {
-  let localComments: CommentWithAuthor[] = memoryCommentsStore.get(postId) || [];
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem(`${LOCAL_COMMENTS_KEY}_${postId}`);
-      if (raw) localComments = JSON.parse(raw);
-    } catch {
-      // ignore
-    }
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("post_comments")
-      .select("*")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-    if (!error && data && data.length > 0) {
-      const rows = data as unknown as CommentRow[];
-      const [profilesRes, likesRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, username, display_name, avatar_url, is_verified")
-          .in("id", Array.from(new Set(rows.map((r) => r.user_id)))),
-        viewerId
-          ? supabase
-              .from("comment_likes")
-              .select("comment_id")
-              .eq("user_id", viewerId)
-              .in(
-                "comment_id",
-                rows.map((r) => r.id),
-              )
-          : Promise.resolve({ data: [] as { comment_id: string }[] }),
-      ]);
-
-      const authors = new Map(
-        ((profilesRes.data ?? []) as FeedAuthor[]).map((p: FeedAuthor) => [p.id, p]),
-      );
-      const liked = new Set(
-        ((likesRes.data ?? []) as Array<{ comment_id: string }>).map((r) => r.comment_id),
-      );
-
-      const remoteDecorated = rows.map((row: CommentRow): CommentWithAuthor => ({
-        ...row,
-        author: authors.get(row.user_id) ?? null,
-        liked: liked.has(row.id),
-      }));
-      return [...remoteDecorated, ...localComments];
-    }
-  } catch {
-    // fallback
-  }
-
-  return localComments;
+export async function getComments(postId: string, _viewerId?: string | null) {
+  const payload = await apiRequest<{
+    comments?: Array<CommentRow & {
+      username?: string;
+      display_name?: string;
+      avatar_url?: string | null;
+      liked_by_me?: boolean;
+    }>;
+  }>(`/api/v1/posts/${encodeURIComponent(postId)}/comments`);
+  return (payload.comments || []).map((row) => ({
+    id: row.id,
+    post_id: row.post_id,
+    user_id: row.user_id,
+    parent_id: row.parent_id,
+    body: row.body,
+    likes_count: row.likes_count,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    author: {
+      id: row.user_id,
+      username: row.username || "unknown",
+      display_name: row.display_name || row.username || "Unknown user",
+      avatar_url: row.avatar_url || null,
+      is_verified: false,
+    },
+    liked: Boolean(row.liked_by_me),
+  }));
 }
 
 export async function addComment(input: {
@@ -729,76 +666,50 @@ export async function addComment(input: {
   body: string;
   parentId?: string | null;
 }): Promise<CommentWithAuthor> {
-  const newComment: CommentWithAuthor = {
-    id: `local_comment_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    post_id: input.postId,
-    user_id: input.userId,
-    body: input.body.trim(),
-    parent_id: input.parentId ?? null,
-    likes_count: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+  const payload = await apiRequest<{
+    comment?: CommentRow & {
+      username?: string;
+      display_name?: string;
+      avatar_url?: string | null;
+      liked_by_me?: boolean;
+    };
+  }>(`/api/v1/posts/${encodeURIComponent(input.postId)}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body: input.body, parentId: input.parentId ?? null }),
+  });
+  if (!payload.comment) throw new Error("The API did not return the created comment.");
+  const row = payload.comment;
+  return {
+    id: row.id,
+    post_id: row.post_id,
+    user_id: row.user_id,
+    parent_id: row.parent_id,
+    body: row.body,
+    likes_count: row.likes_count,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
     author: {
-      id: input.userId,
-      username: "you",
-      display_name: "You",
-      avatar_url: null,
+      id: row.user_id,
+      username: row.username || "unknown",
+      display_name: row.display_name || row.username || "Unknown user",
+      avatar_url: row.avatar_url || null,
       is_verified: false,
     },
-    liked: false,
+    liked: Boolean(row.liked_by_me),
   };
-
-  const currentMem = memoryCommentsStore.get(input.postId) || [];
-  currentMem.push(newComment);
-  memoryCommentsStore.set(input.postId, currentMem);
-
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem(`${LOCAL_COMMENTS_KEY}_${input.postId}`);
-      const current: CommentWithAuthor[] = raw ? JSON.parse(raw) : [];
-      current.push(newComment);
-      localStorage.setItem(`${LOCAL_COMMENTS_KEY}_${input.postId}`, JSON.stringify(current));
-    } catch {
-      // ignore
-    }
-  }
-
-  try {
-    await supabase.from("post_comments").insert({
-      post_id: input.postId,
-      user_id: input.userId,
-      body: input.body.trim(),
-      parent_id: input.parentId ?? null,
-    });
-  } catch {
-    // handled locally
-  }
-
-  return newComment;
 }
 
 export async function deleteComment(commentId: string) {
-  try {
-    await supabase.from("post_comments").delete().eq("id", commentId);
-  } catch {
-    // ignore
-  }
+  await apiRequest<{ success: boolean }>(`/api/v1/comments/${encodeURIComponent(commentId)}`, {
+    method: "DELETE",
+  });
 }
 
-export async function toggleCommentLike(commentId: string, userId: string, liked: boolean) {
-  try {
-    if (liked) {
-      await supabase
-        .from("comment_likes")
-        .delete()
-        .eq("comment_id", commentId)
-        .eq("user_id", userId);
-    } else {
-      await supabase.from("comment_likes").insert({ comment_id: commentId, user_id: userId });
-    }
-  } catch {
-    // ignore
-  }
+export async function toggleCommentLike(commentId: string, _userId: string, liked: boolean) {
+  await apiRequest<{ liked: boolean }>(`/api/v1/comments/${encodeURIComponent(commentId)}/like`, {
+    method: liked ? "DELETE" : "POST",
+  });
 }
 
 export type NewPostMedia = {
@@ -816,79 +727,71 @@ export async function createPost(input: {
   commentsEnabled: boolean;
   media: NewPostMedia[];
 }) {
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData.user?.id || input.userId;
-  if (!effectiveUserId) {
-    throw new Error("Authentication required to create a post");
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id;
+  if (authError || !effectiveUserId || effectiveUserId !== input.userId) {
+    throw new Error("Verified authentication is required to create a post.");
+  }
+  if (input.media.length > 10) {
+    throw new Error("A post can contain at most 10 media items.");
+  }
+  if (!input.media.length && !input.caption.trim()) {
+    throw new Error("Add a caption or media before posting.");
   }
 
-  const { data: post, error } = await supabase
-    .from("posts")
-    .insert({
-      user_id: effectiveUserId,
-      caption: input.caption.trim(),
-      visibility: input.visibility,
-      location_name: input.locationName?.trim() || null,
-      comments_enabled: input.commentsEnabled,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
+  const uploadedPaths: string[] = [];
   try {
-    const rows: Database["public"]["Tables"]["post_media"]["Insert"][] = [];
-    for (const [index, item] of input.media.entries()) {
-      const ext =
-        item.file.name.split(".").pop()?.toLowerCase() ||
-        (item.mediaType === "video" ? "mp4" : "jpg");
-      const path = `${effectiveUserId}/${post.id}/${index}-${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("post-media")
-        .upload(path, item.file, { contentType: item.file.type, upsert: false });
-      if (uploadError) throw uploadError;
-      rows.push({
-        post_id: post.id,
-        user_id: effectiveUserId,
-        storage_path: path,
-        media_type: item.mediaType,
+    const media: Array<{
+      mediaUrl: string;
+      mediaType: "image" | "video";
+      width?: number | null;
+      height?: number | null;
+    }> = [];
+    for (const item of input.media) {
+      const { data, error } = await supabase.storage.from("post-media").upload(
+        `${effectiveUserId}/${crypto.randomUUID()}`,
+        item.file,
+        { contentType: item.file.type, upsert: false },
+      );
+      if (error || !data?.path) throw error || new Error("Media upload returned no storage path.");
+      uploadedPaths.push(data.path);
+      media.push({
+        mediaUrl: data.path,
+        mediaType: item.mediaType,
         width: item.width ?? null,
         height: item.height ?? null,
-        position: index,
       });
     }
-    if (rows.length > 0) {
-      const { error: mediaError } = await supabase.from("post_media").insert(rows);
-      if (mediaError) throw mediaError;
+
+    const payload = await apiRequest<{ post?: { id?: string } }>("/api/v1/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caption: input.caption.trim(),
+        visibility: input.visibility,
+        locationName: input.locationName?.trim() || null,
+        commentsEnabled: input.commentsEnabled,
+        media,
+      }),
+    });
+    if (!payload.post?.id) throw new Error("The API did not return the created post.");
+    return payload.post.id;
+  } catch (error) {
+    if (uploadedPaths.length) {
+      await supabase.storage.from("post-media").remove(uploadedPaths).catch(() => undefined);
     }
-    return post.id;
-  } catch (err) {
-    await supabase.from("posts").delete().eq("id", post.id);
-    throw err;
+    throw error;
   }
 }
 
 export async function deletePost(postId: string, requestingUserId?: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData?.user?.id || requestingUserId;
-  if (!effectiveUserId) {
-    throw new Error("Authentication required to delete a post");
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user?.id || (requestingUserId && requestingUserId !== authData.user.id)) {
+    throw new Error("Verified authentication is required to delete a post.");
   }
-
-  const { data: post } = await supabase.from("posts").select("user_id").eq("id", postId).single();
-  if (post && (post as { user_id: string }).user_id !== effectiveUserId) {
-    throw new Error("Unauthorized: You can only delete your own posts");
-  }
-
-  const { error } = await supabase
-    .from("posts")
-    .delete()
-    .eq("id", postId)
-    .eq("user_id", effectiveUserId);
-  if (error) throw error;
-  removeLocalPost(postId);
+  await apiRequest<{ success: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {
+    method: "DELETE",
+  });
 }
 
 export function formatCount(value: number) {
