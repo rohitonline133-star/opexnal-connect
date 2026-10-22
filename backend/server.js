@@ -1,11 +1,12 @@
 import "dotenv/config";
 import express from "express";
 import http from "node:http";
-import { randomUUID, scrypt as scryptCallback, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomUUID, scrypt as scryptCallback, randomBytes, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import jwt from "jsonwebtoken";
 import pg from "pg";
 import { WebSocketServer } from "ws";
+import nodemailer from "nodemailer";
 
 const { Pool } = pg;
 const app = express();
@@ -16,6 +17,20 @@ const jwtSecret = process.env.JWT_SECRET || "";
 const databaseUrl = process.env.DATABASE_URL || "";
 const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000").split(",").map((v) => v.trim());
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined, max: Number(process.env.DB_POOL_MAX || 10) }) : null;
+const smtpHost = process.env.SMTP_HOST || "";
+const smtpUser = process.env.SMTP_USER || "";
+const smtpPass = process.env.SMTP_PASS || "";
+const smtpFrom = process.env.SMTP_FROM || "";
+const publicApiUrl = process.env.PUBLIC_API_URL || "";
+const emailTransport =
+  smtpHost && smtpUser && smtpPass && smtpFrom
+    ? nodemailer.createTransport({
+        host: smtpHost,
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: process.env.SMTP_SECURE === "true",
+        auth: { user: smtpUser, pass: smtpPass },
+      })
+    : null;
 const socketsByUser = new Map();
 const attempts = new Map();
 const scrypt = promisify(scryptCallback);
@@ -111,16 +126,99 @@ app.get("/health", async (_req, res) => {
 });
 
 app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
+  if (!emailTransport || !publicApiUrl) {
+    return res.status(503).json({
+      error: "Email verification delivery is not configured. No account was created.",
+    });
+  }
+  const { username, email, password, displayName, dateOfBirth } = req.body || {};
+  if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) {
+    return res.status(429).json({ error: "Too many signup attempts. Try again later." });
+  }
+  if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
+    return res.status(400).json({
+      error: "Use a 3–30 character username, valid email, and password of 12–128 characters.",
+    });
+  }
+  const birthDate = typeof dateOfBirth === "string" ? new Date(dateOfBirth) : null;
+  if (!birthDate || !Number.isFinite(birthDate.getTime()) || birthDate.getTime() > Date.now()) {
+    return res.status(400).json({ error: "A valid date of birth is required." });
+  }
+  const ageCutoff = new Date();
+  ageCutoff.setFullYear(ageCutoff.getFullYear() - 13);
+  if (birthDate > ageCutoff) {
+    return res.status(400).json({ error: "You must be at least 13 years old to create an account." });
+  }
+
+  const client = await pool.connect();
   try {
-    const { username, email, password, displayName } = req.body || {};
-    if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) return res.status(429).json({ error: "Too many signup attempts. Try again later." });
-    if (!validUsername(username) || !validEmail(email) || !validPassword(password)) return res.status(400).json({ error: "Use a 3–30 character username, valid email, and password of 12–128 characters." });
+    await client.query("BEGIN");
     const passwordHash = await hashPassword(password);
-    const result = await pool.query("INSERT INTO users (id, username, email, password_hash, display_name, email_verified) VALUES ($1,$2,$3,$4,$5,FALSE) RETURNING id, username, email, display_name, avatar_url, created_at", [randomUUID(), username.toLowerCase(), email.toLowerCase(), passwordHash, typeof displayName === "string" ? displayName.slice(0, 80) : username]);
-    return res.status(201).json({ user: publicUser(result.rows[0]), emailVerificationRequired: true, message: "Account created. Email verification delivery must be configured before enabling verified-account features." });
+    const result = await client.query(
+      "INSERT INTO users (id, username, email, password_hash, display_name, email_verified) VALUES ($1,$2,$3,$4,$5,FALSE) RETURNING id, username, email, display_name, avatar_url, created_at",
+      [randomUUID(), username.toLowerCase(), email.toLowerCase(), passwordHash, typeof displayName === "string" ? displayName.slice(0, 80) : username],
+    );
+    const user = result.rows[0];
+    const rawToken = randomBytes(32).toString("base64url");
+    const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+    await client.query(
+      "INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at) VALUES ($1,$2,$3,NOW()+INTERVAL '30 minutes')",
+      [randomUUID(), user.id, tokenHash],
+    );
+
+    const verificationUrl = new URL("/api/v1/auth/verify-email", publicApiUrl);
+    verificationUrl.searchParams.set("token", rawToken);
+    await emailTransport.sendMail({
+      from: smtpFrom,
+      to: user.email,
+      subject: "Verify your Opexnal email",
+      text: `Verify your Opexnal account within 30 minutes: ${verificationUrl.toString()}\nIf you did not request this account, ignore this message.`,
+      html: `<p>Verify your Opexnal account within 30 minutes:</p><p><a href="${verificationUrl.toString()}">Verify email</a></p><p>If you did not request this account, ignore this message.</p>`,
+    });
+    await client.query("COMMIT");
+    return res.status(201).json({
+      user: publicUser(user),
+      emailVerificationRequired: true,
+      message: "Account created. Check your email to verify it before signing in.",
+    });
   } catch (error) {
-    if (error?.code === "23505") return res.status(409).json({ error: "Username or email is already registered." });
+    await client.query("ROLLBACK").catch(() => {});
+    if (error?.code === "23505") {
+      return res.status(409).json({ error: "Username or email is already registered." });
+    }
     next(error);
+  } finally {
+    client.release();
+  }
+});
+
+app.get("/api/v1/auth/verify-email", dbRequired, async (req, res, next) => {
+  const rawToken = typeof req.query.token === "string" ? req.query.token : "";
+  if (!/^[A-Za-z0-9_-]{40,60}$/.test(rawToken)) {
+    return res.status(400).json({ error: "Invalid or expired email verification link." });
+  }
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const tokenResult = await client.query(
+      "SELECT id, user_id FROM email_verification_tokens WHERE token_hash=$1 AND used_at IS NULL AND expires_at > NOW() FOR UPDATE",
+      [tokenHash],
+    );
+    if (!tokenResult.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid or expired email verification link." });
+    }
+    const token = tokenResult.rows[0];
+    await client.query("UPDATE users SET email_verified=TRUE, updated_at=NOW() WHERE id=$1", [token.user_id]);
+    await client.query("UPDATE email_verification_tokens SET used_at=NOW() WHERE id=$1", [token.id]);
+    await client.query("COMMIT");
+    return res.json({ success: true, message: "Email verified. You can now sign in to Opexnal." });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    next(error);
+  } finally {
+    client.release();
   }
 });
 app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
@@ -130,8 +228,19 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     if (typeof identity !== "string" || typeof password !== "string" || identity.length > 254 || password.length > 128) return res.status(400).json({ error: "Username/email and password are required." });
     const result = await pool.query("SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1", [identity.toLowerCase()]);
     const user = result.rows[0];
-    if (!user || !(await verifyPassword(password, user.password_hash))) return res.status(401).json({ error: "Invalid username/email or password." });
-    return res.json({ user: publicUser(user), accessToken: issueToken(user), tokenType: "Bearer", expiresIn: 3600, emailVerified: Boolean(user.email_verified) });
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid username/email or password." });
+    }
+    if (!user.email_verified) {
+      return res.status(403).json({ error: "Please verify your email before signing in." });
+    }
+    return res.json({
+      user: publicUser(user),
+      accessToken: issueToken(user),
+      tokenType: "Bearer",
+      expiresIn: 3600,
+      emailVerified: true,
+    });
   } catch (error) { next(error); }
 });
 app.get("/api/v1/auth/me", dbRequired, authRequired, async (req, res, next) => {
