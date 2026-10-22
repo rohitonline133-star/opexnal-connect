@@ -10,6 +10,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => ({
@@ -50,7 +51,7 @@ function ForgotPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/auth/password-reset/request", {
+      const res = await fetch(apiUrl("/api/v1/auth/password-reset/request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: target }),
