@@ -131,7 +131,10 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     url.pathname === "/api/ai/moderate"
   ) {
     return new Response(
-      JSON.stringify({ error: "AI actions are temporarily unavailable until verified server-side authentication is integrated." }),
+      JSON.stringify({
+        error:
+          "AI actions are temporarily unavailable until verified server-side authentication is integrated.",
+      }),
       { status: 503, headers: { "Content-Type": "application/json" } },
     );
   }
