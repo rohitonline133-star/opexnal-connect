@@ -483,6 +483,20 @@ app.delete("/api/v1/auth/sessions/:sessionId", dbRequired, authRequired, async (
   }
 });
 
+app.post("/api/v1/auth/websocket-ticket", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const rawTicket = randomBytes(32).toString("base64url");
+    const tokenHash = createHash("sha256").update(rawTicket).digest("hex");
+    await pool.query(
+      "INSERT INTO websocket_tickets (id,user_id,session_id,token_hash,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL '30 seconds')",
+      [randomUUID(), req.user.id, req.authSessionId, tokenHash],
+    );
+    return res.json({ ticket: rawTicket, expiresIn: 30 });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.post("/api/v1/auth/logout-all", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
@@ -578,14 +592,38 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
 });
 
 server.on("upgrade", (req, socket, head) => {
-  const url = new URL(req.url || "/", "http://localhost");
-  if (url.pathname !== "/ws" || jwtSecret.length < 32) { socket.destroy(); return; }
-  const token = url.searchParams.get("token") || "";
-  try {
-    const claims = jwt.verify(token, jwtSecret, { algorithms: ["HS256"], issuer: "opexnal-api", audience: "opexnal-app" });
-    if (!claims || typeof claims !== "object" || typeof claims.sub !== "string") throw new Error("Invalid token");
-    wss.handleUpgrade(req, socket, head, (ws) => { ws.userId = claims.sub; wss.emit("connection", ws, req); });
-  } catch { socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n"); socket.destroy(); }
+  void (async () => {
+    const url = new URL(req.url || "/", "http://localhost");
+    if (url.pathname !== "/ws" || !pool) throw new Error("Invalid WebSocket route.");
+    const rawTicket = url.searchParams.get("ticket") || "";
+    if (!/^[A-Za-z0-9_-]{40,60}$/.test(rawTicket)) throw new Error("Invalid WebSocket ticket.");
+    const tokenHash = createHash("sha256").update(rawTicket).digest("hex");
+    const result = await pool.query(
+      `WITH consumed_ticket AS (
+        UPDATE websocket_tickets
+        SET used_at=NOW()
+        WHERE token_hash=$1 AND used_at IS NULL AND expires_at>NOW()
+        RETURNING user_id, session_id
+      )
+      SELECT consumed_ticket.user_id
+      FROM consumed_ticket
+      JOIN auth_sessions ON auth_sessions.id=consumed_ticket.session_id
+        AND auth_sessions.user_id=consumed_ticket.user_id
+      WHERE auth_sessions.revoked_at IS NULL AND auth_sessions.expires_at>NOW()`,
+      [tokenHash],
+    );
+    if (!result.rowCount) throw new Error("Invalid or expired WebSocket ticket.");
+    const userId = result.rows[0].user_id;
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      ws.userId = userId;
+      wss.emit("connection", ws, req);
+    });
+  })().catch(() => {
+    if (!socket.destroyed) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+    }
+  });
 });
 wss.on("connection", (ws) => {
   const userSockets = socketsByUser.get(ws.userId) || new Set();
