@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authClient, supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { getProfileById, initialsFor, USERNAME_PATTERN } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
