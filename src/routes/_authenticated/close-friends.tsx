@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Users,
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/hooks/use-session";
+import { authClient } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/close-friends")({
   head: () => ({
@@ -42,65 +44,156 @@ interface CreatorUser {
   avatar: string;
 }
 
-const SAMPLE_CREATORS: CreatorUser[] = [
-  { id: "u1", username: "maya_visuals", name: "Maya Sharma", avatar: "M" },
-  { id: "u2", username: "aarav_tech", name: "Aarav Patel", avatar: "A" },
-  { id: "u3", username: "sneha_art", name: "Sneha Roy", avatar: "S" },
-  { id: "u4", username: "rohan_music", name: "Rohan Kapoor", avatar: "R" },
-  { id: "u5", username: "ananya_writes", name: "Ananya Desai", avatar: "A" },
-  { id: "u6", username: "vikram_builds", name: "Vikram Mehta", avatar: "V" },
-];
-
 export function CloseFriendsPage() {
+  const { user } = useSession();
   const [mode, setMode] = useState<ListMode>("close_friends");
   const [search, setSearch] = useState("");
+  const [creators, setCreators] = useState<CreatorUser[]>([]);
+  const [closeFriends, setCloseFriends] = useState<CreatorUser[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const [closeFriends, setCloseFriends] = useState<string[]>(() => {
-    return getStoredSettings().closeFriends || ["maya_visuals", "aarav_tech"];
-  });
+  useEffect(() => {
+    if (!user?.id) {
+      setCloseFriends([]);
+      setFavorites([]);
+      setLoading(false);
+      return;
+    }
+    setFavorites(getStoredSettings(user.id).favoriteCreators || []);
+    let active = true;
+    setLoading(true);
+    fetch("/api/v1/users/me/close-friends", {
+      headers: authClient.getAuthHeader(),
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => ({}))) as {
+          profiles?: Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>;
+          error?: string;
+        };
+        if (!response.ok) throw new Error(payload.error || "Could not load Close Friends.");
+        if (active) {
+          setCloseFriends((payload.profiles || []).map((profile) => ({
+            id: profile.id,
+            username: profile.username,
+            name: profile.display_name || profile.username,
+            avatar: profile.username.charAt(0).toUpperCase(),
+          })));
+        }
+      })
+      .catch((error) => {
+        if (active) toast.error(error instanceof Error ? error.message : "Could not load Close Friends.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    return getStoredSettings().favoriteCreators || ["maya_visuals", "sneha_art"];
-  });
+  useEffect(() => {
+    if (!user?.id) {
+      setCreators([]);
+      return;
+    }
+    let active = true;
+    const params = new URLSearchParams({ limit: "30" });
+    if (search.trim()) params.set("q", search.trim());
+    fetch(`/api/v1/users/search?${params.toString()}`, {
+      headers: authClient.getAuthHeader(),
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => ({}))) as {
+          profiles?: Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>;
+          error?: string;
+        };
+        if (!response.ok) throw new Error(payload.error || "Could not search accounts.");
+        if (active) {
+          setCreators((payload.profiles || []).map((profile) => ({
+            id: profile.id,
+            username: profile.username,
+            name: profile.display_name || profile.username,
+            avatar: profile.username.charAt(0).toUpperCase(),
+          })));
+        }
+      })
+      .catch((error) => {
+        if (active) toast.error(error instanceof Error ? error.message : "Could not search accounts.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id, search]);
 
   const filteredCreators = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return SAMPLE_CREATORS;
-    return SAMPLE_CREATORS.filter(
-      (c) => c.username.toLowerCase().includes(q) || c.name.toLowerCase().includes(q),
+    return creators.filter((creator) =>
+      !q || creator.username.toLowerCase().includes(q) || creator.name.toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [creators, search]);
 
-  const toggleCloseFriend = (username: string) => {
-    const exists = closeFriends.includes(username);
-    const updated = exists
-      ? closeFriends.filter((u) => u !== username)
-      : [...closeFriends, username];
-    setCloseFriends(updated);
-    saveSettings({ closeFriends: updated });
-    toast.success(
-      exists ? `Removed @${username} from Close Friends` : `Added @${username} to Close Friends 💚`,
-    );
+  const toggleCloseFriend = async (creator: CreatorUser) => {
+    if (!user?.id) return;
+    const exists = closeFriends.some((friend) => friend.id === creator.id);
+    setActionLoading(creator.id);
+    try {
+      const response = await fetch(
+        `/api/v1/users/me/close-friends/${encodeURIComponent(creator.id)}`,
+        {
+          method: exists ? "DELETE" : "POST",
+          headers: authClient.getAuthHeader(),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Close Friends update failed.");
+      setCloseFriends((previous) =>
+        exists ? previous.filter((friend) => friend.id !== creator.id) : [...previous, creator],
+      );
+      toast.success(exists ? `Removed @${creator.username} from Close Friends` : `Added @${creator.username} to Close Friends`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Close Friends update failed.");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const toggleFavorite = (username: string) => {
+    if (!user?.id) return;
     const exists = favorites.includes(username);
-    const updated = exists ? favorites.filter((u) => u !== username) : [...favorites, username];
+    const updated = exists ? favorites.filter((item) => item !== username) : [...favorites, username];
     setFavorites(updated);
-    saveSettings({ favoriteCreators: updated });
-    toast.success(
-      exists ? `Removed @${username} from Favorites` : `Added @${username} to Favorites ⭐`,
-    );
+    saveSettings({ favoriteCreators: updated }, user.id);
+    toast.success(exists ? `Removed @${username} from Favorites` : `Added @${username} to Favorites`);
   };
 
-  const clearCurrentList = () => {
+  const clearCurrentList = async () => {
+    if (!user?.id) return;
     if (mode === "close_friends") {
-      setCloseFriends([]);
-      saveSettings({ closeFriends: [] });
-      toast.success("Cleared all Close Friends");
+      setActionLoading("clear");
+      try {
+        await Promise.all(
+          closeFriends.map(async (friend) => {
+            const response = await fetch(
+              `/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`,
+              { method: "DELETE", headers: authClient.getAuthHeader() },
+            );
+            if (!response.ok) throw new Error("One or more Close Friends could not be removed.");
+          }),
+        );
+        setCloseFriends([]);
+        toast.success("Cleared all Close Friends");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not clear Close Friends.");
+      } finally {
+        setActionLoading(null);
+      }
     } else {
       setFavorites([]);
-      saveSettings({ favoriteCreators: [] });
+      saveSettings({ favoriteCreators: [] }, user.id);
       toast.success("Cleared all Favorites");
     }
   };
@@ -212,7 +305,7 @@ export function CloseFriendsPage() {
           {filteredCreators.map((creator) => {
             const isSelected =
               mode === "close_friends"
-                ? closeFriends.includes(creator.username)
+                ? closeFriends.some((friend) => friend.id === creator.id)
                 : favorites.includes(creator.username);
 
             return (
