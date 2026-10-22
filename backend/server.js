@@ -467,8 +467,8 @@ app.delete("/api/v1/auth/sessions/:sessionId", dbRequired, authRequired, async (
 app.post("/api/v1/auth/logout-all", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
-      "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL RETURNING id",
-      [req.user.id],
+      "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND id<>$2 AND revoked_at IS NULL RETURNING id",
+      [req.user.id, req.authSessionId],
     );
     return res.json({ success: true, revokedCount: result.rowCount || 0 });
   } catch (error) {
