@@ -752,6 +752,45 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
 });
+app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
+        p.caption, p.media_url, p.media_type, p.visibility, p.location_name, p.comments_enabled,
+        p.created_at, p.updated_at,
+        (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count,
+        (SELECT COUNT(*) FROM post_comments c WHERE c.post_id=p.id) AS comments_count,
+        (SELECT COUNT(*) FROM post_saves s WHERE s.post_id=p.id) AS saves_count,
+        (SELECT COUNT(*) FROM post_shares sh WHERE sh.post_id=p.id) AS shares_count,
+        EXISTS(SELECT 1 FROM post_likes l WHERE l.post_id=p.id AND l.user_id=$2) AS liked_by_me,
+        EXISTS(SELECT 1 FROM post_saves s WHERE s.post_id=p.id AND s.user_id=$2) AS saved_by_me,
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', pm.id, 'post_id', pm.post_id, 'user_id', pm.user_id,
+            'storage_path', pm.storage_path, 'media_type', pm.media_type,
+            'width', pm.width, 'height', pm.height, 'duration_seconds', pm.duration_seconds,
+            'position', pm.position, 'created_at', pm.created_at
+          ) ORDER BY pm.position) FROM post_media pm WHERE pm.post_id=p.id),
+          CASE WHEN p.media_url IS NOT NULL THEN json_build_array(json_build_object(
+            'id', p.id::text || '-media', 'post_id', p.id, 'user_id', p.user_id,
+            'storage_path', p.media_url, 'media_type', p.media_type,
+            'width', NULL, 'height', NULL, 'duration_seconds', NULL,
+            'position', 0, 'created_at', p.created_at
+          )) ELSE '[]'::json END
+        ) AS media
+      FROM posts p JOIN users u ON u.id=p.user_id
+      WHERE p.id=$1 AND (p.visibility='public' OR p.user_id=$2)
+      LIMIT 1`,
+      [req.params.postId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Post not found." });
+    return res.json({ post: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   const body = req.body || {};
   const caption = body.caption === undefined ? "" : body.caption;
