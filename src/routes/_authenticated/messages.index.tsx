@@ -33,6 +33,7 @@ import {
   type ConversationSummary,
 } from "@/lib/messages";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
@@ -63,6 +64,7 @@ function Inbox() {
     queryKey: ["conversations", user?.id],
     queryFn: () => listConversations(user!.id),
     enabled: Boolean(user?.id),
+    refetchInterval: 10000,
   });
 
   const rawConversations: ConversationSummary[] = data ?? [];
@@ -79,10 +81,26 @@ function Inbox() {
   const handleStartChat = async (e: React.FormEvent) => {
     e.preventDefault();
     const uname = recipientUsername.trim().replace(/^@/, "");
-    if (!uname) return;
-    toast.info(`Opening chat with @${uname}...`);
-    setNewChatModalOpen(false);
-    navigate({ to: "/explore" });
+    if (!uname || !user?.id) return;
+    try {
+      const response = await fetch(`/api/v1/users/${encodeURIComponent(uname)}`, {
+        headers: authClient.getAuthHeader(),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        profile?: { id: string; username: string };
+        error?: string;
+      };
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "That account could not be found.");
+      }
+      const conversationId = await openDirectConversation(user.id, payload.profile.id);
+      setNewChatModalOpen(false);
+      setRecipientUsername("");
+      navigate({ to: "/messages/$conversationId", params: { conversationId } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open the conversation.");
+    }
   };
 
   return (
@@ -166,7 +184,7 @@ function Inbox() {
             <ShieldAlert className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
             <p className="font-semibold text-foreground">No Message Requests</p>
             <p className="text-[11px]">
-              Messages from accounts you don&apos;t follow will appear here.
+              Message requests are not configured yet. Use a profile’s Message action to start a conversation.
             </p>
           </div>
         ) : conversations.length === 0 ? (
