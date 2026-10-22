@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS content_reports (
   action_notes VARCHAR(1000),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE content_reports DROP CONSTRAINT IF EXISTS content_reports_target_type_check;
+ALTER TABLE content_reports ADD CONSTRAINT content_reports_target_type_check CHECK (target_type IN ('post','comment','user','story','message'));
 CREATE INDEX IF NOT EXISTS content_reports_queue_idx ON content_reports (status, created_at DESC);
 CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY,
