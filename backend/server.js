@@ -619,6 +619,45 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
   }
 });
 
+app.delete("/api/v1/storage/:objectKey", dbRequired, authRequired, async (req, res, next) => {
+  const objectKey = req.params.objectKey;
+  if (!mediaKeyPattern.test(objectKey)) return res.status(400).json({ error: "Invalid media path." });
+  const storagePath = `/api/v1/storage/${objectKey}`;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const media = await client.query(
+      "SELECT id, owner_id FROM media_objects WHERE object_key=$1 AND deleted_at IS NULL FOR UPDATE",
+      [objectKey],
+    );
+    if (!media.rowCount || media.rows[0].owner_id !== req.user.id) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Media not found." });
+    }
+    const references = await client.query(
+      `SELECT 1
+       WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1)
+          OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1)
+          OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1)
+       LIMIT 1`,
+      [storagePath],
+    );
+    if (references.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "Media is still attached to a post or story." });
+    }
+    await client.query("UPDATE media_objects SET deleted_at=NOW() WHERE id=$1", [media.rows[0].id]);
+    await client.query("COMMIT");
+    try { unlinkSync(path.join(mediaRoot, objectKey)); } catch {}
+    return res.json({ success: true });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
 app.get("/api/v1/storage/public/:objectKey", dbRequired, async (req, res, next) => {
   const objectKey = req.params.objectKey;
   if (!mediaKeyPattern.test(objectKey)) return res.status(404).json({ error: "Media not found." });
