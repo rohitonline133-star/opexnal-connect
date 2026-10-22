@@ -1032,11 +1032,11 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
   try {
     const result = query
       ? await pool.query(
-          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
+          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
           [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
         )
       : await pool.query(
-          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
+          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
           [req.user.id, limit],
         );
     return res.json({ profiles: result.rows.map(publicProfile) });
@@ -1188,6 +1188,7 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
         ) AS media
        FROM posts p JOIN users u ON u.id=p.user_id
        WHERE LOWER(u.username)=LOWER($1)
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
          AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
@@ -1344,7 +1345,10 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
 app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
   if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot follow yourself." });
   try {
-    const target = await pool.query("SELECT id,is_private,is_deactivated FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    const target = await pool.query(
+      "SELECT id,is_private,is_deactivated FROM users WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2)) LIMIT 1",
+      [req.params.userId, req.user.id],
+    );
     if (!target.rowCount || target.rows[0].is_deactivated) return res.status(404).json({ error: "User not found." });
     const alreadyFollowing = await pool.query(
       "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
