@@ -42,12 +42,17 @@ function createSupabaseAdminClient() {
   const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase admin client disabled: configure server-only URL and service-role credentials.");
+    throw new Error(
+      "Supabase admin client disabled: configure server-only URL and service-role credentials.",
+    );
   }
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL)) {
     throw new Error("Supabase admin client requires a valid HTTPS Supabase project URL.");
   }
-  if (SUPABASE_SERVICE_ROLE_KEY === "mock-service-role-key" || SUPABASE_SERVICE_ROLE_KEY.startsWith("sb_publishable_")) {
+  if (
+    SUPABASE_SERVICE_ROLE_KEY === "mock-service-role-key" ||
+    SUPABASE_SERVICE_ROLE_KEY.startsWith("sb_publishable_")
+  ) {
     throw new Error("A real server-only Supabase secret/service-role key is required.");
   }
 
