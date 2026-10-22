@@ -1309,6 +1309,18 @@ app.delete("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req,
   }
 });
 
+app.delete("/api/v1/users/:userId/follow-request", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query(
+      "DELETE FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending'",
+      [req.user.id, req.params.userId],
+    );
+    return res.json({ requested: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
