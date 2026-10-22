@@ -602,7 +602,7 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
     const result = await pool.query(
       `SELECT m.object_key,
         (m.owner_id=$2 OR EXISTS (SELECT 1 FROM posts p WHERE p.media_url=$3 AND (p.visibility='public' OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
-          OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$3 AND (s.visibility='public' OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) AND s.expires_at>NOW())) AS can_access
+          OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.visibility='public' OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)))) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
       [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
     );
@@ -856,7 +856,7 @@ app.delete("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req,
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   const body = req.body || {};
   const caption = body.caption === undefined ? "" : body.caption;
-  const visibility = ["public", "followers", "private"].includes(body.visibility) ? body.visibility : "public";
+  const visibility = body.visibility === undefined ? "public" : body.visibility;
   const commentsEnabled = body.commentsEnabled !== false;
   const locationName = typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
   let media = Array.isArray(body.media) ? body.media : [];
@@ -1181,7 +1181,7 @@ app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => 
       typeof mediaUrl !== "string" ||
       mediaUrl.length > 2048 ||
       !["image", "video"].includes(mediaType) ||
-      !["public", "private"].includes(visibility)
+      !["public", "followers", "private"].includes(visibility)
     ) {
       return res.status(400).json({ error: "Valid uploaded mediaUrl, mediaType, and visibility are required." });
     }
