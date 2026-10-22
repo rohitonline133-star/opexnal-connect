@@ -34,16 +34,16 @@ function SettingsMediaPage() {
 
   const [dataSaver, setDataSaver] = useState(settings?.cellularDataSaver ?? false);
   const [highQualityUploads, setHighQualityUploads] = useState(
-    settings?.highQualityUploads ?? true,
+    settings?.uploadHighestQuality ?? true,
   );
-  const [autoPlayVideos, setAutoPlayVideos] = useState(settings?.autoPlayVideosOnCellular ?? true);
+  const [autoPlayVideos, setAutoPlayVideos] = useState(settings?.autoplayVideos !== "never");
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return updateSettings(userId, {
         cellularDataSaver: dataSaver,
-        highQualityUploads: highQualityUploads,
-        autoPlayVideosOnCellular: autoPlayVideos,
+        uploadHighestQuality: highQualityUploads,
+        autoplayVideos: autoPlayVideos ? "always" : "never",
       });
     },
     onSuccess: () => {
