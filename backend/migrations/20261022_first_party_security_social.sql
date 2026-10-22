@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS audit_logs_created_idx ON audit_logs (created_at DESC
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_account_type_check;
 ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('personal','creator','business'));
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_allow_mentions_from_check;
-ALTER TABLE users ADD CONSTRAINT users_allow_mentions_from_check CHECK (allow_mentions_from IN ('everyone','followers','none'));
+ALTER TABLE users ADD CONSTRAINT users_allow_mentions_from_check CHECK (allow_mentions_from IN ('everyone','followers','nobody'));
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_allow_tags_from_check;
 ALTER TABLE users ADD CONSTRAINT users_allow_tags_from_check CHECK (allow_tags_from IN ('everyone','followers','none'));
 
