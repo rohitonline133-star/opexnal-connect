@@ -160,6 +160,8 @@ export interface OpexnalSettings {
   autoSaveOriginalMedia: boolean;
   autoGenerateCaptions: boolean;
   highContrastMode: boolean;
+  reducedMotion: boolean;
+  advancedCommentFiltering: boolean;
   appLanguage: string;
   autoTranslateCaptions: boolean;
 
@@ -376,6 +378,8 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   autoSaveOriginalMedia: true,
   autoGenerateCaptions: true,
   highContrastMode: false,
+  reducedMotion: false,
+  advancedCommentFiltering: true,
   appLanguage: "en",
   autoTranslateCaptions: true,
 
@@ -469,13 +473,17 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
 
 const STORAGE_KEY = "opexnal_master_settings_v3";
 
+function getSettingsStorageKey(userId?: string): string {
+  return userId ? `${STORAGE_KEY}:${encodeURIComponent(userId)}` : STORAGE_KEY;
+}
+
 /**
  * Retrieves the unified settings object with deep merge and Supabase profile synchronization.
  */
-export function getStoredSettings(): OpexnalSettings {
+export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getSettingsStorageKey(userId));
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_SETTINGS, ...parsed };
@@ -491,12 +499,12 @@ export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const current = getStoredSettings();
+  const current = getStoredSettings(userId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(getSettingsStorageKey(userId), JSON.stringify(updated));
     } catch {
       // ignore storage quota error
     }
