@@ -18,6 +18,8 @@ const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000").spl
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined, max: Number(process.env.DB_POOL_MAX || 10) }) : null;
 const socketsByUser = new Map();
 const attempts = new Map();
+// Short-lived, single-use tickets avoid sending long-lived bearer JWTs in WebSocket URLs.
+const websocketTickets = new Map();
 const scrypt = promisify(scryptCallback);
 
 if (jwtSecret.length < 32) {
@@ -143,6 +145,17 @@ app.get("/api/v1/auth/me", dbRequired, authRequired, async (req, res, next) => {
 });
 app.post("/api/v1/auth/logout", authRequired, (_req, res) => res.json({ success: true, message: "Access token cleared on client. Server-side revocation requires refresh-token sessions." }));
 
+app.post("/api/v1/auth/ws-ticket", authRequired, (_req, res) => {
+  const now = Date.now();
+  for (const [ticket, record] of websocketTickets) {
+    if (record.expiresAt <= now) websocketTickets.delete(ticket);
+  }
+  if (websocketTickets.size >= 10_000) return res.status(503).json({ error: "Realtime service is temporarily busy. Try again shortly." });
+  const ticket = randomBytes(32).toString("base64url");
+  websocketTickets.set(ticket, { userId: _req.user.id, expiresAt: now + 30_000 });
+  return res.status(201).json({ ticket, expiresIn: 30 });
+});
+
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
@@ -227,13 +240,18 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
 
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url || "/", "http://localhost");
-  if (url.pathname !== "/ws" || jwtSecret.length < 32) { socket.destroy(); return; }
-  const token = url.searchParams.get("token") || "";
-  try {
-    const claims = jwt.verify(token, jwtSecret, { algorithms: ["HS256"], issuer: "opexnal-api", audience: "opexnal-app" });
-    if (!claims || typeof claims !== "object" || typeof claims.sub !== "string") throw new Error("Invalid token");
-    wss.handleUpgrade(req, socket, head, (ws) => { ws.userId = claims.sub; wss.emit("connection", ws, req); });
-  } catch { socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n"); socket.destroy(); }
+  if (url.pathname !== "/ws") { socket.destroy(); return; }
+  const ticket = url.searchParams.get("ticket") || "";
+  const record = websocketTickets.get(ticket);
+  // Tickets are short-lived, single-use, and consumed before the handshake completes.
+  if (!record || record.expiresAt <= Date.now()) {
+    if (ticket) websocketTickets.delete(ticket);
+    socket.write("HTTP/1.1 401 Unauthorized\\r\\nConnection: close\\r\\n\\r\\n");
+    socket.destroy();
+    return;
+  }
+  websocketTickets.delete(ticket);
+  wss.handleUpgrade(req, socket, head, (ws) => { ws.userId = record.userId; wss.emit("connection", ws, req); });
 });
 wss.on("connection", (ws) => {
   const userSockets = socketsByUser.get(ws.userId) || new Set();
