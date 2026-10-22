@@ -13,7 +13,7 @@ export function apiUrl(path: string): string {
 
   if (!configuredOrigin) return normalizedPath;
   const origin = configuredOrigin.replace(/\/+$/, "");
-  if (!import.meta.env.DEV && !origin.startsWith("https://")) {
+  if (!import.meta.env.DEV && !origin.startsWith("https://") && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
     throw new Error("VITE_OPEXNAL_API_URL must use HTTPS in production.");
   }
   return `${origin}${normalizedPath}`;
