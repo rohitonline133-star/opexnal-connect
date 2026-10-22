@@ -78,17 +78,51 @@ function rateLimit(key, max = 10, windowMs = 60_000) {
   old.count += 1;
   return old.count <= max;
 }
-function authRequired(req, res, next) {
-  if (!jwtSecret || jwtSecret.length < 32) return res.status(503).json({ error: "JWT_SECRET is not configured securely." });
+async function authRequired(req, res, next) {
+  if (!pool) return res.status(503).json({ error: "Database is not configured." });
+  if (!jwtSecret || jwtSecret.length < 32) {
+    return res.status(503).json({ error: "JWT_SECRET is not configured securely." });
+  }
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
   if (!token) return res.status(401).json({ error: "Authentication required." });
+
+  let claims;
   try {
-    const claims = jwt.verify(token, jwtSecret, { algorithms: ["HS256"], issuer: "opexnal-api", audience: "opexnal-app" });
-    if (!claims || typeof claims !== "object" || typeof claims.sub !== "string") throw new Error("Invalid token");
-    req.user = { id: claims.sub, username: typeof claims.username === "string" ? claims.username : "" };
-    next();
-  } catch { return res.status(401).json({ error: "Invalid or expired access token." }); }
+    claims = jwt.verify(token, jwtSecret, {
+      algorithms: ["HS256"],
+      issuer: "opexnal-api",
+      audience: "opexnal-app",
+    });
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired access token." });
+  }
+  if (
+    !claims ||
+    typeof claims !== "object" ||
+    typeof claims.sub !== "string" ||
+    typeof claims.jti !== "string"
+  ) {
+    return res.status(401).json({ error: "Invalid or expired access token." });
+  }
+
+  try {
+    const activeSession = await pool.query(
+      "SELECT id FROM auth_sessions WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL AND expires_at > NOW()",
+      [claims.jti, claims.sub],
+    );
+    if (!activeSession.rowCount) {
+      return res.status(401).json({ error: "Session has been revoked or expired." });
+    }
+    req.authSessionId = claims.jti;
+    req.user = {
+      id: claims.sub,
+      username: typeof claims.username === "string" ? claims.username : "",
+    };
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 }
 async function hashPassword(password) {
   const salt = randomBytes(16);
@@ -104,9 +138,32 @@ async function verifyPassword(password, stored) {
     return actual.length === expected.length && timingSafeEqual(actual, expected);
   } catch { return false; }
 }
-function issueToken(user) {
+async function issueToken(user, req) {
   if (jwtSecret.length < 32) throw new Error("JWT_SECRET is not configured securely.");
-  return jwt.sign({ username: user.username }, jwtSecret, { subject: user.id, expiresIn: "1h", issuer: "opexnal-api", audience: "opexnal-app", algorithm: "HS256" });
+  const sessionId = randomUUID();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  await pool.query(
+    "INSERT INTO auth_sessions (id, user_id, expires_at, user_agent, ip_address) VALUES ($1,$2,$3,$4,$5)",
+    [
+      sessionId,
+      user.id,
+      expiresAt,
+      String(req.headers["user-agent"] || "").slice(0, 512) || null,
+      req.ip || null,
+    ],
+  );
+  return jwt.sign(
+    { username: user.username },
+    jwtSecret,
+    {
+      subject: user.id,
+      jwtid: sessionId,
+      expiresIn: "1h",
+      issuer: "opexnal-api",
+      audience: "opexnal-app",
+      algorithm: "HS256",
+    },
+  );
 }
 function publicUser(row) {
   return { id: row.id, username: row.username, email: row.email, displayName: row.display_name, avatarUrl: row.avatar_url, createdAt: row.created_at };
@@ -236,7 +293,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     }
     return res.json({
       user: publicUser(user),
-      accessToken: issueToken(user),
+      accessToken: await issueToken(user, req),
       tokenType: "Bearer",
       expiresIn: 3600,
       emailVerified: true,
@@ -250,7 +307,64 @@ app.get("/api/v1/auth/me", dbRequired, authRequired, async (req, res, next) => {
     return res.json({ user: publicUser(result.rows[0]) });
   } catch (error) { next(error); }
 });
-app.post("/api/v1/auth/logout", authRequired, (_req, res) => res.json({ success: true, message: "Access token cleared on client. Server-side revocation requires refresh-token sessions." }));
+app.post("/api/v1/auth/logout", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query(
+      "UPDATE auth_sessions SET revoked_at=NOW() WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL",
+      [req.authSessionId, req.user.id],
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/auth/sessions", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, created_at, expires_at, revoked_at, user_agent, ip_address FROM auth_sessions WHERE user_id=$1 AND expires_at > NOW() ORDER BY created_at DESC LIMIT 50",
+      [req.user.id],
+    );
+    return res.json({
+      sessions: result.rows.map((row) => ({
+        id: row.id,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+        revoked: Boolean(row.revoked_at),
+        current: row.id === req.authSessionId,
+        userAgent: row.user_agent,
+        ipAddress: row.ip_address,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/auth/sessions/:sessionId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE auth_sessions SET revoked_at=NOW() WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL RETURNING id",
+      [req.params.sessionId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Active session not found." });
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/auth/logout-all", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL RETURNING id",
+      [req.user.id],
+    );
+    return res.json({ success: true, revokedCount: result.rowCount || 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
   try {
