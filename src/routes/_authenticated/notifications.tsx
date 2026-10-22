@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
@@ -82,8 +83,8 @@ function NotificationsPage() {
     try {
       const headers = authClient.getAuthHeader();
       const [notificationResponse, requestResponse] = await Promise.all([
-        fetch("/api/v1/notifications?limit=100", { headers, cache: "no-store" }),
-        fetch("/api/v1/follow-requests", { headers, cache: "no-store" }),
+        fetch(apiUrl("/api/v1/notifications?limit=100"), { headers, cache: "no-store" }),
+        fetch(apiUrl("/api/v1/follow-requests"), { headers, cache: "no-store" }),
       ]);
       const [notificationPayload, requestPayload] = await Promise.all([
         notificationResponse.json().catch(() => ({})),
@@ -111,7 +112,7 @@ function NotificationsPage() {
   async function respondToFollowRequest(requestId: string, decision: "accept" | "reject") {
     setActionId(requestId);
     try {
-      const response = await fetch(`/api/v1/follow-requests/${encodeURIComponent(requestId)}/${decision}`, {
+      const response = await fetch(apiUrl(`/api/v1/follow-requests/${encodeURIComponent(requestId)}/${decision}`), {
         method: "POST",
         headers: authClient.getAuthHeader(),
       });
@@ -129,7 +130,7 @@ function NotificationsPage() {
 
   async function markAllRead() {
     try {
-      const response = await fetch("/api/v1/notifications/read-all", {
+      const response = await fetch(apiUrl("/api/v1/notifications/read-all"), {
         method: "POST",
         headers: authClient.getAuthHeader(),
       });
@@ -145,7 +146,7 @@ function NotificationsPage() {
   async function markRead(item: NotificationItem) {
     if (item.read_at) return;
     try {
-      const response = await fetch(`/api/v1/notifications/${encodeURIComponent(item.id)}/read`, {
+      const response = await fetch(apiUrl(`/api/v1/notifications/${encodeURIComponent(item.id)}/read`), {
         method: "PATCH",
         headers: authClient.getAuthHeader(),
       });
