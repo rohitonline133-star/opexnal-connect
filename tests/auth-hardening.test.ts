@@ -47,7 +47,9 @@ test("password reset does not report success without a verified reset token", as
 });
 
 test("security audit logs are not returned by the unauthenticated fallback", async () => {
-  const response = await handleAuthApiRequest(new Request("http://localhost/api/auth/security-logs"));
+  const response = await handleAuthApiRequest(
+    new Request("http://localhost/api/auth/security-logs"),
+  );
   assert.equal(response.status, 503);
   const payload = await response.json();
   assert.equal("logs" in payload, false);
