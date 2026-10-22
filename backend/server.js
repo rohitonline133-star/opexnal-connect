@@ -192,6 +192,25 @@ app.get("/health", async (_req, res) => {
   }
 });
 
+app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next) => {
+  const username = typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
+  if (!validUsername(username)) {
+    return res.status(400).json({ available: false, error: "Username must be 3–30 characters using letters, numbers, dots, or underscores." });
+  }
+  if (!rateLimit("username-check:" + String(req.ip || "unknown"), 30)) {
+    return res.status(429).json({ available: false, error: "Too many username checks. Try again shortly." });
+  }
+  if (["admin", "system", "root", "instagram", "meta", "support", "security"].includes(username)) {
+    return res.json({ username, available: false });
+  }
+  try {
+    const result = await pool.query("SELECT 1 FROM users WHERE username=$1 LIMIT 1", [username]);
+    return res.json({ username, available: result.rowCount === 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   if (!emailTransport || !publicApiUrl) {
     return res.status(503).json({
