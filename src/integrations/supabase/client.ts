@@ -444,8 +444,30 @@ class StorageBucketClient {
     return { data: { publicUrl: `/api/v1/storage/public/${encodeURIComponent(objectKey)}` } };
   }
 
-  async remove(_paths: string[]) {
-    return { data: null, error: null };
+  async remove(paths: string[]) {
+    try {
+      await Promise.all(
+        paths.map(async (path) => {
+          const objectKey = path.startsWith("/api/v1/storage/")
+            ? path.slice("/api/v1/storage/".length)
+            : path;
+          const response = await fetch(`/api/v1/storage/${encodeURIComponent(objectKey)}`, {
+            method: "DELETE",
+            headers: authClient.getAuthHeader(),
+          });
+          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          if (!response.ok) {
+            throw new Error(payload.error || `Media delete failed with status ${response.status}.`);
+          }
+        }),
+      );
+      return { data: null, error: null };
+    } catch (error: unknown) {
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error("Media delete failed."),
+      };
+    }
   }
 }
 
