@@ -8,6 +8,18 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS users_created_at_idx ON users (created_at DESC);
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ,
+  user_agent VARCHAR(512),
+  ip_address INET
+);
+CREATE INDEX IF NOT EXISTS auth_sessions_user_active_idx
+  ON auth_sessions (user_id, expires_at DESC) WHERE revoked_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS email_verification_tokens (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
