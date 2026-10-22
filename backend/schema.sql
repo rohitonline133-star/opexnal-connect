@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   country_code CHAR(2), is_private BOOLEAN NOT NULL DEFAULT TRUE, is_deactivated BOOLEAN NOT NULL DEFAULT FALSE,
   account_type VARCHAR(20) NOT NULL DEFAULT 'personal' CHECK (account_type IN ('personal','creator','business')),
   allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_mentions_from IN ('everyone','followers','nobody')),
-  allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_tags_from IN ('everyone','followers','none')),
+  allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_tags_from IN ('everyone','followers','nobody')),
   show_activity_status BOOLEAN NOT NULL DEFAULT FALSE,
   role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user','moderator','admin')),
   email_verified BOOLEAN NOT NULL DEFAULT FALSE, last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
