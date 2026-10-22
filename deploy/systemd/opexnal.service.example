@@ -1,0 +1,30 @@
+# Example systemd unit for a self-hosted Opexnal Node deployment.
+# Install as /etc/systemd/system/opexnal.service only after creating the opexnal
+# system user, deploying the built app, and preparing /etc/opexnal/opexnal.env.
+[Unit]
+Description=Opexnal Node application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opexnal
+Group=opexnal
+WorkingDirectory=/opt/opexnal/app
+Environment=NODE_ENV=production
+Environment=NITRO_HOST=127.0.0.1
+Environment=NITRO_PORT=3000
+EnvironmentFile=/etc/opexnal/opexnal.env
+ExecStart=/usr/bin/node /opt/opexnal/app/.output/server/index.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/opexnal
+
+[Install]
+WantedBy=multi-user.target
