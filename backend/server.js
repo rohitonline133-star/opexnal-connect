@@ -212,10 +212,15 @@ async function issueToken(user, req) {
 }
 async function notifyUser(recipientId, actorId, type, targetType = null, targetId = null, metadata = {}) {
   if (!recipientId || recipientId === actorId) return;
-  await pool.query(
-    "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
-    [randomUUID(), recipientId, actorId || null, type, targetType, targetId, JSON.stringify(metadata)],
-  );
+  try {
+    await pool.query(
+      "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
+      [randomUUID(), recipientId, actorId || null, type, targetType, targetId, JSON.stringify(metadata)],
+    );
+  } catch (error) {
+    // A notification failure must not turn a successful post/message action into a client-visible failure.
+    console.error("Notification write failed", error?.message || "unknown error");
+  }
 }
 
 async function adminRequired(req, res, next) {
