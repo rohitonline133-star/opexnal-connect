@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   locale VARCHAR(12) NOT NULL DEFAULT 'en', timezone VARCHAR(80) NOT NULL DEFAULT 'UTC',
   country_code CHAR(2), is_private BOOLEAN NOT NULL DEFAULT TRUE, is_deactivated BOOLEAN NOT NULL DEFAULT FALSE,
   account_type VARCHAR(20) NOT NULL DEFAULT 'personal' CHECK (account_type IN ('personal','creator','business')),
-  allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_mentions_from IN ('everyone','followers','none')),
+  allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_mentions_from IN ('everyone','followers','nobody')),
   allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_tags_from IN ('everyone','followers','none')),
   show_activity_status BOOLEAN NOT NULL DEFAULT FALSE,
   role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user','moderator','admin')),
