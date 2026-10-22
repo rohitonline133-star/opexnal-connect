@@ -44,13 +44,13 @@ function ForgotPasswordPage() {
 
     const target = identity.trim();
     if (!target) {
-      setErrorMessage("Please enter your email, username, or phone number.");
+      setErrorMessage("Please enter the email address associated with your account.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/phone/otp/request", {
+      const res = await fetch("/api/v1/auth/password-reset/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: target }),
@@ -63,7 +63,7 @@ function ForgotPasswordPage() {
       }
       setCodeSent(true);
       setCooldown(60);
-      toast.success(data.message || "Reset instructions sent to your contact address");
+      toast.success(data.message || "If an account exists for that email, reset instructions will be sent.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to send reset instructions";
       setErrorMessage(msg);
@@ -91,8 +91,7 @@ function ForgotPasswordPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Trouble Logging In?</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Enter your email, username, or phone number and we'll send you a secure reset code to get
-          back into your account.
+          Enter your account email. If it matches an account, we will send a time-limited password reset link.
         </p>
       </div>
 
@@ -111,10 +110,10 @@ function ForgotPasswordPage() {
           <div className="p-3.5 bg-emerald-950/50 border border-emerald-800/60 rounded-xl text-emerald-200 text-xs flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-semibold">Reset Code Dispatched</p>
+              <p className="font-semibold">Check your email</p>
               <p className="text-emerald-300 text-[11px] leading-relaxed">
                 If an account exists matching <strong className="text-white">{identity}</strong>, a
-                one-time verification link and code has been dispatched.
+                password reset instructions will be sent if the account exists.
               </p>
             </div>
           </div>
@@ -123,7 +122,7 @@ function ForgotPasswordPage() {
             to="/auth/reset-password"
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2"
           >
-            Enter Code & Reset Password
+            Open the reset link from your email
           </Link>
 
           <div className="flex justify-between items-center text-xs pt-1">
@@ -148,8 +147,8 @@ function ForgotPasswordPage() {
               <User size={18} />
             </span>
             <input
-              type="text"
-              placeholder="Email, username, or phone number"
+              type="email"
+              placeholder="Account email address"
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
               disabled={loading}
