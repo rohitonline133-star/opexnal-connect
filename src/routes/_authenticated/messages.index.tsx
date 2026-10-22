@@ -33,7 +33,7 @@ import {
   type ConversationSummary,
 } from "@/lib/messages";
 import { cn } from "@/lib/utils";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
