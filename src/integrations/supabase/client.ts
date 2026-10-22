@@ -223,12 +223,12 @@ class QueryBuilder<T = unknown> {
         }
         const item = items[0] as Record<string, unknown>;
         const mediaUrl =
-          typeof item.media_url === "string"
-            ? item.media_url
-            : typeof item.mediaUrl === "string"
-              ? item.mediaUrl
+          typeof item["media_url"] === "string"
+            ? item["media_url"]
+            : typeof item["mediaUrl"] === "string"
+              ? item["mediaUrl"]
               : null;
-        const mediaTypeValue = item.media_type ?? item.mediaType;
+        const mediaTypeValue = item["media_type"] ?? item["mediaType"];
         const mediaType =
           typeof mediaTypeValue === "string"
             ? mediaTypeValue
@@ -244,10 +244,10 @@ class QueryBuilder<T = unknown> {
               ...authClient.getAuthHeader(),
             },
             body: JSON.stringify({
-              caption: typeof item.caption === "string" ? item.caption : "",
+              caption: typeof item["caption"] === "string" ? item["caption"] : "",
               mediaUrl,
               mediaType,
-              visibility: item.visibility === "private" ? "private" : "public",
+              visibility: item["visibility"] === "private" ? "private" : "public",
             }),
             cache: "no-store",
           });
