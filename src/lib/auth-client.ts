@@ -1,5 +1,6 @@
-export type AuthUser = {
 import { apiUrl } from "@/lib/api-client";
+
+export type AuthUser = {
   id: string;
   email: string;
   username: string;
