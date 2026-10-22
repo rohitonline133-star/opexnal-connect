@@ -22,29 +22,6 @@ export type AuthSession = {
 const AUTH_USER_KEY = "opexnal_auth_user";
 const AUTH_SESSION_KEY = "opexnal_auth_session";
 
-export const DEFAULT_USER: AuthUser = {
-  id: "user_maya",
-  email: "maya@opexnal.local",
-  username: "maya_codes",
-  displayName: "Maya Chen",
-  avatarUrl:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  user_metadata: {
-    username: "maya_codes",
-    full_name: "Maya Chen",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  },
-};
-
-export const DEFAULT_SESSION: AuthSession = {
-  token: "opexnal_demo_jwt_token_user_maya",
-  access_token: "opexnal_demo_jwt_token_user_maya",
-  userId: "user_maya",
-  user: DEFAULT_USER,
-  expiresAt: 1893456000000,
-};
-
 type AuthListener = (event: string, session: AuthSession | null) => void;
 
 class AuthClient {
