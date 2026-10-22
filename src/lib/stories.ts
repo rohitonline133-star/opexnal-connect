@@ -380,14 +380,31 @@ export async function reportContent(input: {
   reason: string;
   details?: string;
 }) {
-  const { error } = await supabase.from("content_reports").insert({
-    reporter_id: input.reporterId,
-    target_type: input.targetType,
-    target_id: input.targetId,
-    reason: input.reason,
-    details: input.details?.trim() ?? "",
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== input.reporterId) {
+    throw new Error("Verified authentication is required to report content.");
+  }
+  const allowedReasons = new Set([
+    "spam",
+    "harassment",
+    "impersonation",
+    "hate",
+    "nudity",
+    "violence",
+    "scam",
+    "other",
+  ]);
+  const reason = allowedReasons.has(input.reason) ? input.reason : "other";
+  await storyApiRequest<{ report: { id: string } }>("/api/v1/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      targetType: input.targetType === "profile" ? "user" : input.targetType,
+      targetId: input.targetId,
+      reason,
+      details: input.details?.trim() ?? "",
+    }),
   });
-  if (error) throw error;
 }
 
 export const STORY_IMAGE_DURATION_MS = 5000;
