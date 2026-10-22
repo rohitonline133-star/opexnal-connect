@@ -1198,7 +1198,17 @@ wss.on("connection", (ws) => {
 });
 app.use((error, _req, res, _next) => {
   console.error("API request failed", error?.message || "unknown error");
-  if (!res.headersSent) res.status(500).json({ error: "Internal server error." });
+  if (res.headersSent) return;
+  if (error?.code === "LIMIT_FILE_SIZE") {
+    return res.status(413).json({ error: "Uploaded file exceeds the allowed size." });
+  }
+  if (error?.code === "LIMIT_UNEXPECTED_FILE" || error?.message === "Unsupported media type.") {
+    return res.status(415).json({ error: "Unsupported media type or upload field." });
+  }
+  if (error?.type === "entity.too.large") {
+    return res.status(413).json({ error: "Request body exceeds the allowed size." });
+  }
+  return res.status(500).json({ error: "Internal server error." });
 });
 app.use((_req, res) => res.status(404).json({ error: "Route not found." }));
 server.listen(port, () => console.log("Opexnal API listening on :" + port));
