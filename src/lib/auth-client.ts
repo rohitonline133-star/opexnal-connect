@@ -121,61 +121,14 @@ class AuthClient {
     };
   }
 
-  async signInWithPassword(params: { email?: string; password?: string }): Promise<{
+  async signInWithPassword(_params: { email?: string; password?: string }): Promise<{
     data: { user: AuthUser; session: AuthSession; requires2fa?: boolean } | null;
     error: Error | null;
   }> {
-    const emailOrUsername = (params.email || "").trim();
-    if (!emailOrUsername) {
-      return { data: null, error: new Error("Email or username is required") };
-    }
-
-    const username = emailOrUsername.includes("@")
-      ? emailOrUsername.split("@")[0] || "user"
-      : emailOrUsername;
-    const userId = `user_${username.toLowerCase().replace(/[^a-z0-9_]/g, "_")}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email: emailOrUsername.includes("@") ? emailOrUsername : `${username}@opexnal.local`,
-      username,
-      displayName: username
-        .split("_")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "),
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: username,
-      },
-    };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
-      }
-    }
-
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
+    return { data: null, error: new Error("Secure login is not configured. No session was created.") };
   }
 
-  async signUp(params: {
+  async signUp(_params: {
     email: string;
     password: string;
     options?: { data?: { username?: string; full_name?: string } };
@@ -183,50 +136,7 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession } | null;
     error: Error | null;
   }> {
-    const email = params.email.trim();
-    const rawUsername =
-      params.options?.data?.username ||
-      (email.includes("@") ? email.split("@")[0] : email) ||
-      "user";
-    const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
-    const displayName = params.options?.data?.full_name || username;
-    const userId = `user_${username}_${Date.now().toString(36)}`;
-
-    const user: AuthUser = {
-      id: userId,
-      email,
-      username,
-      displayName,
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      user_metadata: {
-        username,
-        full_name: displayName,
-      },
-    };
-
-    const session: AuthSession = {
-      token: `opexnal_jwt_${Date.now()}_${userId}`,
-      access_token: `opexnal_jwt_${Date.now()}_${userId}`,
-      userId,
-      user,
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
-    };
-
-    this.memoryUser = user;
-    this.memorySession = session;
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
-      } catch {
-        // storage quota
-      }
-    }
-
-    this.notify("SIGNED_IN", session);
-    return { data: { user, session }, error: null };
+    return { data: null, error: new Error("Secure signup is not configured. No account or session was created.") };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
