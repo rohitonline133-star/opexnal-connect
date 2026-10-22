@@ -29,6 +29,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Check first-party API syntax
+        run: npm run backend:check
       - name: Production build (generates TanStack route types)
         run: npm run build
       - name: Type check
