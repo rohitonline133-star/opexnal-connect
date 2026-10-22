@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { getProfileById, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
