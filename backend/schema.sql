@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS comment_likes (
 CREATE TABLE IF NOT EXISTS stories (
   id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   media_url TEXT NOT NULL, media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video')),
-  visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','private')),
+  visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','followers','private')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '24 hours')
 );
 CREATE INDEX IF NOT EXISTS stories_expiry_idx ON stories (expires_at DESC);
