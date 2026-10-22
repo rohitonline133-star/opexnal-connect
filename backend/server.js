@@ -315,7 +315,7 @@ app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next)
 });
 
 app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
-  if (!emailTransport || !publicWebUrl) {
+  if (!emailTransport || !publicApiUrl) {
     return res.status(503).json({
       error: "Email verification delivery is not configured. No account was created.",
     });
@@ -417,7 +417,7 @@ app.get("/api/v1/auth/verify-email", dbRequired, async (req, res, next) => {
   }
 });
 app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, next) => {
-  if (!emailTransport || !publicApiUrl) {
+  if (!emailTransport || !publicWebUrl) {
     return res.status(503).json({ error: "Password reset email delivery is not configured." });
   }
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
