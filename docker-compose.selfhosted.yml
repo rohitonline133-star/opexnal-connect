@@ -30,7 +30,8 @@ services:
       MEDIA_STORAGE_DIR: /app/media
       JWT_SECRET: ${JWT_SECRET:?Set a unique JWT_SECRET of at least 32 characters}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
-      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3000}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:3000}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURE: ${SMTP_SECURE:-false}
