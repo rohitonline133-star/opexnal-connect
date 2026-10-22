@@ -122,7 +122,10 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession; requires2fa?: boolean } | null;
     error: Error | null;
   }> {
-    return { data: null, error: new Error("Secure login is not configured. No session was created.") };
+    return {
+      data: null,
+      error: new Error("Secure login is not configured. No session was created."),
+    };
   }
 
   async signUp(_params: {
@@ -133,7 +136,10 @@ class AuthClient {
     data: { user: AuthUser; session: AuthSession } | null;
     error: Error | null;
   }> {
-    return { data: null, error: new Error("Secure signup is not configured. No account or session was created.") };
+    return {
+      data: null,
+      error: new Error("Secure signup is not configured. No account or session was created."),
+    };
   }
 
   async signOut(): Promise<{ error: Error | null }> {
