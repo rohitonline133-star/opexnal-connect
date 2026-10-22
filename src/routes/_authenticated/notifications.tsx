@@ -4,7 +4,7 @@ import { Bell, Check, Heart, MessageCircle, ShieldAlert, UserPlus, Users, Loader
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
