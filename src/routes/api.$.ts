@@ -18,7 +18,7 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
     return Response.json({ error: "Method not allowed." }, { status: 405 });
   }
 
-  const configuredOrigin = process.env.OPEXNAL_API_URL?.trim();
+  const configuredOrigin = process.env["OPEXNAL_API_URL"]?.trim();
   if (!configuredOrigin) {
     return Response.json(
       { error: "The first-party API is not configured. Set OPEXNAL_API_URL on the web server." },
@@ -53,13 +53,14 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
   }
 
   try {
-    const upstream = await fetch(target, {
+    const requestInit: RequestInit = {
       method,
       headers,
-      body,
       redirect: "manual",
       cache: "no-store",
-    });
+    };
+    if (body !== undefined) requestInit.body = body;
+    const upstream = await fetch(target, requestInit);
     const responseHeaders = new Headers();
     for (const name of ["content-type", "cache-control", "location", "retry-after"]) {
       const value = upstream.headers.get(name);
