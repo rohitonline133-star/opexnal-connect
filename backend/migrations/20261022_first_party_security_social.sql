@@ -12,6 +12,34 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_mentions_from VARCHAR(20) NOT N
 ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS show_activity_status BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user';
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user','moderator','admin'));
+CREATE TABLE IF NOT EXISTS content_reports (
+  id UUID PRIMARY KEY,
+  reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story')),
+  target_id UUID NOT NULL,
+  reason VARCHAR(80) NOT NULL,
+  details VARCHAR(2000),
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','reviewed','actioned','dismissed')),
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  action_notes VARCHAR(1000),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS content_reports_queue_idx ON content_reports (status, created_at DESC);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY,
+  actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(40),
+  target_id VARCHAR(120),
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ip_address INET,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS audit_logs_created_idx ON audit_logs (created_at DESC);
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_account_type_check;
 ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('personal','creator','business'));
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_allow_mentions_from_check;
