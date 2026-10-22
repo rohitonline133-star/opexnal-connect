@@ -1434,12 +1434,14 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
         "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW()",
         [randomUUID(), req.user.id, req.params.userId],
       );
+      await notifyUser(req.params.userId, req.user.id, "follow_request", "user", req.user.id);
       return res.json({ status: "requested", following: false });
     }
-    await pool.query(
-      "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+    const inserted = await pool.query(
+      "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING following_id",
       [req.user.id, req.params.userId],
     );
+    if (inserted.rowCount) await notifyUser(req.params.userId, req.user.id, "new_follower", "user", req.user.id);
     return res.json({ status: "following", following: true });
   } catch (error) {
     return next(error);
@@ -1500,6 +1502,7 @@ app.post("/api/v1/follow-requests/:requestId/accept", dbRequired, authRequired, 
     );
     await client.query("UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1", [item.id]);
     await client.query("COMMIT");
+    await notifyUser(item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
     return res.json({ accepted: true });
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
@@ -1631,10 +1634,11 @@ app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    await pool.query(
-      "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+    const inserted = await pool.query(
+      "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING post_id",
       [req.user.id, post.id],
     );
+    if (inserted.rowCount) await notifyUser(post.user_id, req.user.id, "post_like", "post", post.id);
     const count = await pool.query("SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1", [post.id]);
     return res.json({ liked: true, likeCount: count.rows[0].count });
   } catch (error) {
@@ -1739,6 +1743,7 @@ app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req,
       "SELECT username,display_name,avatar_url FROM users WHERE id=$1",
       [req.user.id],
     );
+    await notifyUser(post.user_id, req.user.id, "post_comment", "comment", id, { postId: post.id });
     return res.status(201).json({
       comment: { ...result.rows[0], ...author.rows[0], liked_by_me: false },
     });
@@ -2173,6 +2178,9 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     );
     const message = result.rows[0];
     await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [conversationId]);
+    for (const recipientId of otherIds) {
+      await notifyUser(recipientId, req.user.id, "message", "conversation", conversationId);
+    }
     await pool.query(
       "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
       [conversationId, req.user.id],
