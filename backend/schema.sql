@@ -62,6 +62,17 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE INDEX IF NOT EXISTS posts_feed_idx ON posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_user_feed_idx ON posts (user_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS media_objects (
+  id UUID PRIMARY KEY,
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  object_key VARCHAR(120) NOT NULL UNIQUE,
+  mime_type VARCHAR(100) NOT NULL,
+  size_bytes BIGINT NOT NULL CHECK (size_bytes > 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS media_objects_owner_idx
+  ON media_objects (owner_id, created_at DESC) WHERE deleted_at IS NULL;
 CREATE TABLE IF NOT EXISTS post_likes (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (user_id, post_id)
