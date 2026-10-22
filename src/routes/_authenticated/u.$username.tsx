@@ -32,6 +32,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getProfileByUsername, initialsFor, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 import { openDirectConversation } from "@/lib/messages";
@@ -81,7 +82,7 @@ function PublicProfile() {
     queryKey: ["relationship", user?.id, profile?.id],
     enabled: Boolean(user?.id && profile?.id) && !isSelf,
     queryFn: async () => {
-      const response = await fetch(
+      const response = await fetch(apiUrl(
         `/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`,
         { headers: authClient.getAuthHeader(), cache: "no-store" },
       );
@@ -100,17 +101,17 @@ function PublicProfile() {
     try {
       let response: Response;
       if (relationship?.following) {
-        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`, {
+        response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`), {
           method: "DELETE",
           headers: authClient.getAuthHeader(),
         });
       } else if (relationship?.requested) {
-        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`, {
+        response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`), {
           method: "DELETE",
           headers: authClient.getAuthHeader(),
         });
       } else {
-        response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`, {
+        response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`), {
           method: "POST",
           headers: authClient.getAuthHeader(),
         });
@@ -140,7 +141,7 @@ function PublicProfile() {
   const handleBlockUser = async () => {
     if (!profile) return;
     try {
-      const response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/block`, {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/block`), {
         method: "POST",
         headers: authClient.getAuthHeader(),
       });
@@ -158,7 +159,7 @@ function PublicProfile() {
   const handleRestrictUser = async () => {
     if (!profile) return;
     try {
-      const response = await fetch(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`, {
+      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`), {
         method: "POST",
         headers: authClient.getAuthHeader(),
       });
@@ -187,7 +188,7 @@ function PublicProfile() {
       "other",
     ]);
     try {
-      const response = await fetch("/api/v1/reports", {
+      const response = await fetch(apiUrl("/api/v1/reports"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
