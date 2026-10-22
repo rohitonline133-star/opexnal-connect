@@ -849,6 +849,224 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
     return next(error);
   }
 });
+async function findVisiblePost(postId, userId) {
+  const result = await pool.query(
+    "SELECT id,user_id,visibility,comments_enabled FROM posts WHERE id=$1 AND (visibility='public' OR user_id=$2) LIMIT 1",
+    [postId, userId],
+  );
+  return result.rows[0] || null;
+}
+
+app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    await pool.query(
+      "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, post.id],
+    );
+    const count = await pool.query("SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1", [post.id]);
+    return res.json({ liked: true, likeCount: count.rows[0].count });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    await pool.query("DELETE FROM post_likes WHERE user_id=$1 AND post_id=$2", [req.user.id, post.id]);
+    const count = await pool.query("SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1", [post.id]);
+    return res.json({ liked: false, likeCount: count.rows[0].count });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/posts/:postId/save", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    await pool.query(
+      "INSERT INTO post_saves (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, post.id],
+    );
+    return res.json({ saved: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/posts/:postId/save", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    await pool.query("DELETE FROM post_saves WHERE user_id=$1 AND post_id=$2", [req.user.id, post.id]);
+    return res.json({ saved: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/posts/:postId/share", dbRequired, authRequired, async (req, res, next) => {
+  const channel = typeof req.body?.channel === "string" ? req.body.channel : "link";
+  if (!["link", "story", "message", "other"].includes(channel)) {
+    return res.status(400).json({ error: "Invalid share channel." });
+  }
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    await pool.query(
+      "INSERT INTO post_shares (id,user_id,post_id,channel) VALUES ($1,$2,$3,$4)",
+      [randomUUID(), req.user.id, post.id, channel],
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    const result = await pool.query(
+      `SELECT c.id,c.post_id,c.user_id,c.parent_id,c.body,c.likes_count,c.created_at,c.updated_at,
+        u.username,u.display_name,u.avatar_url,
+        EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id=c.id AND cl.user_id=$2) AS liked_by_me
+       FROM post_comments c JOIN users u ON u.id=c.user_id
+       WHERE c.post_id=$1 ORDER BY c.created_at ASC LIMIT 200`,
+      [post.id, req.user.id],
+    );
+    return res.json({ comments: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req, res, next) => {
+  const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
+  const parentId = typeof req.body?.parentId === "string" ? req.body.parentId : null;
+  if (!body || body.length > 2000) return res.status(400).json({ error: "Comment must be 1–2000 characters." });
+  try {
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    if (!post.comments_enabled) return res.status(403).json({ error: "Comments are disabled for this post." });
+    if (parentId) {
+      const parent = await pool.query(
+        "SELECT id FROM post_comments WHERE id=$1 AND post_id=$2 LIMIT 1",
+        [parentId, post.id],
+      );
+      if (!parent.rowCount) return res.status(400).json({ error: "Reply target is not part of this post." });
+    }
+    const id = randomUUID();
+    const result = await pool.query(
+      "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
+      [id, post.id, req.user.id, parentId, body],
+    );
+    const author = await pool.query(
+      "SELECT username,display_name,avatar_url FROM users WHERE id=$1",
+      [req.user.id],
+    );
+    return res.status(201).json({
+      comment: { ...result.rows[0], ...author.rows[0], liked_by_me: false },
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/comments/:commentId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM post_comments c USING posts p
+       WHERE c.id=$1 AND p.id=c.post_id AND (c.user_id=$2 OR p.user_id=$2)
+       RETURNING c.id`,
+      [req.params.commentId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Comment not found or not owned by this account." });
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const comment = await pool.query(
+      "SELECT id FROM post_comments WHERE id=$1 LIMIT 1",
+      [req.params.commentId],
+    );
+    if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
+    await pool.query(
+      "INSERT INTO comment_likes (user_id,comment_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.commentId],
+    );
+    await pool.query(
+      "UPDATE post_comments SET likes_count=(SELECT COUNT(*) FROM comment_likes WHERE comment_id=$1),updated_at=NOW() WHERE id=$1",
+      [req.params.commentId],
+    );
+    return res.json({ liked: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [req.params.commentId]);
+    if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
+    await pool.query("DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2", [req.user.id, req.params.commentId]);
+    await pool.query(
+      "UPDATE post_comments SET likes_count=(SELECT COUNT(*) FROM comment_likes WHERE comment_id=$1),updated_at=NOW() WHERE id=$1",
+      [req.params.commentId],
+    );
+    return res.json({ liked: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const postResult = await client.query(
+      "SELECT id,user_id FROM posts WHERE id=$1 FOR UPDATE",
+      [req.params.postId],
+    );
+    if (!postResult.rowCount || postResult.rows[0].user_id !== req.user.id) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Post not found or not owned by this account." });
+    }
+    const media = await client.query(
+      "SELECT storage_path FROM post_media WHERE post_id=$1 UNION SELECT media_url AS storage_path FROM posts WHERE id=$1 AND media_url IS NOT NULL",
+      [req.params.postId],
+    );
+    await client.query("DELETE FROM posts WHERE id=$1 AND user_id=$2", [req.params.postId, req.user.id]);
+    await client.query("COMMIT");
+    for (const row of media.rows) {
+      const key = typeof row.storage_path === "string" ? row.storage_path.replace("/api/v1/storage/", "") : "";
+      if (!mediaKeyPattern.test(key)) continue;
+      const references = await pool.query(
+        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) LIMIT 1",
+        [row.storage_path],
+      );
+      if (!references.rowCount) {
+        await pool.query("UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2", [key, req.user.id]);
+        try { unlinkSync(path.join(mediaRoot, key)); } catch {}
+      }
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
 app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query("SELECT s.id,s.user_id AS author_id,u.username,u.avatar_url,s.media_url,s.media_type,s.created_at,s.expires_at FROM stories s JOIN users u ON u.id=s.user_id WHERE s.expires_at > NOW() AND (s.visibility='public' OR s.user_id=$1) ORDER BY s.created_at DESC LIMIT 100", [req.user.id]);
