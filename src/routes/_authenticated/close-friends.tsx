@@ -177,8 +177,8 @@ export function CloseFriendsPage() {
       try {
         await Promise.all(
           closeFriends.map(async (friend) => {
-            const response = await fetch(
-              `/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`,
+            const response = await fetch(apiUrl(
+              `/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`),
               { method: "DELETE", headers: authClient.getAuthHeader() },
             );
             if (!response.ok) throw new Error("One or more Close Friends could not be removed.");
