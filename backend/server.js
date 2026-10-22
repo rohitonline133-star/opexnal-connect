@@ -213,6 +213,33 @@ async function issueToken(user, req) {
 function publicUser(row) {
   return { id: row.id, username: row.username, email: row.email, displayName: row.display_name, avatarUrl: row.avatar_url, createdAt: row.created_at };
 }
+function publicProfile(row) {
+  return {
+    id: row.id,
+    username: row.username,
+    display_name: row.display_name,
+    bio: row.bio || "",
+    avatar_url: row.avatar_url || null,
+    posts_count: Number(row.posts_count || 0),
+    followers_count: Number(row.followers_count || 0),
+    following_count: Number(row.following_count || 0),
+    is_verified: false,
+    is_private: Boolean(row.is_private),
+    is_deactivated: Boolean(row.is_deactivated),
+    website: row.website || null,
+    location: row.location || null,
+    locale: row.locale || "en",
+    timezone: row.timezone || "UTC",
+    account_type: row.account_type || "personal",
+    allow_mentions_from: row.allow_mentions_from || "everyone",
+    allow_tags_from: row.allow_tags_from || "everyone",
+    show_activity_status: Boolean(row.show_activity_status),
+    country_code: row.country_code || null,
+    last_active_at: row.last_active_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
 function validUsername(value) { return typeof value === "string" && /^[a-zA-Z0-9._]{3,30}$/.test(value); }
 function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
 function validPassword(value) {
@@ -793,6 +820,194 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
     );
     if (!result.rowCount) return res.status(404).json({ error: "Post not found." });
     return res.json({ post: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+const profileSelect = `
+  SELECT u.id,u.username,u.display_name,u.bio,u.avatar_url,u.website,u.location,u.locale,u.timezone,
+    u.country_code,u.is_private,u.is_deactivated,u.account_type,u.allow_mentions_from,u.allow_tags_from,
+    u.show_activity_status,u.last_active_at,u.created_at,u.updated_at,
+    (SELECT COUNT(*) FROM posts p WHERE p.user_id=u.id) AS posts_count,
+    (SELECT COUNT(*) FROM follows f WHERE f.following_id=u.id) AS followers_count,
+    (SELECT COUNT(*) FROM follows f WHERE f.follower_id=u.id) AS following_count
+  FROM users u
+`;
+
+app.get("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(profileSelect + " WHERE u.id=$1 LIMIT 1", [req.user.id]);
+    if (!result.rowCount) return res.status(404).json({ error: "Profile not found." });
+    await pool.query("UPDATE users SET last_active_at=NOW() WHERE id=$1", [req.user.id]);
+    return res.json({ profile: publicProfile(result.rows[0]) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(profileSelect + " WHERE u.id=$1 LIMIT 1", [req.params.userId]);
+    if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
+      return res.status(404).json({ error: "Profile not found." });
+    }
+    return res.json({ profile: publicProfile(result.rows[0]) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/users/:username", dbRequired, authRequired, async (req, res, next) => {
+  const username = String(req.params.username || "").toLowerCase();
+  try {
+    const result = await pool.query(profileSelect + " WHERE LOWER(u.username)=LOWER($1) LIMIT 1", [username]);
+    if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
+      return res.status(404).json({ error: "Profile not found." });
+    }
+    return res.json({ profile: publicProfile(result.rows[0]) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => {
+  const body = req.body || {};
+  const updates = [];
+  const values = [];
+  const add = (column, value) => {
+    values.push(value);
+    updates.push(`${column}=$${values.length}`);
+  };
+
+  if (body.username !== undefined) {
+    if (!validUsername(body.username)) {
+      return res.status(400).json({ error: "Username must be 3–30 characters using letters, numbers, dots, or underscores." });
+    }
+    const existing = await pool.query("SELECT 1 FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2 LIMIT 1", [body.username, req.user.id]);
+    if (existing.rowCount) return res.status(409).json({ error: "Username is already taken." });
+    add("username", body.username.toLowerCase());
+  }
+  if (body.displayName !== undefined) {
+    if (typeof body.displayName !== "string" || !body.displayName.trim() || body.displayName.trim().length > 80) {
+      return res.status(400).json({ error: "Display name must be 1–80 characters." });
+    }
+    add("display_name", body.displayName.trim());
+  }
+  if (body.bio !== undefined) {
+    if (typeof body.bio !== "string" || body.bio.length > 500) return res.status(400).json({ error: "Bio must be 500 characters or fewer." });
+    add("bio", body.bio);
+  }
+  if (body.website !== undefined) {
+    if (body.website !== null && body.website !== "") {
+      try {
+        const url = new URL(body.website);
+        if (url.protocol !== "https:") throw new Error("HTTPS required");
+      } catch {
+        return res.status(400).json({ error: "Website must be a valid HTTPS URL." });
+      }
+      add("website", body.website);
+    } else {
+      add("website", null);
+    }
+  }
+  if (body.location !== undefined) {
+    if (body.location !== null && (typeof body.location !== "string" || body.location.length > 120)) return res.status(400).json({ error: "Location must be 120 characters or fewer." });
+    add("location", body.location || null);
+  }
+  if (body.isPrivate !== undefined) {
+    if (typeof body.isPrivate !== "boolean") return res.status(400).json({ error: "isPrivate must be boolean." });
+    add("is_private", body.isPrivate);
+  }
+  if (body.accountType !== undefined) {
+    if (!["personal", "creator", "business"].includes(body.accountType)) return res.status(400).json({ error: "Invalid account type." });
+    add("account_type", body.accountType);
+  }
+  for (const [inputKey, column] of [["allowMentionsFrom", "allow_mentions_from"], ["allowTagsFrom", "allow_tags_from"]]) {
+    if (body[inputKey] !== undefined) {
+      if (!["everyone", "followers", "none"].includes(body[inputKey])) return res.status(400).json({ error: "Invalid mention/tag permission." });
+      add(column, body[inputKey]);
+    }
+  }
+  if (body.showActivityStatus !== undefined) {
+    if (typeof body.showActivityStatus !== "boolean") return res.status(400).json({ error: "showActivityStatus must be boolean." });
+    add("show_activity_status", body.showActivityStatus);
+  }
+  if (body.locale !== undefined) {
+    if (typeof body.locale !== "string" || body.locale.length > 12) return res.status(400).json({ error: "Invalid locale." });
+    add("locale", body.locale);
+  }
+  if (body.timezone !== undefined) {
+    if (typeof body.timezone !== "string" || body.timezone.length > 80) return res.status(400).json({ error: "Invalid timezone." });
+    add("timezone", body.timezone);
+  }
+  if (body.countryCode !== undefined) {
+    if (body.countryCode !== null && (typeof body.countryCode !== "string" || !/^[A-Za-z]{2}$/.test(body.countryCode))) return res.status(400).json({ error: "Country code must be a two-letter code." });
+    add("country_code", body.countryCode ? body.countryCode.toUpperCase() : null);
+  }
+  if (body.avatarUrl !== undefined) {
+    if (body.avatarUrl !== null && typeof body.avatarUrl !== "string") return res.status(400).json({ error: "Invalid avatar path." });
+    if (body.avatarUrl) {
+      const prefix = "/api/v1/storage/";
+      if (!body.avatarUrl.startsWith(prefix)) return res.status(400).json({ error: "Avatar must be uploaded to Opexnal storage." });
+      const objectKey = body.avatarUrl.slice(prefix.length);
+      const owned = await pool.query("SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1", [objectKey, req.user.id]);
+      if (!owned.rowCount) return res.status(403).json({ error: "You can only use media you uploaded." });
+    }
+    add("avatar_url", body.avatarUrl || null);
+  }
+
+  if (updates.length === 0) return res.status(400).json({ error: "No supported profile fields were provided." });
+  values.push(req.user.id);
+  try {
+    await pool.query(`UPDATE users SET ${updates.join(", ")}, updated_at=NOW() WHERE id=$${values.length}`, values);
+    const result = await pool.query(profileSelect + " WHERE u.id=$1 LIMIT 1", [req.user.id]);
+    return res.json({ profile: publicProfile(result.rows[0]) });
+  } catch (error) {
+    if (error?.code === "23505") return res.status(409).json({ error: "Username is already taken." });
+    return next(error);
+  }
+});
+
+app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, res, next) => {
+  const cursor = typeof req.query.cursor === "string" ? new Date(req.query.cursor) : null;
+  if (cursor && !Number.isFinite(cursor.getTime())) return res.status(400).json({ error: "Invalid cursor." });
+  const limit = Math.min(Math.max(Number(req.query.limit || 18), 1), 100);
+  try {
+    const result = await pool.query(
+      `SELECT
+        p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
+        p.caption, p.media_url, p.media_type, p.visibility, p.location_name, p.comments_enabled,
+        p.created_at, p.updated_at,
+        (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count,
+        (SELECT COUNT(*) FROM post_comments c WHERE c.post_id=p.id) AS comments_count,
+        (SELECT COUNT(*) FROM post_saves s WHERE s.post_id=p.id) AS saves_count,
+        (SELECT COUNT(*) FROM post_shares sh WHERE sh.post_id=p.id) AS shares_count,
+        EXISTS(SELECT 1 FROM post_likes l WHERE l.post_id=p.id AND l.user_id=$2) AS liked_by_me,
+        EXISTS(SELECT 1 FROM post_saves s WHERE s.post_id=p.id AND s.user_id=$2) AS saved_by_me,
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', pm.id, 'post_id', pm.post_id, 'user_id', pm.user_id,
+            'storage_path', pm.storage_path, 'media_type', pm.media_type,
+            'width', pm.width, 'height', pm.height, 'duration_seconds', pm.duration_seconds,
+            'position', pm.position, 'created_at', pm.created_at
+          ) ORDER BY pm.position) FROM post_media pm WHERE pm.post_id=p.id),
+          CASE WHEN p.media_url IS NOT NULL THEN json_build_array(json_build_object(
+            'id', p.id::text || '-media', 'post_id', p.id, 'user_id', p.user_id,
+            'storage_path', p.media_url, 'media_type', p.media_type,
+            'width', NULL, 'height', NULL, 'duration_seconds', NULL,
+            'position', 0, 'created_at', p.created_at
+          )) ELSE '[]'::json END
+        ) AS media
+       FROM posts p JOIN users u ON u.id=p.user_id
+       WHERE LOWER(u.username)=LOWER($1)
+         AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
+           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
+         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
+       ORDER BY p.created_at DESC LIMIT $4`,
+      [String(req.params.username).toLowerCase(), req.user.id, cursor ? cursor.toISOString() : null, limit],
+    );
+    return res.json({ posts: result.rows });
   } catch (error) {
     return next(error);
   }
