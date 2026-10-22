@@ -870,7 +870,7 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
   const details = typeof req.body?.details === "string" ? req.body.details.trim() : "";
   if (
-    !["post", "comment", "user", "story"].includes(targetType) ||
+    !["post", "comment", "user", "story", "message"].includes(targetType) ||
     !/^[0-9a-f-]{36}$/i.test(targetId) ||
     !["spam", "harassment", "impersonation", "hate", "nudity", "violence", "scam", "other"].includes(reason) ||
     details.length > 2000
@@ -880,7 +880,7 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   if (!rateLimit("report:" + req.user.id, 20)) {
     return res.status(429).json({ error: "Too many reports. Try again later." });
   }
-  const tables = { post: "posts", comment: "post_comments", user: "users", story: "stories" };
+  const tables = { post: "posts", comment: "post_comments", user: "users", story: "stories", message: "messages" };
   try {
     const target = await pool.query(`SELECT id FROM ${tables[targetType]} WHERE id=$1 LIMIT 1`, [targetId]);
     if (!target.rowCount) return res.status(404).json({ error: "Report target not found." });
@@ -908,6 +908,7 @@ app.get("/api/v1/admin/reports", dbRequired, authRequired, adminRequired, async 
           WHEN 'comment' THEN (SELECT c.body FROM post_comments c WHERE c.id=r.target_id)
           WHEN 'user' THEN (SELECT u.username FROM users u WHERE u.id=r.target_id)
           WHEN 'story' THEN (SELECT s.caption FROM stories s WHERE s.id=r.target_id)
+          WHEN 'message' THEN (SELECT m.body FROM messages m WHERE m.id=r.target_id)
         END AS target_summary
        FROM content_reports r JOIN users reporter ON reporter.id=r.reporter_id
        WHERE ($1='all' OR r.status=$1)
@@ -2122,6 +2123,53 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
       }
     }
     return res.status(201).json({ message });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/messages/:conversationId/reactions", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const membership = await pool.query(
+      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+      [req.params.conversationId, req.user.id],
+    );
+    if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
+    const result = await pool.query(
+      `SELECT r.message_id,r.emoji FROM message_reactions r
+       JOIN messages m ON m.id=r.message_id
+       WHERE m.conversation_id=$1 AND r.user_id=$2`,
+      [req.params.conversationId, req.user.id],
+    );
+    return res.json({ reactions: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.put("/api/v1/messages/:messageId/reaction", dbRequired, authRequired, async (req, res, next) => {
+  const emoji = typeof req.body?.emoji === "string" ? req.body.emoji : "";
+  const allowed = new Set(["❤️", "🔥", "😂", "👏", "🙌", "✨"]);
+  if (emoji && !allowed.has(emoji)) return res.status(400).json({ error: "Unsupported reaction." });
+  try {
+    const message = await pool.query(
+      `SELECT m.id FROM messages m JOIN conversation_members cm ON cm.conversation_id=m.conversation_id
+       WHERE m.id=$1 AND cm.user_id=$2 LIMIT 1`,
+      [req.params.messageId, req.user.id],
+    );
+    if (!message.rowCount) return res.status(404).json({ error: "Message not found." });
+    if (!emoji) {
+      await pool.query("DELETE FROM message_reactions WHERE message_id=$1 AND user_id=$2", [req.params.messageId, req.user.id]);
+      return res.json({ reaction: null });
+    }
+    const result = await pool.query(
+      `INSERT INTO message_reactions (message_id,user_id,emoji)
+       VALUES ($1,$2,$3)
+       ON CONFLICT (message_id,user_id) DO UPDATE SET emoji=EXCLUDED.emoji,updated_at=NOW()
+       RETURNING message_id,emoji`,
+      [req.params.messageId, req.user.id, emoji],
+    );
+    return res.json({ reaction: result.rows[0] });
   } catch (error) {
     return next(error);
   }
