@@ -18,7 +18,7 @@ ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user','modera
 CREATE TABLE IF NOT EXISTS content_reports (
   id UUID PRIMARY KEY,
   reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story')),
+  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story','message')),
   target_id UUID NOT NULL,
   reason VARCHAR(80) NOT NULL,
   details VARCHAR(2000),
@@ -230,3 +230,12 @@ CREATE TABLE IF NOT EXISTS comment_likes (
 -- Persist message read receipts and conversation ordering.
 ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 ALTER TABLE conversation_members ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+CREATE TABLE IF NOT EXISTS message_reactions (
+  message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  emoji VARCHAR(16) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (message_id, user_id)
+);
