@@ -714,40 +714,98 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
   } catch (error) { next(error); }
 });
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
+  const body = req.body || {};
+  const caption = body.caption === undefined ? "" : body.caption;
+  const visibility = body.visibility === "private" ? "private" : "public";
+  const commentsEnabled = body.commentsEnabled !== false;
+  const locationName = typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
+  let media = Array.isArray(body.media) ? body.media : [];
+  if (!Array.isArray(body.media) && typeof body.mediaUrl === "string") {
+    media = [{ mediaUrl: body.mediaUrl, mediaType: body.mediaType || "image" }];
+  }
+  if (
+    typeof caption !== "string" ||
+    caption.length > 2200 ||
+    !["public", "private"].includes(visibility) ||
+    media.length > 10
+  ) {
+    return res.status(400).json({ error: "Invalid post payload." });
+  }
+  if (
+    media.some((item) =>
+      !item ||
+      typeof item.mediaUrl !== "string" ||
+      item.mediaUrl.length > 2048 ||
+      !["image", "video"].includes(item.mediaType) ||
+      (item.width != null && (!Number.isInteger(item.width) || item.width < 1 || item.width > 30000)) ||
+      (item.height != null && (!Number.isInteger(item.height) || item.height < 1 || item.height > 30000)) ||
+      (item.durationSeconds != null && (typeof item.durationSeconds !== "number" || item.durationSeconds < 0 || item.durationSeconds > 3600))
+    )
+  ) {
+    return res.status(400).json({ error: "One or more media items are invalid." });
+  }
+  if (media.length === 0 && caption.trim().length === 0) {
+    return res.status(400).json({ error: "A post needs a caption or at least one media item." });
+  }
+
   try {
-    const { caption = "", mediaUrl = null, mediaType = "image", visibility = "public" } = req.body || {};
-    if (
-      typeof caption !== "string" ||
-      caption.length > 2200 ||
-      !["image", "video", "text"].includes(mediaType) ||
-      !["public", "private"].includes(visibility) ||
-      (mediaUrl !== null && (typeof mediaUrl !== "string" || mediaUrl.length > 2048))
-    ) {
-      return res.status(400).json({ error: "Invalid post payload." });
-    }
-    if (mediaType !== "text" && !mediaUrl) {
-      return res.status(400).json({ error: "Upload media before creating an image/video post." });
-    }
-    if (mediaType === "text" && mediaUrl !== null) {
-      return res.status(400).json({ error: "Text posts cannot include a media URL." });
-    }
-    if (mediaUrl !== null) {
+    for (const item of media) {
       const prefix = "/api/v1/storage/";
-      if (!mediaUrl.startsWith(prefix)) {
+      if (!item.mediaUrl.startsWith(prefix)) {
         return res.status(400).json({ error: "Post media must be uploaded to Opexnal storage first." });
       }
-      const objectKey = mediaUrl.slice(prefix.length);
-      const media = await pool.query(
+      const objectKey = item.mediaUrl.slice(prefix.length);
+      const owned = await pool.query(
         "SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1",
         [objectKey, req.user.id],
       );
-      if (!media.rowCount) return res.status(403).json({ error: "You can only attach media you uploaded." });
+      if (!owned.rowCount) {
+        return res.status(403).json({ error: "You can only attach media you uploaded." });
+      }
     }
-    const result = await pool.query(
-      "INSERT INTO posts (id,user_id,caption,media_url,media_type,visibility) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
-      [randomUUID(), req.user.id, caption, mediaUrl, mediaType, visibility],
-    );
-    return res.status(201).json({ post: result.rows[0] });
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const first = media[0];
+      const result = await client.query(
+        "INSERT INTO posts (id,user_id,caption,media_url,media_type,visibility,location_name,comments_enabled) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+        [
+          randomUUID(),
+          req.user.id,
+          caption,
+          first?.mediaUrl || null,
+          first?.mediaType || "text",
+          visibility,
+          locationName,
+          commentsEnabled,
+        ],
+      );
+      const post = result.rows[0];
+      for (const [position, item] of media.entries()) {
+        await client.query(
+          "INSERT INTO post_media (id,post_id,user_id,storage_path,media_type,width,height,duration_seconds,position) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+          [
+            randomUUID(),
+            post.id,
+            req.user.id,
+            item.mediaUrl,
+            item.mediaType,
+            item.width ?? null,
+            item.height ?? null,
+            item.durationSeconds ?? null,
+            position,
+          ],
+        );
+      }
+      await client.query("COMMIT");
+      return res.status(201).json({ post });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     return next(error);
   }
