@@ -1488,9 +1488,11 @@ app.get("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT s.id,s.user_id AS author_id,u.username,u.display_name,u.avatar_url,
-        s.media_url,s.media_type,s.visibility,s.caption,s.width,s.height,s.created_at,s.expires_at
+        s.media_url,s.media_type,s.visibility,s.caption,s.width,s.height,s.created_at,s.expires_at,
+        EXISTS(SELECT 1 FROM story_views sv WHERE sv.story_id=s.id AND sv.viewer_id=$1) AS seen_by_me
        FROM stories s JOIN users u ON u.id=s.user_id
        WHERE s.expires_at > NOW()
+         AND NOT EXISTS (SELECT 1 FROM story_mutes sm WHERE sm.muter_id=$1 AND sm.muted_id=s.user_id)
          AND ($2::uuid IS NULL OR s.user_id=$2)
          AND (
            s.user_id=$1
