@@ -1112,7 +1112,7 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
   }
   for (const [inputKey, column] of [["allowMentionsFrom", "allow_mentions_from"], ["allowTagsFrom", "allow_tags_from"]]) {
     if (body[inputKey] !== undefined) {
-      if (!["everyone", "followers", "none"].includes(body[inputKey])) return res.status(400).json({ error: "Invalid mention/tag permission." });
+      if (!["everyone", "followers", "nobody"].includes(body[inputKey])) return res.status(400).json({ error: "Invalid mention/tag permission." });
       add(column, body[inputKey]);
     }
   }
