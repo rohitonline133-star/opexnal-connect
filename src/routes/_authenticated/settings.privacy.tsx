@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 import { getProfileById, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
@@ -56,7 +57,7 @@ function Privacy() {
     if (patch.allow_tags_from !== undefined) body.allowTagsFrom = patch.allow_tags_from;
     if (patch.allow_mentions_from !== undefined) body.allowMentionsFrom = patch.allow_mentions_from;
     try {
-      const response = await fetch("/api/v1/users/me", {
+      const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
