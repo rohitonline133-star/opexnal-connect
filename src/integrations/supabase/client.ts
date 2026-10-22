@@ -275,7 +275,18 @@ class QueryBuilder<T = unknown> {
         }
       }
 
-      // Local persistent table fallback
+      // Browser-local storage is only a development convenience. In production,
+      // unsupported tables must fail explicitly rather than pretending data persisted.
+      if (!import.meta.env.DEV) {
+        return {
+          data: null,
+          error: new Error(
+            `First-party API adapter does not support ${this.operation} on "${this.tableName}". No local data was written.`,
+          ),
+        };
+      }
+
+      // Development-only local persistent table fallback
       let tableData = getLocalTable(this.tableName);
 
       if (this.operation === "insert") {
