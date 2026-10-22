@@ -8,6 +8,14 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS users_created_at_idx ON users (created_at DESC);
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (follower_id, following_id),
+  CHECK (follower_id <> following_id)
+);
+CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS auth_sessions (
   id UUID PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -56,7 +64,7 @@ CREATE TABLE IF NOT EXISTS posts (
   id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   caption VARCHAR(2200) NOT NULL DEFAULT '', media_url TEXT,
   media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video','text')),
-  visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','private')),
+  visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','followers','private')),
   location_name VARCHAR(120), comments_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK (media_type = 'text' OR media_url IS NOT NULL)
