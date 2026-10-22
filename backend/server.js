@@ -1932,7 +1932,7 @@ app.delete("/api/v1/stories/:storyId", dbRequired, authRequired, async (req, res
     const objectKey = storagePath.replace("/api/v1/storage/", "");
     if (mediaKeyPattern.test(objectKey)) {
       const references = await pool.query(
-        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) LIMIT 1",
+        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) OR EXISTS (SELECT 1 FROM users WHERE avatar_url=$1) LIMIT 1",
         [storagePath],
       );
       if (!references.rowCount) {
