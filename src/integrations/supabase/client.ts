@@ -176,7 +176,7 @@ class QueryBuilder<T = unknown> {
     try {
       // First attempt first-party API endpoint if available
       if (this.tableName === "posts" && this.operation === "select") {
-        const res = await fetch(apiUrl("/api/v1/posts/feed", {
+        const res = await fetch(apiUrl("/api/v1/posts/feed"), {
           headers: authClient.getAuthHeader(),
           cache: "no-store",
         });
@@ -196,7 +196,7 @@ class QueryBuilder<T = unknown> {
       }
 
       if (this.tableName === "stories" && this.operation === "select") {
-        const res = await fetch(apiUrl("/api/v1/stories", {
+        const res = await fetch(apiUrl("/api/v1/stories"), {
           headers: authClient.getAuthHeader(),
           cache: "no-store",
         });
@@ -385,7 +385,7 @@ class StorageBucketClient {
       formData.append("file", file);
       formData.append("bucket", this.bucket);
 
-      const res = await fetch(apiUrl("/api/v1/storage/upload", {
+      const res = await fetch(apiUrl("/api/v1/storage/upload"), {
         method: "POST",
         headers: authClient.getAuthHeader(),
         body: formData,
@@ -413,7 +413,7 @@ class StorageBucketClient {
       ? path.slice("/api/v1/storage/".length)
       : path;
     try {
-      const res = await fetch(apiUrl("/api/v1/storage/signed-url", {
+      const res = await fetch(apiUrl("/api/v1/storage/signed-url"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -452,7 +452,7 @@ class StorageBucketClient {
           const objectKey = path.startsWith("/api/v1/storage/")
             ? path.slice("/api/v1/storage/".length)
             : path;
-          const response = await fetch(apiUrl(`/api/v1/storage/${encodeURIComponent(objectKey)}`, {
+          const response = await fetch(apiUrl(`/api/v1/storage/${encodeURIComponent(objectKey)}`), {
             method: "DELETE",
             headers: authClient.getAuthHeader(),
           });
