@@ -169,7 +169,8 @@ function Explore() {
     queryKey: ["search-people", query],
     enabled: query.length >= 1,
     queryFn: async () => {
-      const response = await fetch(apiUrl(`/api/v1/users/search?q=${encodeURIComponent(query)}&limit=20`),
+      const response = await fetch(
+        apiUrl(`/api/v1/users/search?q=${encodeURIComponent(query)}&limit=20`),
         {
           headers: authClient.getAuthHeader(),
           cache: "no-store",
@@ -223,7 +224,9 @@ function Explore() {
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error || "Follow failed.");
-      toast.success(payload.status === "requested" ? "Follow request sent" : `Following @${targetUsername}`);
+      toast.success(
+        payload.status === "requested" ? "Follow request sent" : `Following @${targetUsername}`,
+      );
       await queryClient.invalidateQueries({ queryKey: ["suggested-creators"] });
       await queryClient.invalidateQueries({ queryKey: ["search-people"] });
     } catch {

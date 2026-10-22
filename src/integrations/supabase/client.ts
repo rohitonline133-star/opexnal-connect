@@ -259,7 +259,9 @@ class QueryBuilder<T = unknown> {
           if (!response.ok) {
             return {
               data: null,
-              error: new Error(payload.error || `Create request failed with status ${response.status}.`),
+              error: new Error(
+                payload.error || `Create request failed with status ${response.status}.`,
+              ),
             };
           }
           const created = this.tableName === "posts" ? payload.post : payload.story;
@@ -438,11 +440,17 @@ class StorageBucketClient {
         error?: string;
       };
       if (!res.ok || !body.signedUrl) {
-        return { data: null, error: new Error(body.error || "Could not create a signed media URL.") };
+        return {
+          data: null,
+          error: new Error(body.error || "Could not create a signed media URL."),
+        };
       }
       return { data: { signedUrl: body.signedUrl }, error: null };
     } catch (error: unknown) {
-      return { data: null, error: error instanceof Error ? error : new Error("Media URL request failed.") };
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error("Media URL request failed."),
+      };
     }
   }
 

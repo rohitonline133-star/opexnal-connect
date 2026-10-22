@@ -64,7 +64,9 @@ function ForgotPasswordPage() {
       }
       setCodeSent(true);
       setCooldown(60);
-      toast.success(data.message || "If an account exists for that email, reset instructions will be sent.");
+      toast.success(
+        data.message || "If an account exists for that email, reset instructions will be sent.",
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to send reset instructions";
       setErrorMessage(msg);
@@ -92,7 +94,8 @@ function ForgotPasswordPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Trouble Logging In?</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Enter your account email. If it matches an account, we will send a time-limited password reset link.
+          Enter your account email. If it matches an account, we will send a time-limited password
+          reset link.
         </p>
       </div>
 

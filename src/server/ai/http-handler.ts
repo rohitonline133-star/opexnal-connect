@@ -132,11 +132,9 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     });
   }
 
-  const protectedAiRoute = [
-    "/api/ai/chat",
-    "/api/ai/creator-tools",
-    "/api/ai/moderate",
-  ].includes(url.pathname);
+  const protectedAiRoute = ["/api/ai/chat", "/api/ai/creator-tools", "/api/ai/moderate"].includes(
+    url.pathname,
+  );
   let verifiedUserId: string | undefined;
   if (protectedAiRoute) {
     if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
@@ -148,10 +146,13 @@ export async function handleAiRequest(request: Request): Promise<Response> {
     try {
       verifiedUserId = (await verifyUserWithFirstPartyApi(request)) || undefined;
     } catch {
-      return new Response(JSON.stringify({ error: "First-party authentication verification is unavailable." }), {
-        status: 503,
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      });
+      return new Response(
+        JSON.stringify({ error: "First-party authentication verification is unavailable." }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        },
+      );
     }
     if (!verifiedUserId) {
       return new Response(JSON.stringify({ error: "Invalid or expired session." }), {

@@ -21,8 +21,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 }
 
 async function proxyFirstPartyApi(request: Request): Promise<Response> {
-  const configuredOrigin =
-    process.env["OPEXNAL_API_URL"] || process.env["VITE_OPEXNAL_API_URL"];
+  const configuredOrigin = process.env["OPEXNAL_API_URL"] || process.env["VITE_OPEXNAL_API_URL"];
   if (!configuredOrigin) {
     return Response.json(
       {
@@ -59,8 +58,7 @@ async function proxyFirstPartyApi(request: Request): Promise<Response> {
 
   try {
     const method = request.method.toUpperCase();
-    const body =
-      method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
+    const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
     const requestInit: RequestInit = {
       method,
       headers,

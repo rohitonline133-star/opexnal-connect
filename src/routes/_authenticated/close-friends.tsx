@@ -71,21 +71,29 @@ export function CloseFriendsPage() {
     })
       .then(async (response) => {
         const payload = (await response.json().catch(() => ({}))) as {
-          profiles?: Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>;
+          profiles?: Array<{
+            id: string;
+            username: string;
+            display_name: string;
+            avatar_url?: string | null;
+          }>;
           error?: string;
         };
         if (!response.ok) throw new Error(payload.error || "Could not load Close Friends.");
         if (active) {
-          setCloseFriends((payload.profiles || []).map((profile) => ({
-            id: profile.id,
-            username: profile.username,
-            name: profile.display_name || profile.username,
-            avatar: profile.username.charAt(0).toUpperCase(),
-          })));
+          setCloseFriends(
+            (payload.profiles || []).map((profile) => ({
+              id: profile.id,
+              username: profile.username,
+              name: profile.display_name || profile.username,
+              avatar: profile.username.charAt(0).toUpperCase(),
+            })),
+          );
         }
       })
       .catch((error) => {
-        if (active) toast.error(error instanceof Error ? error.message : "Could not load Close Friends.");
+        if (active)
+          toast.error(error instanceof Error ? error.message : "Could not load Close Friends.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -109,21 +117,29 @@ export function CloseFriendsPage() {
     })
       .then(async (response) => {
         const payload = (await response.json().catch(() => ({}))) as {
-          profiles?: Array<{ id: string; username: string; display_name: string; avatar_url?: string | null }>;
+          profiles?: Array<{
+            id: string;
+            username: string;
+            display_name: string;
+            avatar_url?: string | null;
+          }>;
           error?: string;
         };
         if (!response.ok) throw new Error(payload.error || "Could not search accounts.");
         if (active) {
-          setCreators((payload.profiles || []).map((profile) => ({
-            id: profile.id,
-            username: profile.username,
-            name: profile.display_name || profile.username,
-            avatar: profile.username.charAt(0).toUpperCase(),
-          })));
+          setCreators(
+            (payload.profiles || []).map((profile) => ({
+              id: profile.id,
+              username: profile.username,
+              name: profile.display_name || profile.username,
+              avatar: profile.username.charAt(0).toUpperCase(),
+            })),
+          );
         }
       })
       .catch((error) => {
-        if (active) toast.error(error instanceof Error ? error.message : "Could not search accounts.");
+        if (active)
+          toast.error(error instanceof Error ? error.message : "Could not search accounts.");
       });
     return () => {
       active = false;
@@ -132,8 +148,9 @@ export function CloseFriendsPage() {
 
   const filteredCreators = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return creators.filter((creator) =>
-      !q || creator.username.toLowerCase().includes(q) || creator.name.toLowerCase().includes(q),
+    return creators.filter(
+      (creator) =>
+        !q || creator.username.toLowerCase().includes(q) || creator.name.toLowerCase().includes(q),
     );
   }, [creators, search]);
 
@@ -142,7 +159,8 @@ export function CloseFriendsPage() {
     const exists = closeFriends.some((friend) => friend.id === creator.id);
     setActionLoading(creator.id);
     try {
-      const response = await fetch(apiUrl(`/api/v1/users/me/close-friends/${encodeURIComponent(creator.id)}`),
+      const response = await fetch(
+        apiUrl(`/api/v1/users/me/close-friends/${encodeURIComponent(creator.id)}`),
         {
           method: exists ? "DELETE" : "POST",
           headers: authClient.getAuthHeader(),
@@ -153,7 +171,11 @@ export function CloseFriendsPage() {
       setCloseFriends((previous) =>
         exists ? previous.filter((friend) => friend.id !== creator.id) : [...previous, creator],
       );
-      toast.success(exists ? `Removed @${creator.username} from Close Friends` : `Added @${creator.username} to Close Friends`);
+      toast.success(
+        exists
+          ? `Removed @${creator.username} from Close Friends`
+          : `Added @${creator.username} to Close Friends`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Close Friends update failed.");
     } finally {
@@ -164,10 +186,14 @@ export function CloseFriendsPage() {
   const toggleFavorite = (username: string) => {
     if (!user?.id) return;
     const exists = favorites.includes(username);
-    const updated = exists ? favorites.filter((item) => item !== username) : [...favorites, username];
+    const updated = exists
+      ? favorites.filter((item) => item !== username)
+      : [...favorites, username];
     setFavorites(updated);
     saveSettings({ favoriteCreators: updated }, user.id);
-    toast.success(exists ? `Removed @${username} from Favorites` : `Added @${username} to Favorites`);
+    toast.success(
+      exists ? `Removed @${username} from Favorites` : `Added @${username} to Favorites`,
+    );
   };
 
   const clearCurrentList = async () => {
@@ -177,8 +203,8 @@ export function CloseFriendsPage() {
       try {
         await Promise.all(
           closeFriends.map(async (friend) => {
-            const response = await fetch(apiUrl(
-              `/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`),
+            const response = await fetch(
+              apiUrl(`/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`),
               { method: "DELETE", headers: authClient.getAuthHeader() },
             );
             if (!response.ok) throw new Error("One or more Close Friends could not be removed.");

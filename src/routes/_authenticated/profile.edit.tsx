@@ -49,7 +49,12 @@ const formSchema = z.object({
   bio: z.string().trim().max(160, "Bio must be 160 characters or fewer"),
   website: z.union([
     z.literal(""),
-    z.string().trim().url("Enter a valid URL").max(200).refine((value) => value.startsWith("https://"), "Website must use HTTPS"),
+    z
+      .string()
+      .trim()
+      .url("Enter a valid URL")
+      .max(200)
+      .refine((value) => value.startsWith("https://"), "Website must use HTTPS"),
   ]),
   account_type: z.enum(["personal", "creator", "business"]),
 });

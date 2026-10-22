@@ -143,7 +143,10 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
     return await fetchApiProfile(`/api/v1/users/${encodeURIComponent(clean)}`);
   } catch {
     if (!import.meta.env.DEV) return null;
-    return Object.values(SEED_PROFILES).find((profile) => profile.username.toLowerCase() === clean) || null;
+    return (
+      Object.values(SEED_PROFILES).find((profile) => profile.username.toLowerCase() === clean) ||
+      null
+    );
   }
 }
 

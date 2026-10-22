@@ -185,7 +185,8 @@ function Inbox() {
             <ShieldAlert className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
             <p className="font-semibold text-foreground">No Message Requests</p>
             <p className="text-[11px]">
-              Message requests are not configured yet. Use a profile’s Message action to start a conversation.
+              Message requests are not configured yet. Use a profile’s Message action to start a
+              conversation.
             </p>
           </div>
         ) : conversations.length === 0 ? (

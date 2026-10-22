@@ -32,14 +32,10 @@ function SettingsAccountPage() {
     enabled: Boolean(userId),
   });
 
-  const [email, setEmail] = useState(
-    settings?.email || session?.user?.email || "",
-  );
+  const [email, setEmail] = useState(settings?.email || session?.user?.email || "");
   const [phone, setPhone] = useState(settings?.phone || "+91 98765 43210");
   const [dob, setDob] = useState(settings?.dateOfBirth || "2000-05-15");
-  const [recoveryEmail, setRecoveryEmail] = useState(
-    settings?.recoveryEmail || "",
-  );
+  const [recoveryEmail, setRecoveryEmail] = useState(settings?.recoveryEmail || "");
 
   const saveMutation = useMutation({
     mutationFn: async () => {

@@ -86,18 +86,30 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     if (pathname === "/api/auth/sessions/revoke" && method === "POST") {
       return jsonResponse(
-        { error: "Session revocation is unavailable until durable server-side sessions are configured." },
+        {
+          error:
+            "Session revocation is unavailable until durable server-side sessions are configured.",
+        },
         503,
       );
     }
 
     if (pathname === "/api/auth/sessions/revoke-all" && method === "POST") {
-      return jsonResponse({ error: "Session revocation is unavailable until durable server-side sessions are configured." }, 503);
+      return jsonResponse(
+        {
+          error:
+            "Session revocation is unavailable until durable server-side sessions are configured.",
+        },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/recovery/request" && method === "POST") {
       return jsonResponse(
-        { error: "Account recovery is not configured with verified delivery and durable token storage." },
+        {
+          error:
+            "Account recovery is not configured with verified delivery and durable token storage.",
+        },
         503,
       );
     }
@@ -132,13 +144,19 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     if (pathname === "/api/v1/posts/feed" && method === "GET") {
       return jsonResponse(
-        { error: "Feed fallback is disabled until it can identify the viewer from a verified session." },
+        {
+          error:
+            "Feed fallback is disabled until it can identify the viewer from a verified session.",
+        },
         503,
       );
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
       return jsonResponse(
-        { error: "Stories fallback is disabled until it can identify the viewer from a verified session." },
+        {
+          error:
+            "Stories fallback is disabled until it can identify the viewer from a verified session.",
+        },
         503,
       );
     }

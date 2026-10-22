@@ -64,7 +64,11 @@ describe("Authentication & Account Security Engine", () => {
     assert.match(unconfigured.message, /delivery is not configured/i);
 
     const testDestination = "tester_sim_guard@opexnal.test";
-    const deliver = async (_destination: string, _type: "email" | "phone" | "recovery", _code: string) => {};
+    const deliver = async (
+      _destination: string,
+      _type: "email" | "phone" | "recovery",
+      _code: string,
+    ) => {};
     const res1 = await requestOtp(testDestination, "email", deliver);
     assert.strictEqual(res1.success, true);
     assert.ok(res1.message.includes("Verification code sent"));

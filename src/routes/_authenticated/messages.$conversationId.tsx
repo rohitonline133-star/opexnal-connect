@@ -120,7 +120,9 @@ function Conversation() {
     setSelectedMessage(null);
     try {
       await updateMessageReaction(msgId, nextEmoji);
-      await queryClient.invalidateQueries({ queryKey: ["message-reactions", conversationId, user?.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ["message-reactions", conversationId, user?.id],
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update reaction.");
     }

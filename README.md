@@ -1235,7 +1235,6 @@ npm i
 npm run dev
 ```
 
-
 ## Self-hosted deployment (first-party API)
 
 The self-hosted stack runs the TanStack web app, the first-party Express API, and PostgreSQL using Docker Compose. It does not require Vercel or Supabase for the API path.

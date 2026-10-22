@@ -45,7 +45,10 @@ function SettingsBlockedPage() {
         if (active) setBlockedUsers(payload.profiles || []);
       })
       .catch((error) => {
-        if (active) setErrorMessage(error instanceof Error ? error.message : "Could not load blocked accounts.");
+        if (active)
+          setErrorMessage(
+            error instanceof Error ? error.message : "Could not load blocked accounts.",
+          );
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -79,14 +82,28 @@ function SettingsBlockedPage() {
   return (
     <AppShell activeTab="profile">
       <div className="min-h-screen max-w-xl mx-auto pb-20">
-        <ScreenHeader title="Blocked Accounts" showBack onBack={() => navigate({ to: "/settings" })} />
+        <ScreenHeader
+          title="Blocked Accounts"
+          showBack
+          onBack={() => navigate({ to: "/settings" })}
+        />
         <div className="p-4 space-y-4">
           <p className="text-xs text-muted-foreground">
-            Blocked accounts cannot follow you or access your profile and posts through Opexnal. They are not notified when you block them.
+            Blocked accounts cannot follow you or access your profile and posts through Opexnal.
+            They are not notified when you block them.
           </p>
-          {errorMessage && <p role="alert" className="rounded-xl border border-destructive/40 p-3 text-sm text-destructive">{errorMessage}</p>}
+          {errorMessage && (
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/40 p-3 text-sm text-destructive"
+            >
+              {errorMessage}
+            </p>
+          )}
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           ) : blockedUsers.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               <UserCheck className="mx-auto mb-2 h-8 w-8" />
@@ -95,7 +112,10 @@ function SettingsBlockedPage() {
           ) : (
             <div className="space-y-2">
               {blockedUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5">
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5"
+                >
                   <div className="min-w-0">
                     <span className="text-sm font-semibold text-foreground">@{user.username}</span>
                     <p className="text-xs text-muted-foreground">{user.display_name}</p>

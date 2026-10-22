@@ -77,7 +77,8 @@ function SignupPage() {
     }
     setUsernameStatus("checking");
     try {
-      const response = await fetch(apiUrl(`/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`),
+      const response = await fetch(
+        apiUrl(`/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`),
         { cache: "no-store" },
       );
       const payload = (await response.json().catch(() => ({}))) as {
@@ -94,7 +95,9 @@ function SignupPage() {
     } catch {
       if (sequence === usernameCheckSequence.current) {
         setUsernameStatus("idle");
-        setErrorMessage("Could not check username availability. The server will validate it during signup.");
+        setErrorMessage(
+          "Could not check username availability. The server will validate it during signup.",
+        );
       }
     }
   };
@@ -146,7 +149,9 @@ function SignupPage() {
     }
 
     if (!contact.includes("@")) {
-      setErrorMessage("Phone signup is unavailable until a real SMS verification provider is configured. Please use an email address.");
+      setErrorMessage(
+        "Phone signup is unavailable until a real SMS verification provider is configured. Please use an email address.",
+      );
       return;
     }
 

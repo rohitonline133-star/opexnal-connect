@@ -3,7 +3,14 @@ import express from "express";
 import http from "node:http";
 import path from "node:path";
 import { mkdirSync, unlinkSync } from "node:fs";
-import { createHash, createHmac, randomUUID, scrypt as scryptCallback, randomBytes, timingSafeEqual } from "node:crypto";
+import {
+  createHash,
+  createHmac,
+  randomUUID,
+  scrypt as scryptCallback,
+  randomBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { promisify } from "node:util";
 import jwt from "jsonwebtoken";
 import pg from "pg";
@@ -19,8 +26,16 @@ const wss = new WebSocketServer({ noServer: true });
 const port = Number(process.env.PORT || process.env.API_PORT || 4000);
 const jwtSecret = process.env.JWT_SECRET || "";
 const databaseUrl = process.env.DATABASE_URL || "";
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000").split(",").map((v) => v.trim());
-const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined, max: Number(process.env.DB_POOL_MAX || 10) }) : null;
+const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:3000")
+  .split(",")
+  .map((v) => v.trim());
+const pool = databaseUrl
+  ? new Pool({
+      connectionString: databaseUrl,
+      ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined,
+      max: Number(process.env.DB_POOL_MAX || 10),
+    })
+  : null;
 const smtpHost = process.env.SMTP_HOST || "";
 const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
@@ -68,7 +83,8 @@ const mediaUpload = multer({
   }),
   limits: { fileSize: 100 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, callback) => {
-    if (!allowedMediaTypes.has(file.mimetype)) return callback(new Error("Unsupported media type."));
+    if (!allowedMediaTypes.has(file.mimetype))
+      return callback(new Error("Unsupported media type."));
     return callback(null, true);
   },
 });
@@ -83,7 +99,9 @@ const scrypt = promisify(scryptCallback);
 if (jwtSecret.length < 32) {
   console.warn("JWT_SECRET must be a unique random value of at least 32 characters.");
   if (process.env.NODE_ENV === "production") {
-    throw new Error("Refusing to start in production without a JWT_SECRET of at least 32 characters.");
+    throw new Error(
+      "Refusing to start in production without a JWT_SECRET of at least 32 characters.",
+    );
   }
 }
 if (!pool) console.warn("DATABASE_URL is missing; API will return 503 for database-backed routes.");
@@ -106,7 +124,8 @@ app.use((req, res, next) => {
   next();
 });
 function dbRequired(_req, res, next) {
-  if (!pool) return res.status(503).json({ error: "Database is not configured on this deployment." });
+  if (!pool)
+    return res.status(503).json({ error: "Database is not configured on this deployment." });
   next();
 }
 function rateLimit(key, max = 10, windowMs = 60_000) {
@@ -119,7 +138,10 @@ function rateLimit(key, max = 10, windowMs = 60_000) {
   }
   if (attempts.size >= 20_000 && !attempts.has(key)) return false;
   const old = attempts.get(key);
-  if (!old || old.resetAt <= now) { attempts.set(key, { count: 1, resetAt: now + windowMs }); return true; }
+  if (!old || old.resetAt <= now) {
+    attempts.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
   old.count += 1;
   return old.count <= max;
 }
@@ -181,7 +203,9 @@ async function verifyPassword(password, stored) {
     const actual = Buffer.from(await scrypt(password, Buffer.from(parts[1], "hex"), 64));
     const expected = Buffer.from(parts[2], "hex");
     return actual.length === expected.length && timingSafeEqual(actual, expected);
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 async function issueToken(user, req) {
   if (jwtSecret.length < 32) throw new Error("JWT_SECRET is not configured securely.");
@@ -197,25 +221,36 @@ async function issueToken(user, req) {
       req.ip || null,
     ],
   );
-  return jwt.sign(
-    { username: user.username },
-    jwtSecret,
-    {
-      subject: user.id,
-      jwtid: sessionId,
-      expiresIn: "1h",
-      issuer: "opexnal-api",
-      audience: "opexnal-app",
-      algorithm: "HS256",
-    },
-  );
+  return jwt.sign({ username: user.username }, jwtSecret, {
+    subject: user.id,
+    jwtid: sessionId,
+    expiresIn: "1h",
+    issuer: "opexnal-api",
+    audience: "opexnal-app",
+    algorithm: "HS256",
+  });
 }
-async function notifyUser(recipientId, actorId, type, targetType = null, targetId = null, metadata = {}) {
+async function notifyUser(
+  recipientId,
+  actorId,
+  type,
+  targetType = null,
+  targetId = null,
+  metadata = {},
+) {
   if (!recipientId || recipientId === actorId) return;
   try {
     await pool.query(
       "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
-      [randomUUID(), recipientId, actorId || null, type, targetType, targetId, JSON.stringify(metadata)],
+      [
+        randomUUID(),
+        recipientId,
+        actorId || null,
+        type,
+        targetType,
+        targetId,
+        JSON.stringify(metadata),
+      ],
     );
   } catch (error) {
     // A notification failure must not turn a successful post/message action into a client-visible failure.
@@ -241,7 +276,14 @@ async function adminRequired(req, res, next) {
 }
 
 function publicUser(row) {
-  return { id: row.id, username: row.username, email: row.email, displayName: row.display_name, avatarUrl: row.avatar_url, createdAt: row.created_at };
+  return {
+    id: row.id,
+    username: row.username,
+    email: row.email,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    createdAt: row.created_at,
+  };
 }
 function publicProfile(row) {
   return {
@@ -270,8 +312,14 @@ function publicProfile(row) {
     updated_at: row.updated_at,
   };
 }
-function validUsername(value) { return typeof value === "string" && /^[a-zA-Z0-9._]{3,30}$/.test(value); }
-function validEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
+function validUsername(value) {
+  return typeof value === "string" && /^[a-zA-Z0-9._]{3,30}$/.test(value);
+}
+function validEmail(value) {
+  return (
+    typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  );
+}
 function validPassword(value) {
   return (
     typeof value === "string" &&
@@ -285,22 +333,40 @@ function validPassword(value) {
 }
 
 app.get("/health", async (_req, res) => {
-  if (!pool) return res.status(503).json({ status: "not_ready", service: "opexnal-api", reason: "database_not_configured" });
+  if (!pool)
+    return res
+      .status(503)
+      .json({ status: "not_ready", service: "opexnal-api", reason: "database_not_configured" });
   try {
     await pool.query("SELECT 1");
-    return res.json({ status: "ok", service: "opexnal-api", database: "connected", websocket: true });
+    return res.json({
+      status: "ok",
+      service: "opexnal-api",
+      database: "connected",
+      websocket: true,
+    });
   } catch {
-    return res.status(503).json({ status: "not_ready", service: "opexnal-api", reason: "database_unavailable" });
+    return res
+      .status(503)
+      .json({ status: "not_ready", service: "opexnal-api", reason: "database_unavailable" });
   }
 });
 
 app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next) => {
-  const username = typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
+  const username =
+    typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
   if (!validUsername(username)) {
-    return res.status(400).json({ available: false, error: "Username must be 3–30 characters using letters, numbers, dots, or underscores." });
+    return res
+      .status(400)
+      .json({
+        available: false,
+        error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
+      });
   }
   if (!rateLimit("username-check:" + String(req.ip || "unknown"), 30)) {
-    return res.status(429).json({ available: false, error: "Too many username checks. Try again shortly." });
+    return res
+      .status(429)
+      .json({ available: false, error: "Too many username checks. Try again shortly." });
   }
   if (["admin", "system", "root", "instagram", "meta", "support", "security"].includes(username)) {
     return res.json({ username, available: false });
@@ -325,7 +391,8 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   }
   if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
     return res.status(400).json({
-      error: "Use a 3–30 character username, valid email, and password of 12–128 characters with mixed character classes.",
+      error:
+        "Use a 3–30 character username, valid email, and password of 12–128 characters with mixed character classes.",
     });
   }
   if (
@@ -341,7 +408,9 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   const ageCutoff = new Date();
   ageCutoff.setFullYear(ageCutoff.getFullYear() - 13);
   if (birthDate > ageCutoff) {
-    return res.status(400).json({ error: "You must be at least 13 years old to create an account." });
+    return res
+      .status(400)
+      .json({ error: "You must be at least 13 years old to create an account." });
   }
 
   const client = await pool.connect();
@@ -350,7 +419,13 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     const passwordHash = await hashPassword(password);
     const result = await client.query(
       "INSERT INTO users (id, username, email, password_hash, display_name, email_verified) VALUES ($1,$2,$3,$4,$5,FALSE) RETURNING id, username, email, display_name, avatar_url, created_at",
-      [randomUUID(), username.toLowerCase(), email.toLowerCase(), passwordHash, typeof displayName === "string" ? displayName.slice(0, 80) : username],
+      [
+        randomUUID(),
+        username.toLowerCase(),
+        email.toLowerCase(),
+        passwordHash,
+        typeof displayName === "string" ? displayName.slice(0, 80) : username,
+      ],
     );
     const user = result.rows[0];
     const rawToken = randomBytes(32).toString("base64url");
@@ -404,8 +479,12 @@ app.get("/api/v1/auth/verify-email", dbRequired, async (req, res, next) => {
       return res.status(400).json({ error: "Invalid or expired email verification link." });
     }
     const token = tokenResult.rows[0];
-    await client.query("UPDATE users SET email_verified=TRUE, updated_at=NOW() WHERE id=$1", [token.user_id]);
-    await client.query("UPDATE email_verification_tokens SET used_at=NOW() WHERE id=$1", [token.id]);
+    await client.query("UPDATE users SET email_verified=TRUE, updated_at=NOW() WHERE id=$1", [
+      token.user_id,
+    ]);
+    await client.query("UPDATE email_verification_tokens SET used_at=NOW() WHERE id=$1", [
+      token.id,
+    ]);
     await client.query("COMMIT");
     return res.json({ success: true, message: "Email verified. You can now sign in to Opexnal." });
   } catch (error) {
@@ -420,7 +499,8 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
     return res.status(503).json({ error: "Password reset email delivery is not configured." });
   }
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  if (!validEmail(email)) return res.status(400).json({ error: "A valid email address is required." });
+  if (!validEmail(email))
+    return res.status(400).json({ error: "A valid email address is required." });
   if (
     !rateLimit("password-reset:" + String(req.ip || "unknown"), 5) ||
     !rateLimit("password-reset-email:" + email, 3)
@@ -433,7 +513,10 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
     const user = result.rows[0];
     // Do not reveal whether an account exists.
     if (!user) {
-      return res.json({ success: true, message: "If an account exists for that email, reset instructions will be sent." });
+      return res.json({
+        success: true,
+        message: "If an account exists for that email, reset instructions will be sent.",
+      });
     }
 
     const rawToken = randomBytes(32).toString("base64url");
@@ -461,9 +544,14 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
         "UPDATE password_reset_tokens SET used_at=NOW() WHERE token_hash=$1 AND used_at IS NULL",
         [tokenHash],
       );
-      return res.status(503).json({ error: "Reset email could not be delivered. Please try again later." });
+      return res
+        .status(503)
+        .json({ error: "Reset email could not be delivered. Please try again later." });
     }
-    return res.json({ success: true, message: "If an account exists for that email, reset instructions will be sent." });
+    return res.json({
+      success: true,
+      message: "If an account exists for that email, reset instructions will be sent.",
+    });
   } catch (error) {
     return next(error);
   }
@@ -477,7 +565,8 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
   }
   if (!validPassword(newPassword)) {
     return res.status(400).json({
-      error: "Password must be 12–128 characters and include lowercase, uppercase, a number, and a symbol.",
+      error:
+        "Password must be 12–128 characters and include lowercase, uppercase, a number, and a symbol.",
     });
   }
   if (!rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10)) {
@@ -498,18 +587,24 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
     }
     const reset = result.rows[0];
     const passwordHash = await hashPassword(newPassword);
-    await client.query(
-      "UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2",
-      [passwordHash, reset.user_id],
-    );
+    await client.query("UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2", [
+      passwordHash,
+      reset.user_id,
+    ]);
     await client.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE id=$1", [reset.id]);
     await client.query(
       "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL",
       [reset.user_id],
     );
-    await client.query("UPDATE password_reset_tokens SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL", [reset.user_id]);
+    await client.query(
+      "UPDATE password_reset_tokens SET used_at=NOW() WHERE user_id=$1 AND used_at IS NULL",
+      [reset.user_id],
+    );
     await client.query("COMMIT");
-    return res.json({ success: true, message: "Password reset successfully. Sign in again with the new password." });
+    return res.json({
+      success: true,
+      message: "Password reset successfully. Sign in again with the new password.",
+    });
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
     return next(error);
@@ -521,12 +616,24 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
 app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
   try {
     const { identity, password } = req.body || {};
-    if (!rateLimit("login:" + String(req.ip || "unknown"), 10)) return res.status(429).json({ error: "Too many login attempts. Try again later." });
-    if (typeof identity !== "string" || typeof password !== "string" || identity.length > 254 || password.length > 128) return res.status(400).json({ error: "Username/email and password are required." });
+    if (!rateLimit("login:" + String(req.ip || "unknown"), 10))
+      return res.status(429).json({ error: "Too many login attempts. Try again later." });
+    if (
+      typeof identity !== "string" ||
+      typeof password !== "string" ||
+      identity.length > 254 ||
+      password.length > 128
+    )
+      return res.status(400).json({ error: "Username/email and password are required." });
     if (!rateLimit("login-identity:" + identity.toLowerCase(), 10)) {
-      return res.status(429).json({ error: "Too many login attempts for this account. Try again later." });
+      return res
+        .status(429)
+        .json({ error: "Too many login attempts for this account. Try again later." });
     }
-    const result = await pool.query("SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1", [identity.toLowerCase()]);
+    const result = await pool.query(
+      "SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1",
+      [identity.toLowerCase()],
+    );
     const user = result.rows[0];
     if (!user || !(await verifyPassword(password, user.password_hash))) {
       return res.status(401).json({ error: "Invalid username/email or password." });
@@ -541,14 +648,21 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
       expiresIn: 3600,
       emailVerified: true,
     });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 });
 app.get("/api/v1/auth/me", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const result = await pool.query("SELECT id, username, email, display_name, avatar_url, created_at FROM users WHERE id = $1", [req.user.id]);
+    const result = await pool.query(
+      "SELECT id, username, email, display_name, avatar_url, created_at FROM users WHERE id = $1",
+      [req.user.id],
+    );
     if (!result.rowCount) return res.status(404).json({ error: "Account not found." });
     return res.json({ user: publicUser(result.rows[0]) });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 });
 app.post("/api/v1/auth/logout", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -623,33 +737,45 @@ app.post("/api/v1/auth/logout-all", dbRequired, authRequired, async (req, res, n
   }
 });
 
-app.post("/api/v1/storage/upload", dbRequired, authRequired, mediaUpload.single("file"), async (req, res, next) => {
-  const file = req.file;
-  if (!file) return res.status(400).json({ error: "A media file is required." });
-  try {
-    if (file.mimetype.startsWith("image/") && file.size > 20 * 1024 * 1024) {
-      unlinkSync(file.path);
-      return res.status(413).json({ error: "Images must be 20 MB or smaller." });
+app.post(
+  "/api/v1/storage/upload",
+  dbRequired,
+  authRequired,
+  mediaUpload.single("file"),
+  async (req, res, next) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "A media file is required." });
+    try {
+      if (file.mimetype.startsWith("image/") && file.size > 20 * 1024 * 1024) {
+        unlinkSync(file.path);
+        return res.status(413).json({ error: "Images must be 20 MB or smaller." });
+      }
+      const detected = await fileTypeFromFile(file.path);
+      if (!detected || detected.mime !== file.mimetype || !allowedMediaTypes.has(detected.mime)) {
+        unlinkSync(file.path);
+        return res
+          .status(400)
+          .json({ error: "The uploaded file content does not match an allowed image/video type." });
+      }
+      const result = await pool.query(
+        "INSERT INTO media_objects (id,owner_id,object_key,mime_type,size_bytes) VALUES ($1,$2,$3,$4,$5) RETURNING object_key",
+        [randomUUID(), req.user.id, file.filename, detected.mime, file.size],
+      );
+      return res.status(201).json({ storagePath: `/api/v1/storage/${result.rows[0].object_key}` });
+    } catch (error) {
+      try {
+        unlinkSync(file.path);
+      } catch {}
+      return next(error);
     }
-    const detected = await fileTypeFromFile(file.path);
-    if (!detected || detected.mime !== file.mimetype || !allowedMediaTypes.has(detected.mime)) {
-      unlinkSync(file.path);
-      return res.status(400).json({ error: "The uploaded file content does not match an allowed image/video type." });
-    }
-    const result = await pool.query(
-      "INSERT INTO media_objects (id,owner_id,object_key,mime_type,size_bytes) VALUES ($1,$2,$3,$4,$5) RETURNING object_key",
-      [randomUUID(), req.user.id, file.filename, detected.mime, file.size],
-    );
-    return res.status(201).json({ storagePath: `/api/v1/storage/${result.rows[0].object_key}` });
-  } catch (error) {
-    try { unlinkSync(file.path); } catch {}
-    return next(error);
-  }
-});
+  },
+);
 
 app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res, next) => {
   const rawPath = typeof req.body?.path === "string" ? req.body.path : "";
-  const objectKey = rawPath.startsWith("/api/v1/storage/") ? rawPath.slice("/api/v1/storage/".length) : rawPath;
+  const objectKey = rawPath.startsWith("/api/v1/storage/")
+    ? rawPath.slice("/api/v1/storage/".length)
+    : rawPath;
   if (!mediaKeyPattern.test(objectKey) || objectKey.includes("/")) {
     return res.status(400).json({ error: "Invalid media path." });
   }
@@ -680,7 +806,8 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
 
 app.delete("/api/v1/storage/:objectKey", dbRequired, authRequired, async (req, res, next) => {
   const objectKey = req.params.objectKey;
-  if (!mediaKeyPattern.test(objectKey)) return res.status(400).json({ error: "Invalid media path." });
+  if (!mediaKeyPattern.test(objectKey))
+    return res.status(400).json({ error: "Invalid media path." });
   const storagePath = `/api/v1/storage/${objectKey}`;
   const client = await pool.connect();
   try {
@@ -707,7 +834,9 @@ app.delete("/api/v1/storage/:objectKey", dbRequired, authRequired, async (req, r
     }
     await client.query("UPDATE media_objects SET deleted_at=NOW() WHERE id=$1", [media.rows[0].id]);
     await client.query("COMMIT");
-    try { unlinkSync(path.join(mediaRoot, objectKey)); } catch {}
+    try {
+      unlinkSync(path.join(mediaRoot, objectKey));
+    } catch {}
     return res.json({ success: true });
   } catch (error) {
     await client.query("ROLLBACK").catch(() => {});
@@ -815,13 +944,16 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
       [
         req.user.id,
         limit,
-        typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime())
+        typeof req.query.cursor === "string" &&
+        Number.isFinite(new Date(req.query.cursor).getTime())
           ? new Date(req.query.cursor).toISOString()
           : null,
       ],
     );
     res.json({ posts: result.rows });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 });
 app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -906,18 +1038,23 @@ app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next
   }
 });
 
-app.patch("/api/v1/notifications/:notificationId/read", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    const result = await pool.query(
-      "UPDATE notifications SET read_at=NOW() WHERE id=$1 AND recipient_id=$2 RETURNING id,read_at",
-      [req.params.notificationId, req.user.id],
-    );
-    if (!result.rowCount) return res.status(404).json({ error: "Notification not found." });
-    return res.json({ notification: result.rows[0] });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.patch(
+  "/api/v1/notifications/:notificationId/read",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      const result = await pool.query(
+        "UPDATE notifications SET read_at=NOW() WHERE id=$1 AND recipient_id=$2 RETURNING id,read_at",
+        [req.params.notificationId, req.user.id],
+      );
+      if (!result.rowCount) return res.status(404).json({ error: "Notification not found." });
+      return res.json({ notification: result.rows[0] });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.post("/api/v1/notifications/read-all", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -939,7 +1076,16 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   if (
     !["post", "comment", "user", "story", "message"].includes(targetType) ||
     !/^[0-9a-f-]{36}$/i.test(targetId) ||
-    !["spam", "harassment", "impersonation", "hate", "nudity", "violence", "scam", "other"].includes(reason) ||
+    ![
+      "spam",
+      "harassment",
+      "impersonation",
+      "hate",
+      "nudity",
+      "violence",
+      "scam",
+      "other",
+    ].includes(reason) ||
     details.length > 2000
   ) {
     return res.status(400).json({ error: "Invalid report payload." });
@@ -947,9 +1093,17 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   if (!rateLimit("report:" + req.user.id, 20)) {
     return res.status(429).json({ error: "Too many reports. Try again later." });
   }
-  const tables = { post: "posts", comment: "post_comments", user: "users", story: "stories", message: "messages" };
+  const tables = {
+    post: "posts",
+    comment: "post_comments",
+    user: "users",
+    story: "stories",
+    message: "messages",
+  };
   try {
-    const target = await pool.query(`SELECT id FROM ${tables[targetType]} WHERE id=$1 LIMIT 1`, [targetId]);
+    const target = await pool.query(`SELECT id FROM ${tables[targetType]} WHERE id=$1 LIMIT 1`, [
+      targetId,
+    ]);
     if (!target.rowCount) return res.status(404).json({ error: "Report target not found." });
     const result = await pool.query(
       "INSERT INTO content_reports (id,reporter_id,target_type,target_id,reason,details) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id,status,created_at",
@@ -961,14 +1115,19 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   }
 });
 
-app.get("/api/v1/admin/reports", dbRequired, authRequired, adminRequired, async (req, res, next) => {
-  const status = typeof req.query.status === "string" ? req.query.status : "pending";
-  if (!["pending", "reviewed", "actioned", "dismissed", "all"].includes(status)) {
-    return res.status(400).json({ error: "Invalid report status filter." });
-  }
-  try {
-    const result = await pool.query(
-      `SELECT r.id,r.reporter_id,r.target_type,r.target_id,r.reason,r.details,r.status,r.reviewed_by,r.reviewed_at,r.action_notes,r.created_at,
+app.get(
+  "/api/v1/admin/reports",
+  dbRequired,
+  authRequired,
+  adminRequired,
+  async (req, res, next) => {
+    const status = typeof req.query.status === "string" ? req.query.status : "pending";
+    if (!["pending", "reviewed", "actioned", "dismissed", "all"].includes(status)) {
+      return res.status(400).json({ error: "Invalid report status filter." });
+    }
+    try {
+      const result = await pool.query(
+        `SELECT r.id,r.reporter_id,r.target_type,r.target_id,r.reason,r.details,r.status,r.reviewed_by,r.reviewed_at,r.action_notes,r.created_at,
         reporter.username AS reporter_username,
         CASE r.target_type
           WHEN 'post' THEN (SELECT p.caption FROM posts p WHERE p.id=r.target_id)
@@ -980,35 +1139,50 @@ app.get("/api/v1/admin/reports", dbRequired, authRequired, adminRequired, async 
        FROM content_reports r JOIN users reporter ON reporter.id=r.reporter_id
        WHERE ($1='all' OR r.status=$1)
        ORDER BY r.created_at DESC LIMIT 200`,
-      [status],
-    );
-    return res.json({ reports: result.rows });
-  } catch (error) {
-    return next(error);
-  }
-});
+        [status],
+      );
+      return res.json({ reports: result.rows });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
-app.patch("/api/v1/admin/reports/:reportId", dbRequired, authRequired, adminRequired, async (req, res, next) => {
-  const status = req.body?.status;
-  const actionNotes = typeof req.body?.actionNotes === "string" ? req.body.actionNotes.trim() : "";
-  if (!["reviewed", "actioned", "dismissed"].includes(status) || actionNotes.length > 1000) {
-    return res.status(400).json({ error: "Invalid report action." });
-  }
-  try {
-    const result = await pool.query(
-      "UPDATE content_reports SET status=$1,reviewed_by=$2,reviewed_at=NOW(),action_notes=$3 WHERE id=$4 RETURNING id,status",
-      [status, req.user.id, actionNotes || null, req.params.reportId],
-    );
-    if (!result.rowCount) return res.status(404).json({ error: "Report not found." });
-    await pool.query(
-      "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'report',$4,$5::jsonb,$6)",
-      [randomUUID(), req.user.id, "report." + status, req.params.reportId, JSON.stringify({ status }), req.ip || null],
-    );
-    return res.json({ report: result.rows[0] });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.patch(
+  "/api/v1/admin/reports/:reportId",
+  dbRequired,
+  authRequired,
+  adminRequired,
+  async (req, res, next) => {
+    const status = req.body?.status;
+    const actionNotes =
+      typeof req.body?.actionNotes === "string" ? req.body.actionNotes.trim() : "";
+    if (!["reviewed", "actioned", "dismissed"].includes(status) || actionNotes.length > 1000) {
+      return res.status(400).json({ error: "Invalid report action." });
+    }
+    try {
+      const result = await pool.query(
+        "UPDATE content_reports SET status=$1,reviewed_by=$2,reviewed_at=NOW(),action_notes=$3 WHERE id=$4 RETURNING id,status",
+        [status, req.user.id, actionNotes || null, req.params.reportId],
+      );
+      if (!result.rowCount) return res.status(404).json({ error: "Report not found." });
+      await pool.query(
+        "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'report',$4,$5::jsonb,$6)",
+        [
+          randomUUID(),
+          req.user.id,
+          "report." + status,
+          req.params.reportId,
+          JSON.stringify({ status }),
+          req.ip || null,
+        ],
+      );
+      return res.json({ report: result.rows[0] });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get("/api/v1/admin/users", dbRequired, authRequired, adminRequired, async (req, res, next) => {
   try {
@@ -1023,50 +1197,76 @@ app.get("/api/v1/admin/users", dbRequired, authRequired, adminRequired, async (r
   }
 });
 
-app.patch("/api/v1/admin/users/:userId/status", dbRequired, authRequired, adminRequired, async (req, res, next) => {
-  const isDeactivated = req.body?.isDeactivated;
-  if (typeof isDeactivated !== "boolean") return res.status(400).json({ error: "isDeactivated must be boolean." });
-  if (req.params.userId === req.user.id && isDeactivated) return res.status(400).json({ error: "You cannot deactivate your own administrator account." });
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const result = await client.query(
-      "UPDATE users SET is_deactivated=$1,updated_at=NOW() WHERE id=$2 RETURNING id,username,is_deactivated",
-      [isDeactivated, req.params.userId],
-    );
-    if (!result.rowCount) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "User not found." });
+app.patch(
+  "/api/v1/admin/users/:userId/status",
+  dbRequired,
+  authRequired,
+  adminRequired,
+  async (req, res, next) => {
+    const isDeactivated = req.body?.isDeactivated;
+    if (typeof isDeactivated !== "boolean")
+      return res.status(400).json({ error: "isDeactivated must be boolean." });
+    if (req.params.userId === req.user.id && isDeactivated)
+      return res
+        .status(400)
+        .json({ error: "You cannot deactivate your own administrator account." });
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query(
+        "UPDATE users SET is_deactivated=$1,updated_at=NOW() WHERE id=$2 RETURNING id,username,is_deactivated",
+        [isDeactivated, req.params.userId],
+      );
+      if (!result.rowCount) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "User not found." });
+      }
+      if (isDeactivated) {
+        await client.query(
+          "UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL",
+          [req.params.userId],
+        );
+      }
+      await client.query(
+        "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'user',$4,$5::jsonb,$6)",
+        [
+          randomUUID(),
+          req.user.id,
+          isDeactivated ? "user.deactivate" : "user.reactivate",
+          req.params.userId,
+          JSON.stringify({ isDeactivated }),
+          req.ip || null,
+        ],
+      );
+      await client.query("COMMIT");
+      return res.json({ user: result.rows[0] });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      return next(error);
+    } finally {
+      client.release();
     }
-    if (isDeactivated) {
-      await client.query("UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL", [req.params.userId]);
-    }
-    await client.query(
-      "INSERT INTO audit_logs (id,actor_id,action,target_type,target_id,metadata,ip_address) VALUES ($1,$2,$3,'user',$4,$5::jsonb,$6)",
-      [randomUUID(), req.user.id, isDeactivated ? "user.deactivate" : "user.reactivate", req.params.userId, JSON.stringify({ isDeactivated }), req.ip || null],
-    );
-    await client.query("COMMIT");
-    return res.json({ user: result.rows[0] });
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
-    return next(error);
-  } finally {
-    client.release();
-  }
-});
+  },
+);
 
-app.get("/api/v1/admin/security-logs", dbRequired, authRequired, adminRequired, async (req, res, next) => {
-  const limit = Math.min(Math.max(Number(req.query.limit || 100), 1), 200);
-  try {
-    const result = await pool.query(
-      "SELECT id,actor_id,action,target_type,target_id,metadata,ip_address,created_at FROM audit_logs ORDER BY created_at DESC LIMIT $1",
-      [limit],
-    );
-    return res.json({ logs: result.rows });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.get(
+  "/api/v1/admin/security-logs",
+  dbRequired,
+  authRequired,
+  adminRequired,
+  async (req, res, next) => {
+    const limit = Math.min(Math.max(Number(req.query.limit || 100), 1), 200);
+    try {
+      const result = await pool.query(
+        "SELECT id,actor_id,action,target_type,target_id,metadata,ip_address,created_at FROM audit_logs ORDER BY created_at DESC LIMIT $1",
+        [limit],
+      );
+      return res.json({ logs: result.rows });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -1081,7 +1281,11 @@ app.get("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => 
 
 app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const result = await pool.query(profileSelect + " WHERE u.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1", [req.params.userId, req.user.id]);
+    const result = await pool.query(
+      profileSelect +
+        " WHERE u.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1",
+      [req.params.userId, req.user.id],
+    );
     if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
       return res.status(404).json({ error: "Profile not found." });
     }
@@ -1100,11 +1304,13 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
   try {
     const result = query
       ? await pool.query(
-          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
+          profileSelect +
+            " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
           [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
         )
       : await pool.query(
-          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
+          profileSelect +
+            " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
           [req.user.id, limit],
         );
     return res.json({ profiles: result.rows.map(publicProfile) });
@@ -1116,7 +1322,11 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
 app.get("/api/v1/users/:username", dbRequired, authRequired, async (req, res, next) => {
   const username = String(req.params.username || "").toLowerCase();
   try {
-    const result = await pool.query(profileSelect + " WHERE LOWER(u.username)=LOWER($1) AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1", [username, req.user.id]);
+    const result = await pool.query(
+      profileSelect +
+        " WHERE LOWER(u.username)=LOWER($1) AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1",
+      [username, req.user.id],
+    );
     if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
       return res.status(404).json({ error: "Profile not found." });
     }
@@ -1137,20 +1347,32 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
 
   if (body.username !== undefined) {
     if (!validUsername(body.username)) {
-      return res.status(400).json({ error: "Username must be 3–30 characters using letters, numbers, dots, or underscores." });
+      return res
+        .status(400)
+        .json({
+          error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
+        });
     }
-    const existing = await pool.query("SELECT 1 FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2 LIMIT 1", [body.username, req.user.id]);
+    const existing = await pool.query(
+      "SELECT 1 FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2 LIMIT 1",
+      [body.username, req.user.id],
+    );
     if (existing.rowCount) return res.status(409).json({ error: "Username is already taken." });
     add("username", body.username.toLowerCase());
   }
   if (body.displayName !== undefined) {
-    if (typeof body.displayName !== "string" || !body.displayName.trim() || body.displayName.trim().length > 80) {
+    if (
+      typeof body.displayName !== "string" ||
+      !body.displayName.trim() ||
+      body.displayName.trim().length > 80
+    ) {
       return res.status(400).json({ error: "Display name must be 1–80 characters." });
     }
     add("display_name", body.displayName.trim());
   }
   if (body.bio !== undefined) {
-    if (typeof body.bio !== "string" || body.bio.length > 500) return res.status(400).json({ error: "Bio must be 500 characters or fewer." });
+    if (typeof body.bio !== "string" || body.bio.length > 500)
+      return res.status(400).json({ error: "Bio must be 500 characters or fewer." });
     add("bio", body.bio);
   }
   if (body.website !== undefined) {
@@ -1167,66 +1389,92 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
     }
   }
   if (body.location !== undefined) {
-    if (body.location !== null && (typeof body.location !== "string" || body.location.length > 120)) return res.status(400).json({ error: "Location must be 120 characters or fewer." });
+    if (body.location !== null && (typeof body.location !== "string" || body.location.length > 120))
+      return res.status(400).json({ error: "Location must be 120 characters or fewer." });
     add("location", body.location || null);
   }
   if (body.isPrivate !== undefined) {
-    if (typeof body.isPrivate !== "boolean") return res.status(400).json({ error: "isPrivate must be boolean." });
+    if (typeof body.isPrivate !== "boolean")
+      return res.status(400).json({ error: "isPrivate must be boolean." });
     add("is_private", body.isPrivate);
   }
   if (body.accountType !== undefined) {
-    if (!["personal", "creator", "business"].includes(body.accountType)) return res.status(400).json({ error: "Invalid account type." });
+    if (!["personal", "creator", "business"].includes(body.accountType))
+      return res.status(400).json({ error: "Invalid account type." });
     add("account_type", body.accountType);
   }
-  for (const [inputKey, column] of [["allowMentionsFrom", "allow_mentions_from"], ["allowTagsFrom", "allow_tags_from"]]) {
+  for (const [inputKey, column] of [
+    ["allowMentionsFrom", "allow_mentions_from"],
+    ["allowTagsFrom", "allow_tags_from"],
+  ]) {
     if (body[inputKey] !== undefined) {
-      if (!["everyone", "followers", "nobody"].includes(body[inputKey])) return res.status(400).json({ error: "Invalid mention/tag permission." });
+      if (!["everyone", "followers", "nobody"].includes(body[inputKey]))
+        return res.status(400).json({ error: "Invalid mention/tag permission." });
       add(column, body[inputKey]);
     }
   }
   if (body.showActivityStatus !== undefined) {
-    if (typeof body.showActivityStatus !== "boolean") return res.status(400).json({ error: "showActivityStatus must be boolean." });
+    if (typeof body.showActivityStatus !== "boolean")
+      return res.status(400).json({ error: "showActivityStatus must be boolean." });
     add("show_activity_status", body.showActivityStatus);
   }
   if (body.locale !== undefined) {
-    if (typeof body.locale !== "string" || body.locale.length > 12) return res.status(400).json({ error: "Invalid locale." });
+    if (typeof body.locale !== "string" || body.locale.length > 12)
+      return res.status(400).json({ error: "Invalid locale." });
     add("locale", body.locale);
   }
   if (body.timezone !== undefined) {
-    if (typeof body.timezone !== "string" || body.timezone.length > 80) return res.status(400).json({ error: "Invalid timezone." });
+    if (typeof body.timezone !== "string" || body.timezone.length > 80)
+      return res.status(400).json({ error: "Invalid timezone." });
     add("timezone", body.timezone);
   }
   if (body.countryCode !== undefined) {
-    if (body.countryCode !== null && (typeof body.countryCode !== "string" || !/^[A-Za-z]{2}$/.test(body.countryCode))) return res.status(400).json({ error: "Country code must be a two-letter code." });
+    if (
+      body.countryCode !== null &&
+      (typeof body.countryCode !== "string" || !/^[A-Za-z]{2}$/.test(body.countryCode))
+    )
+      return res.status(400).json({ error: "Country code must be a two-letter code." });
     add("country_code", body.countryCode ? body.countryCode.toUpperCase() : null);
   }
   if (body.avatarUrl !== undefined) {
-    if (body.avatarUrl !== null && typeof body.avatarUrl !== "string") return res.status(400).json({ error: "Invalid avatar path." });
+    if (body.avatarUrl !== null && typeof body.avatarUrl !== "string")
+      return res.status(400).json({ error: "Invalid avatar path." });
     if (body.avatarUrl) {
       const prefix = "/api/v1/storage/";
-      if (!body.avatarUrl.startsWith(prefix)) return res.status(400).json({ error: "Avatar must be uploaded to Opexnal storage." });
+      if (!body.avatarUrl.startsWith(prefix))
+        return res.status(400).json({ error: "Avatar must be uploaded to Opexnal storage." });
       const objectKey = body.avatarUrl.slice(prefix.length);
-      const owned = await pool.query("SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1", [objectKey, req.user.id]);
-      if (!owned.rowCount) return res.status(403).json({ error: "You can only use media you uploaded." });
+      const owned = await pool.query(
+        "SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1",
+        [objectKey, req.user.id],
+      );
+      if (!owned.rowCount)
+        return res.status(403).json({ error: "You can only use media you uploaded." });
     }
     add("avatar_url", body.avatarUrl || null);
   }
 
-  if (updates.length === 0) return res.status(400).json({ error: "No supported profile fields were provided." });
+  if (updates.length === 0)
+    return res.status(400).json({ error: "No supported profile fields were provided." });
   values.push(req.user.id);
   try {
-    await pool.query(`UPDATE users SET ${updates.join(", ")}, updated_at=NOW() WHERE id=$${values.length}`, values);
+    await pool.query(
+      `UPDATE users SET ${updates.join(", ")}, updated_at=NOW() WHERE id=$${values.length}`,
+      values,
+    );
     const result = await pool.query(profileSelect + " WHERE u.id=$1 LIMIT 1", [req.user.id]);
     return res.json({ profile: publicProfile(result.rows[0]) });
   } catch (error) {
-    if (error?.code === "23505") return res.status(409).json({ error: "Username is already taken." });
+    if (error?.code === "23505")
+      return res.status(409).json({ error: "Username is already taken." });
     return next(error);
   }
 });
 
 app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, res, next) => {
   const cursor = typeof req.query.cursor === "string" ? new Date(req.query.cursor) : null;
-  if (cursor && !Number.isFinite(cursor.getTime())) return res.status(400).json({ error: "Invalid cursor." });
+  if (cursor && !Number.isFinite(cursor.getTime()))
+    return res.status(400).json({ error: "Invalid cursor." });
   const limit = Math.min(Math.max(Number(req.query.limit || 18), 1), 100);
   try {
     const result = await pool.query(
@@ -1261,7 +1509,12 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
          AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
        ORDER BY p.created_at DESC LIMIT $4`,
-      [String(req.params.username).toLowerCase(), req.user.id, cursor ? cursor.toISOString() : null, limit],
+      [
+        String(req.params.username).toLowerCase(),
+        req.user.id,
+        cursor ? cursor.toISOString() : null,
+        limit,
+      ],
     );
     return res.json({ posts: result.rows });
   } catch (error) {
@@ -1275,11 +1528,13 @@ app.get("/api/v1/users/me/followers", dbRequired, authRequired, async (req, res,
   try {
     const result = query
       ? await pool.query(
-          profileSelect + " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY f.created_at DESC LIMIT $3",
+          profileSelect +
+            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY f.created_at DESC LIMIT $3",
           [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
         )
       : await pool.query(
-          profileSelect + " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 ORDER BY f.created_at DESC LIMIT $2",
+          profileSelect +
+            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 ORDER BY f.created_at DESC LIMIT $2",
           [req.user.id, limit],
         );
     return res.json({ profiles: result.rows.map(publicProfile) });
@@ -1291,7 +1546,8 @@ app.get("/api/v1/users/me/followers", dbRequired, authRequired, async (req, res,
 app.get("/api/v1/users/me/blocked", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
-      profileSelect + " JOIN user_blocks b ON b.blocked_id=u.id WHERE b.blocker_id=$1 ORDER BY b.created_at DESC LIMIT 500",
+      profileSelect +
+        " JOIN user_blocks b ON b.blocked_id=u.id WHERE b.blocker_id=$1 ORDER BY b.created_at DESC LIMIT 500",
       [req.user.id],
     );
     return res.json({ profiles: result.rows.map(publicProfile) });
@@ -1303,7 +1559,8 @@ app.get("/api/v1/users/me/blocked", dbRequired, authRequired, async (req, res, n
 app.get("/api/v1/users/me/close-friends", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
-      profileSelect + " JOIN close_friends cf ON cf.friend_id=u.id WHERE cf.owner_id=$1 ORDER BY cf.created_at DESC LIMIT 500",
+      profileSelect +
+        " JOIN close_friends cf ON cf.friend_id=u.id WHERE cf.owner_id=$1 ORDER BY cf.created_at DESC LIMIT 500",
       [req.user.id],
     );
     return res.json({ profiles: result.rows.map(publicProfile) });
@@ -1312,36 +1569,55 @@ app.get("/api/v1/users/me/close-friends", dbRequired, authRequired, async (req, 
   }
 });
 
-app.post("/api/v1/users/me/close-friends/:friendId", dbRequired, authRequired, async (req, res, next) => {
-  if (req.params.friendId === req.user.id) return res.status(400).json({ error: "You cannot add yourself to Close Friends." });
-  try {
-    const friend = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1", [req.params.friendId]);
-    if (!friend.rowCount) return res.status(404).json({ error: "User not found." });
-    const followsOwner = await pool.query(
-      "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
-      [req.params.friendId, req.user.id],
-    );
-    if (!followsOwner.rowCount) {
-      return res.status(400).json({ error: "Only people who follow your account can be added to Close Friends." });
+app.post(
+  "/api/v1/users/me/close-friends/:friendId",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    if (req.params.friendId === req.user.id)
+      return res.status(400).json({ error: "You cannot add yourself to Close Friends." });
+    try {
+      const friend = await pool.query(
+        "SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1",
+        [req.params.friendId],
+      );
+      if (!friend.rowCount) return res.status(404).json({ error: "User not found." });
+      const followsOwner = await pool.query(
+        "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
+        [req.params.friendId, req.user.id],
+      );
+      if (!followsOwner.rowCount) {
+        return res
+          .status(400)
+          .json({ error: "Only people who follow your account can be added to Close Friends." });
+      }
+      await pool.query(
+        "INSERT INTO close_friends (owner_id,friend_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+        [req.user.id, req.params.friendId],
+      );
+      return res.json({ added: true });
+    } catch (error) {
+      return next(error);
     }
-    await pool.query(
-      "INSERT INTO close_friends (owner_id,friend_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
-      [req.user.id, req.params.friendId],
-    );
-    return res.json({ added: true });
-  } catch (error) {
-    return next(error);
-  }
-});
+  },
+);
 
-app.delete("/api/v1/users/me/close-friends/:friendId", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    await pool.query("DELETE FROM close_friends WHERE owner_id=$1 AND friend_id=$2", [req.user.id, req.params.friendId]);
-    return res.json({ removed: true });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.delete(
+  "/api/v1/users/me/close-friends/:friendId",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      await pool.query("DELETE FROM close_friends WHERE owner_id=$1 AND friend_id=$2", [
+        req.user.id,
+        req.params.friendId,
+      ]);
+      return res.json({ removed: true });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -1356,11 +1632,14 @@ app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req,
 });
 
 app.post("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, res, next) => {
-  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot block yourself." });
+  if (req.params.userId === req.user.id)
+    return res.status(400).json({ error: "You cannot block yourself." });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const target = await client.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    const target = await client.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [
+      req.params.userId,
+    ]);
     if (!target.rowCount) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "User not found." });
@@ -1389,7 +1668,10 @@ app.post("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, re
 
 app.delete("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, res, next) => {
   try {
-    await pool.query("DELETE FROM user_blocks WHERE blocker_id=$1 AND blocked_id=$2", [req.user.id, req.params.userId]);
+    await pool.query("DELETE FROM user_blocks WHERE blocker_id=$1 AND blocked_id=$2", [
+      req.user.id,
+      req.params.userId,
+    ]);
     return res.json({ blocked: false });
   } catch (error) {
     return next(error);
@@ -1397,9 +1679,13 @@ app.delete("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, 
 });
 
 app.post("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (req, res, next) => {
-  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot restrict yourself." });
+  if (req.params.userId === req.user.id)
+    return res.status(400).json({ error: "You cannot restrict yourself." });
   try {
-    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1", [req.params.userId]);
+    const target = await pool.query(
+      "SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1",
+      [req.params.userId],
+    );
     if (!target.rowCount) return res.status(404).json({ error: "User not found." });
     await pool.query(
       "INSERT INTO user_restrictions (restrictor_id,restricted_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
@@ -1413,7 +1699,10 @@ app.post("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (req,
 
 app.delete("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (req, res, next) => {
   try {
-    await pool.query("DELETE FROM user_restrictions WHERE restrictor_id=$1 AND restricted_id=$2", [req.user.id, req.params.userId]);
+    await pool.query("DELETE FROM user_restrictions WHERE restrictor_id=$1 AND restricted_id=$2", [
+      req.user.id,
+      req.params.userId,
+    ]);
     return res.json({ restricted: false });
   } catch (error) {
     return next(error);
@@ -1422,13 +1711,25 @@ app.delete("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (re
 
 app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [
+      req.params.userId,
+    ]);
     if (!target.rowCount) return res.status(404).json({ error: "User not found." });
     const [following, pending, followers, own] = await Promise.all([
-      pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1", [req.user.id, req.params.userId]),
-      pool.query("SELECT 1 FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending' LIMIT 1", [req.user.id, req.params.userId]),
-      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE following_id=$1", [req.params.userId]),
-      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE follower_id=$1", [req.params.userId]),
+      pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1", [
+        req.user.id,
+        req.params.userId,
+      ]),
+      pool.query(
+        "SELECT 1 FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending' LIMIT 1",
+        [req.user.id, req.params.userId],
+      ),
+      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE following_id=$1", [
+        req.params.userId,
+      ]),
+      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE follower_id=$1", [
+        req.params.userId,
+      ]),
     ]);
     return res.json({
       isFollowing: Boolean(following.rowCount),
@@ -1442,13 +1743,15 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
 });
 
 app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
-  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot follow yourself." });
+  if (req.params.userId === req.user.id)
+    return res.status(400).json({ error: "You cannot follow yourself." });
   try {
     const target = await pool.query(
       "SELECT id,is_private,is_deactivated FROM users WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2)) LIMIT 1",
       [req.params.userId, req.user.id],
     );
-    if (!target.rowCount || target.rows[0].is_deactivated) return res.status(404).json({ error: "User not found." });
+    if (!target.rowCount || target.rows[0].is_deactivated)
+      return res.status(404).json({ error: "User not found." });
     const alreadyFollowing = await pool.query(
       "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
       [req.user.id, req.params.userId],
@@ -1466,7 +1769,8 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
       "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING following_id",
       [req.user.id, req.params.userId],
     );
-    if (inserted.rowCount) await notifyUser(req.params.userId, req.user.id, "new_follower", "user", req.user.id);
+    if (inserted.rowCount)
+      await notifyUser(req.params.userId, req.user.id, "new_follower", "user", req.user.id);
     return res.json({ status: "following", following: true });
   } catch (error) {
     return next(error);
@@ -1475,24 +1779,32 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
 
 app.delete("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
   try {
-    await pool.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [req.user.id, req.params.userId]);
+    await pool.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [
+      req.user.id,
+      req.params.userId,
+    ]);
     return res.json({ following: false });
   } catch (error) {
     return next(error);
   }
 });
 
-app.delete("/api/v1/users/:userId/follow-request", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    await pool.query(
-      "DELETE FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending'",
-      [req.user.id, req.params.userId],
-    );
-    return res.json({ requested: false });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.delete(
+  "/api/v1/users/:userId/follow-request",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      await pool.query(
+        "DELETE FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending'",
+        [req.user.id, req.params.userId],
+      );
+      return res.json({ requested: false });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -1508,54 +1820,69 @@ app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, ne
   }
 });
 
-app.post("/api/v1/follow-requests/:requestId/accept", dbRequired, authRequired, async (req, res, next) => {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const request = await client.query(
-      "SELECT id,requester_id,target_id FROM follow_requests WHERE id=$1 AND target_id=$2 AND status='pending' FOR UPDATE",
-      [req.params.requestId, req.user.id],
-    );
-    if (!request.rowCount) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Pending follow request not found." });
+app.post(
+  "/api/v1/follow-requests/:requestId/accept",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const request = await client.query(
+        "SELECT id,requester_id,target_id FROM follow_requests WHERE id=$1 AND target_id=$2 AND status='pending' FOR UPDATE",
+        [req.params.requestId, req.user.id],
+      );
+      if (!request.rowCount) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "Pending follow request not found." });
+      }
+      const item = request.rows[0];
+      await client.query(
+        "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+        [item.requester_id, item.target_id],
+      );
+      await client.query(
+        "UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1",
+        [item.id],
+      );
+      await client.query("COMMIT");
+      await notifyUser(item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
+      return res.json({ accepted: true });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      return next(error);
+    } finally {
+      client.release();
     }
-    const item = request.rows[0];
-    await client.query(
-      "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
-      [item.requester_id, item.target_id],
-    );
-    await client.query("UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1", [item.id]);
-    await client.query("COMMIT");
-    await notifyUser(item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
-    return res.json({ accepted: true });
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
-    return next(error);
-  } finally {
-    client.release();
-  }
-});
+  },
+);
 
-app.post("/api/v1/follow-requests/:requestId/reject", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    const result = await pool.query(
-      "UPDATE follow_requests SET status='rejected',updated_at=NOW() WHERE id=$1 AND target_id=$2 AND status='pending' RETURNING id",
-      [req.params.requestId, req.user.id],
-    );
-    if (!result.rowCount) return res.status(404).json({ error: "Pending follow request not found." });
-    return res.json({ rejected: true });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.post(
+  "/api/v1/follow-requests/:requestId/reject",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      const result = await pool.query(
+        "UPDATE follow_requests SET status='rejected',updated_at=NOW() WHERE id=$1 AND target_id=$2 AND status='pending' RETURNING id",
+        [req.params.requestId, req.user.id],
+      );
+      if (!result.rowCount)
+        return res.status(404).json({ error: "Pending follow request not found." });
+      return res.json({ rejected: true });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   const body = req.body || {};
   const caption = body.caption === undefined ? "" : body.caption;
   const visibility = body.visibility === undefined ? "public" : body.visibility;
   const commentsEnabled = body.commentsEnabled !== false;
-  const locationName = typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
+  const locationName =
+    typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
   let media = Array.isArray(body.media) ? body.media : [];
   if (!Array.isArray(body.media) && typeof body.mediaUrl === "string") {
     media = [{ mediaUrl: body.mediaUrl, mediaType: body.mediaType || "image" }];
@@ -1569,14 +1896,20 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
     return res.status(400).json({ error: "Invalid post payload." });
   }
   if (
-    media.some((item) =>
-      !item ||
-      typeof item.mediaUrl !== "string" ||
-      item.mediaUrl.length > 2048 ||
-      !["image", "video"].includes(item.mediaType) ||
-      (item.width != null && (!Number.isInteger(item.width) || item.width < 1 || item.width > 30000)) ||
-      (item.height != null && (!Number.isInteger(item.height) || item.height < 1 || item.height > 30000)) ||
-      (item.durationSeconds != null && (typeof item.durationSeconds !== "number" || item.durationSeconds < 0 || item.durationSeconds > 3600))
+    media.some(
+      (item) =>
+        !item ||
+        typeof item.mediaUrl !== "string" ||
+        item.mediaUrl.length > 2048 ||
+        !["image", "video"].includes(item.mediaType) ||
+        (item.width != null &&
+          (!Number.isInteger(item.width) || item.width < 1 || item.width > 30000)) ||
+        (item.height != null &&
+          (!Number.isInteger(item.height) || item.height < 1 || item.height > 30000)) ||
+        (item.durationSeconds != null &&
+          (typeof item.durationSeconds !== "number" ||
+            item.durationSeconds < 0 ||
+            item.durationSeconds > 3600)),
     )
   ) {
     return res.status(400).json({ error: "One or more media items are invalid." });
@@ -1589,7 +1922,9 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
     for (const item of media) {
       const prefix = "/api/v1/storage/";
       if (!item.mediaUrl.startsWith(prefix)) {
-        return res.status(400).json({ error: "Post media must be uploaded to Opexnal storage first." });
+        return res
+          .status(400)
+          .json({ error: "Post media must be uploaded to Opexnal storage first." });
       }
       const objectKey = item.mediaUrl.slice(prefix.length);
       const owned = await pool.query(
@@ -1663,8 +1998,12 @@ app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res
       "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING post_id",
       [req.user.id, post.id],
     );
-    if (inserted.rowCount) await notifyUser(post.user_id, req.user.id, "post_like", "post", post.id);
-    const count = await pool.query("SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1", [post.id]);
+    if (inserted.rowCount)
+      await notifyUser(post.user_id, req.user.id, "post_like", "post", post.id);
+    const count = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1",
+      [post.id],
+    );
     return res.json({ liked: true, likeCount: count.rows[0].count });
   } catch (error) {
     return next(error);
@@ -1675,8 +2014,14 @@ app.delete("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, r
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    await pool.query("DELETE FROM post_likes WHERE user_id=$1 AND post_id=$2", [req.user.id, post.id]);
-    const count = await pool.query("SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1", [post.id]);
+    await pool.query("DELETE FROM post_likes WHERE user_id=$1 AND post_id=$2", [
+      req.user.id,
+      post.id,
+    ]);
+    const count = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1",
+      [post.id],
+    );
     return res.json({ liked: false, likeCount: count.rows[0].count });
   } catch (error) {
     return next(error);
@@ -1701,7 +2046,10 @@ app.delete("/api/v1/posts/:postId/save", dbRequired, authRequired, async (req, r
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    await pool.query("DELETE FROM post_saves WHERE user_id=$1 AND post_id=$2", [req.user.id, post.id]);
+    await pool.query("DELETE FROM post_saves WHERE user_id=$1 AND post_id=$2", [
+      req.user.id,
+      post.id,
+    ]);
     return res.json({ saved: false });
   } catch (error) {
     return next(error);
@@ -1716,10 +2064,12 @@ app.post("/api/v1/posts/:postId/share", dbRequired, authRequired, async (req, re
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    await pool.query(
-      "INSERT INTO post_shares (id,user_id,post_id,channel) VALUES ($1,$2,$3,$4)",
-      [randomUUID(), req.user.id, post.id, channel],
-    );
+    await pool.query("INSERT INTO post_shares (id,user_id,post_id,channel) VALUES ($1,$2,$3,$4)", [
+      randomUUID(),
+      req.user.id,
+      post.id,
+      channel,
+    ]);
     return res.json({ success: true });
   } catch (error) {
     return next(error);
@@ -1756,17 +2106,20 @@ app.get("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req, 
 app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req, res, next) => {
   const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
   const parentId = typeof req.body?.parentId === "string" ? req.body.parentId : null;
-  if (!body || body.length > 2000) return res.status(400).json({ error: "Comment must be 1–2000 characters." });
+  if (!body || body.length > 2000)
+    return res.status(400).json({ error: "Comment must be 1–2000 characters." });
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    if (!post.comments_enabled) return res.status(403).json({ error: "Comments are disabled for this post." });
+    if (!post.comments_enabled)
+      return res.status(403).json({ error: "Comments are disabled for this post." });
     if (parentId) {
       const parent = await pool.query(
         "SELECT id FROM post_comments WHERE id=$1 AND post_id=$2 LIMIT 1",
         [parentId, post.id],
       );
-      if (!parent.rowCount) return res.status(400).json({ error: "Reply target is not part of this post." });
+      if (!parent.rowCount)
+        return res.status(400).json({ error: "Reply target is not part of this post." });
     }
     const id = randomUUID();
     const result = await pool.query(
@@ -1794,7 +2147,8 @@ app.delete("/api/v1/comments/:commentId", dbRequired, authRequired, async (req, 
        RETURNING c.id`,
       [req.params.commentId, req.user.id],
     );
-    if (!result.rowCount) return res.status(404).json({ error: "Comment not found or not owned by this account." });
+    if (!result.rowCount)
+      return res.status(404).json({ error: "Comment not found or not owned by this account." });
     return res.json({ success: true });
   } catch (error) {
     return next(error);
@@ -1803,10 +2157,9 @@ app.delete("/api/v1/comments/:commentId", dbRequired, authRequired, async (req, 
 
 app.post("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const comment = await pool.query(
-      "SELECT id FROM post_comments WHERE id=$1 LIMIT 1",
-      [req.params.commentId],
-    );
+    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [
+      req.params.commentId,
+    ]);
     if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
     await pool.query(
       "INSERT INTO comment_likes (user_id,comment_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
@@ -1824,9 +2177,14 @@ app.post("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (re
 
 app.delete("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [req.params.commentId]);
+    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [
+      req.params.commentId,
+    ]);
     if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
-    await pool.query("DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2", [req.user.id, req.params.commentId]);
+    await pool.query("DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2", [
+      req.user.id,
+      req.params.commentId,
+    ]);
     await pool.query(
       "UPDATE post_comments SET likes_count=(SELECT COUNT(*) FROM comment_likes WHERE comment_id=$1),updated_at=NOW() WHERE id=$1",
       [req.params.commentId],
@@ -1841,10 +2199,9 @@ app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, n
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const postResult = await client.query(
-      "SELECT id,user_id FROM posts WHERE id=$1 FOR UPDATE",
-      [req.params.postId],
-    );
+    const postResult = await client.query("SELECT id,user_id FROM posts WHERE id=$1 FOR UPDATE", [
+      req.params.postId,
+    ]);
     if (!postResult.rowCount || postResult.rows[0].user_id !== req.user.id) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Post not found or not owned by this account." });
@@ -1853,18 +2210,29 @@ app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, n
       "SELECT storage_path FROM post_media WHERE post_id=$1 UNION SELECT media_url AS storage_path FROM posts WHERE id=$1 AND media_url IS NOT NULL",
       [req.params.postId],
     );
-    await client.query("DELETE FROM posts WHERE id=$1 AND user_id=$2", [req.params.postId, req.user.id]);
+    await client.query("DELETE FROM posts WHERE id=$1 AND user_id=$2", [
+      req.params.postId,
+      req.user.id,
+    ]);
     await client.query("COMMIT");
     for (const row of media.rows) {
-      const key = typeof row.storage_path === "string" ? row.storage_path.replace("/api/v1/storage/", "") : "";
+      const key =
+        typeof row.storage_path === "string"
+          ? row.storage_path.replace("/api/v1/storage/", "")
+          : "";
       if (!mediaKeyPattern.test(key)) continue;
       const references = await pool.query(
         "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) OR EXISTS (SELECT 1 FROM users WHERE avatar_url=$1) LIMIT 1",
         [row.storage_path],
       );
       if (!references.rowCount) {
-        await pool.query("UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2", [key, req.user.id]);
-        try { unlinkSync(path.join(mediaRoot, key)); } catch {}
+        await pool.query(
+          "UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2",
+          [key, req.user.id],
+        );
+        try {
+          unlinkSync(path.join(mediaRoot, key));
+        } catch {}
       }
     }
     return res.json({ success: true });
@@ -1927,14 +2295,17 @@ app.post("/api/v1/stories", dbRequired, authRequired, async (req, res, next) => 
     }
     const prefix = "/api/v1/storage/";
     if (!mediaUrl.startsWith(prefix)) {
-      return res.status(400).json({ error: "Story media must be uploaded to Opexnal storage first." });
+      return res
+        .status(400)
+        .json({ error: "Story media must be uploaded to Opexnal storage first." });
     }
     const objectKey = mediaUrl.slice(prefix.length);
     const media = await pool.query(
       "SELECT 1 FROM media_objects WHERE object_key=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1",
       [objectKey, req.user.id],
     );
-    if (!media.rowCount) return res.status(403).json({ error: "You can only attach media you uploaded." });
+    if (!media.rowCount)
+      return res.status(403).json({ error: "You can only attach media you uploaded." });
     const result = await pool.query(
       "INSERT INTO stories (id,user_id,media_url,media_type,visibility,caption,width,height,expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW()+INTERVAL '24 hours') RETURNING *",
       [randomUUID(), req.user.id, mediaUrl, mediaType, visibility, caption.trim(), width, height],
@@ -1951,7 +2322,8 @@ app.delete("/api/v1/stories/:storyId", dbRequired, authRequired, async (req, res
       "DELETE FROM stories WHERE id=$1 AND user_id=$2 RETURNING media_url",
       [req.params.storyId, req.user.id],
     );
-    if (!result.rowCount) return res.status(404).json({ error: "Story not found or not owned by this account." });
+    if (!result.rowCount)
+      return res.status(404).json({ error: "Story not found or not owned by this account." });
     const storagePath = result.rows[0].media_url;
     const objectKey = storagePath.replace("/api/v1/storage/", "");
     if (mediaKeyPattern.test(objectKey)) {
@@ -1960,8 +2332,13 @@ app.delete("/api/v1/stories/:storyId", dbRequired, authRequired, async (req, res
         [storagePath],
       );
       if (!references.rowCount) {
-        await pool.query("UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2", [objectKey, req.user.id]);
-        try { unlinkSync(path.join(mediaRoot, objectKey)); } catch {}
+        await pool.query(
+          "UPDATE media_objects SET deleted_at=NOW() WHERE object_key=$1 AND owner_id=$2",
+          [objectKey, req.user.id],
+        );
+        try {
+          unlinkSync(path.join(mediaRoot, objectKey));
+        } catch {}
       }
     }
     return res.json({ success: true });
@@ -1984,7 +2361,8 @@ app.post("/api/v1/stories/:storyId/view", dbRequired, authRequired, async (req, 
        LIMIT 1`,
       [req.params.storyId, req.user.id],
     );
-    if (!story.rowCount) return res.status(404).json({ error: "Story not found or not visible to this account." });
+    if (!story.rowCount)
+      return res.status(404).json({ error: "Story not found or not visible to this account." });
     await pool.query(
       "INSERT INTO story_views (story_id,viewer_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
       [req.params.storyId, req.user.id],
@@ -1997,8 +2375,12 @@ app.post("/api/v1/stories/:storyId/view", dbRequired, authRequired, async (req, 
 
 app.get("/api/v1/stories/:storyId/viewers", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const story = await pool.query("SELECT id FROM stories WHERE id=$1 AND user_id=$2 LIMIT 1", [req.params.storyId, req.user.id]);
-    if (!story.rowCount) return res.status(404).json({ error: "Story not found or not owned by this account." });
+    const story = await pool.query("SELECT id FROM stories WHERE id=$1 AND user_id=$2 LIMIT 1", [
+      req.params.storyId,
+      req.user.id,
+    ]);
+    if (!story.rowCount)
+      return res.status(404).json({ error: "Story not found or not owned by this account." });
     const result = await pool.query(
       `SELECT v.viewer_id,v.created_at,u.username,u.display_name,u.avatar_url
        FROM story_views v JOIN users u ON u.id=v.viewer_id
@@ -2024,9 +2406,13 @@ app.get("/api/v1/users/:userId/story-muted", dbRequired, authRequired, async (re
 });
 
 app.post("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (req, res, next) => {
-  if (req.user.id === req.params.userId) return res.status(400).json({ error: "You cannot mute your own stories." });
+  if (req.user.id === req.params.userId)
+    return res.status(400).json({ error: "You cannot mute your own stories." });
   try {
-    await pool.query("INSERT INTO story_mutes (muter_id,muted_id) VALUES ($1,$2) ON CONFLICT DO NOTHING", [req.user.id, req.params.userId]);
+    await pool.query(
+      "INSERT INTO story_mutes (muter_id,muted_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.userId],
+    );
     return res.json({ muted: true });
   } catch (error) {
     return next(error);
@@ -2035,7 +2421,10 @@ app.post("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (re
 
 app.delete("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (req, res, next) => {
   try {
-    await pool.query("DELETE FROM story_mutes WHERE muter_id=$1 AND muted_id=$2", [req.user.id, req.params.userId]);
+    await pool.query("DELETE FROM story_mutes WHERE muter_id=$1 AND muted_id=$2", [
+      req.user.id,
+      req.params.userId,
+    ]);
     return res.json({ muted: false });
   } catch (error) {
     return next(error);
@@ -2045,9 +2434,14 @@ app.delete("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (
 app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
-    const result = await pool.query("SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2", [req.user.id, limit]);
+    const result = await pool.query(
+      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
+      [req.user.id, limit],
+    );
     res.json({ reels: result.rows });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
 });
 app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -2094,7 +2488,8 @@ app.post("/api/v1/messages/conversations", dbRequired, authRequired, async (req,
       "SELECT 1 FROM user_blocks WHERE (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1",
       [req.user.id, recipientId],
     );
-    if (blocked.rowCount) return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
+    if (blocked.rowCount)
+      return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
 
     const existing = await client.query(
       `SELECT mine.conversation_id
@@ -2105,7 +2500,8 @@ app.post("/api/v1/messages/conversations", dbRequired, authRequired, async (req,
        ORDER BY mine.joined_at DESC LIMIT 1`,
       [req.user.id, recipientId],
     );
-    if (existing.rowCount) return res.json({ conversation: { id: existing.rows[0].conversation_id } });
+    if (existing.rowCount)
+      return res.json({ conversation: { id: existing.rows[0].conversation_id } });
 
     await client.query("BEGIN");
     const conversationId = randomUUID();
@@ -2124,37 +2520,47 @@ app.post("/api/v1/messages/conversations", dbRequired, authRequired, async (req,
   }
 });
 
-app.get("/api/v1/messages/:conversationId/members", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    const membership = await pool.query(
-      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
-      [req.params.conversationId, req.user.id],
-    );
-    if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
-    const result = await pool.query(
-      `SELECT u.id,u.username,u.display_name,u.avatar_url,FALSE AS is_verified
+app.get(
+  "/api/v1/messages/:conversationId/members",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      const membership = await pool.query(
+        "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+        [req.params.conversationId, req.user.id],
+      );
+      if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
+      const result = await pool.query(
+        `SELECT u.id,u.username,u.display_name,u.avatar_url,FALSE AS is_verified
        FROM conversation_members cm JOIN users u ON u.id=cm.user_id
        WHERE cm.conversation_id=$1 AND cm.user_id<>$2`,
-      [req.params.conversationId, req.user.id],
-    );
-    return res.json({ members: result.rows });
-  } catch (error) {
-    return next(error);
-  }
-});
+        [req.params.conversationId, req.user.id],
+      );
+      return res.json({ members: result.rows });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
-app.post("/api/v1/messages/:conversationId/read", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    const result = await pool.query(
-      "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2 RETURNING conversation_id",
-      [req.params.conversationId, req.user.id],
-    );
-    if (!result.rowCount) return res.status(404).json({ error: "Conversation not found." });
-    return res.json({ success: true });
-  } catch (error) {
-    return next(error);
-  }
-});
+app.post(
+  "/api/v1/messages/:conversationId/read",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      const result = await pool.query(
+        "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2 RETURNING conversation_id",
+        [req.params.conversationId, req.user.id],
+      );
+      if (!result.rowCount) return res.status(404).json({ error: "Conversation not found." });
+      return res.json({ success: true });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -2183,7 +2589,8 @@ app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req
 app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
   const body = typeof req.body?.body === "string" ? req.body.body.trim() : "";
   const conversationId = req.params.conversationId;
-  if (!body || body.length > 5000) return res.status(400).json({ error: "Message must contain 1–5000 characters." });
+  if (!body || body.length > 5000)
+    return res.status(400).json({ error: "Message must contain 1–5000 characters." });
   try {
     const member = await pool.query(
       "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
@@ -2211,7 +2618,9 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
       [randomUUID(), conversationId, req.user.id, body],
     );
     const message = result.rows[0];
-    await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [conversationId]);
+    await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [
+      conversationId,
+    ]);
     for (const recipientId of otherIds) {
       await notifyUser(recipientId, req.user.id, "message", "conversation", conversationId);
     }
@@ -2222,7 +2631,8 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     for (const row of member.rows) {
       if (row.user_id === req.user.id) continue;
       for (const socket of socketsByUser.get(row.user_id) || []) {
-        if (socket.readyState === 1) socket.send(JSON.stringify({ type: "message.created", message }));
+        if (socket.readyState === 1)
+          socket.send(JSON.stringify({ type: "message.created", message }));
       }
     }
     return res.status(201).json({ message });
@@ -2231,52 +2641,66 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
   }
 });
 
-app.get("/api/v1/messages/:conversationId/reactions", dbRequired, authRequired, async (req, res, next) => {
-  try {
-    const membership = await pool.query(
-      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
-      [req.params.conversationId, req.user.id],
-    );
-    if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
-    const result = await pool.query(
-      `SELECT r.message_id,r.emoji FROM message_reactions r
+app.get(
+  "/api/v1/messages/:conversationId/reactions",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    try {
+      const membership = await pool.query(
+        "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+        [req.params.conversationId, req.user.id],
+      );
+      if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
+      const result = await pool.query(
+        `SELECT r.message_id,r.emoji FROM message_reactions r
        JOIN messages m ON m.id=r.message_id
        WHERE m.conversation_id=$1 AND r.user_id=$2`,
-      [req.params.conversationId, req.user.id],
-    );
-    return res.json({ reactions: result.rows });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-app.put("/api/v1/messages/:messageId/reaction", dbRequired, authRequired, async (req, res, next) => {
-  const emoji = typeof req.body?.emoji === "string" ? req.body.emoji : "";
-  const allowed = new Set(["❤️", "🔥", "😂", "👏", "🙌", "✨"]);
-  if (emoji && !allowed.has(emoji)) return res.status(400).json({ error: "Unsupported reaction." });
-  try {
-    const message = await pool.query(
-      `SELECT m.id FROM messages m JOIN conversation_members cm ON cm.conversation_id=m.conversation_id
-       WHERE m.id=$1 AND cm.user_id=$2 LIMIT 1`,
-      [req.params.messageId, req.user.id],
-    );
-    if (!message.rowCount) return res.status(404).json({ error: "Message not found." });
-    if (!emoji) {
-      await pool.query("DELETE FROM message_reactions WHERE message_id=$1 AND user_id=$2", [req.params.messageId, req.user.id]);
-      return res.json({ reaction: null });
+        [req.params.conversationId, req.user.id],
+      );
+      return res.json({ reactions: result.rows });
+    } catch (error) {
+      return next(error);
     }
-    const result = await pool.query(
-      `INSERT INTO message_reactions (message_id,user_id,emoji)
+  },
+);
+
+app.put(
+  "/api/v1/messages/:messageId/reaction",
+  dbRequired,
+  authRequired,
+  async (req, res, next) => {
+    const emoji = typeof req.body?.emoji === "string" ? req.body.emoji : "";
+    const allowed = new Set(["❤️", "🔥", "😂", "👏", "🙌", "✨"]);
+    if (emoji && !allowed.has(emoji))
+      return res.status(400).json({ error: "Unsupported reaction." });
+    try {
+      const message = await pool.query(
+        `SELECT m.id FROM messages m JOIN conversation_members cm ON cm.conversation_id=m.conversation_id
+       WHERE m.id=$1 AND cm.user_id=$2 LIMIT 1`,
+        [req.params.messageId, req.user.id],
+      );
+      if (!message.rowCount) return res.status(404).json({ error: "Message not found." });
+      if (!emoji) {
+        await pool.query("DELETE FROM message_reactions WHERE message_id=$1 AND user_id=$2", [
+          req.params.messageId,
+          req.user.id,
+        ]);
+        return res.json({ reaction: null });
+      }
+      const result = await pool.query(
+        `INSERT INTO message_reactions (message_id,user_id,emoji)
        VALUES ($1,$2,$3)
        ON CONFLICT (message_id,user_id) DO UPDATE SET emoji=EXCLUDED.emoji,updated_at=NOW()
        RETURNING message_id,emoji`,
-      [req.params.messageId, req.user.id, emoji],
-    );
-    return res.json({ reaction: result.rows[0] });
-  } catch (error) {
-    return next(error);
-  }
-});
+        [req.params.messageId, req.user.id, emoji],
+      );
+      return res.json({ reaction: result.rows[0] });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.delete("/api/v1/messages/:messageId", dbRequired, authRequired, async (req, res, next) => {
   try {
@@ -2286,13 +2710,13 @@ app.delete("/api/v1/messages/:messageId", dbRequired, authRequired, async (req, 
        RETURNING m.id`,
       [req.params.messageId, req.user.id],
     );
-    if (!result.rowCount) return res.status(404).json({ error: "Message not found or not owned by this account." });
+    if (!result.rowCount)
+      return res.status(404).json({ error: "Message not found or not owned by this account." });
     return res.json({ success: true });
   } catch (error) {
     return next(error);
   }
 });
-
 
 server.on("upgrade", (req, socket, head) => {
   void (async () => {
@@ -2333,7 +2757,10 @@ wss.on("connection", (ws) => {
   userSockets.add(ws);
   socketsByUser.set(ws.userId, userSockets);
   ws.send(JSON.stringify({ type: "connected" }));
-  ws.on("close", () => { userSockets.delete(ws); if (!userSockets.size) socketsByUser.delete(ws.userId); });
+  ws.on("close", () => {
+    userSockets.delete(ws);
+    if (!userSockets.size) socketsByUser.delete(ws.userId);
+  });
 });
 app.use((error, _req, res, _next) => {
   console.error("API request failed", error?.message || "unknown error");
@@ -2351,6 +2778,11 @@ app.use((error, _req, res, _next) => {
 });
 app.use((_req, res) => res.status(404).json({ error: "Route not found." }));
 server.listen(port, () => console.log("Opexnal API listening on :" + port));
-async function shutdown() { server.close(); wss.close(); if (pool) await pool.end(); process.exit(0); }
+async function shutdown() {
+  server.close();
+  wss.close();
+  if (pool) await pool.end();
+  process.exit(0);
+}
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);

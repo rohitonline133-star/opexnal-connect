@@ -10,7 +10,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_API_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured.
 3. Install dependencies at repository root with npm install.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
-psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints

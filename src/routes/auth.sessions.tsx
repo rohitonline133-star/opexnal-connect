@@ -26,7 +26,8 @@ interface ApiDeviceSession {
 function getAccessToken(session: ReturnType<typeof useSession>["session"]): string {
   if (!session) return "";
   if ("token" in session && typeof session.token === "string") return session.token;
-  if ("access_token" in session && typeof session.access_token === "string") return session.access_token;
+  if ("access_token" in session && typeof session.access_token === "string")
+    return session.access_token;
   return "";
 }
 
@@ -82,7 +83,9 @@ function SessionsPage() {
         }
       } catch (error) {
         if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : "Unable to load active sessions.");
+          setErrorMessage(
+            error instanceof Error ? error.message : "Unable to load active sessions.",
+          );
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -117,7 +120,8 @@ function SessionsPage() {
   };
 
   const handleRevokeAll = async () => {
-    if (!token || !window.confirm("Log out all other devices? This device will stay signed in.")) return;
+    if (!token || !window.confirm("Log out all other devices? This device will stay signed in."))
+      return;
     setActionLoading("all");
     setErrorMessage(null);
     try {
@@ -192,7 +196,11 @@ function SessionsPage() {
                   >
                     <div className="flex items-start gap-3">
                       <div className="p-2 rounded-lg bg-[#1f1f1f] text-gray-300 shrink-0 mt-0.5">
-                        {isMobile ? <Smartphone className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
+                        {isMobile ? (
+                          <Smartphone className="w-4 h-4" />
+                        ) : (
+                          <Laptop className="w-4 h-4" />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -213,7 +221,9 @@ function SessionsPage() {
                         {item.ipAddress && (
                           <p className="text-[10px] text-gray-500">IP: {item.ipAddress}</p>
                         )}
-                        <p className="text-[10px] text-gray-500">Expires {formatDate(item.expiresAt)}</p>
+                        <p className="text-[10px] text-gray-500">
+                          Expires {formatDate(item.expiresAt)}
+                        </p>
                       </div>
                     </div>
 

@@ -20,7 +20,8 @@ async function messagesApiRequest<T>(path: string, init: RequestInit = {}): Prom
   new Headers(init.headers).forEach((value, key) => headers.set(key, value));
   const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
   const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
-  if (!response.ok) throw new Error(payload.error || `Messaging API request failed (${response.status}).`);
+  if (!response.ok)
+    throw new Error(payload.error || `Messaging API request failed (${response.status}).`);
   return payload;
 }
 
@@ -111,9 +112,7 @@ export async function sendMessage(
       ? conversationIdOrPayload.conversationId
       : conversationIdOrPayload;
   const textBody =
-    typeof conversationIdOrPayload === "object"
-      ? conversationIdOrPayload.text
-      : body || "";
+    typeof conversationIdOrPayload === "object" ? conversationIdOrPayload.text : body || "";
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user?.id || (senderId && senderId !== data.user.id)) {
     throw new Error("Verified authentication is required to send a message.");
@@ -183,7 +182,9 @@ export async function fetchMessageReactions(conversationId: string) {
   const payload = await messagesApiRequest<{
     reactions?: Array<{ message_id: string; emoji: string }>;
   }>(`/api/v1/messages/${encodeURIComponent(conversationId)}/reactions`);
-  return Object.fromEntries((payload.reactions || []).map((reaction) => [reaction.message_id, reaction.emoji]));
+  return Object.fromEntries(
+    (payload.reactions || []).map((reaction) => [reaction.message_id, reaction.emoji]),
+  );
 }
 
 export async function updateMessageReaction(messageId: string, emoji: string) {

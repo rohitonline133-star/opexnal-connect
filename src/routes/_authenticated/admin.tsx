@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Activity, AlertTriangle, ChevronLeft, Flag, Loader2, ShieldCheck, Users } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ChevronLeft,
+  Flag,
+  Loader2,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
@@ -93,13 +101,17 @@ export function AdminPage() {
     setErrorMessage(null);
     try {
       if (tab === "reports") {
-        const payload = await apiRequest<{ reports?: ModerationReport[] }>("/api/v1/admin/reports?status=all");
+        const payload = await apiRequest<{ reports?: ModerationReport[] }>(
+          "/api/v1/admin/reports?status=all",
+        );
         setReports(payload.reports || []);
       } else if (tab === "users") {
         const payload = await apiRequest<{ users?: ManagedUser[] }>("/api/v1/admin/users");
         setUsers(payload.users || []);
       } else {
-        const payload = await apiRequest<{ logs?: AuditLog[] }>("/api/v1/admin/security-logs?limit=100");
+        const payload = await apiRequest<{ logs?: AuditLog[] }>(
+          "/api/v1/admin/security-logs?limit=100",
+        );
         setLogs(payload.logs || []);
       }
       setAccessDenied(false);
@@ -130,7 +142,9 @@ export function AdminPage() {
           body: JSON.stringify({ status }),
         },
       );
-      setReports((previous) => previous.map((report) => report.id === reportId ? { ...report, status } : report));
+      setReports((previous) =>
+        previous.map((report) => (report.id === reportId ? { ...report, status } : report)),
+      );
       toast.success(`Report marked ${status}.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Report update failed.");
@@ -141,7 +155,14 @@ export function AdminPage() {
 
   async function toggleUserStatus(user: ManagedUser) {
     const isDeactivated = !user.is_deactivated;
-    if (!window.confirm(isDeactivated ? `Deactivate @${user.username} and revoke their sessions?` : `Reactivate @${user.username}?`)) return;
+    if (
+      !window.confirm(
+        isDeactivated
+          ? `Deactivate @${user.username} and revoke their sessions?`
+          : `Reactivate @${user.username}?`,
+      )
+    )
+      return;
     setActionId(user.id);
     try {
       await apiRequest<{ user: ManagedUser }>(
@@ -152,7 +173,11 @@ export function AdminPage() {
           body: JSON.stringify({ isDeactivated }),
         },
       );
-      setUsers((previous) => previous.map((item) => item.id === user.id ? { ...item, is_deactivated: isDeactivated } : item));
+      setUsers((previous) =>
+        previous.map((item) =>
+          item.id === user.id ? { ...item, is_deactivated: isDeactivated } : item,
+        ),
+      );
       toast.success(isDeactivated ? "Account deactivated." : "Account reactivated.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "User status update failed.");
@@ -167,7 +192,11 @@ export function AdminPage() {
         <ScreenHeader
           title="Admin Operations"
           left={
-            <Link to="/settings" aria-label="Back to settings" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/settings"
+              aria-label="Back to settings"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" />
             </Link>
           }
@@ -181,7 +210,9 @@ export function AdminPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">Platform operations</h1>
-            <p className="text-xs text-muted-foreground">Data below comes from the first-party API, not demo fixtures.</p>
+            <p className="text-xs text-muted-foreground">
+              Data below comes from the first-party API, not demo fixtures.
+            </p>
           </div>
         </div>
 
@@ -190,17 +221,20 @@ export function AdminPage() {
             <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" />
             <h2 className="font-semibold text-foreground">Administrator access required</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              This account does not have a moderator/admin role. No mock users, reports, or security events are shown.
+              This account does not have a moderator/admin role. No mock users, reports, or security
+              events are shown.
             </p>
           </section>
         ) : (
           <>
             <div className="grid grid-cols-3 gap-2">
-              {([
-                ["reports", "Reports", Flag],
-                ["users", "Users", Users],
-                ["audit", "Audit log", Activity],
-              ] as const).map(([tab, label, Icon]) => (
+              {(
+                [
+                  ["reports", "Reports", Flag],
+                  ["users", "Users", Users],
+                  ["audit", "Audit log", Activity],
+                ] as const
+              ).map(([tab, label, Icon]) => (
                 <Button
                   key={tab}
                   type="button"
@@ -215,7 +249,10 @@ export function AdminPage() {
             </div>
 
             {errorMessage && (
-              <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+              <div
+                role="alert"
+                className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+              >
                 {errorMessage}
               </div>
             )}
@@ -227,69 +264,132 @@ export function AdminPage() {
             ) : activeTab === "reports" ? (
               <section className="space-y-3">
                 {reports.length === 0 ? (
-                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">No reports were returned.</p>
-                ) : reports.map((report) => (
-                  <article key={report.id} className="space-y-3 rounded-2xl border border-border bg-surface p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{report.target_type}</Badge>
-                        <Badge variant={report.status === "pending" ? "destructive" : "secondary"}>{report.status}</Badge>
+                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">
+                    No reports were returned.
+                  </p>
+                ) : (
+                  reports.map((report) => (
+                    <article
+                      key={report.id}
+                      className="space-y-3 rounded-2xl border border-border bg-surface p-4"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{report.target_type}</Badge>
+                          <Badge
+                            variant={report.status === "pending" ? "destructive" : "secondary"}
+                          >
+                            {report.status}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(report.created_at)}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{formatDate(report.created_at)}</span>
-                    </div>
-                    <h3 className="font-semibold text-foreground">{report.reason}</h3>
-                    <p className="text-sm text-muted-foreground">{report.target_summary || `Target ${report.target_id}`}</p>
-                    <p className="text-xs text-muted-foreground">Reported by @{report.reporter_username}</p>
-                    {report.details && <p className="whitespace-pre-wrap text-sm text-foreground">{report.details}</p>}
-                    {report.status === "pending" && (
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" variant="outline" disabled={actionId === report.id} onClick={() => void updateReport(report.id, "reviewed")}>Mark reviewed</Button>
-                        <Button size="sm" variant="destructive" disabled={actionId === report.id} onClick={() => void updateReport(report.id, "actioned")}>Action report</Button>
-                        <Button size="sm" variant="ghost" disabled={actionId === report.id} onClick={() => void updateReport(report.id, "dismissed")}>Dismiss</Button>
-                      </div>
-                    )}
-                  </article>
-                ))}
+                      <h3 className="font-semibold text-foreground">{report.reason}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {report.target_summary || `Target ${report.target_id}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Reported by @{report.reporter_username}
+                      </p>
+                      {report.details && (
+                        <p className="whitespace-pre-wrap text-sm text-foreground">
+                          {report.details}
+                        </p>
+                      )}
+                      {report.status === "pending" && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={actionId === report.id}
+                            onClick={() => void updateReport(report.id, "reviewed")}
+                          >
+                            Mark reviewed
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={actionId === report.id}
+                            onClick={() => void updateReport(report.id, "actioned")}
+                          >
+                            Action report
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={actionId === report.id}
+                            onClick={() => void updateReport(report.id, "dismissed")}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      )}
+                    </article>
+                  ))
+                )}
               </section>
             ) : activeTab === "users" ? (
               <section className="space-y-3">
                 {users.length === 0 ? (
-                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">No users were returned.</p>
-                ) : users.map((managedUser) => (
-                  <article key={managedUser.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground">@{managedUser.username}</p>
-                      <p className="break-all text-xs text-muted-foreground">{managedUser.email}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {managedUser.role} · {managedUser.email_verified ? "email verified" : "email unverified"} · {managedUser.posts_count} posts
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={managedUser.is_deactivated ? "outline" : "destructive"}
-                      disabled={actionId === managedUser.id || managedUser.role === "admin"}
-                      onClick={() => void toggleUserStatus(managedUser)}
+                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">
+                    No users were returned.
+                  </p>
+                ) : (
+                  users.map((managedUser) => (
+                    <article
+                      key={managedUser.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
                     >
-                      {managedUser.is_deactivated ? "Reactivate" : "Deactivate"}
-                    </Button>
-                  </article>
-                ))}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">@{managedUser.username}</p>
+                        <p className="break-all text-xs text-muted-foreground">
+                          {managedUser.email}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {managedUser.role} ·{" "}
+                          {managedUser.email_verified ? "email verified" : "email unverified"} ·{" "}
+                          {managedUser.posts_count} posts
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={managedUser.is_deactivated ? "outline" : "destructive"}
+                        disabled={actionId === managedUser.id || managedUser.role === "admin"}
+                        onClick={() => void toggleUserStatus(managedUser)}
+                      >
+                        {managedUser.is_deactivated ? "Reactivate" : "Deactivate"}
+                      </Button>
+                    </article>
+                  ))
+                )}
               </section>
             ) : (
               <section className="space-y-2">
                 {logs.length === 0 ? (
-                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">No audit events were returned.</p>
-                ) : logs.map((log) => (
-                  <article key={log.id} className="rounded-xl border border-border bg-surface p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-medium text-foreground">{log.action}</p>
-                      <span className="text-xs text-muted-foreground">{formatDate(log.created_at)}</span>
-                    </div>
-                    <p className="mt-1 break-all text-xs text-muted-foreground">
-                      {log.target_type || "event"} {log.target_id || ""} · actor {log.actor_id || "system"}
-                    </p>
-                  </article>
-                ))}
+                  <p className="rounded-xl border border-border p-5 text-sm text-muted-foreground">
+                    No audit events were returned.
+                  </p>
+                ) : (
+                  logs.map((log) => (
+                    <article
+                      key={log.id}
+                      className="rounded-xl border border-border bg-surface p-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium text-foreground">{log.action}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(log.created_at)}
+                        </span>
+                      </div>
+                      <p className="mt-1 break-all text-xs text-muted-foreground">
+                        {log.target_type || "event"} {log.target_id || ""} · actor{" "}
+                        {log.actor_id || "system"}
+                      </p>
+                    </article>
+                  ))
+                )}
               </section>
             )}
           </>

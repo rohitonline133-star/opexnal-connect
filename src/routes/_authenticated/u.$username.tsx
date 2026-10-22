@@ -82,7 +82,8 @@ function PublicProfile() {
     queryKey: ["relationship", user?.id, profile?.id],
     enabled: Boolean(user?.id && profile?.id) && !isSelf,
     queryFn: async () => {
-      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`),
+      const response = await fetch(
+        apiUrl(`/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`),
         { headers: authClient.getAuthHeader(), cache: "no-store" },
       );
       const payload = (await response.json().catch(() => ({}))) as {
@@ -91,7 +92,10 @@ function PublicProfile() {
         error?: string;
       };
       if (!response.ok) throw new Error(payload.error || "Could not load relationship status.");
-      return { following: Boolean(payload.isFollowing), requested: Boolean(payload.requestPending) };
+      return {
+        following: Boolean(payload.isFollowing),
+        requested: Boolean(payload.requestPending),
+      };
     },
   });
 
@@ -105,10 +109,13 @@ function PublicProfile() {
           headers: authClient.getAuthHeader(),
         });
       } else if (relationship?.requested) {
-        response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`), {
-          method: "DELETE",
-          headers: authClient.getAuthHeader(),
-        });
+        response = await fetch(
+          apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`),
+          {
+            method: "DELETE",
+            headers: authClient.getAuthHeader(),
+          },
+        );
       } else {
         response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`), {
           method: "POST",
@@ -122,14 +129,16 @@ function PublicProfile() {
       if (!response.ok) throw new Error(payload.error || "Could not update follow status.");
       if (relationship?.following) toast.success(`Unfollowed @${profile.username}`);
       else if (relationship?.requested) toast.success("Follow request withdrawn");
-      else toast.success(payload.status === "requested" ? "Follow request sent" : `Following @${profile.username}`);
+      else
+        toast.success(
+          payload.status === "requested" ? "Follow request sent" : `Following @${profile.username}`,
+        );
       await queryClient.invalidateQueries({ queryKey: ["relationship", user.id, profile.id] });
       await queryClient.invalidateQueries({ queryKey: ["profile-by-username", username] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update follow status.");
     }
   }
-
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -140,10 +149,13 @@ function PublicProfile() {
   const handleBlockUser = async () => {
     if (!profile) return;
     try {
-      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/block`), {
-        method: "POST",
-        headers: authClient.getAuthHeader(),
-      });
+      const response = await fetch(
+        apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/block`),
+        {
+          method: "POST",
+          headers: authClient.getAuthHeader(),
+        },
+      );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not block this account.");
       setBlockDialogOpen(false);
@@ -158,10 +170,13 @@ function PublicProfile() {
   const handleRestrictUser = async () => {
     if (!profile) return;
     try {
-      const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`), {
-        method: "POST",
-        headers: authClient.getAuthHeader(),
-      });
+      const response = await fetch(
+        apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`),
+        {
+          method: "POST",
+          headers: authClient.getAuthHeader(),
+        },
+      );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not restrict this account.");
       setRestrictDialogOpen(false);

@@ -72,10 +72,7 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
       headers: responseHeaders,
     });
   } catch {
-    return Response.json(
-      { error: "The first-party API could not be reached." },
-      { status: 502 },
-    );
+    return Response.json({ error: "The first-party API could not be reached." }, { status: 502 });
   }
 }
 

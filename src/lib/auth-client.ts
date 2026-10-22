@@ -121,17 +121,26 @@ class AuthClient {
       });
       if (response.status === 401 || response.status === 403 || response.status === 404) {
         await this.signOut();
-        return { data: { user: null }, error: new Error("Your session is no longer valid. Please sign in again.") };
+        return {
+          data: { user: null },
+          error: new Error("Your session is no longer valid. Please sign in again."),
+        };
       }
       if (!response.ok) {
-        return { data: { user: null }, error: new Error("Unable to verify your session with Opexnal's API.") };
+        return {
+          data: { user: null },
+          error: new Error("Unable to verify your session with Opexnal's API."),
+        };
       }
 
       const payload = (await response.json()) as { user?: Partial<AuthUser> & { id?: string } };
       const user = payload.user;
       if (!user || typeof user.id !== "string" || typeof user.username !== "string") {
         await this.signOut();
-        return { data: { user: null }, error: new Error("The API returned an invalid user record.") };
+        return {
+          data: { user: null },
+          error: new Error("The API returned an invalid user record."),
+        };
       }
       const verifiedUser: AuthUser = {
         id: user.id,
@@ -157,7 +166,10 @@ class AuthClient {
       }
       return { data: { user: verifiedUser }, error: null };
     } catch {
-      return { data: { user: null }, error: new Error("Could not reach Opexnal's authentication API.") };
+      return {
+        data: { user: null },
+        error: new Error("Could not reach Opexnal's authentication API."),
+      };
     }
   }
 
@@ -207,7 +219,10 @@ class AuthClient {
         !payload.user?.id ||
         !payload.user.username
       ) {
-        return { data: null, error: new Error("The authentication API returned an invalid response.") };
+        return {
+          data: null,
+          error: new Error("The authentication API returned an invalid response."),
+        };
       }
 
       const user: AuthUser = {
@@ -233,7 +248,9 @@ class AuthClient {
     } catch {
       return {
         data: null,
-        error: new Error("Could not reach Opexnal's authentication API. Check backend deployment and OPEXNAL_API_URL."),
+        error: new Error(
+          "Could not reach Opexnal's authentication API. Check backend deployment and OPEXNAL_API_URL.",
+        ),
       };
     }
   }
@@ -244,7 +261,11 @@ class AuthClient {
     dateOfBirth?: string;
     options?: { data?: { username?: string; full_name?: string } };
   }): Promise<{
-    data: { user: AuthUser; session: AuthSession | null; emailVerificationRequired?: boolean } | null;
+    data: {
+      user: AuthUser;
+      session: AuthSession | null;
+      emailVerificationRequired?: boolean;
+    } | null;
     error: Error | null;
   }> {
     const username = params.options?.data?.username?.trim() || params.email.split("@")[0] || "";
@@ -300,7 +321,9 @@ class AuthClient {
     } catch {
       return {
         data: null,
-        error: new Error("Could not reach Opexnal's signup API. Check backend deployment and OPEXNAL_API_URL."),
+        error: new Error(
+          "Could not reach Opexnal's signup API. Check backend deployment and OPEXNAL_API_URL.",
+        ),
       };
     }
   }
@@ -316,10 +339,14 @@ class AuthClient {
           cache: "no-store",
         });
         if (!response.ok && response.status >= 500) {
-          revokeError = new Error("Signed out locally, but the server could not revoke this session.");
+          revokeError = new Error(
+            "Signed out locally, but the server could not revoke this session.",
+          );
         }
       } catch {
-        revokeError = new Error("Signed out locally, but server-side session revocation could not be confirmed.");
+        revokeError = new Error(
+          "Signed out locally, but server-side session revocation could not be confirmed.",
+        );
       }
     }
 

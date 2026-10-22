@@ -43,7 +43,9 @@ export async function resolveMediaUrl(path: string, expiresIn = 300) {
     return path;
   }
   try {
-    const { data, error } = await supabase.storage.from("post-media").createSignedUrl(path, expiresIn);
+    const { data, error } = await supabase.storage
+      .from("post-media")
+      .createSignedUrl(path, expiresIn);
     if (error) return null;
     return data?.signedUrl ?? null;
   } catch {
@@ -458,7 +460,12 @@ function mapApiPost(row: ApiPostRecord): FeedPost {
     location_name: row.location_name || null,
     saves_count: Number(row.saves_count || 0),
     shares_count: Number(row.shares_count || 0),
-    visibility: row.visibility === "private" ? "private" : row.visibility === "followers" ? "followers" : "public",
+    visibility:
+      row.visibility === "private"
+        ? "private"
+        : row.visibility === "followers"
+          ? "followers"
+          : "public",
     media: mediaRows,
     author: authorId
       ? {
@@ -480,7 +487,8 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   new Headers(init.headers).forEach((value, key) => headers.set(key, value));
   const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
   const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
-  if (!response.ok) throw new Error(payload.error || `Opexnal API request failed (${response.status}).`);
+  if (!response.ok)
+    throw new Error(payload.error || `Opexnal API request failed (${response.status}).`);
   return payload;
 }
 
@@ -619,9 +627,11 @@ export async function getPost(postId: string, viewerId?: string | null) {
     return payload.post ? mapApiPost(payload.post) : null;
   } catch {
     if (!import.meta.env.DEV) return null;
-    return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).find(
-      (post) => post.id === postId,
-    ) ?? null;
+    return (
+      decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).find(
+        (post) => post.id === postId,
+      ) ?? null
+    );
   }
 }
 
@@ -629,9 +639,7 @@ export async function getPostsByHashtag(tag: string, viewerId?: string | null) {
   try {
     const targetTag = tag.toLowerCase().replace(/^#/, "");
     return (await fetchApiFeed(100)).filter(
-      (post) =>
-        post.visibility === "public" &&
-        extractHashtags(post.caption).includes(targetTag),
+      (post) => post.visibility === "public" && extractHashtags(post.caption).includes(targetTag),
     );
   } catch {
     if (!import.meta.env.DEV) return [];
@@ -666,12 +674,14 @@ export type CommentWithAuthor = CommentRow & { author: FeedAuthor | null; liked:
 
 export async function getComments(postId: string, _viewerId?: string | null) {
   const payload = await apiRequest<{
-    comments?: Array<CommentRow & {
-      username?: string;
-      display_name?: string;
-      avatar_url?: string | null;
-      liked_by_me?: boolean;
-    }>;
+    comments?: Array<
+      CommentRow & {
+        username?: string;
+        display_name?: string;
+        avatar_url?: string | null;
+        liked_by_me?: boolean;
+      }
+    >;
   }>(`/api/v1/posts/${encodeURIComponent(postId)}/comments`);
   return (payload.comments || []).map((row) => ({
     id: row.id,
@@ -781,11 +791,12 @@ export async function createPost(input: {
       height?: number | null;
     }> = [];
     for (const item of input.media) {
-      const { data, error } = await supabase.storage.from("post-media").upload(
-        `${effectiveUserId}/${crypto.randomUUID()}`,
-        item.file,
-        { contentType: item.file.type, upsert: false },
-      );
+      const { data, error } = await supabase.storage
+        .from("post-media")
+        .upload(`${effectiveUserId}/${crypto.randomUUID()}`, item.file, {
+          contentType: item.file.type,
+          upsert: false,
+        });
       if (error || !data?.path) throw error || new Error("Media upload returned no storage path.");
       uploadedPaths.push(data.path);
       media.push({
@@ -811,7 +822,10 @@ export async function createPost(input: {
     return payload.post.id;
   } catch (error) {
     if (uploadedPaths.length) {
-      await supabase.storage.from("post-media").remove(uploadedPaths).catch(() => undefined);
+      await supabase.storage
+        .from("post-media")
+        .remove(uploadedPaths)
+        .catch(() => undefined);
     }
     throw error;
   }
@@ -819,7 +833,11 @@ export async function createPost(input: {
 
 export async function deletePost(postId: string, requestingUserId?: string) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user?.id || (requestingUserId && requestingUserId !== authData.user.id)) {
+  if (
+    authError ||
+    !authData.user?.id ||
+    (requestingUserId && requestingUserId !== authData.user.id)
+  ) {
     throw new Error("Verified authentication is required to delete a post.");
   }
   await apiRequest<{ success: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {

@@ -27,7 +27,9 @@ export async function resolveStoryMediaUrl(path: string, expiresIn = 300) {
     return path;
   }
   try {
-    const { data, error } = await supabase.storage.from("story-media").createSignedUrl(path, expiresIn);
+    const { data, error } = await supabase.storage
+      .from("story-media")
+      .createSignedUrl(path, expiresIn);
     if (error) return null;
     return data?.signedUrl ?? null;
   } catch {
@@ -207,7 +209,8 @@ async function storyApiRequest<T>(path: string, init: RequestInit = {}): Promise
   new Headers(init.headers).forEach((value, key) => headers.set(key, value));
   const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
   const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
-  if (!response.ok) throw new Error(payload.error || `Story API request failed (${response.status}).`);
+  if (!response.ok)
+    throw new Error(payload.error || `Story API request failed (${response.status}).`);
   return payload;
 }
 
@@ -272,7 +275,9 @@ export async function getUserStories(userId: string, _viewerId: string) {
     return (payload.stories || []).map(mapApiStory);
   } catch {
     if (import.meta.env.DEV) {
-      return SEED_STORY_GROUPS.flatMap((group) => group.stories).filter((story) => story.user_id === userId);
+      return SEED_STORY_GROUPS.flatMap((group) => group.stories).filter(
+        (story) => story.user_id === userId,
+      );
     }
     return [];
   }
@@ -328,9 +333,12 @@ export async function deleteStory(story: Pick<StoryRow, "id" | "storage_path">) 
 }
 
 export async function recordStoryView(storyId: string, _viewerId: string) {
-  await storyApiRequest<{ success: boolean }>(`/api/v1/stories/${encodeURIComponent(storyId)}/view`, {
-    method: "POST",
-  });
+  await storyApiRequest<{ success: boolean }>(
+    `/api/v1/stories/${encodeURIComponent(storyId)}/view`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function getStoryViewers(storyId: string) {

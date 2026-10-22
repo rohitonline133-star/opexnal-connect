@@ -53,7 +53,8 @@ function CurrentUserProfileRedirect() {
       <AppShell activeTab="profile">
         <div className="flex min-h-[60vh] items-center justify-center px-6">
           <p role="status" className="max-w-md text-center text-sm text-muted-foreground">
-            Your profile could not be found yet. Opexnal will not redirect you to another user’s profile.
+            Your profile could not be found yet. Opexnal will not redirect you to another user’s
+            profile.
           </p>
         </div>
       </AppShell>
