@@ -25,7 +25,6 @@ const smtpHost = process.env.SMTP_HOST || "";
 const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const smtpFrom = process.env.SMTP_FROM || "";
-const publicApiUrl = process.env.PUBLIC_API_URL || "";
 const publicWebUrl = process.env.PUBLIC_WEB_URL || "";
 const emailTransport =
   smtpHost && smtpUser && smtpPass && smtpFrom
@@ -315,7 +314,7 @@ app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next)
 });
 
 app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
-  if (!emailTransport || !publicApiUrl) {
+  if (!emailTransport || !publicWebUrl) {
     return res.status(503).json({
       error: "Email verification delivery is not configured. No account was created.",
     });
@@ -361,7 +360,7 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
       [randomUUID(), user.id, tokenHash],
     );
 
-    const verificationUrl = new URL("/api/v1/auth/verify-email", publicApiUrl);
+    const verificationUrl = new URL("/api/v1/auth/verify-email", publicWebUrl);
     verificationUrl.searchParams.set("token", rawToken);
     await emailTransport.sendMail({
       from: smtpFrom,
