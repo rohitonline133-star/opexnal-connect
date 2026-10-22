@@ -16,10 +16,10 @@ import {
 
 describe("Authentication & Account Security Engine", () => {
   // 1. Password Strength & Breached Password Policy
-  test("Password policy: rejects passwords under 8 characters", () => {
+  test("Password policy: rejects passwords under 12 characters", () => {
     const result = evaluatePasswordStrength("short1");
     assert.strictEqual(result.isValid, false);
-    assert.ok(result.errors.some((e) => e.includes("8 characters")));
+    assert.ok(result.errors.some((e) => e.includes("12 characters")));
   });
 
   test("Password policy: blocks common breached passwords", () => {
