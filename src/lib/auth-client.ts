@@ -115,7 +115,7 @@ class AuthClient {
     }
 
     try {
-      const response = await fetch(apiUrl("/api/v1/auth/me", {
+      const response = await fetch(apiUrl("/api/v1/auth/me"), {
         headers: { Authorization: `Bearer ${session.token}` },
         cache: "no-store",
       });
@@ -177,7 +177,7 @@ class AuthClient {
       return { data: null, error: new Error("Email/username and password are required.") };
     }
     try {
-      const response = await fetch(apiUrl("/api/v1/auth/login", {
+      const response = await fetch(apiUrl("/api/v1/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identity, password: params.password }),
@@ -249,7 +249,7 @@ class AuthClient {
   }> {
     const username = params.options?.data?.username?.trim() || params.email.split("@")[0] || "";
     try {
-      const response = await fetch(apiUrl("/api/v1/auth/signup", {
+      const response = await fetch(apiUrl("/api/v1/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -310,7 +310,7 @@ class AuthClient {
     let revokeError: Error | null = null;
     if (token) {
       try {
-        const response = await fetch(apiUrl("/api/v1/auth/logout", {
+        const response = await fetch(apiUrl("/api/v1/auth/logout"), {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
