@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   User,
@@ -61,26 +61,42 @@ function SignupPage() {
   );
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const usernameCheckSequence = useRef(0);
 
   const passwordEval: PasswordEvaluation = evaluatePasswordStrength(password, username);
 
-  // Check username availability
-  const checkUsername = (val: string) => {
+  // Check username availability against the first-party database.
+  const checkUsername = async (val: string) => {
     const clean = val.toLowerCase().replace(/[^a-z0-9_.]/g, "");
     setUsername(clean);
+    const sequence = ++usernameCheckSequence.current;
     if (clean.length < 3) {
       setUsernameStatus("idle");
       return;
     }
     setUsernameStatus("checking");
-    setTimeout(() => {
-      // Reserved demo check
-      if (["admin", "system", "root", "instagram", "meta"].includes(clean)) {
-        setUsernameStatus("taken");
-      } else {
-        setUsernameStatus("available");
+    try {
+      const response = await fetch(
+        `/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`,
+        { cache: "no-store" },
+      );
+      const payload = (await response.json().catch(() => ({}))) as {
+        available?: boolean;
+        error?: string;
+      };
+      if (sequence !== usernameCheckSequence.current) return;
+      if (!response.ok) {
+        setUsernameStatus("idle");
+        setErrorMessage(payload.error || "Username availability could not be verified.");
+        return;
       }
-    }, 250);
+      setUsernameStatus(payload.available ? "available" : "taken");
+    } catch {
+      if (sequence === usernameCheckSequence.current) {
+        setUsernameStatus("idle");
+        setErrorMessage("Could not check username availability. The server will validate it during signup.");
+      }
+    }
   };
 
   const handleInitialSubmit = async (e: React.FormEvent) => {
