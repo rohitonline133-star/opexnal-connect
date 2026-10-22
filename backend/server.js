@@ -1252,6 +1252,71 @@ app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req,
   }
 });
 
+app.post("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, res, next) => {
+  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot block yourself." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const target = await client.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    if (!target.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found." });
+    }
+    await client.query(
+      "INSERT INTO user_blocks (blocker_id,blocked_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.userId],
+    );
+    await client.query(
+      "DELETE FROM follows WHERE (follower_id=$1 AND following_id=$2) OR (follower_id=$2 AND following_id=$1)",
+      [req.user.id, req.params.userId],
+    );
+    await client.query(
+      "DELETE FROM follow_requests WHERE (requester_id=$1 AND target_id=$2) OR (requester_id=$2 AND target_id=$1)",
+      [req.user.id, req.params.userId],
+    );
+    await client.query("COMMIT");
+    return res.json({ blocked: true });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
+app.delete("/api/v1/users/:userId/block", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM user_blocks WHERE blocker_id=$1 AND blocked_id=$2", [req.user.id, req.params.userId]);
+    return res.json({ blocked: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (req, res, next) => {
+  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot restrict yourself." });
+  try {
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE LIMIT 1", [req.params.userId]);
+    if (!target.rowCount) return res.status(404).json({ error: "User not found." });
+    await pool.query(
+      "INSERT INTO user_restrictions (restrictor_id,restricted_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.userId],
+    );
+    return res.json({ restricted: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM user_restrictions WHERE restrictor_id=$1 AND restricted_id=$2", [req.user.id, req.params.userId]);
+    return res.json({ restricted: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (req, res, next) => {
   try {
     const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
