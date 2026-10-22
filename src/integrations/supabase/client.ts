@@ -209,6 +209,71 @@ class QueryBuilder<T = unknown> {
         return { data: (json.stories || []) as unknown as T, error: null };
       }
 
+      if (
+        (this.tableName === "posts" || this.tableName === "stories") &&
+        this.operation === "insert"
+      ) {
+        const items = Array.isArray(this.payload) ? this.payload : [this.payload];
+        if (items.length !== 1 || !items[0] || typeof items[0] !== "object") {
+          return {
+            data: null,
+            error: new Error("Only one post or story can be created per request."),
+          };
+        }
+        const item = items[0] as Record<string, unknown>;
+        const mediaUrl =
+          typeof item.media_url === "string"
+            ? item.media_url
+            : typeof item.mediaUrl === "string"
+              ? item.mediaUrl
+              : null;
+        const mediaTypeValue = item.media_type ?? item.mediaType;
+        const mediaType =
+          typeof mediaTypeValue === "string"
+            ? mediaTypeValue
+            : this.tableName === "posts" && !mediaUrl
+              ? "text"
+              : "image";
+        const endpoint = this.tableName === "posts" ? "/api/v1/posts" : "/api/v1/stories";
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...authClient.getAuthHeader(),
+            },
+            body: JSON.stringify({
+              caption: typeof item.caption === "string" ? item.caption : "",
+              mediaUrl,
+              mediaType,
+              visibility: item.visibility === "private" ? "private" : "public",
+            }),
+            cache: "no-store",
+          });
+          const payload = (await response.json().catch(() => ({}))) as {
+            post?: Record<string, unknown>;
+            story?: Record<string, unknown>;
+            error?: string;
+          };
+          if (!response.ok) {
+            return {
+              data: null,
+              error: new Error(payload.error || `Create request failed with status ${response.status}.`),
+            };
+          }
+          const created = this.tableName === "posts" ? payload.post : payload.story;
+          if (!created) {
+            return { data: null, error: new Error("The API returned no created record.") };
+          }
+          return { data: created as unknown as T, error: null };
+        } catch (error: unknown) {
+          return {
+            data: null,
+            error: error instanceof Error ? error : new Error("Create request failed."),
+          };
+        }
+      }
+
       // Local persistent table fallback
       let tableData = getLocalTable(this.tableName);
 
