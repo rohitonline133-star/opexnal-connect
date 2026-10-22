@@ -1,8 +1,9 @@
 /**
  * Resolve a first-party API path to the configured API origin.
  *
- * In local development, leave VITE_OPEXNAL_API_URL unset to use the Vite proxy.
- * Production deployments must set VITE_OPEXNAL_API_URL to the public HTTPS API origin.
+ * Leave VITE_OPEXNAL_API_URL unset to use the same-origin /api proxy route.
+ * The web server must have OPEXNAL_API_URL configured to reach the first-party API.
+ * Set VITE_OPEXNAL_API_URL only when the browser should call a public HTTPS API origin directly.
  */
 export function apiUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
