@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bell, Check, Heart, MessageCircle, ShieldAlert, UserPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -76,7 +76,7 @@ function NotificationsPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setErrorMessage(null);
     try {
@@ -102,11 +102,11 @@ function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   async function respondToFollowRequest(requestId: string, decision: "accept" | "reject") {
     setActionId(requestId);
