@@ -318,20 +318,36 @@ class AuthClient {
   }
 
   async signOut(): Promise<{ error: Error | null }> {
+    const token = this.memorySession?.token;
+    let revokeError: Error | null = null;
+    if (token) {
+      try {
+        const response = await fetch("/api/v1/auth/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        if (!response.ok && response.status >= 500) {
+          revokeError = new Error("Signed out locally, but the server could not revoke this session.");
+        }
+      } catch {
+        revokeError = new Error("Signed out locally, but server-side session revocation could not be confirmed.");
+      }
+    }
+
     this.memoryUser = null;
     this.memorySession = null;
-
     if (typeof window !== "undefined") {
       try {
         sessionStorage.removeItem(AUTH_USER_KEY);
         sessionStorage.removeItem(AUTH_SESSION_KEY);
       } catch {
-        // ignore
+        // The in-memory session is still cleared.
       }
     }
 
     this.notify("SIGNED_OUT", null);
-    return { error: null };
+    return { error: revokeError };
   }
 
   onAuthStateChange(callback: AuthListener) {
