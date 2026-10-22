@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, AlertTriangle, ChevronLeft, Flag, Loader2, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -87,7 +87,7 @@ export function AdminPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function loadTab(tab: AdminTab) {
+  const loadTab = useCallback(async (tab: AdminTab) => {
     setLoading(true);
     setErrorMessage(null);
     try {
@@ -112,11 +112,11 @@ export function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void loadTab(activeTab);
-  }, [activeTab]);
+  }, [activeTab, loadTab]);
 
   async function updateReport(reportId: string, status: Exclude<ReportStatus, "pending">) {
     setActionId(reportId);
