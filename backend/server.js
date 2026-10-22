@@ -630,7 +630,7 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
       `SELECT m.object_key,
         (m.owner_id=$2
           OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$3 AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
-          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)))) AS can_access
+          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
       [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
     );
