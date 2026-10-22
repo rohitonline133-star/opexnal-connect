@@ -721,7 +721,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
     const result = await pool.query(
       `SELECT
         p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
-        p.caption, p.media_url, p.media_type, p.visibility, p.created_at, p.updated_at,
+        p.caption, p.media_url, p.media_type, p.visibility, p.location_name, p.comments_enabled, p.created_at, p.updated_at,
         (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count,
         (SELECT COUNT(*) FROM post_comments c WHERE c.post_id=p.id) AS comments_count,
         (SELECT COUNT(*) FROM post_saves s WHERE s.post_id=p.id) AS saves_count,
