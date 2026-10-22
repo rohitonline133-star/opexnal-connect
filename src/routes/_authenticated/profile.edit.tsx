@@ -116,6 +116,7 @@ function EditProfile() {
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Avatar update failed.");
+      await authClient.getUser();
     } catch (error) {
       await supabase.storage.from("avatars").remove([uploaded.path]);
       setUploading(false);
@@ -153,6 +154,7 @@ function EditProfile() {
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Profile update failed.");
+      await authClient.getUser();
     } catch (error) {
       setBusy(false);
       toast.error(error instanceof Error ? error.message : "Profile update failed.");
