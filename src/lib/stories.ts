@@ -354,32 +354,23 @@ export async function getStoryViewers(storyId: string) {
 }
 
 export async function isStoryMuted(muterId: string, mutedId: string) {
-  const { data } = await supabase
-    .from("mutes")
-    .select("mute_stories")
-    .eq("muter_id", muterId)
-    .eq("muted_id", mutedId)
-    .maybeSingle();
-  return Boolean(data?.mute_stories);
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== muterId) return false;
+  const payload = await storyApiRequest<{ muted?: boolean }>(
+    `/api/v1/users/${encodeURIComponent(mutedId)}/story-muted`,
+  );
+  return Boolean(payload.muted);
 }
 
 export async function setStoryMuted(muterId: string, mutedId: string, muted: boolean) {
-  if (muted) {
-    const { error } = await supabase
-      .from("mutes")
-      .upsert(
-        { muter_id: muterId, muted_id: mutedId, mute_stories: true, mute_posts: false },
-        { onConflict: "muter_id,muted_id" },
-      );
-    if (error) throw error;
-  } else {
-    const { error } = await supabase
-      .from("mutes")
-      .update({ mute_stories: false })
-      .eq("muter_id", muterId)
-      .eq("muted_id", mutedId);
-    if (error) throw error;
+  const { data, error } = await supabase.auth.getUser();
+  if (error || data.user?.id !== muterId) {
+    throw new Error("Verified authentication is required to update story mute settings.");
   }
+  await storyApiRequest<{ muted: boolean }>(
+    `/api/v1/users/${encodeURIComponent(mutedId)}/story-mute`,
+    { method: muted ? "POST" : "DELETE" },
+  );
 }
 
 export async function reportContent(input: {
