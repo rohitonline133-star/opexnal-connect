@@ -481,9 +481,13 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   return payload;
 }
 
-async function fetchApiFeed(limit = 100): Promise<FeedPost[]> {
+async function fetchApiFeed(limit = 100, cursor?: string | null): Promise<FeedPost[]> {
+  const params = new URLSearchParams({
+    limit: String(Math.min(Math.max(limit, 1), 100)),
+  });
+  if (cursor) params.set("cursor", cursor);
   const payload = await apiRequest<{ posts?: ApiPostRecord[] }>(
-    `/api/v1/posts/feed?limit=${Math.min(Math.max(limit, 1), 100)}`,
+    `/api/v1/posts/feed?${params.toString()}`,
   );
   return (payload.posts || []).map(mapApiPost);
 }
@@ -494,14 +498,13 @@ export async function getHomeFeed(
   limit = FEED_PAGE_SIZE,
 ) {
   try {
-    const all = await fetchApiFeed(100);
+    const all = await fetchApiFeed(Math.min(limit + 1, 100), cursor);
     const visible = all.filter((post) => post.visibility === "public" || post.user_id === viewerId);
-    const sliced = cursor ? visible.filter((post) => post.created_at < cursor) : visible;
-    const items = sliced.slice(0, limit);
+    const items = visible.slice(0, limit);
     const last = items[items.length - 1];
     return {
       items,
-      nextCursor: sliced.length > limit && last ? last.created_at : null,
+      nextCursor: visible.length > limit && last ? last.created_at : null,
     };
   } catch {
     if (!import.meta.env.DEV) return { items: [], nextCursor: null };
