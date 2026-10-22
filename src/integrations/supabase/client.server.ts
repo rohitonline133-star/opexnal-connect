@@ -38,26 +38,22 @@ function createSupabaseAdminClient() {
     process.env["VITE_SUPABASE_URL"] ||
     (process.env["SUPABASE_PROJECT_ID"]
       ? `https://${process.env["SUPABASE_PROJECT_ID"]}.supabase.co`
-      : undefined) ||
-    "https://cvzloydcxjjpjydzjyhw.supabase.co";
-  const SUPABASE_SERVICE_ROLE_KEY =
-    process.env["SUPABASE_SERVICE_ROLE_KEY"] || "mock-service-role-key";
+      : undefined);
+  const SUPABASE_SERVICE_ROLE_KEY = process.env["SUPABASE_SERVICE_ROLE_KEY"];
 
-  if (!process.env["SUPABASE_URL"] || !process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
-    console.warn(
-      "[Supabase Admin] Supabase service role credentials not found in env. Running with fallback credentials for preview.",
-    );
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase admin client disabled: configure server-only URL and service-role credentials.");
+  }
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL)) {
+    throw new Error("Supabase admin client requires a valid HTTPS Supabase project URL.");
+  }
+  if (SUPABASE_SERVICE_ROLE_KEY === "mock-service-role-key" || SUPABASE_SERVICE_ROLE_KEY.startsWith("sb_publishable_")) {
+    throw new Error("A real server-only Supabase secret/service-role key is required.");
   }
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    global: {
-      fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY),
-    },
-    auth: {
-      storage: undefined,
-      persistSession: false,
-      autoRefreshToken: false,
-    },
+    global: { fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY) },
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   });
 }
 
