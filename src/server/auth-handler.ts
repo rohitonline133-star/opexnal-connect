@@ -38,7 +38,13 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
     }
 
     if (pathname === "/api/auth/phone/otp/verify" && method === "POST") {
-      return jsonResponse({ error: "OTP login is disabled until real delivery and verified server sessions are configured." }, 503);
+      return jsonResponse(
+        {
+          error:
+            "OTP login is disabled until real delivery and verified server sessions are configured.",
+        },
+        503,
+      );
     }
 
     // 3. Password Strength Inspection Endpoint
@@ -52,19 +58,37 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
     }
 
     if (pathname === "/api/auth/2fa/setup" && method === "POST") {
-      return jsonResponse({ error: "Two-factor setup is unavailable until a verified account and persistent secret storage are configured." }, 503);
+      return jsonResponse(
+        {
+          error:
+            "Two-factor setup is unavailable until a verified account and persistent secret storage are configured.",
+        },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/2fa/verify" && method === "POST") {
-      return jsonResponse({ error: "Two-factor verification is unavailable until a real login challenge and TOTP validation are configured." }, 503);
+      return jsonResponse(
+        {
+          error:
+            "Two-factor verification is unavailable until a real login challenge and TOTP validation are configured.",
+        },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/sessions" && method === "GET") {
-      return jsonResponse({ error: "Session listing requires verified server-side authentication." }, 503);
+      return jsonResponse(
+        { error: "Session listing requires verified server-side authentication." },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/sessions/revoke" && method === "POST") {
-      return jsonResponse({ error: "Session revocation is unavailable until durable server-side sessions are configured." }, 503);
+      return jsonResponse(
+        { error: "Session revocation is unavailable until durable server-side sessions are configured." },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/sessions/revoke-all" && method === "POST") {
@@ -72,15 +96,24 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
     }
 
     if (pathname === "/api/auth/recovery/request" && method === "POST") {
-      return jsonResponse({ error: "Account recovery is not configured with verified delivery and durable token storage." }, 503);
+      return jsonResponse(
+        { error: "Account recovery is not configured with verified delivery and durable token storage." },
+        503,
+      );
     }
 
     if (pathname.startsWith("/api/auth/recovery/status") && method === "GET") {
-      return jsonResponse({ error: "Recovery status is unavailable until ticket ownership is securely verified." }, 503);
+      return jsonResponse(
+        { error: "Recovery status is unavailable until ticket ownership is securely verified." },
+        503,
+      );
     }
 
     if (pathname === "/api/auth/security-logs" && method === "GET") {
-      return jsonResponse({ error: "Security logs require verified administrator authorization." }, 503);
+      return jsonResponse(
+        { error: "Security logs require verified administrator authorization." },
+        503,
+      );
     }
 
     if (
@@ -88,14 +121,26 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
         pathname === "/api/auth/reset-password") &&
       method === "POST"
     ) {
-      return jsonResponse({ error: "Password reset is unavailable until expiring single-use tokens and durable password storage are configured." }, 503);
+      return jsonResponse(
+        {
+          error:
+            "Password reset is unavailable until expiring single-use tokens and durable password storage are configured.",
+        },
+        503,
+      );
     }
 
     if (pathname === "/api/v1/posts/feed" && method === "GET") {
-      return jsonResponse({ error: "Feed fallback is disabled until it can identify the viewer from a verified session." }, 503);
+      return jsonResponse(
+        { error: "Feed fallback is disabled until it can identify the viewer from a verified session." },
+        503,
+      );
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
-      return jsonResponse({ error: "Stories fallback is disabled until it can identify the viewer from a verified session." }, 503);
+      return jsonResponse(
+        { error: "Stories fallback is disabled until it can identify the viewer from a verified session." },
+        503,
+      );
     }
 
     return jsonResponse({ error: "Endpoint not found" }, 404);
