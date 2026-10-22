@@ -1269,6 +1269,25 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
   }
 });
 
+app.get("/api/v1/users/me/followers", dbRequired, authRequired, async (req, res, next) => {
+  const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
+  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  try {
+    const result = query
+      ? await pool.query(
+          profileSelect + " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY f.created_at DESC LIMIT $3",
+          [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
+        )
+      : await pool.query(
+          profileSelect + " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 ORDER BY f.created_at DESC LIMIT $2",
+          [req.user.id, limit],
+        );
+    return res.json({ profiles: result.rows.map(publicProfile) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/users/me/blocked", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
