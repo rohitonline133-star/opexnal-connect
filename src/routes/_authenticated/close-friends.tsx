@@ -142,7 +142,7 @@ export function CloseFriendsPage() {
     const exists = closeFriends.some((friend) => friend.id === creator.id);
     setActionLoading(creator.id);
     try {
-      const response = await fetch(
+      const response = await fetch(apiUrl(
         `/api/v1/users/me/close-friends/${encodeURIComponent(creator.id)}`,
         {
           method: exists ? "DELETE" : "POST",
