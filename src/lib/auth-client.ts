@@ -253,6 +253,7 @@ class AuthClient {
   async signUp(params: {
     email: string;
     password: string;
+    dateOfBirth?: string;
     options?: { data?: { username?: string; full_name?: string } };
   }): Promise<{
     data: { user: AuthUser; session: AuthSession | null; emailVerificationRequired?: boolean } | null;
@@ -268,6 +269,7 @@ class AuthClient {
           email: params.email.trim(),
           password: params.password,
           displayName: params.options?.data?.full_name?.trim() || username,
+          dateOfBirth: params.dateOfBirth,
         }),
         cache: "no-store",
       });
