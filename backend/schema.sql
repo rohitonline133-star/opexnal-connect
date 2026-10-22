@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   allow_mentions_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_mentions_from IN ('everyone','followers','none')),
   allow_tags_from VARCHAR(20) NOT NULL DEFAULT 'everyone' CHECK (allow_tags_from IN ('everyone','followers','none')),
   show_activity_status BOOLEAN NOT NULL DEFAULT FALSE,
+  role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user','moderator','admin')),
   email_verified BOOLEAN NOT NULL DEFAULT FALSE, last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -176,6 +177,31 @@ CREATE TABLE IF NOT EXISTS story_views (
   PRIMARY KEY (story_id, viewer_id)
 );
 CREATE INDEX IF NOT EXISTS story_views_story_idx ON story_views (story_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS content_reports (
+  id UUID PRIMARY KEY,
+  reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story')),
+  target_id UUID NOT NULL,
+  reason VARCHAR(80) NOT NULL,
+  details VARCHAR(2000),
+  status VARCHAR(12) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','reviewed','actioned','dismissed')),
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  action_notes VARCHAR(1000),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS content_reports_queue_idx ON content_reports (status, created_at DESC);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY,
+  actor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  action VARCHAR(80) NOT NULL,
+  target_type VARCHAR(40),
+  target_id VARCHAR(120),
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ip_address INET,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS audit_logs_created_idx ON audit_logs (created_at DESC);
 CREATE TABLE IF NOT EXISTS story_mutes (
   muter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   muted_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
