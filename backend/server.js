@@ -744,10 +744,17 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE p.visibility='public' OR p.user_id=$1
+      WHERE (p.visibility='public' OR p.user_id=$1)
+        AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
       ORDER BY p.created_at DESC
       LIMIT $2`,
-      [req.user.id, limit],
+      [
+        req.user.id,
+        limit,
+        typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime())
+          ? new Date(req.query.cursor).toISOString()
+          : null,
+      ],
     );
     res.json({ posts: result.rows });
   } catch (error) { next(error); }
