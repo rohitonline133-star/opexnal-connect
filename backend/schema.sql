@@ -257,5 +257,5 @@ CREATE TABLE IF NOT EXISTS message_reactions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (message_id, user_id)
 );
--- Future migrations required: verification/reset tokens, refresh sessions, MFA, follows,
--- comments, moderation, media storage, unread receipts, audit events and backup policies.
+-- Remaining production work: refresh-token rotation, SMS OTP, distributed rate limits,
+-- durable object storage, monitoring, backup/restore drills, and load/security testing.
