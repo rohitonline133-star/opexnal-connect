@@ -867,6 +867,28 @@ app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, n
   }
 });
 
+app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next) => {
+  const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
+  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 30);
+  if (!rateLimit("user-search:" + req.user.id, 60)) {
+    return res.status(429).json({ error: "Too many searches. Try again shortly." });
+  }
+  try {
+    const result = query
+      ? await pool.query(
+          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
+          [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
+        )
+      : await pool.query(
+          profileSelect + " WHERE u.is_deactivated=FALSE AND u.id<>$1 ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
+          [req.user.id, limit],
+        );
+    return res.json({ profiles: result.rows.map(publicProfile) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/users/:username", dbRequired, authRequired, async (req, res, next) => {
   const username = String(req.params.username || "").toLowerCase();
   try {
@@ -1038,13 +1060,15 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
   try {
     const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
     if (!target.rowCount) return res.status(404).json({ error: "User not found." });
-    const [following, followers, own] = await Promise.all([
+    const [following, pending, followers, own] = await Promise.all([
       pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1", [req.user.id, req.params.userId]),
+      pool.query("SELECT 1 FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending' LIMIT 1", [req.user.id, req.params.userId]),
       pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE following_id=$1", [req.params.userId]),
       pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE follower_id=$1", [req.params.userId]),
     ]);
     return res.json({
       isFollowing: Boolean(following.rowCount),
+      requestPending: Boolean(pending.rowCount),
       followersCount: followers.rows[0].count,
       followingCount: own.rows[0].count,
     });
@@ -1056,13 +1080,25 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
 app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
   if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot follow yourself." });
   try {
-    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
-    if (!target.rowCount) return res.status(404).json({ error: "User not found." });
+    const target = await pool.query("SELECT id,is_private,is_deactivated FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    if (!target.rowCount || target.rows[0].is_deactivated) return res.status(404).json({ error: "User not found." });
+    const alreadyFollowing = await pool.query(
+      "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
+      [req.user.id, req.params.userId],
+    );
+    if (alreadyFollowing.rowCount) return res.json({ status: "following", following: true });
+    if (target.rows[0].is_private) {
+      await pool.query(
+        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW()",
+        [randomUUID(), req.user.id, req.params.userId],
+      );
+      return res.json({ status: "requested", following: false });
+    }
     await pool.query(
       "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
       [req.user.id, req.params.userId],
     );
-    return res.json({ following: true });
+    return res.json({ status: "following", following: true });
   } catch (error) {
     return next(error);
   }
@@ -1072,6 +1108,61 @@ app.delete("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req,
   try {
     await pool.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [req.user.id, req.params.userId]);
     return res.json({ following: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT fr.id,fr.requester_id,fr.created_at,u.username,u.display_name,u.avatar_url
+       FROM follow_requests fr JOIN users u ON u.id=fr.requester_id
+       WHERE fr.target_id=$1 AND fr.status='pending' ORDER BY fr.created_at DESC LIMIT 100`,
+      [req.user.id],
+    );
+    return res.json({ requests: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/follow-requests/:requestId/accept", dbRequired, authRequired, async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const request = await client.query(
+      "SELECT id,requester_id,target_id FROM follow_requests WHERE id=$1 AND target_id=$2 AND status='pending' FOR UPDATE",
+      [req.params.requestId, req.user.id],
+    );
+    if (!request.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Pending follow request not found." });
+    }
+    const item = request.rows[0];
+    await client.query(
+      "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [item.requester_id, item.target_id],
+    );
+    await client.query("UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1", [item.id]);
+    await client.query("COMMIT");
+    return res.json({ accepted: true });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
+app.post("/api/v1/follow-requests/:requestId/reject", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE follow_requests SET status='rejected',updated_at=NOW() WHERE id=$1 AND target_id=$2 AND status='pending' RETURNING id",
+      [req.params.requestId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Pending follow request not found." });
+    return res.json({ rejected: true });
   } catch (error) {
     return next(error);
   }
