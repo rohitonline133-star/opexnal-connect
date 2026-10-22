@@ -405,7 +405,7 @@ type ApiPostRecord = {
   display_name?: string;
   avatar_url?: string | null;
   caption?: string;
-  visibility?: "public" | "private";
+  visibility?: "public" | "followers" | "private";
   location_name?: string | null;
   comments_enabled?: boolean;
   created_at: string;
@@ -455,7 +455,7 @@ function mapApiPost(row: ApiPostRecord): FeedPost {
     location_name: row.location_name || null,
     saves_count: Number(row.saves_count || 0),
     shares_count: Number(row.shares_count || 0),
-    visibility: row.visibility === "private" ? "private" : "public",
+    visibility: row.visibility === "private" ? "private" : row.visibility === "followers" ? "followers" : "public",
     media: mediaRows,
     author: authorId
       ? {
@@ -499,7 +499,7 @@ export async function getHomeFeed(
 ) {
   try {
     const all = await fetchApiFeed(Math.min(limit + 1, 100), cursor);
-    const visible = all.filter((post) => post.visibility === "public" || post.user_id === viewerId);
+    const visible = all;
     const items = visible.slice(0, limit);
     const last = items[items.length - 1];
     return {
@@ -533,7 +533,6 @@ export async function getReelsFeed(viewerId: string, limit = 30) {
   try {
     const posts = await fetchApiFeed(100);
     return posts
-      .filter((post) => post.visibility === "public" || post.user_id === viewerId)
       .filter((post) => post.media.some((item) => item.media_type === "video"))
       .slice(0, limit);
   } catch {
