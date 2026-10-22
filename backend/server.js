@@ -654,6 +654,7 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
     const result = await pool.query(
       `SELECT m.object_key,
         (m.owner_id=$2
+          OR EXISTS (SELECT 1 FROM users avatar_owner WHERE avatar_owner.avatar_url=$3 AND (avatar_owner.id=$2 OR (avatar_owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=avatar_owner.id))))
           OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$3 AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
           OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
@@ -1834,7 +1835,7 @@ app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, n
       const key = typeof row.storage_path === "string" ? row.storage_path.replace("/api/v1/storage/", "") : "";
       if (!mediaKeyPattern.test(key)) continue;
       const references = await pool.query(
-        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) LIMIT 1",
+        "SELECT 1 WHERE EXISTS (SELECT 1 FROM posts WHERE media_url=$1) OR EXISTS (SELECT 1 FROM post_media WHERE storage_path=$1) OR EXISTS (SELECT 1 FROM stories WHERE media_url=$1) OR EXISTS (SELECT 1 FROM users WHERE avatar_url=$1) LIMIT 1",
         [row.storage_path],
       );
       if (!references.rowCount) {
