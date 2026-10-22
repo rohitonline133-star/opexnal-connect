@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
-import { authClient } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated/close-friends")({
   head: () => ({
