@@ -40,7 +40,9 @@ function CurrentUserProfileRedirect() {
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
     } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
+      // Do not redirect an authenticated account to a seeded/demo identity.
+      // Remain here until the real profile is loaded or created.
+      return;
     } else {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }
