@@ -223,8 +223,14 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   }
   if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
     return res.status(400).json({
-      error: "Use a 3–30 character username, valid email, and password of 12–128 characters.",
+      error: "Use a 3–30 character username, valid email, and password of 12–128 characters with mixed character classes.",
     });
+  }
+  if (
+    !rateLimit("signup-email:" + email.toLowerCase(), 3) ||
+    !rateLimit("signup-username:" + username.toLowerCase(), 3)
+  ) {
+    return res.status(429).json({ error: "Too many signup attempts for this email or username." });
   }
   const birthDate = typeof dateOfBirth === "string" ? new Date(dateOfBirth) : null;
   if (!birthDate || !Number.isFinite(birthDate.getTime()) || birthDate.getTime() > Date.now()) {
@@ -313,7 +319,10 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
   }
   const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
   if (!validEmail(email)) return res.status(400).json({ error: "A valid email address is required." });
-  if (!rateLimit("password-reset:" + String(req.ip || "unknown"), 5)) {
+  if (
+    !rateLimit("password-reset:" + String(req.ip || "unknown"), 5) ||
+    !rateLimit("password-reset-email:" + email, 3)
+  ) {
     return res.status(429).json({ error: "Too many reset requests. Try again later." });
   }
 
@@ -412,6 +421,9 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     const { identity, password } = req.body || {};
     if (!rateLimit("login:" + String(req.ip || "unknown"), 10)) return res.status(429).json({ error: "Too many login attempts. Try again later." });
     if (typeof identity !== "string" || typeof password !== "string" || identity.length > 254 || password.length > 128) return res.status(400).json({ error: "Username/email and password are required." });
+    if (!rateLimit("login-identity:" + identity.toLowerCase(), 10)) {
+      return res.status(429).json({ error: "Too many login attempts for this account. Try again later." });
+    }
     const result = await pool.query("SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1", [identity.toLowerCase()]);
     const user = result.rows[0];
     if (!user || !(await verifyPassword(password, user.password_hash))) {
