@@ -210,6 +210,14 @@ async function issueToken(user, req) {
     },
   );
 }
+async function notifyUser(recipientId, actorId, type, targetType = null, targetId = null, metadata = {}) {
+  if (!recipientId || recipientId === actorId) return;
+  await pool.query(
+    "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
+    [randomUUID(), recipientId, actorId || null, type, targetType, targetId, JSON.stringify(metadata)],
+  );
+}
+
 async function adminRequired(req, res, next) {
   try {
     const result = await pool.query(
@@ -863,6 +871,59 @@ const profileSelect = `
     (SELECT COUNT(*) FROM follows f WHERE f.follower_id=u.id) AS following_count
   FROM users u
 `;
+
+app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next) => {
+  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  try {
+    const result = await pool.query(
+      `SELECT n.id,n.notification_type,n.target_type,n.target_id,n.metadata,n.read_at,n.created_at,
+        actor.id AS actor_id,actor.username AS actor_username,actor.display_name AS actor_display_name,actor.avatar_url AS actor_avatar_url,
+        CASE n.target_type
+          WHEN 'post' THEN (SELECT p.caption FROM posts p WHERE p.id=n.target_id)
+          WHEN 'comment' THEN (SELECT c.body FROM post_comments c WHERE c.id=n.target_id)
+          WHEN 'user' THEN (SELECT u.username FROM users u WHERE u.id=n.target_id)
+          WHEN 'story' THEN (SELECT s.caption FROM stories s WHERE s.id=n.target_id)
+          WHEN 'conversation' THEN (SELECT c.id::text FROM conversations c WHERE c.id=n.target_id)
+        END AS target_summary
+       FROM notifications n LEFT JOIN users actor ON actor.id=n.actor_id
+       WHERE n.recipient_id=$1
+       ORDER BY n.created_at DESC LIMIT $2`,
+      [req.user.id, limit],
+    );
+    const unread = await pool.query(
+      "SELECT COUNT(*)::int AS count FROM notifications WHERE recipient_id=$1 AND read_at IS NULL",
+      [req.user.id],
+    );
+    return res.json({ notifications: result.rows, unreadCount: unread.rows[0].count });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/notifications/:notificationId/read", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE notifications SET read_at=NOW() WHERE id=$1 AND recipient_id=$2 RETURNING id,read_at",
+      [req.params.notificationId, req.user.id],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Notification not found." });
+    return res.json({ notification: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/notifications/read-all", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "UPDATE notifications SET read_at=NOW() WHERE recipient_id=$1 AND read_at IS NULL",
+      [req.user.id],
+    );
+    return res.json({ markedRead: result.rowCount || 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => {
   const targetType = req.body?.targetType;
