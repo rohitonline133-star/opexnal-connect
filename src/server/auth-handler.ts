@@ -44,15 +44,12 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
   };
 
   try {
-    // 1. Phone / Email OTP Request
+    // Fail closed: no OTP provider is configured, so do not generate or return codes.
     if (pathname === "/api/auth/phone/otp/request" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as { phone?: string; email?: string };
-      const destination = body.phone || body.email;
-      if (!destination || destination.trim().length < 3) {
-        return jsonResponse({ error: "Valid phone number or email is required" }, 400);
-      }
-      const result = requestOtp(destination, body.phone ? "phone" : "email");
-      return jsonResponse(result, result.success ? 200 : 429);
+      return jsonResponse(
+        { error: "OTP delivery is not configured. No verification code was sent." },
+        503,
+      );
     }
 
     // 2. Phone / Email OTP Verify
