@@ -10,6 +10,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_API_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured.
 3. Install dependencies at repository root with npm install.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
+psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
@@ -21,7 +22,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/posts/feed, POST /api/v1/posts.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
-- GET/POST /api/v1/messages/conversations, GET/POST /api/v1/messages/:conversationId.
+- GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints.
 - GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
 
 ## Deployment boundary
@@ -35,3 +36,17 @@ The frontend and API are separate processes. Deploy the API on a Node.js host th
 - WebSocket authorization uses one-time tickets bound to a currently active server-side session; it only broadcasts messages created through authenticated REST routes.
 - Rate limiting is process-local, not distributed. Add Redis rate limiting, stricter request validation, media storage, integration tests, monitoring, backups, and load testing before public launch.
 - Never commit .env or production credentials.
+
+## First administrator
+
+New accounts receive the `user` role. The app does not allow users to promote themselves. After verifying the intended owner account, an operator with database access must grant the first administrator role manually, for example:
+
+```sql
+UPDATE users SET role = 'admin' WHERE email = 'owner@example.com';
+```
+
+Replace the example email with the verified owner account. Do not expose database credentials in the web app or commit them to Git.
+
+## First-party media
+
+Media uploads use the API's local `MEDIA_STORAGE_DIR` volume, enforce file-size and MIME/signature checks, and store ownership metadata in PostgreSQL. Private media uses short-lived HMAC-signed URLs. The volume must be backed up and has not been load-tested; use durable object storage for a larger production deployment.
