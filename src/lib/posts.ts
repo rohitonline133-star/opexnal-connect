@@ -28,19 +28,20 @@ export function extractHashtags(caption: string) {
   return Array.from(new Set(matches.map((m) => m.slice(1).toLowerCase())));
 }
 
-export async function resolveMediaUrl(path: string, expiresIn = 3600) {
+export async function resolveMediaUrl(path: string, expiresIn = 300) {
   if (!path) return null;
   if (
     path.startsWith("http://") ||
     path.startsWith("https://") ||
     path.startsWith("data:") ||
     path.startsWith("blob:") ||
-    path.startsWith("/")
+    path.startsWith("/api/v1/storage/public/")
   ) {
     return path;
   }
   try {
-    const { data } = await supabase.storage.from("post-media").createSignedUrl(path, expiresIn);
+    const { data, error } = await supabase.storage.from("post-media").createSignedUrl(path, expiresIn);
+    if (error) return null;
     return data?.signedUrl ?? null;
   } catch {
     return null;
