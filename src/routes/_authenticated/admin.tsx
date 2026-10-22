@@ -7,6 +7,7 @@ import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
