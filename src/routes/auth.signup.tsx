@@ -77,8 +77,7 @@ function SignupPage() {
     }
     setUsernameStatus("checking");
     try {
-      const response = await fetch(apiUrl(
-        `/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`,
+      const response = await fetch(apiUrl(`/api/v1/auth/username-availability?username=${encodeURIComponent(clean)}`),
         { cache: "no-store" },
       );
       const payload = (await response.json().catch(() => ({}))) as {
