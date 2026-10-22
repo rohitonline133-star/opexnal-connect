@@ -86,86 +86,31 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       return jsonResponse({ error: "Session revocation is unavailable until durable server-side sessions are configured." }, 503);
     }
 
-    // 9. Account Recovery Request
     if (pathname === "/api/auth/recovery/request" && method === "POST") {
-      const body = (await request.json().catch(() => ({}))) as {
-        identityInput?: string;
-        reason?: RecoveryReason;
-        contactEmail?: string;
-        contactPhone?: string;
-        additionalDetails?: string;
-      };
-      if (!body.identityInput || !body.contactEmail) {
-        return jsonResponse({ error: "Account identifier and contact email are required." }, 400);
-      }
-      const res = submitAccountRecoveryRequest({
-        identityInput: body.identityInput,
-        reason: body.reason || "forgot_password",
-        contactEmail: body.contactEmail,
-        contactPhone: body.contactPhone,
-        additionalDetails: body.additionalDetails,
-      });
-      return jsonResponse(res);
+      return jsonResponse({ error: "Account recovery is not configured with verified delivery and durable token storage." }, 503);
     }
 
-    // 10. Account Recovery Status
     if (pathname.startsWith("/api/auth/recovery/status") && method === "GET") {
-      const ticketId = url.searchParams.get("ticketId") || "";
-      if (!ticketId) {
-        return jsonResponse({ error: "ticketId query parameter is required" }, 400);
-      }
-      const ticket = getRecoveryStatus(ticketId);
-      if (!ticket) {
-        return jsonResponse({ error: "Recovery ticket not found" }, 404);
-      }
-      return jsonResponse({ ticket });
+      return jsonResponse({ error: "Recovery status is unavailable until ticket ownership is securely verified." }, 503);
     }
 
-    // 11. Security Audit Logs
     if (pathname === "/api/auth/security-logs" && method === "GET") {
-      const logs = getSecurityAuditLogs();
-      return jsonResponse({ logs });
+      return jsonResponse({ error: "Security logs require verified administrator authorization." }, 503);
     }
 
-    // 12. Password Reset Confirm
     if (
       (pathname === "/api/v1/auth/password-reset/confirm" ||
         pathname === "/api/auth/reset-password") &&
       method === "POST"
     ) {
-      const body = (await request.json().catch(() => ({}))) as {
-        newPassword?: string;
-        code?: string;
-        token?: string;
-      };
-      const password = body.newPassword || "";
-      const evaluation = evaluatePasswordStrength(password);
-      if (!evaluation.isValid) {
-        return jsonResponse(
-          { error: evaluation.errors[0] || "Password does not meet security requirements" },
-          400,
-        );
-      }
-      recordSecurityAudit(
-        "user_maya",
-        "PASSWORD_RESET_COMPLETED",
-        "Password changed and verified. Previous active sessions rotated.",
-      );
-      revokeAllSessions("user_maya", false);
-      return jsonResponse({
-        success: true,
-        message: "Password reset successfully. Please log in with your new credentials.",
-      });
+      return jsonResponse({ error: "Password reset is unavailable until expiring single-use tokens and durable password storage are configured." }, 503);
     }
 
-    // 13. Feed and Stories Fallback API endpoints
     if (pathname === "/api/v1/posts/feed" && method === "GET") {
-      const feed = await getHomeFeed({ limit: 10 });
-      return jsonResponse(feed);
+      return jsonResponse({ error: "Feed fallback is disabled until it can identify the viewer from a verified session." }, 503);
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
-      const stories = await getStoryTray("user_maya");
-      return jsonResponse({ stories });
+      return jsonResponse({ error: "Stories fallback is disabled until it can identify the viewer from a verified session." }, 503);
     }
 
     return jsonResponse({ error: "Endpoint not found" }, 404);
