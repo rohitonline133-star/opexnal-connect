@@ -1,4 +1,5 @@
-import { authClient, supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
 
