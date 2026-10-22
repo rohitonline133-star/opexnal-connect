@@ -10,22 +10,7 @@
  * - Password reset validation
  */
 
-import {
-  requestOtp,
-  verifyOtp,
-  evaluatePasswordStrength,
-  generateTotpSecret,
-  getSessionsForUser,
-  revokeSession,
-  revokeAllSessions,
-  submitAccountRecoveryRequest,
-  getRecoveryStatus,
-  recordSecurityAudit,
-  getSecurityAuditLogs,
-  type RecoveryReason,
-} from "../lib/account-security";
-import { getHomeFeed } from "../lib/posts";
-import { getStoryTray } from "../lib/stories";
+import { evaluatePasswordStrength } from "../lib/account-security";
 
 export async function handleAuthApiRequest(request: Request): Promise<Response> {
   const url = new URL(request.url);
