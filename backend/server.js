@@ -697,7 +697,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
             'position', pm.position, 'created_at', pm.created_at
           ) ORDER BY pm.position) FROM post_media pm WHERE pm.post_id=p.id),
           CASE WHEN p.media_url IS NOT NULL THEN json_build_array(json_build_object(
-            'id', p.id || '-media', 'post_id', p.id, 'user_id', p.user_id,
+            'id', p.id::text || '-media', 'post_id', p.id, 'user_id', p.user_id,
             'storage_path', p.media_url, 'media_type', p.media_type,
             'width', NULL, 'height', NULL, 'duration_seconds', NULL,
             'position', 0, 'created_at', p.created_at
