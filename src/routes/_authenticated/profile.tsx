@@ -37,13 +37,18 @@ function CurrentUserProfileRedirect() {
   useEffect(() => {
     if (loading || isLoading) return;
 
+    if (!user?.id) {
+      navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+      return;
+    }
+
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
-    } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
-    } else {
-      navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+      return;
     }
+
+    // Never send an account to another person's demo profile when its own profile is missing.
+    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
   }, [loading, isLoading, profile, user, navigate]);
 
   return (
