@@ -386,7 +386,12 @@ export const supabase = {
       };
     },
     setSession: async (_tokens: unknown) => {
-      return { data: { session: null }, error: null };
+      return {
+        data: { session: null },
+        error: new Error(
+          "Third-party OAuth sessions are not accepted by Opexnal's first-party authentication backend.",
+        ),
+      };
     },
     signInWithPassword: (params: { email?: string; password?: string }) =>
       authClient.signInWithPassword(params),
@@ -400,27 +405,14 @@ export const supabase = {
       authClient.onAuthStateChange(callback),
     updateUser: async (attributes: { password?: string }) => {
       if (attributes.password) {
-        try {
-          const res = await fetch("/api/v1/auth/password-reset/confirm", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              newPassword: attributes.password,
-              code: "verified_session_reset",
-            }),
-          });
-          if (!res.ok) {
-            const b = (await res.json().catch(() => ({ error: "Password update failed" }))) as {
-              error?: string;
-            };
-            return { data: null, error: new Error(b.error || "Update failed") };
-          }
-          return { data: { user: {} }, error: null };
-        } catch (e: unknown) {
-          return { data: null, error: e instanceof Error ? e : new Error("Network error") };
-        }
+        return {
+          data: null,
+          error: new Error(
+            "Password changes are unavailable until verified first-party password-reset tokens are configured.",
+          ),
+        };
       }
-      return { data: null, error: null };
+      return { data: null, error: new Error("Unsupported account update operation.") };
     },
   },
   storage: {
@@ -428,8 +420,13 @@ export const supabase = {
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   from: <T = any>(tableName: string) => new QueryBuilder<T>(tableName),
-  rpc: async (func: string, params?: Record<string, unknown>) => {
-    return { data: "success", error: null };
+  rpc: async (_func: string, _params?: Record<string, unknown>) => {
+    return {
+      data: null,
+      error: new Error(
+        "RPC is not implemented by the first-party API. No operation was performed.",
+      ),
+    };
   },
   channel: (_name: string) => ({
     on: (..._args: unknown[]) => ({
