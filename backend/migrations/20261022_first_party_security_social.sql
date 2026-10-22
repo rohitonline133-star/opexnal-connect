@@ -1,3 +1,15 @@
+-- Add follow graph and follower-only post visibility for existing databases.
+CREATE TABLE IF NOT EXISTS follows (
+  follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (follower_id, following_id),
+  CHECK (follower_id <> following_id)
+);
+CREATE INDEX IF NOT EXISTS follows_following_idx ON follows (following_id, created_at DESC);
+ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_visibility_check;
+ALTER TABLE posts ADD CONSTRAINT posts_visibility_check CHECK (visibility IN ('public','followers','private'));
+
 -- Idempotent migration for existing Opexnal PostgreSQL deployments.
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS location_name VARCHAR(120);
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_enabled BOOLEAN NOT NULL DEFAULT TRUE;
