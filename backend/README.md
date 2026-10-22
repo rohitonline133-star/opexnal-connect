@@ -20,7 +20,8 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations, GET/POST /api/v1/messages/:conversationId.
-- GET /health; WebSocket endpoint /ws?token=<JWT>, emits message.created events.
+- POST /api/v1/auth/ws-ticket — authenticated endpoint that issues a 30-second, single-use WebSocket ticket.
+- GET /health; WebSocket endpoint `/ws?ticket=<single-use-ticket>`, emits `message.created` events. Do not put bearer JWTs in WebSocket URLs. Request a ticket with the access token, then connect immediately; the ticket is consumed during the handshake.
 
 ## Deployment boundary
 
