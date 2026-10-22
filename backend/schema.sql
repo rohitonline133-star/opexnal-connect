@@ -194,7 +194,7 @@ CREATE INDEX IF NOT EXISTS story_views_story_idx ON story_views (story_id, creat
 CREATE TABLE IF NOT EXISTS content_reports (
   id UUID PRIMARY KEY,
   reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story')),
+  target_type VARCHAR(12) NOT NULL CHECK (target_type IN ('post','comment','user','story','message')),
   target_id UUID NOT NULL,
   reason VARCHAR(80) NOT NULL,
   details VARCHAR(2000),
@@ -236,5 +236,13 @@ CREATE TABLE IF NOT EXISTS messages (
   body VARCHAR(5000) NOT NULL CHECK (length(body) > 0), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS messages_conversation_idx ON messages (conversation_id, created_at ASC);
+CREATE TABLE IF NOT EXISTS message_reactions (
+  message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  emoji VARCHAR(16) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (message_id, user_id)
+);
 -- Future migrations required: verification/reset tokens, refresh sessions, MFA, follows,
 -- comments, moderation, media storage, unread receipts, audit events and backup policies.
