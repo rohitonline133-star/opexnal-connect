@@ -172,10 +172,39 @@ function PublicProfile() {
     }
   };
 
-  const handleReportUser = (reason: string) => {
+  const handleReportUser = async (reason: string) => {
+    if (!profile) return;
     setReportDialogOpen(false);
     setMenuOpen(false);
-    toast.success(`Report submitted for @${username} (${reason}). Thank you.`);
+    const allowedReasons = new Set([
+      "spam",
+      "harassment",
+      "impersonation",
+      "hate",
+      "nudity",
+      "violence",
+      "scam",
+      "other",
+    ]);
+    try {
+      const response = await fetch("/api/v1/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify({
+          targetType: "user",
+          targetId: profile.id,
+          reason: allowedReasons.has(reason.toLowerCase()) ? reason.toLowerCase() : "other",
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Report submission failed.");
+      toast.success(`Report submitted for @${username}. Thank you.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Report submission failed.");
+    }
   };
 
   return (
