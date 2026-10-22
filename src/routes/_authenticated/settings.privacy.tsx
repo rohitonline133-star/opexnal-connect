@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import { authClient } from "@/integrations/supabase/client";
 import { getProfileById, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
 
@@ -36,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/settings/privacy")({
 const audienceOptions = [
   { value: "everyone", label: "Everyone" },
   { value: "followers", label: "People you follow" },
-  { value: "nobody", label: "No one" },
+  { value: "none", label: "No one" },
 ];
 
 function Privacy() {
@@ -49,16 +48,24 @@ function Privacy() {
     enabled: Boolean(user?.id),
   });
 
-  type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
-
-  async function update(patch: ProfileUpdate) {
+  async function update(patch: Partial<Pick<Profile, "is_private" | "show_activity_status" | "allow_tags_from" | "allow_mentions_from">>) {
     if (!user) return;
+    const body: Record<string, unknown> = {};
+    if (patch.is_private !== undefined) body.isPrivate = patch.is_private;
+    if (patch.show_activity_status !== undefined) body.showActivityStatus = patch.show_activity_status;
+    if (patch.allow_tags_from !== undefined) body.allowTagsFrom = patch.allow_tags_from;
+    if (patch.allow_mentions_from !== undefined) body.allowMentionsFrom = patch.allow_mentions_from;
     try {
-      const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
+      const response = await fetch("/api/v1/users/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authClient.getAuthHeader(),
+        },
+        body: JSON.stringify(body),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Failed to update privacy settings.");
       await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast.success("Privacy updated");
     } catch (err) {
