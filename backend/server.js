@@ -1201,6 +1201,18 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
   }
 });
 
+app.get("/api/v1/users/me/blocked", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      profileSelect + " JOIN user_blocks b ON b.blocked_id=u.id WHERE b.blocker_id=$1 ORDER BY b.created_at DESC LIMIT 500",
+      [req.user.id],
+    );
+    return res.json({ profiles: result.rows.map(publicProfile) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/users/me/close-friends", dbRequired, authRequired, async (req, res, next) => {
   try {
     const result = await pool.query(
