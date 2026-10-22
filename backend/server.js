@@ -1,12 +1,16 @@
 import "dotenv/config";
 import express from "express";
 import http from "node:http";
-import { createHash, randomUUID, scrypt as scryptCallback, randomBytes, timingSafeEqual } from "node:crypto";
+import path from "node:path";
+import { mkdirSync, unlinkSync } from "node:fs";
+import { createHash, createHmac, randomUUID, scrypt as scryptCallback, randomBytes, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import jwt from "jsonwebtoken";
 import pg from "pg";
 import { WebSocketServer } from "ws";
 import nodemailer from "nodemailer";
+import multer from "multer";
+import { fileTypeFromFile } from "file-type";
 
 const { Pool } = pg;
 const app = express();
@@ -31,6 +35,47 @@ const emailTransport =
         auth: { user: smtpUser, pass: smtpPass },
       })
     : null;
+const mediaRoot = process.env.MEDIA_STORAGE_DIR || path.join(process.cwd(), "media");
+const allowedMediaTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]);
+const mediaExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
+};
+const mediaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, callback) => {
+      mkdirSync(mediaRoot, { recursive: true });
+      callback(null, mediaRoot);
+    },
+    filename: (_req, file, callback) => {
+      const extension = mediaExtensions[file.mimetype];
+      if (!extension) return callback(new Error("Unsupported media type."));
+      return callback(null, `${randomUUID()}.${extension}`);
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, callback) => {
+    if (!allowedMediaTypes.has(file.mimetype)) return callback(new Error("Unsupported media type."));
+    return callback(null, true);
+  },
+});
+const mediaKeyPattern = /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm|mov)$/i;
+function signMediaUrl(objectKey, expires) {
+  return createHmac("sha256", jwtSecret).update(`${objectKey}:${expires}`).digest("hex");
+}
 const socketsByUser = new Map();
 const attempts = new Map();
 const scrypt = promisify(scryptCallback);
@@ -516,6 +561,116 @@ app.post("/api/v1/auth/logout-all", dbRequired, authRequired, async (req, res, n
       [req.user.id, req.authSessionId],
     );
     return res.json({ success: true, revokedCount: result.rowCount || 0 });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/storage/upload", dbRequired, authRequired, mediaUpload.single("file"), async (req, res, next) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: "A media file is required." });
+  try {
+    if (file.mimetype.startsWith("image/") && file.size > 20 * 1024 * 1024) {
+      unlinkSync(file.path);
+      return res.status(413).json({ error: "Images must be 20 MB or smaller." });
+    }
+    const detected = await fileTypeFromFile(file.path);
+    if (!detected || detected.mime !== file.mimetype || !allowedMediaTypes.has(detected.mime)) {
+      unlinkSync(file.path);
+      return res.status(400).json({ error: "The uploaded file content does not match an allowed image/video type." });
+    }
+    const result = await pool.query(
+      "INSERT INTO media_objects (id,owner_id,object_key,mime_type,size_bytes) VALUES ($1,$2,$3,$4,$5) RETURNING object_key",
+      [randomUUID(), req.user.id, file.filename, detected.mime, file.size],
+    );
+    return res.status(201).json({ storagePath: `/api/v1/storage/${result.rows[0].object_key}` });
+  } catch (error) {
+    try { unlinkSync(file.path); } catch {}
+    return next(error);
+  }
+});
+
+app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res, next) => {
+  const rawPath = typeof req.body?.path === "string" ? req.body.path : "";
+  const objectKey = rawPath.startsWith("/api/v1/storage/") ? rawPath.slice("/api/v1/storage/".length) : rawPath;
+  if (!mediaKeyPattern.test(objectKey) || objectKey.includes("/")) {
+    return res.status(400).json({ error: "Invalid media path." });
+  }
+  const expiresIn = Math.min(Math.max(Number(req.body?.expiresIn || 300), 60), 3600);
+  const expires = Math.floor(Date.now() / 1000) + expiresIn;
+  try {
+    const result = await pool.query(
+      `SELECT m.object_key,
+        (m.owner_id=$2 OR EXISTS (SELECT 1 FROM posts p WHERE p.media_url=$3 AND p.visibility='public')
+          OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$3 AND s.visibility='public' AND s.expires_at>NOW())) AS can_access
+       FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
+      [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
+    );
+    if (!result.rowCount || !result.rows[0].can_access) {
+      return res.status(404).json({ error: "Media not found or access denied." });
+    }
+    const signature = signMediaUrl(objectKey, expires);
+    return res.json({
+      signedUrl: `/api/v1/storage/${objectKey}?expires=${expires}&signature=${signature}`,
+      expiresIn,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/storage/public/:objectKey", dbRequired, async (req, res, next) => {
+  const objectKey = req.params.objectKey;
+  if (!mediaKeyPattern.test(objectKey)) return res.status(404).json({ error: "Media not found." });
+  try {
+    const result = await pool.query(
+      `SELECT m.object_key,m.mime_type FROM media_objects m
+       WHERE m.object_key=$1 AND m.deleted_at IS NULL
+       AND (EXISTS (SELECT 1 FROM posts p WHERE p.media_url=$2 AND p.visibility='public')
+         OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$2 AND s.visibility='public' AND s.expires_at>NOW()))
+       LIMIT 1`,
+      [objectKey, `/api/v1/storage/${objectKey}`],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Public media not found." });
+    res.type(result.rows[0].mime_type);
+    res.setHeader("Cache-Control", "public, max-age=60");
+    return res.sendFile(path.join(mediaRoot, result.rows[0].object_key), (error) => {
+      if (error && !res.headersSent) res.status(404).json({ error: "Media file not found." });
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
+  const objectKey = req.params.objectKey;
+  const expires = Number(req.query.expires);
+  const signature = typeof req.query.signature === "string" ? req.query.signature : "";
+  if (
+    !mediaKeyPattern.test(objectKey) ||
+    !Number.isSafeInteger(expires) ||
+    expires <= Math.floor(Date.now() / 1000) ||
+    expires > Math.floor(Date.now() / 1000) + 3600 ||
+    !/^[0-9a-f]{64}$/i.test(signature)
+  ) {
+    return res.status(403).json({ error: "Invalid or expired media signature." });
+  }
+  const expected = Buffer.from(signMediaUrl(objectKey, expires), "hex");
+  const supplied = Buffer.from(signature, "hex");
+  if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) {
+    return res.status(403).json({ error: "Invalid or expired media signature." });
+  }
+  try {
+    const result = await pool.query(
+      "SELECT mime_type FROM media_objects WHERE object_key=$1 AND deleted_at IS NULL LIMIT 1",
+      [objectKey],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Media not found." });
+    res.type(result.rows[0].mime_type);
+    res.setHeader("Cache-Control", "private, max-age=60");
+    return res.sendFile(path.join(mediaRoot, objectKey), (error) => {
+      if (error && !res.headersSent) res.status(404).json({ error: "Media file not found." });
+    });
   } catch (error) {
     return next(error);
   }
