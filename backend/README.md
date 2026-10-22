@@ -37,6 +37,12 @@ The frontend and API are separate processes. Deploy the API on a Node.js host th
 - Rate limiting is process-local, not distributed. Add Redis rate limiting, stricter request validation, media storage, integration tests, monitoring, backups, and load testing before public launch.
 - Never commit .env or production credentials.
 
+## Web deployment and API proxy
+
+The TanStack web server proxies `/api/*` to the API using the server-only `OPEXNAL_API_URL` environment variable. For a Vercel web deployment, set `OPEXNAL_API_URL` to the public HTTPS origin of the separately deployed Node API, and set `PUBLIC_WEB_URL` to the exact HTTPS origin of the web app. Leave `VITE_OPEXNAL_API_URL` blank to use the same-origin proxy. Do not point a browser at a Docker-only hostname such as `api:4000`.
+
+The self-hosted Compose setup uses `OPEXNAL_API_URL=http://api:4000` internally and a same-origin web proxy. The default `VITE_OPEXNAL_API_URL` is blank. For a public deployment, use HTTPS and configure trusted reverse-proxy/TLS settings before exposing the API. Vercel does not run the long-lived Express/WebSocket process or PostgreSQL; those need a separate host and managed/persistent database/media storage.
+
 ## First administrator
 
 New accounts receive the `user` role. The app does not allow users to promote themselves. After verifying the intended owner account, an operator with database access must grant the first administrator role manually, for example:
