@@ -789,7 +789,8 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE (
+      WHERE NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
+        AND (
           p.user_id=$1
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
@@ -836,11 +837,13 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
           )) ELSE '[]'::json END
         ) AS media
       FROM posts p JOIN users u ON u.id=p.user_id
-      WHERE p.id=$1 AND (
-        p.user_id=$2
-        OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id)))
-        OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))
-      )
+      WHERE p.id=$1
+        AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2))
+        AND (
+          p.user_id=$2
+          OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id)))
+          OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))
+        )
       LIMIT 1`,
       [req.params.postId, req.user.id],
     );
@@ -1010,7 +1013,7 @@ app.get("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) => 
 
 app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const result = await pool.query(profileSelect + " WHERE u.id=$1 LIMIT 1", [req.params.userId]);
+    const result = await pool.query(profileSelect + " WHERE u.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1", [req.params.userId, req.user.id]);
     if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
       return res.status(404).json({ error: "Profile not found." });
     }
@@ -1045,7 +1048,7 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
 app.get("/api/v1/users/:username", dbRequired, authRequired, async (req, res, next) => {
   const username = String(req.params.username || "").toLowerCase();
   try {
-    const result = await pool.query(profileSelect + " WHERE LOWER(u.username)=LOWER($1) LIMIT 1", [username]);
+    const result = await pool.query(profileSelect + " WHERE LOWER(u.username)=LOWER($1) AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) LIMIT 1", [username, req.user.id]);
     if (!result.rowCount || (result.rows[0].is_deactivated && result.rows[0].id !== req.user.id)) {
       return res.status(404).json({ error: "Profile not found." });
     }
@@ -1540,7 +1543,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
 });
 async function findVisiblePost(postId, userId) {
   const result = await pool.query(
-    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
+    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
     [postId, userId],
   );
   return result.rows[0] || null;
