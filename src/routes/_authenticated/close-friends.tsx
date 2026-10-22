@@ -342,7 +342,7 @@ export function CloseFriendsPage() {
                   variant={isSelected ? "surface" : "brand"}
                   onClick={() =>
                     mode === "close_friends"
-                      ? toggleCloseFriend(creator.username)
+                      ? toggleCloseFriend(creator)
                       : toggleFavorite(creator.username)
                   }
                   className={cn(
