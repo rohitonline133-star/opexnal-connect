@@ -601,8 +601,8 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
   try {
     const result = await pool.query(
       `SELECT m.object_key,
-        (m.owner_id=$2 OR EXISTS (SELECT 1 FROM posts p WHERE p.media_url=$3 AND p.visibility='public')
-          OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$3 AND s.visibility='public' AND s.expires_at>NOW())) AS can_access
+        (m.owner_id=$2 OR EXISTS (SELECT 1 FROM posts p WHERE p.media_url=$3 AND (p.visibility='public' OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
+          OR EXISTS (SELECT 1 FROM stories s WHERE s.media_url=$3 AND (s.visibility='public' OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) AND s.expires_at>NOW())) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
       [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
     );
@@ -744,7 +744,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE (p.visibility='public' OR p.user_id=$1)
+      WHERE (p.visibility='public' OR p.user_id=$1 OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
       ORDER BY p.created_at DESC
       LIMIT $2`,
@@ -787,7 +787,7 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
           )) ELSE '[]'::json END
         ) AS media
       FROM posts p JOIN users u ON u.id=p.user_id
-      WHERE p.id=$1 AND (p.visibility='public' OR p.user_id=$2)
+      WHERE p.id=$1 AND (p.visibility='public' OR p.user_id=$2 OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id)))
       LIMIT 1`,
       [req.params.postId, req.user.id],
     );
@@ -798,10 +798,65 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
   }
 });
 
+app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT following_id FROM follows WHERE follower_id=$1 ORDER BY created_at DESC LIMIT 5000",
+      [req.user.id],
+    );
+    return res.json({ following: result.rows.map((row) => row.following_id) });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    if (!target.rowCount) return res.status(404).json({ error: "User not found." });
+    const [following, followers, own] = await Promise.all([
+      pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1", [req.user.id, req.params.userId]),
+      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE following_id=$1", [req.params.userId]),
+      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE follower_id=$1", [req.params.userId]),
+    ]);
+    return res.json({
+      isFollowing: Boolean(following.rowCount),
+      followersCount: followers.rows[0].count,
+      followingCount: own.rows[0].count,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
+  if (req.params.userId === req.user.id) return res.status(400).json({ error: "You cannot follow yourself." });
+  try {
+    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [req.params.userId]);
+    if (!target.rowCount) return res.status(404).json({ error: "User not found." });
+    await pool.query(
+      "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.userId],
+    );
+    return res.json({ following: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.delete("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [req.user.id, req.params.userId]);
+    return res.json({ following: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   const body = req.body || {};
   const caption = body.caption === undefined ? "" : body.caption;
-  const visibility = body.visibility === "private" ? "private" : "public";
+  const visibility = ["public", "followers", "private"].includes(body.visibility) ? body.visibility : "public";
   const commentsEnabled = body.commentsEnabled !== false;
   const locationName = typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
   let media = Array.isArray(body.media) ? body.media : [];
@@ -811,7 +866,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   if (
     typeof caption !== "string" ||
     caption.length > 2200 ||
-    !["public", "private"].includes(visibility) ||
+    !["public", "followers", "private"].includes(visibility) ||
     media.length > 10
   ) {
     return res.status(400).json({ error: "Invalid post payload." });
@@ -897,7 +952,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
 });
 async function findVisiblePost(postId, userId) {
   const result = await pool.query(
-    "SELECT id,user_id,visibility,comments_enabled FROM posts WHERE id=$1 AND (visibility='public' OR user_id=$2) LIMIT 1",
+    "SELECT id,user_id,visibility,comments_enabled FROM posts WHERE id=$1 AND (visibility='public' OR user_id=$2 OR (visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=posts.user_id))) LIMIT 1",
     [postId, userId],
   );
   return result.rows[0] || null;
