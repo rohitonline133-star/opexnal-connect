@@ -34,7 +34,10 @@ export const Route = createFileRoute("/auth/2fa")({
 
 function TwoFactorPage() {
   const { session, user } = useSession();
-  const username = user?.username || "user_maya";
+  const username =
+    user?.username ||
+    user?.user_metadata?.username ||
+    (user?.email ? user.email.split("@")[0] : "user");
 
   const [step, setStep] = useState<"intro" | "setup" | "backup_codes" | "completed">("intro");
   const [secret, setSecret] = useState("");
@@ -89,7 +92,7 @@ function TwoFactorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?.id || "user_maya",
+          userId: user?.id || "",
           token: verificationCode.trim(),
         }),
       });

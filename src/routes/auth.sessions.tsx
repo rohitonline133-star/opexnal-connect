@@ -33,7 +33,7 @@ export const Route = createFileRoute("/auth/sessions")({
 function SessionsPage() {
   const { session, user } = useSession();
   const token = session?.access_token || "";
-  const userId = user?.id || "user_maya";
+  const userId = user?.id || "";
 
   const [sessions, setSessions] = useState<DeviceSessionRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,10 +42,14 @@ function SessionsPage() {
 
   useEffect(() => {
     let isMounted = true;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       try {
         const res = await fetch("/api/auth/sessions", {
-          headers: { Authorization: `Bearer ${token || "user_maya"}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         const data = await res.json();
         if (isMounted) setSessions(data.sessions || []);

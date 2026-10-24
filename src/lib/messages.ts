@@ -262,12 +262,15 @@ export async function sendMessage(
     textBody = conversationIdOrPayload.text;
   } else {
     convId = conversationIdOrPayload;
-    sId = senderId || "user_maya";
+    sId = senderId || "";
     textBody = body || "";
   }
 
   const { data: authData } = await supabase.auth.getUser();
   const effectiveSenderId = authData?.user?.id || sId;
+  if (!effectiveSenderId) {
+    throw new Error("You must be logged in to send messages");
+  }
   const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const now = new Date().toISOString();
 

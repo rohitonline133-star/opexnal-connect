@@ -115,7 +115,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
         return jsonResponse({ error: "Invalid two-factor code format" }, 400);
       }
       recordSecurityAudit(
-        body.userId || "user_maya",
+        body.userId || "authenticated_user",
         "MFA_ENABLED",
         "Two-factor challenge verified successfully.",
       );
@@ -129,8 +129,11 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
     if (pathname === "/api/auth/sessions" && method === "GET") {
       const authHeader = request.headers.get("authorization") || "";
       const userId = authHeader.includes("user_")
-        ? authHeader.split("user_")[1]?.split(" ")[0] || "user_maya"
-        : "user_maya";
+        ? `user_${authHeader.split("user_")[1]?.split(" ")[0]}`
+        : null;
+      if (!userId) {
+        return jsonResponse({ sessions: [] });
+      }
       const sessions = getSessionsForUser(userId);
       return jsonResponse({ sessions });
     }
@@ -144,7 +147,9 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!body.sessionId) {
         return jsonResponse({ error: "sessionId is required" }, 400);
       }
-      revokeSession(body.userId || "user_maya", body.sessionId);
+      if (body.userId) {
+        revokeSession(body.userId, body.sessionId);
+      }
       return jsonResponse({ success: true, message: "Session revoked" });
     }
 
@@ -154,7 +159,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
         userId?: string;
         keepCurrent?: boolean;
       };
-      const count = revokeAllSessions(body.userId || "user_maya", body.keepCurrent !== false);
+      const count = body.userId ? revokeAllSessions(body.userId, body.keepCurrent !== false) : 0;
       return jsonResponse({ success: true, revokedCount: count });
     }
 
@@ -218,12 +223,18 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
           400,
         );
       }
+      const targetUser =
+        typeof body.code === "string" && body.code.startsWith("user_")
+          ? body.code
+          : "authenticated_user";
       recordSecurityAudit(
-        "user_maya",
+        targetUser,
         "PASSWORD_RESET_COMPLETED",
         "Password changed and verified. Previous active sessions rotated.",
       );
-      revokeAllSessions("user_maya", false);
+      if (targetUser !== "authenticated_user") {
+        revokeAllSessions(targetUser, false);
+      }
       return jsonResponse({
         success: true,
         message: "Password reset successfully. Please log in with your new credentials.",
@@ -236,7 +247,11 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       return jsonResponse(feed);
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
-      const stories = await getStoryTray("user_maya");
+      const authHeader = request.headers.get("authorization") || "";
+      const storyUserId = authHeader.includes("user_")
+        ? `user_${authHeader.split("user_")[1]?.split(" ")[0]}`
+        : "";
+      const stories = await getStoryTray(storyUserId);
       return jsonResponse({ stories });
     }
 

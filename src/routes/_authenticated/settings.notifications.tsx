@@ -24,11 +24,12 @@ export const Route = createFileRoute("/_authenticated/settings/notifications")({
 function SettingsNotificationsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.userId || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
+    enabled: Boolean(userId),
     queryFn: () => getStoredSettings(userId),
   });
 

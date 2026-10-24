@@ -75,7 +75,14 @@ function PublicProfile() {
     queryFn: () => getProfileByUsername(username),
   });
 
-  const isSelf = Boolean(user && profile && user.id === profile.id);
+  const isSelf = Boolean(
+    user &&
+    profile &&
+    (user.id === profile.id ||
+      (user.username && user.username.toLowerCase() === profile.username.toLowerCase()) ||
+      (user.user_metadata?.username &&
+        user.user_metadata.username.toLowerCase() === profile.username.toLowerCase())),
+  );
 
   const { data: relationship } = useQuery({
     queryKey: ["relationship", user?.id, profile?.id],
@@ -248,7 +255,26 @@ function PublicProfile() {
             {profile.bio && <p className="mt-2 whitespace-pre-line text-sm">{profile.bio}</p>}
           </div>
 
-          {!isSelf && (
+          {isSelf ? (
+            <div className="flex gap-2 px-4 pt-4">
+              <Button
+                variant="surface"
+                size="xl"
+                className="flex-1 rounded-xl font-medium"
+                onClick={() => navigate({ to: "/settings/account" })}
+              >
+                Edit Profile
+              </Button>
+              <Button
+                variant="surface"
+                size="xl"
+                className="flex-1 rounded-xl font-medium"
+                onClick={handleCopyLink}
+              >
+                Share Profile
+              </Button>
+            </div>
+          ) : (
             <div className="flex gap-2 px-4 pt-4">
               <Button
                 variant={relationship?.following || relationship?.requested ? "surface" : "brand"}

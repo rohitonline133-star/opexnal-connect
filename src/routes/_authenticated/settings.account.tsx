@@ -23,22 +23,19 @@ export const Route = createFileRoute("/_authenticated/settings/account")({
 function SettingsAccountPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || "user_maya";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.userId || "";
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["settings", userId],
+    enabled: Boolean(userId),
     queryFn: () => getStoredSettings(userId),
   });
 
-  const [email, setEmail] = useState(
-    settings?.email || session?.user?.email || "maya@opexnal.local",
-  );
-  const [phone, setPhone] = useState(settings?.phone || "+91 98765 43210");
-  const [dob, setDob] = useState(settings?.dateOfBirth || "2000-05-15");
-  const [recoveryEmail, setRecoveryEmail] = useState(
-    settings?.recoveryEmail || "maya.backup@gmail.com",
-  );
+  const [email, setEmail] = useState(settings?.email || user?.email || "");
+  const [phone, setPhone] = useState(settings?.phone || "");
+  const [dob, setDob] = useState(settings?.dateOfBirth || "");
+  const [recoveryEmail, setRecoveryEmail] = useState(settings?.recoveryEmail || "");
 
   const saveMutation = useMutation({
     mutationFn: async () => {

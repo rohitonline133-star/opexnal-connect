@@ -35,12 +35,32 @@ function CurrentUserProfileRedirect() {
   });
 
   useEffect(() => {
-    if (loading || isLoading) return;
+    if (loading) return;
 
-    if (profile?.username) {
-      navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
-    } else if (user?.id) {
-      navigate({ to: "/u/$username", params: { username: "maya_creates" }, replace: true });
+    if (!user?.id) {
+      navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+      return;
+    }
+
+    if (isLoading) return;
+
+    const realUsername =
+      profile?.username ||
+      user?.user_metadata?.username ||
+      user?.username ||
+      (user?.email
+        ? user.email
+            .split("@")[0]
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, "_")
+        : null) ||
+      user.id
+        .replace(/^user_/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "_");
+
+    if (realUsername) {
+      navigate({ to: "/u/$username", params: { username: realUsername }, replace: true });
     } else {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }

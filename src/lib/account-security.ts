@@ -515,16 +515,7 @@ export interface SecurityAuditEvent {
   ipAddress?: string;
 }
 
-const auditLogs: SecurityAuditEvent[] = [
-  {
-    id: "log_init_1",
-    userId: "user_maya",
-    action: "LOGIN_SUCCESS",
-    details: "Authenticated via password with verified device session.",
-    timestamp: new Date(Date.now() - 3600 * 1000).toISOString(),
-    ipAddress: "49.36.128.45",
-  },
-];
+const auditLogs: SecurityAuditEvent[] = [];
 
 export function recordSecurityAudit(
   userId: string,

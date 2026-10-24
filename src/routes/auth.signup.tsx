@@ -17,6 +17,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { ensureUserProfile } from "@/lib/profile";
 import { evaluatePasswordStrength, type PasswordEvaluation } from "@/lib/account-security";
 
 const signupSearchSchema = z.object({
@@ -196,6 +197,10 @@ function SignupPage() {
         setErrorMessage(error.message);
         toast.error(error.message);
         return;
+      }
+
+      if (data?.user) {
+        await ensureUserProfile(data.user);
       }
 
       setStep("welcome");

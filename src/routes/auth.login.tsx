@@ -15,6 +15,7 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { ensureUserProfile } from "@/lib/profile";
 import { lovable } from "@/integrations/lovable";
 
 const loginSearchSchema = z.object({
@@ -110,6 +111,28 @@ function LoginPage() {
         });
         const data = await res.json();
         if (res.ok && data.success) {
+          const rawPhone = phoneNumber.trim().replace(/[^0-9]/g, "");
+          const cleanUsername = `user_${rawPhone.slice(-6) || "mobile"}`;
+          const userObj = {
+            id: data.userId || `user_${cleanUsername}`,
+            email: `${cleanUsername}@opexnal.local`,
+            username: cleanUsername,
+            displayName: `User ${cleanUsername.slice(-4)}`,
+            avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+            user_metadata: {
+              username: cleanUsername,
+              full_name: `User ${cleanUsername.slice(-4)}`,
+              avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+            },
+          };
+          authClient.setSession({
+            token: data.token || `opex_phone_${Date.now()}`,
+            access_token: data.token || `opex_phone_${Date.now()}`,
+            userId: userObj.id,
+            user: userObj,
+            expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+          });
+          await ensureUserProfile(userObj);
           toast.success("Phone verified! Welcome back.");
           navigate({ to: search.redirect || "/home", replace: true });
         } else {
@@ -157,6 +180,7 @@ function LoginPage() {
       }
 
       if (data?.session) {
+        await ensureUserProfile(data.user);
         toast.success("Signed in successfully! Welcome to Opexnal.");
         navigate({ to: search.redirect || "/home", replace: true });
       }

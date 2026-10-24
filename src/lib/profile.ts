@@ -4,32 +4,6 @@ import type { Database } from "@/integrations/supabase/types";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const SEED_PROFILES: Record<string, Profile> = {
-  user_maya: {
-    id: "user_maya",
-    username: "maya_codes",
-    display_name: "Maya Chen",
-    bio: "Building aesthetic web interfaces & next-gen social platforms ✨ Developer, visual artist & coffee enthusiast.",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    posts_count: 24,
-    followers_count: 14200,
-    following_count: 382,
-    is_verified: true,
-    is_private: false,
-    is_deactivated: false,
-    website: "https://mayachen.design",
-    location: "Bengaluru, India",
-    locale: "en",
-    timezone: "Asia/Kolkata",
-    account_type: "creator",
-    allow_mentions_from: "everyone",
-    allow_tags_from: "everyone",
-    show_activity_status: true,
-    country_code: "IN",
-    last_active_at: "2026-01-01T00:00:00Z",
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
-  },
   user_zenith: {
     id: "user_zenith",
     username: "zenith_design",
@@ -111,6 +85,8 @@ export const SEED_PROFILES: Record<string, Profile> = {
 };
 
 export async function getProfileById(id: string): Promise<Profile | null> {
+  if (!id) return null;
+
   try {
     const { data, error } = await supabase
       .from<Profile>("profiles")
@@ -127,15 +103,20 @@ export async function getProfileById(id: string): Promise<Profile | null> {
     return SEED_PROFILES[id];
   }
 
-  // Generic fallback profile if unknown id
-  const name = id.replace(/^user_/, "").replace(/_/g, " ");
-  return {
+  // Create and persist authentic initial profile for this user ID
+  const rawUsername = id.replace(/^user_/, "");
+  const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  const displayName = username
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  const newProfile: Profile = {
     id,
-    username: id.replace(/^user_/, ""),
-    display_name: name.charAt(0).toUpperCase() + name.slice(1),
-    bio: "Creator on Opexnal Connect",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+    username,
+    display_name: displayName,
+    bio: "",
+    avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
     posts_count: 0,
     followers_count: 0,
     following_count: 0,
@@ -155,6 +136,83 @@ export async function getProfileById(id: string): Promise<Profile | null> {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+
+  try {
+    await supabase.from("profiles").upsert(newProfile);
+  } catch {
+    // ignore
+  }
+
+  return newProfile;
+}
+
+export async function ensureUserProfile(user: {
+  id: string;
+  email?: string;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+}): Promise<Profile> {
+  try {
+    const { data: existing } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (existing) {
+      return existing;
+    }
+  } catch {
+    // ignore
+  }
+
+  const rawUsername =
+    user.username ||
+    (user.email ? user.email.split("@")[0] : null) ||
+    user.id.replace(/^user_/, "");
+  const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  const displayName =
+    user.displayName ||
+    username
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+  const newProfile: Profile = {
+    id: user.id,
+    username,
+    display_name: displayName,
+    bio: "",
+    avatar_url:
+      user.avatarUrl ||
+      `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    is_verified: false,
+    is_private: false,
+    is_deactivated: false,
+    website: null,
+    location: null,
+    locale: "en",
+    timezone: "UTC",
+    account_type: "personal",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: null,
+    last_active_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    await supabase.from("profiles").upsert(newProfile);
+  } catch {
+    // ignore
+  }
+
+  return newProfile;
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
@@ -175,6 +233,29 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
     if (profile.username.toLowerCase() === clean) {
       return profile;
     }
+  }
+
+  // Check if this username matches the currently authenticated user
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    const currentUser = userRes?.user;
+    if (
+      currentUser &&
+      (currentUser.username?.toLowerCase() === clean ||
+        currentUser.user_metadata?.username?.toLowerCase() === clean ||
+        currentUser.id.replace(/^user_/, "").toLowerCase() === clean ||
+        (currentUser.email && currentUser.email.split("@")[0].toLowerCase() === clean))
+    ) {
+      return ensureUserProfile({
+        id: currentUser.id,
+        email: currentUser.email,
+        username: clean,
+        displayName: currentUser.displayName || currentUser.user_metadata?.full_name,
+        avatarUrl: currentUser.user_metadata?.avatar_url,
+      });
+    }
+  } catch {
+    // ignore
   }
 
   return null;

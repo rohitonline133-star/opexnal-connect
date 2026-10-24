@@ -358,9 +358,12 @@ export const supabase = {
             ? {
                 id: res.data.user.id,
                 email: res.data.user.email,
+                username: res.data.user.username,
+                displayName: res.data.user.displayName,
                 user_metadata: {
                   username: res.data.user.username,
                   full_name: res.data.user.displayName,
+                  avatar_url: res.data.user.avatarUrl,
                 },
               }
             : null,
@@ -375,9 +378,17 @@ export const supabase = {
           session: res.data.session
             ? {
                 access_token: res.data.session.token,
+                userId: res.data.session.userId,
                 user: {
                   id: res.data.session.userId,
-                  email: "",
+                  email: res.data.session.user?.email || "",
+                  username: res.data.session.user?.username || "",
+                  displayName: res.data.session.user?.displayName || "",
+                  user_metadata: {
+                    username: res.data.session.user?.username || "",
+                    full_name: res.data.session.user?.displayName || "",
+                    avatar_url: res.data.session.user?.avatarUrl || "",
+                  },
                 },
               }
             : null,

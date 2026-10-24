@@ -22,29 +22,6 @@ export type AuthSession = {
 const AUTH_USER_KEY = "opexnal_auth_user";
 const AUTH_SESSION_KEY = "opexnal_auth_session";
 
-export const DEFAULT_USER: AuthUser = {
-  id: "user_maya",
-  email: "maya@opexnal.local",
-  username: "maya_codes",
-  displayName: "Maya Chen",
-  avatarUrl:
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  user_metadata: {
-    username: "maya_codes",
-    full_name: "Maya Chen",
-    avatar_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  },
-};
-
-export const DEFAULT_SESSION: AuthSession = {
-  token: "opexnal_demo_jwt_token_user_maya",
-  access_token: "opexnal_demo_jwt_token_user_maya",
-  userId: "user_maya",
-  user: DEFAULT_USER,
-  expiresAt: 1893456000000,
-};
-
 type AuthListener = (event: string, session: AuthSession | null) => void;
 
 class AuthClient {
@@ -60,8 +37,25 @@ class AuthClient {
         const storedSession = localStorage.getItem(AUTH_SESSION_KEY);
         const storedUser = localStorage.getItem(AUTH_USER_KEY);
         if (storedSession && storedUser) {
-          this.memorySession = JSON.parse(storedSession);
-          this.memoryUser = JSON.parse(storedUser);
+          const parsedUser = JSON.parse(storedUser);
+          const parsedSession = JSON.parse(storedSession);
+
+          // Purge legacy demo Maya session if still present in browser storage
+          if (
+            parsedUser?.id === "user_maya" ||
+            parsedUser?.username === "maya_codes" ||
+            parsedSession?.userId === "user_maya" ||
+            (typeof parsedSession?.token === "string" &&
+              parsedSession.token.includes("demo_jwt_token_user_maya"))
+          ) {
+            localStorage.removeItem(AUTH_USER_KEY);
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            this.memorySession = null;
+            this.memoryUser = null;
+          } else {
+            this.memorySession = parsedSession;
+            this.memoryUser = parsedUser;
+          }
         }
       } catch {
         this.memoryUser = null;
@@ -143,11 +137,11 @@ class AuthClient {
         .split("_")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" "),
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`,
       user_metadata: {
         username,
         full_name: username,
+        avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`,
       },
     };
 
@@ -190,18 +184,18 @@ class AuthClient {
       "user";
     const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
     const displayName = params.options?.data?.full_name || username;
-    const userId = `user_${username}_${Date.now().toString(36)}`;
+    const userId = `user_${username}`;
 
     const user: AuthUser = {
       id: userId,
       email,
       username,
       displayName,
-      avatarUrl:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
       user_metadata: {
         username,
         full_name: displayName,
+        avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
       },
     };
 
