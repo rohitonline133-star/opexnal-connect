@@ -18,6 +18,7 @@ import { useSession } from "@/hooks/use-session";
 import { type DeviceSessionRecord } from "@/lib/account-security";
 
 export const Route = createFileRoute("/auth/sessions")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Active Devices & Login Sessions — Opexnal" },

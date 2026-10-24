@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth/forgot-password")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Forgot Password — Opexnal" },
@@ -153,7 +154,6 @@ function ForgotPasswordPage() {
               value={identity}
               onChange={(e) => setIdentity(e.target.value)}
               disabled={loading}
-              autoFocus
               required
               className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
             />

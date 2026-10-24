@@ -7,6 +7,7 @@ const authSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth/")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>) => authSearchSchema.parse(search),
   beforeLoad: ({ search }) => {
     if (search.mode === "signup") {

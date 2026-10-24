@@ -19,6 +19,7 @@ import QRCode from "qrcode";
 import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/auth/2fa")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Two-Factor Authentication (2FA) — Opexnal" },
@@ -236,7 +237,6 @@ function TwoFactorPage() {
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 disabled={loading}
-                autoFocus
                 required
                 className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-widest text-center"
               />

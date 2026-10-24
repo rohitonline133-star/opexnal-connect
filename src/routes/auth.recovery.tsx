@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { type RecoveryReason } from "@/lib/account-security";
 
 export const Route = createFileRoute("/auth/recovery")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Account Recovery Center — Opexnal" },

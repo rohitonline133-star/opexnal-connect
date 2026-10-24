@@ -20,6 +20,7 @@ const resetPasswordSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth/reset-password")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>) => resetPasswordSearchSchema.parse(search),
   head: () => ({
     meta: [

@@ -23,6 +23,7 @@ const loginSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth/login")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>) => loginSearchSchema.parse(search),
   head: () => ({
     meta: [
@@ -309,7 +310,6 @@ function LoginPage() {
               value={twoFactorCode}
               onChange={(e) => setTwoFactorCode(e.target.value)}
               disabled={loading}
-              autoFocus
               required
               className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-wider"
             />
@@ -394,7 +394,6 @@ function LoginPage() {
                       value={phoneOtp}
                       onChange={(e) => setPhoneOtp(e.target.value)}
                       disabled={loading}
-                      autoFocus
                       required
                       className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono"
                     />
