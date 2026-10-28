@@ -225,6 +225,26 @@ export async function ensureUserProfile(user: {
   return newProfile;
 }
 
+export function hydrateProfileExtension(profile: Profile): Profile {
+  if (typeof window === "undefined" || !profile?.id) return profile;
+  try {
+    const raw = localStorage.getItem(`opexnal_profile_ext_${profile.id}`);
+    if (raw) {
+      const ext = JSON.parse(raw);
+      return {
+        ...profile,
+        ...(ext.pronouns ? { pronouns: ext.pronouns } : {}),
+        ...(ext.gender ? { gender: ext.gender } : {}),
+        ...(ext.banner_url ? { banner_url: ext.banner_url } : {}),
+        ...(ext.links ? { links: ext.links } : {}),
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return profile;
+}
+
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
   const clean = username.toLowerCase();
   try {
@@ -234,14 +254,14 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
       .eq("username", clean)
       .maybeSingle();
     if (error) throw error;
-    if (data) return data;
+    if (data) return hydrateProfileExtension(data);
   } catch {
     // ignore
   }
 
   for (const profile of Object.values(SEED_PROFILES)) {
     if (profile.username.toLowerCase() === clean) {
-      return profile;
+      return hydrateProfileExtension(profile);
     }
   }
 
@@ -251,18 +271,32 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
     const currentUser = userRes?.user;
     if (
       currentUser &&
-      (currentUser.username?.toLowerCase() === clean ||
+      ((currentUser as { username?: string }).username?.toLowerCase() === clean ||
         currentUser.user_metadata?.username?.toLowerCase() === clean ||
         currentUser.id.replace(/^user_/, "").toLowerCase() === clean ||
-        (currentUser.email && currentUser.email.split("@")[0].toLowerCase() === clean))
+        (currentUser.email && currentUser.email.split("@")[0]?.toLowerCase() === clean))
     ) {
-      return ensureUserProfile({
+      const userArgs: {
+        id: string;
+        email?: string;
+        username?: string;
+        displayName?: string;
+        avatarUrl?: string;
+      } = {
         id: currentUser.id,
-        email: currentUser.email,
         username: clean,
-        displayName: currentUser.displayName || currentUser.user_metadata?.full_name,
-        avatarUrl: currentUser.user_metadata?.avatar_url,
-      });
+      };
+      if (currentUser.email) userArgs.email = currentUser.email;
+      const dName =
+        (currentUser as { displayName?: string }).displayName ||
+        currentUser.user_metadata?.full_name ||
+        currentUser.user_metadata?.display_name;
+      if (dName) userArgs.displayName = dName;
+      if (currentUser.user_metadata?.avatar_url) {
+        userArgs.avatarUrl = currentUser.user_metadata.avatar_url;
+      }
+      const created = await ensureUserProfile(userArgs);
+      return hydrateProfileExtension(created);
     }
   } catch {
     // ignore

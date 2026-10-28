@@ -172,16 +172,20 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
         contactPhone?: string;
         additionalDetails?: string;
       };
-      if (!body.identityInput || !body.contactEmail) {
-        return jsonResponse({ error: "Account identifier and contact email are required." }, 400);
-      }
-      const res = submitAccountRecoveryRequest({
+      const recoveryPayload: {
+        identityInput: string;
+        reason: RecoveryReason;
+        contactEmail: string;
+        contactPhone?: string;
+        additionalDetails?: string;
+      } = {
         identityInput: body.identityInput,
         reason: body.reason || "forgot_password",
         contactEmail: body.contactEmail,
-        contactPhone: body.contactPhone,
-        additionalDetails: body.additionalDetails,
-      });
+      };
+      if (body.contactPhone) recoveryPayload.contactPhone = body.contactPhone;
+      if (body.additionalDetails) recoveryPayload.additionalDetails = body.additionalDetails;
+      const res = submitAccountRecoveryRequest(recoveryPayload);
       return jsonResponse(res);
     }
 

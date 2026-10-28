@@ -145,17 +145,27 @@ function EditProfile() {
       return;
     }
     setBusy(true);
+    try {
+      localStorage.setItem(
+        `opexnal_profile_ext_${user.id}`,
+        JSON.stringify({
+          pronouns: parsed.data.pronouns || null,
+          gender: parsed.data.gender || null,
+          banner_url: parsed.data.banner_url || null,
+          links: linksList,
+        }),
+      );
+    } catch {
+      // quota
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
         display_name: parsed.data.display_name,
         username: parsed.data.username,
-        pronouns: parsed.data.pronouns || null,
-        gender: parsed.data.gender || null,
         bio: parsed.data.bio,
-        website: parsed.data.website || null,
-        banner_url: parsed.data.banner_url || null,
-        links: linksList,
+        website: parsed.data.website || (linksList[0]?.url ?? null),
         account_type: parsed.data.account_type,
       })
       .eq("id", user.id);
@@ -169,6 +179,7 @@ function EditProfile() {
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+    await queryClient.invalidateQueries({ queryKey: ["profile-by-username"] });
     toast.success("Profile saved");
     navigate({ to: "/profile" });
   }
@@ -182,8 +193,8 @@ function EditProfile() {
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
       url = `https://${url}`;
     }
-    const title = newLinkTitle.trim() || url.replace(/^https?:\/\//, "").split("/")[0];
-    setLinksList((prev) => [...prev, { title, url }]);
+    const cleanTitle = newLinkTitle.trim() || url.replace(/^https?:\/\//, "").split("/")[0] || "Link";
+    setLinksList((prev) => [...prev, { title: cleanTitle, url }]);
     setNewLinkTitle("");
     setNewLinkUrl("");
     setShowAddLink(false);

@@ -25,7 +25,7 @@ export function StoryTray({ viewerId = "" }: { viewerId?: string | null }) {
           {mine ? (
             <Link
               to="/stories/$userId"
-              params={{ userId: viewerId }}
+              params={{ userId: mine.author.id }}
               className="flex w-16 flex-col items-center gap-1.5"
             >
               <MyStoryBadge

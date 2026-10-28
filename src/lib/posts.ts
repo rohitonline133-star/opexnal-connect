@@ -397,10 +397,21 @@ export const FEED_PAGE_SIZE = 10;
 
 /** Home feed: posts from people the viewer follows, plus their own. */
 export async function getHomeFeed(
-  viewerId: string,
-  cursor?: string | null,
-  limit = FEED_PAGE_SIZE,
+  viewerIdOrOptions?: string | { viewerId?: string; cursor?: string | null; limit?: number },
+  cursorArg?: string | null,
+  limitArg = FEED_PAGE_SIZE,
 ) {
+  let viewerId = "anonymous";
+  let cursor: string | null | undefined = cursorArg;
+  let limit = limitArg;
+
+  if (typeof viewerIdOrOptions === "object" && viewerIdOrOptions !== null) {
+    if (viewerIdOrOptions.viewerId) viewerId = viewerIdOrOptions.viewerId;
+    if (viewerIdOrOptions.cursor !== undefined) cursor = viewerIdOrOptions.cursor;
+    if (viewerIdOrOptions.limit !== undefined) limit = viewerIdOrOptions.limit;
+  } else if (typeof viewerIdOrOptions === "string") {
+    viewerId = viewerIdOrOptions;
+  }
   try {
     const { data: following } = await supabase
       .from("follows")

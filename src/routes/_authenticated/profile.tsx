@@ -48,10 +48,10 @@ function CurrentUserProfileRedirect() {
       profile?.username ||
       user?.user_metadata?.username ||
       user?.username ||
-      (user?.email
+      (user?.email && user.email.includes("@")
         ? user.email
             .split("@")[0]
-            .toLowerCase()
+            ?.toLowerCase()
             .replace(/[^a-z0-9_]/g, "_")
         : null) ||
       user.id

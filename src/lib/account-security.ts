@@ -225,7 +225,7 @@ const MAX_OTP_ATTEMPTS = 5;
 export function requestOtp(
   destination: string,
   type: "email" | "phone" | "recovery" = "email",
-): { success: boolean; cooldownRemainingMs: number; message: string } {
+): { success: boolean; cooldownRemainingMs: number; message: string; code?: string } {
   const destClean = destination.trim().toLowerCase();
   const now = Date.now();
 
@@ -436,11 +436,11 @@ export interface RecoveryTicket {
   reason: RecoveryReason;
   status: "pending_verification" | "manual_review" | "approved" | "resolved" | "rejected";
   contactEmail: string;
-  contactPhone?: string;
-  token?: string;
+  contactPhone?: string | undefined;
+  token?: string | undefined;
   expiresAt: number;
   createdAt: number;
-  notes?: string;
+  notes?: string | undefined;
 }
 
 const recoveryTickets = new Map<string, RecoveryTicket>();

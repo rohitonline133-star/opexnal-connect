@@ -73,7 +73,11 @@ function Inbox() {
     saveUserNote({
       userId: user.id,
       username: user.username || user.user_metadata?.username || "me",
-      displayName: user.user_metadata?.display_name || user.username || "Me",
+      displayName:
+        (user.user_metadata as { display_name?: string; full_name?: string })?.display_name ||
+        user.user_metadata?.full_name ||
+        user.username ||
+        "Me",
       avatarUrl: user.user_metadata?.avatar_url || null,
       text: noteText.trim(),
       audience: noteAudience,
