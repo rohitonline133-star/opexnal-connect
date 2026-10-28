@@ -1,7 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export interface ProfileLink {
+  title: string;
+  url: string;
+}
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  pronouns?: string | null;
+  gender?: string | null;
+  links?: ProfileLink[] | null;
+  banner_url?: string | null;
+};
 
 export const SEED_PROFILES: Record<string, Profile> = {
   user_zenith: {

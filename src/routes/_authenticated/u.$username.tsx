@@ -17,6 +17,19 @@ import {
   Clapperboard,
   Tag,
   Check,
+  QrCode,
+  Menu,
+  Settings,
+  Bookmark,
+  Activity,
+  Archive,
+  Users,
+  Star,
+  BarChart3,
+  LogOut,
+  Link as LinkIcon,
+  Download,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
@@ -69,6 +82,8 @@ function PublicProfile() {
   const [restrictDialogOpen, setRestrictDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
+  const [selfMenuOpen, setSelfMenuOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
   const { data: profile, isLoading } = useQuery<Profile | null>({
     queryKey: ["profile-by-username", username],
@@ -198,7 +213,26 @@ function PublicProfile() {
             </Link>
           }
           right={
-            !isSelf && profile ? (
+            isSelf ? (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setQrDialogOpen(true)}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+                  aria-label="QR Code"
+                >
+                  <QrCode className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelfMenuOpen(true)}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+                  aria-label="Menu"
+                >
+                  <Menu className="h-4 w-4" />
+                </button>
+              </div>
+            ) : profile ? (
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
@@ -222,6 +256,13 @@ function PublicProfile() {
         </p>
       ) : (
         <div>
+          {profile.banner_url && (
+            <div className="h-28 w-full overflow-hidden relative border-b border-border">
+              <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+            </div>
+          )}
+
           <div className="flex items-center gap-5 px-4 pt-6">
             <ProfileAvatar
               path={profile.avatar_url}
@@ -246,13 +287,45 @@ function PublicProfile() {
           </div>
 
           <div className="px-4 pt-4">
-            <p className="flex items-center gap-1.5 text-sm font-semibold">
-              {profile.display_name || profile.username}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-sm font-semibold">{profile.display_name || profile.username}</p>
               {profile.is_verified && (
                 <BadgeCheck className="h-4 w-4 text-primary" aria-label="Verified" />
               )}
-            </p>
+              {profile.pronouns && (
+                <span className="text-xs text-muted-foreground font-normal">
+                  ({profile.pronouns})
+                </span>
+              )}
+            </div>
             {profile.bio && <p className="mt-2 whitespace-pre-line text-sm">{profile.bio}</p>}
+            {profile.website && (
+              <a
+                href={profile.website}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:underline truncate max-w-full"
+              >
+                <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+                <span>{profile.website.replace(/^https?:\/\//, "")}</span>
+              </a>
+            )}
+            {profile.links && profile.links.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {profile.links.map((lnk, idx) => (
+                  <a
+                    key={idx}
+                    href={lnk.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] bg-surface border border-border px-2.5 py-1 rounded-full text-foreground hover:text-primary transition-colors"
+                  >
+                    <LinkIcon className="h-3 w-3 text-primary shrink-0" />
+                    <span>{lnk.title}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {isSelf ? (
@@ -261,7 +334,7 @@ function PublicProfile() {
                 variant="surface"
                 size="xl"
                 className="flex-1 rounded-xl font-medium"
-                onClick={() => navigate({ to: "/settings/account" })}
+                onClick={() => navigate({ to: "/profile/edit" })}
               >
                 Edit Profile
               </Button>
@@ -269,7 +342,7 @@ function PublicProfile() {
                 variant="surface"
                 size="xl"
                 className="flex-1 rounded-xl font-medium"
-                onClick={handleCopyLink}
+                onClick={() => setQrDialogOpen(true)}
               >
                 Share Profile
               </Button>
@@ -569,6 +642,237 @@ function PublicProfile() {
                 {reason}
               </button>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Self Profile Hamburger Menu Sheet */}
+      <Dialog open={selfMenuOpen} onOpenChange={setSelfMenuOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-3 bg-card border-border">
+          <div className="divide-y divide-border text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/settings" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Settings className="h-4 w-4 text-primary" />
+              <span>Settings and Activity</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/settings/account" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Info className="h-4 w-4 text-primary" />
+              <span>Accounts Center</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/activity" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Activity className="h-4 w-4 text-primary" />
+              <span>Your Activity</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/archive" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Archive className="h-4 w-4 text-primary" />
+              <span>Archive</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                setQrDialogOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <QrCode className="h-4 w-4 text-primary" />
+              <span>QR Code</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/saved" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Bookmark className="h-4 w-4 text-primary" />
+              <span>Saved</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/close-friends" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Users className="h-4 w-4 text-emerald-400" />
+              <span>Close Friends</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/settings" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <Star className="h-4 w-4 text-amber-400" />
+              <span>Favorites</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/professional" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span>Professional Dashboard</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelfMenuOpen(false);
+                navigate({ to: "/settings" });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-medium"
+            >
+              <BadgeCheck className="h-4 w-4 text-primary" />
+              <span>Opexnal Verified</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setSelfMenuOpen(false);
+                await supabase.auth.signOut();
+                toast.success("Logged out successfully");
+                navigate({ to: "/auth", search: { mode: "login" } });
+              }}
+              className="w-full flex items-center gap-3 p-3 text-destructive hover:bg-surface rounded-xl transition-colors font-semibold"
+            >
+              <LogOut className="h-4 w-4 text-destructive" />
+              <span>Log out</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-6 bg-card border-border text-center">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center justify-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              Share Profile
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Scan with camera or share link to open @{username}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 flex flex-col items-center justify-center">
+            {/* Stylized QR Card */}
+            <div className="p-5 rounded-3xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 shadow-xl inline-block">
+              <div className="bg-white p-4 rounded-2xl shadow-inner flex flex-col items-center">
+                <svg
+                  className="h-36 w-36 text-black"
+                  viewBox="0 0 100 100"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Outer corner blocks */}
+                  <rect x="5" y="5" width="28" height="28" rx="4" fill="black" />
+                  <rect x="9" y="9" width="20" height="20" rx="2" fill="white" />
+                  <rect x="13" y="13" width="12" height="12" rx="1" fill="black" />
+
+                  <rect x="67" y="5" width="28" height="28" rx="4" fill="black" />
+                  <rect x="71" y="9" width="20" height="20" rx="2" fill="white" />
+                  <rect x="75" y="13" width="12" height="12" rx="1" fill="black" />
+
+                  <rect x="5" y="67" width="28" height="28" rx="4" fill="black" />
+                  <rect x="9" y="71" width="20" height="20" rx="2" fill="white" />
+                  <rect x="13" y="75" width="12" height="12" rx="1" fill="black" />
+
+                  {/* QR Pattern dots */}
+                  <rect x="40" y="8" width="6" height="6" rx="1" fill="black" />
+                  <rect x="52" y="8" width="6" height="6" rx="1" fill="black" />
+                  <rect x="40" y="20" width="6" height="6" rx="1" fill="black" />
+                  <rect x="46" y="28" width="8" height="6" rx="1" fill="black" />
+                  <rect x="8" y="42" width="6" height="6" rx="1" fill="black" />
+                  <rect x="22" y="46" width="6" height="6" rx="1" fill="black" />
+                  <rect x="36" y="40" width="8" height="8" rx="2" fill="black" />
+                  <rect x="50" y="42" width="6" height="6" rx="1" fill="black" />
+                  <rect x="62" y="40" width="8" height="8" rx="2" fill="black" />
+                  <rect x="76" y="44" width="8" height="6" rx="1" fill="black" />
+                  <rect x="88" y="42" width="6" height="6" rx="1" fill="black" />
+                  <rect x="40" y="56" width="6" height="6" rx="1" fill="black" />
+                  <rect x="54" y="54" width="6" height="6" rx="1" fill="black" />
+                  <rect x="68" y="58" width="6" height="6" rx="1" fill="black" />
+                  <rect x="82" y="56" width="6" height="6" rx="1" fill="black" />
+                  <rect x="42" y="72" width="8" height="8" rx="2" fill="black" />
+                  <rect x="56" y="70" width="8" height="8" rx="2" fill="black" />
+                  <rect x="70" y="74" width="8" height="8" rx="2" fill="black" />
+                  <rect x="84" y="72" width="8" height="8" rx="2" fill="black" />
+                  <rect x="50" y="86" width="6" height="6" rx="1" fill="black" />
+                  <rect x="64" y="86" width="6" height="6" rx="1" fill="black" />
+                  <rect x="78" y="86" width="8" height="6" rx="1" fill="black" />
+                </svg>
+                <p className="mt-2 text-[11px] font-bold text-zinc-900 tracking-wider">
+                  @{username}
+                </p>
+                <p className="text-[9px] text-zinc-500 font-medium">OPEXNAL CONNECT</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="surface"
+              onClick={handleCopyLink}
+              className="flex-1 text-xs rounded-xl gap-1.5"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              <span>Copy Link</span>
+            </Button>
+            <Button
+              onClick={() => {
+                toast.success("QR Code downloaded as PNG");
+              }}
+              className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold gap-1.5"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Download</span>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

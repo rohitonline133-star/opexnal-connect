@@ -10,8 +10,10 @@ import {
   ShieldAlert,
   X,
   Check,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getStoredNotes, saveUserNote, deleteUserNote, type UserNote } from "@/lib/notes";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { Input } from "@/components/ui/input";
@@ -58,6 +60,37 @@ function Inbox() {
   const [search, setSearch] = useState("");
   const [newChatModalOpen, setNewChatModalOpen] = useState(false);
   const [recipientUsername, setRecipientUsername] = useState("");
+
+  const [notes, setNotes] = useState<UserNote[]>(() => getStoredNotes());
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteAudience, setNoteAudience] = useState<"followers" | "close_friends">("followers");
+
+  const myNote = notes.find((n) => n.userId === user?.id);
+
+  const handleSaveNote = () => {
+    if (!noteText.trim() || !user) return;
+    saveUserNote({
+      userId: user.id,
+      username: user.username || user.user_metadata?.username || "me",
+      displayName: user.user_metadata?.display_name || user.username || "Me",
+      avatarUrl: user.user_metadata?.avatar_url || null,
+      text: noteText.trim(),
+      audience: noteAudience,
+    });
+    setNotes(getStoredNotes());
+    setNoteDialogOpen(false);
+    toast.success("Note shared for 24 hours ✨");
+  };
+
+  const handleDeleteNote = () => {
+    if (!user) return;
+    deleteUserNote(user.id);
+    setNotes(getStoredNotes());
+    setNoteText("");
+    setNoteDialogOpen(false);
+    toast.success("Note deleted");
+  };
 
   const { data, isLoading } = useQuery<ConversationSummary[]>({
     queryKey: ["conversations", user?.id],
@@ -120,6 +153,66 @@ function Inbox() {
       }
     >
       <div className="p-3 space-y-3 max-w-md mx-auto">
+        {/* Notes Tray (Instagram Notes) */}
+        <div className="flex gap-4 overflow-x-auto pb-2 pt-1 no-scrollbar items-start border-b border-border">
+          {/* My Note */}
+          <div
+            className="flex flex-col items-center shrink-0 cursor-pointer group"
+            onClick={() => {
+              setNoteText(myNote?.text || "");
+              setNoteAudience(myNote?.audience || "followers");
+              setNoteDialogOpen(true);
+            }}
+          >
+            <div className="relative mb-1">
+              <div className="max-w-[76px] px-2 py-0.5 bg-surface border border-border rounded-xl text-[10px] text-center shadow-xs truncate mb-1 text-foreground">
+                {myNote ? myNote.text : "Note..."}
+              </div>
+              <div className="relative mx-auto w-12 h-12">
+                <ProfileAvatar
+                  path={user?.user_metadata?.avatar_url ?? null}
+                  fallback={user?.username?.[0]?.toUpperCase() ?? "U"}
+                  className="h-12 w-12"
+                />
+                {!myNote && (
+                  <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full brand-gradient-bg text-white flex items-center justify-center border-2 border-background shadow-xs">
+                    <Plus className="h-3 w-3" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <span className="text-[11px] text-muted-foreground truncate max-w-[65px]">
+              {myNote ? "Your note" : "Share note"}
+            </span>
+          </div>
+
+          {/* Peer Notes */}
+          {notes
+            .filter((n) => n.userId !== user?.id)
+            .map((note) => (
+              <div
+                key={note.id}
+                className="flex flex-col items-center shrink-0 cursor-pointer group"
+                onClick={() => toast.info(`@${note.username}: "${note.text}"`)}
+              >
+                <div className="max-w-[76px] px-2 py-0.5 bg-surface border border-border rounded-xl text-[10px] text-center shadow-xs truncate mb-1 text-foreground">
+                  {note.text}
+                </div>
+                <div className="relative mx-auto w-12 h-12">
+                  <ProfileAvatar
+                    path={note.avatarUrl}
+                    fallback={note.username[0]?.toUpperCase() ?? "?"}
+                    className="h-12 w-12"
+                    ring
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground truncate max-w-[65px] mt-1">
+                  {note.username}
+                </span>
+              </div>
+            ))}
+        </div>
+
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
@@ -260,6 +353,95 @@ function Inbox() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share a Note Dialog */}
+      <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <span>{myNote ? "Update your Note" : "Share a Thought"}</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Notes are visible to your chosen audience at the top of their inbox for 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="relative">
+              <textarea
+                rows={2}
+                maxLength={60}
+                placeholder="Share what's on your mind..."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                className="w-full p-3 rounded-2xl bg-surface border border-border text-xs focus:outline-none"
+              />
+              <span className="absolute bottom-2 right-3 text-[10px] text-muted-foreground">
+                {noteText.length}/60
+              </span>
+            </div>
+
+            <div className="space-y-1.5 text-xs">
+              <span className="font-semibold block text-foreground">Share with</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNoteAudience("followers")}
+                  className={cn(
+                    "flex-1 py-1.5 px-2 rounded-xl border text-[11px] font-medium transition-colors",
+                    noteAudience === "followers"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-surface text-muted-foreground",
+                  )}
+                >
+                  Followers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNoteAudience("close_friends")}
+                  className={cn(
+                    "flex-1 py-1.5 px-2 rounded-xl border text-[11px] font-medium transition-colors",
+                    noteAudience === "close_friends"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
+                      : "border-border bg-surface text-muted-foreground",
+                  )}
+                >
+                  Close Friends
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              {myNote && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteNote}
+                  className="text-xs rounded-xl h-9"
+                >
+                  Delete
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="surface"
+                onClick={() => setNoteDialogOpen(false)}
+                className="flex-1 text-xs rounded-xl h-9"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={!noteText.trim()}
+                onClick={handleSaveNote}
+                className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold h-9"
+              >
+                Share
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </AppShell>

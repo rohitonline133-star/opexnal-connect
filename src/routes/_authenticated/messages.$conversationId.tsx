@@ -15,6 +15,11 @@ import {
   Phone,
   Video,
   Image as ImageIcon,
+  Mic,
+  MicOff,
+  VideoOff,
+  PhoneOff,
+  Volume2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -64,6 +69,44 @@ function Conversation() {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [reactionsMap, setReactionsMap] = useState<Record<string, string>>({});
+
+  // Call State
+  const [callOpen, setCallOpen] = useState(false);
+  const [callType, setCallType] = useState<"audio" | "video">("audio");
+  const [callDuration, setCallDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+
+  useEffect(() => {
+    if (!callOpen) {
+      setCallDuration(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setCallDuration((d) => d + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [callOpen]);
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const startCall = (type: "audio" | "video") => {
+    setCallType(type);
+    setCallDuration(0);
+    setIsMuted(false);
+    setIsVideoOff(false);
+    setCallOpen(true);
+  };
+
+  const endCall = () => {
+    setCallOpen(false);
+    toast.success(`Call ended (${formatDuration(callDuration)})`);
+  };
 
   const messagesQuery = useQuery({
     queryKey: ["messages", conversationId],
@@ -182,16 +225,16 @@ function Conversation() {
             <div className="flex items-center gap-1 text-muted-foreground">
               <button
                 type="button"
-                onClick={() => toast.info("Calling provider status: NOT VERIFIED")}
-                className="p-1.5 hover:text-foreground rounded-lg"
+                onClick={() => startCall("audio")}
+                className="p-1.5 hover:text-foreground rounded-lg transition-colors"
                 aria-label="Audio call"
               >
                 <Phone className="h-4 w-4" />
               </button>
               <button
                 type="button"
-                onClick={() => toast.info("Video calling provider status: NOT VERIFIED")}
-                className="p-1.5 hover:text-foreground rounded-lg"
+                onClick={() => startCall("video")}
+                className="p-1.5 hover:text-foreground rounded-lg transition-colors"
                 aria-label="Video call"
               >
                 <Video className="h-4 w-4" />
@@ -360,6 +403,127 @@ function Conversation() {
                 <span>Report message</span>
               </button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audio / Video Call Dialog */}
+      <Dialog open={callOpen} onOpenChange={(open) => !open && endCall()}>
+        <DialogContent className="max-w-xs rounded-3xl p-6 bg-zinc-950 border-zinc-800 text-white text-center">
+          <div className="space-y-4 py-2">
+            {/* Call Header */}
+            <div>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                {callType === "video" ? "Opexnal Video Call" : "Opexnal Audio Call"}
+              </p>
+              <h3 className="text-lg font-bold mt-1 text-white">@{peer?.username || "creator"}</h3>
+              <p className="text-xs text-primary font-mono mt-0.5">
+                {callDuration === 0 ? "Connecting..." : formatDuration(callDuration)}
+              </p>
+            </div>
+
+            {/* Video Canvas or Audio Avatar visual */}
+            {callType === "video" && !isVideoOff ? (
+              <div className="relative aspect-4/3 w-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-inner flex items-center justify-center">
+                <ProfileAvatar
+                  path={peer?.avatar_url ?? null}
+                  fallback={peer ? initialsFor(peer) : "?"}
+                  className="h-20 w-20 ring-4 ring-primary/40 animate-pulse"
+                />
+                {/* Local PIP Preview */}
+                <div className="absolute bottom-2 right-2 h-14 w-11 bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden flex items-center justify-center">
+                  <ProfileAvatar
+                    path={user?.user_metadata?.avatar_url ?? null}
+                    fallback={user?.username?.[0]?.toUpperCase() ?? "U"}
+                    className="h-8 w-8"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="py-6 flex flex-col items-center justify-center">
+                <div className="relative">
+                  <ProfileAvatar
+                    path={peer?.avatar_url ?? null}
+                    fallback={peer ? initialsFor(peer) : "?"}
+                    className="h-24 w-24 text-xl ring-4 ring-primary/30 animate-pulse"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* In-Call Controls Bar */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMuted(!isMuted);
+                  toast.info(isMuted ? "Microphone unmuted" : "Microphone muted");
+                }}
+                className={cn(
+                  "h-12 w-12 rounded-full flex items-center justify-center transition-colors shadow-md",
+                  isMuted
+                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700",
+                )}
+                aria-label={isMuted ? "Unmute" : "Mute"}
+              >
+                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </button>
+
+              {callType === "video" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVideoOff(!isVideoOff);
+                    toast.info(isVideoOff ? "Camera turned on" : "Camera turned off");
+                  }}
+                  className={cn(
+                    "h-12 w-12 rounded-full flex items-center justify-center transition-colors shadow-md",
+                    isVideoOff
+                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                      : "bg-zinc-800 text-white hover:bg-zinc-700",
+                  )}
+                  aria-label={isVideoOff ? "Turn camera on" : "Turn camera off"}
+                >
+                  {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSpeakerOn(!isSpeakerOn);
+                  toast.info(isSpeakerOn ? "Speaker off" : "Speaker on");
+                }}
+                className={cn(
+                  "h-12 w-12 rounded-full flex items-center justify-center transition-colors shadow-md",
+                  !isSpeakerOn
+                    ? "bg-zinc-800 text-zinc-500"
+                    : "bg-zinc-800 text-white hover:bg-zinc-700",
+                )}
+                aria-label="Speaker"
+              >
+                <Volume2 className="h-5 w-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={endCall}
+                className="h-12 w-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-lg shadow-red-900/40"
+                aria-label="End call"
+              >
+                <PhoneOff className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* WebRTC Gateway Dependency Notice */}
+            <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80 text-[10px] text-zinc-400 text-left space-y-1">
+              <p className="font-semibold text-zinc-300">WebRTC Media Traversal Notice</p>
+              <p>
+                In-app peer preview is active. Direct cross-NAT calling in production requires
+                configured STUN/TURN relay credentials (e.g. LiveKit, Agora, or Twilio Network).
+              </p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

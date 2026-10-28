@@ -105,6 +105,7 @@ function CreateFlow() {
   const [collaboration, setCollaboration] = useState("");
   const [hideLikes, setHideLikes] = useState(false);
   const [commentsEnabled, setCommentsEnabled] = useState(true);
+  const [isAiGenerated, setIsAiGenerated] = useState(false);
   const [scheduledTime, setScheduledTime] = useState("");
   const [visibility, setVisibility] = useState<PostVisibility>("public");
   const [submitting, setSubmitting] = useState(false);
@@ -218,10 +219,14 @@ function CreateFlow() {
   async function onPublish() {
     if (items.length === 0 || !user) return;
     setSubmitting(true);
+    const finalCaption =
+      isAiGenerated && !caption.includes("#aigenerated")
+        ? `${caption.trim()} #aigenerated`.trim()
+        : caption.trim();
     try {
       await createPost({
         userId: user.id,
-        caption: caption.trim(),
+        caption: finalCaption,
         locationName: locationName.trim() || null,
         visibility,
         commentsEnabled,
@@ -637,6 +642,18 @@ function CreateFlow() {
               <div className="flex items-center justify-between py-1">
                 <span className="text-muted-foreground">Allow comments on this post</span>
                 <Switch checked={commentsEnabled} onCheckedChange={setCommentsEnabled} />
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <div className="pr-4">
+                  <span className="text-foreground font-medium block">
+                    AI-generated content label
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    Turn on when photos or media were generated or edited using AI
+                  </span>
+                </div>
+                <Switch checked={isAiGenerated} onCheckedChange={setIsAiGenerated} />
               </div>
 
               <div className="pt-2 border-t border-border space-y-1">

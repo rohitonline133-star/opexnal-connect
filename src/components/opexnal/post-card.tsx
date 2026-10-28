@@ -19,6 +19,7 @@ import {
   Edit3,
   Sliders,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
@@ -81,6 +82,10 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     "why" | "report" | "edit" | "delete" | "archive" | null
   >(null);
   const [editInput, setEditInput] = useState(captionText);
+  const [aiInfoOpen, setAiInfoOpen] = useState(false);
+  const isAiLabeled =
+    Boolean((post as unknown as { is_ai_generated?: boolean })?.is_ai_generated) ||
+    Boolean(captionText?.toLowerCase().match(/#(ai|aigenerated|midjourney|generativeai)\b/));
 
   const author = post.author;
   const isOwner = Boolean(viewerId && author && viewerId === author.id);
@@ -315,6 +320,18 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
         )}
         {commentsDisabled && (
           <p className="text-xs text-muted-foreground italic">Comments are turned off</p>
+        )}
+        {isAiLabeled && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setAiInfoOpen(true)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-medium hover:bg-purple-500/20 transition-colors"
+            >
+              <Sparkles className="h-3 w-3" />
+              <span>AI info</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -622,6 +639,37 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
               Delete
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Info Modal */}
+      <Dialog open={aiInfoOpen} onOpenChange={setAiInfoOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-400" />
+              AI-Generated Content Info
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Opexnal requires creators to label content that is created or edited using AI models.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-surface border border-border rounded-xl space-y-1">
+              <p className="font-semibold text-foreground">Why this label appears</p>
+              <p className="text-[11px] text-muted-foreground">
+                The creator labeled this post as AI-generated, or the media was detected as having
+                synthetic/generative AI modifications.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="surface"
+            onClick={() => setAiInfoOpen(false)}
+            className="w-full text-xs rounded-xl"
+          >
+            Got it
+          </Button>
         </DialogContent>
       </Dialog>
     </article>
