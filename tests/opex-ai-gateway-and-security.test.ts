@@ -355,7 +355,6 @@ describe("OPEX AI HTTP Endpoints & Backward Compatibility", () => {
     const toxicRes = await handleAiRequest(toxicReq);
     assert.strictEqual(toxicRes.status, 401);
 
-
     const cleanReq = new Request("http://localhost:3000/api/ai/moderate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
