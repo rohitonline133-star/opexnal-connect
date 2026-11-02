@@ -148,7 +148,9 @@ function SettingsAccountPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-300">Backup Recovery Email</label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-gray-400"><Mail size={16} /></span>
+                  <span className="absolute left-3.5 text-gray-400">
+                    <Mail size={16} />
+                  </span>
                   <input
                     type="email"
                     value={recoveryEmail}
