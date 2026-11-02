@@ -140,8 +140,8 @@ function SettingsAccountPage() {
                   />
                 </div>
                 <p className="text-[11px] text-gray-500">
-                  Enter a birth date only if you want to store it locally; server-side age verification is not
-                  connected here.
+                  Enter a birth date only if you want to store it locally; server-side age
+                  verification is not connected here.
                 </p>
               </div>
 
