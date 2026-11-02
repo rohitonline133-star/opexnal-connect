@@ -1,1 +1,162 @@
-import{t as e}from"./client-CNuAEkjg.js";var t={user_maya:{id:`user_maya`,username:`maya_codes`,display_name:`Maya Chen`,bio:`Building aesthetic web interfaces & next-gen social platforms ✨ Developer, visual artist & coffee enthusiast.`,avatar_url:`https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`,posts_count:24,followers_count:14200,following_count:382,is_verified:!0,is_private:!1,is_deactivated:!1,website:`https://mayachen.design`,location:`Bengaluru, India`,locale:`en`,timezone:`Asia/Kolkata`,account_type:`creator`,allow_mentions_from:`everyone`,allow_tags_from:`everyone`,show_activity_status:!0,country_code:`IN`,last_active_at:new Date().toISOString(),created_at:`2024-01-01T00:00:00Z`,updated_at:new Date().toISOString()},user_zenith:{id:`user_zenith`,username:`zenith_design`,display_name:`Zenith Creative`,bio:`3D Design Studio & Motion graphics laboratory. Exploring fluid forms and spatial UI.`,avatar_url:`https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80`,posts_count:18,followers_count:28500,following_count:194,is_verified:!0,is_private:!1,is_deactivated:!1,website:`https://zenithcreative.xyz`,location:`Tokyo, Japan`,locale:`en`,timezone:`Asia/Tokyo`,account_type:`business`,allow_mentions_from:`everyone`,allow_tags_from:`everyone`,show_activity_status:!0,country_code:`JP`,last_active_at:new Date().toISOString(),created_at:`2024-01-01T00:00:00Z`,updated_at:new Date().toISOString()},user_alex:{id:`user_alex`,username:`alex_adventures`,display_name:`Alex Rivers`,bio:`Outdoor explorer, documentary photographer, capturing untouched wilderness.`,avatar_url:`https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80`,posts_count:45,followers_count:9800,following_count:420,is_verified:!0,is_private:!1,is_deactivated:!1,website:null,location:`Reykjavik, Iceland`,locale:`en`,timezone:`Atlantic/Reykjavik`,account_type:`personal`,allow_mentions_from:`everyone`,allow_tags_from:`everyone`,show_activity_status:!0,country_code:`IS`,last_active_at:new Date().toISOString(),created_at:`2024-01-01T00:00:00Z`,updated_at:new Date().toISOString()},user_rohit:{id:`user_rohit`,username:`rohit_visuals`,display_name:`Rohit Sharma`,bio:`Cinematographer & Colorist based in Mumbai. High-octane visual storytelling.`,avatar_url:`https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80`,posts_count:31,followers_count:18300,following_count:512,is_verified:!0,is_private:!1,is_deactivated:!1,website:`https://rohitvisuals.com`,location:`Mumbai, India`,locale:`en`,timezone:`Asia/Kolkata`,account_type:`creator`,allow_mentions_from:`everyone`,allow_tags_from:`everyone`,show_activity_status:!0,country_code:`IN`,last_active_at:new Date().toISOString(),created_at:`2024-01-01T00:00:00Z`,updated_at:new Date().toISOString()}};async function n(n){try{let{data:t,error:r}=await e.from(`profiles`).select(`*`).eq(`id`,n).maybeSingle();if(r)throw r;if(t)return t}catch{}if(t[n])return t[n];let r=n.replace(/^user_/,``).replace(/_/g,` `);return{id:n,username:n.replace(/^user_/,``),display_name:r.charAt(0).toUpperCase()+r.slice(1),bio:`Creator on Opexnal Connect`,avatar_url:`https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`,posts_count:0,followers_count:0,following_count:0,is_verified:!1,is_private:!1,is_deactivated:!1,website:null,location:null,locale:`en`,timezone:`UTC`,account_type:`personal`,allow_mentions_from:`everyone`,allow_tags_from:`everyone`,show_activity_status:!0,country_code:null,last_active_at:new Date().toISOString(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()}}async function r(n){let r=n.toLowerCase();try{let{data:t,error:n}=await e.from(`profiles`).select(`*`).eq(`username`,r).maybeSingle();if(n)throw n;if(t)return t}catch{}for(let e of Object.values(t))if(e.username.toLowerCase()===r)return e;return null}async function i(t){if(!t)return null;if(t.startsWith(`http`))return t;let{data:n}=await e.storage.from(`avatars`).createSignedUrl(t,3600);return n?.signedUrl??null}function a(e){return(e.display_name?.trim()||e.username).slice(0,2).toUpperCase()}var o=/^[a-z0-9._]{3,30}$/;export{i as a,a as i,n,r,o as t};
+import { t as e } from "./client-CNuAEkjg.js";
+var t = {
+  user_maya: {
+    id: `user_maya`,
+    username: `maya_codes`,
+    display_name: `Maya Chen`,
+    bio: `Building aesthetic web interfaces & next-gen social platforms ✨ Developer, visual artist & coffee enthusiast.`,
+    avatar_url: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`,
+    posts_count: 24,
+    followers_count: 14200,
+    following_count: 382,
+    is_verified: !0,
+    is_private: !1,
+    is_deactivated: !1,
+    website: `https://mayachen.design`,
+    location: `Bengaluru, India`,
+    locale: `en`,
+    timezone: `Asia/Kolkata`,
+    account_type: `creator`,
+    allow_mentions_from: `everyone`,
+    allow_tags_from: `everyone`,
+    show_activity_status: !0,
+    country_code: `IN`,
+    last_active_at: new Date().toISOString(),
+    created_at: `2024-01-01T00:00:00Z`,
+    updated_at: new Date().toISOString(),
+  },
+  user_zenith: {
+    id: `user_zenith`,
+    username: `zenith_design`,
+    display_name: `Zenith Creative`,
+    bio: `3D Design Studio & Motion graphics laboratory. Exploring fluid forms and spatial UI.`,
+    avatar_url: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80`,
+    posts_count: 18,
+    followers_count: 28500,
+    following_count: 194,
+    is_verified: !0,
+    is_private: !1,
+    is_deactivated: !1,
+    website: `https://zenithcreative.xyz`,
+    location: `Tokyo, Japan`,
+    locale: `en`,
+    timezone: `Asia/Tokyo`,
+    account_type: `business`,
+    allow_mentions_from: `everyone`,
+    allow_tags_from: `everyone`,
+    show_activity_status: !0,
+    country_code: `JP`,
+    last_active_at: new Date().toISOString(),
+    created_at: `2024-01-01T00:00:00Z`,
+    updated_at: new Date().toISOString(),
+  },
+  user_alex: {
+    id: `user_alex`,
+    username: `alex_adventures`,
+    display_name: `Alex Rivers`,
+    bio: `Outdoor explorer, documentary photographer, capturing untouched wilderness.`,
+    avatar_url: `https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80`,
+    posts_count: 45,
+    followers_count: 9800,
+    following_count: 420,
+    is_verified: !0,
+    is_private: !1,
+    is_deactivated: !1,
+    website: null,
+    location: `Reykjavik, Iceland`,
+    locale: `en`,
+    timezone: `Atlantic/Reykjavik`,
+    account_type: `personal`,
+    allow_mentions_from: `everyone`,
+    allow_tags_from: `everyone`,
+    show_activity_status: !0,
+    country_code: `IS`,
+    last_active_at: new Date().toISOString(),
+    created_at: `2024-01-01T00:00:00Z`,
+    updated_at: new Date().toISOString(),
+  },
+  user_rohit: {
+    id: `user_rohit`,
+    username: `rohit_visuals`,
+    display_name: `Rohit Sharma`,
+    bio: `Cinematographer & Colorist based in Mumbai. High-octane visual storytelling.`,
+    avatar_url: `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80`,
+    posts_count: 31,
+    followers_count: 18300,
+    following_count: 512,
+    is_verified: !0,
+    is_private: !1,
+    is_deactivated: !1,
+    website: `https://rohitvisuals.com`,
+    location: `Mumbai, India`,
+    locale: `en`,
+    timezone: `Asia/Kolkata`,
+    account_type: `creator`,
+    allow_mentions_from: `everyone`,
+    allow_tags_from: `everyone`,
+    show_activity_status: !0,
+    country_code: `IN`,
+    last_active_at: new Date().toISOString(),
+    created_at: `2024-01-01T00:00:00Z`,
+    updated_at: new Date().toISOString(),
+  },
+};
+async function n(n) {
+  try {
+    let { data: t, error: r } = await e.from(`profiles`).select(`*`).eq(`id`, n).maybeSingle();
+    if (r) throw r;
+    if (t) return t;
+  } catch {}
+  if (t[n]) return t[n];
+  let r = n.replace(/^user_/, ``).replace(/_/g, ` `);
+  return {
+    id: n,
+    username: n.replace(/^user_/, ``),
+    display_name: r.charAt(0).toUpperCase() + r.slice(1),
+    bio: `Creator on Opexnal Connect`,
+    avatar_url: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`,
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    is_verified: !1,
+    is_private: !1,
+    is_deactivated: !1,
+    website: null,
+    location: null,
+    locale: `en`,
+    timezone: `UTC`,
+    account_type: `personal`,
+    allow_mentions_from: `everyone`,
+    allow_tags_from: `everyone`,
+    show_activity_status: !0,
+    country_code: null,
+    last_active_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+async function r(n) {
+  let r = n.toLowerCase();
+  try {
+    let { data: t, error: n } = await e
+      .from(`profiles`)
+      .select(`*`)
+      .eq(`username`, r)
+      .maybeSingle();
+    if (n) throw n;
+    if (t) return t;
+  } catch {}
+  for (let e of Object.values(t)) if (e.username.toLowerCase() === r) return e;
+  return null;
+}
+async function i(t) {
+  if (!t) return null;
+  if (t.startsWith(`http`)) return t;
+  let { data: n } = await e.storage.from(`avatars`).createSignedUrl(t, 3600);
+  return n?.signedUrl ?? null;
+}
+function a(e) {
+  return (e.display_name?.trim() || e.username).slice(0, 2).toUpperCase();
+}
+var o = /^[a-z0-9._]{3,30}$/;
+export { i as a, a as i, n, r, o as t };

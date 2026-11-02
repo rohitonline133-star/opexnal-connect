@@ -1,1 +1,130 @@
-import{t as e}from"./jsx-runtime-B5yqYJvp.js";import{n as t,t as n}from"./createLucideIcon-DgzBSI1Z.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{t as i}from"./arrow-right-DCS8A9mL.js";import{t as a}from"./history-DBuwN939.js";import{E as o,T as s}from"./index-BPJbQuiK.js";var c=n(`landmark`,[[`path`,{d:`M10 18v-7`,key:`wt116b`}],[`path`,{d:`M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z`,key:`1m329m`}],[`path`,{d:`M14 18v-7`,key:`vav6t3`}],[`path`,{d:`M18 18v-7`,key:`aexdmj`}],[`path`,{d:`M3 22h18`,key:`8prr45`}],[`path`,{d:`M6 18v-7`,key:`1ivflk`}]]),l=e();function u(){let e=r();return(0,l.jsx)(s,{activeTab:`profile`,children:(0,l.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,l.jsx)(o,{title:`Payouts & Banking`,showBack:!0,onBack:()=>e({to:`/monetization`})}),(0,l.jsxs)(`div`,{className:`p-4 space-y-6`,children:[(0,l.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-2`,children:[(0,l.jsx)(`span`,{className:`text-xs text-gray-400 font-medium`,children:`Estimated Upcoming Disbursement`}),(0,l.jsx)(`p`,{className:`text-3xl font-extrabold text-white`,children:`$142.50`}),(0,l.jsx)(`p`,{className:`text-[11px] text-emerald-400 font-medium`,children:`Scheduled for 21st of next month via direct bank deposit`})]}),(0,l.jsxs)(`div`,{className:`space-y-3`,children:[(0,l.jsx)(`h3`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Payment Receiving Methods`}),(0,l.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between`,children:[(0,l.jsxs)(`div`,{className:`flex items-center gap-3`,children:[(0,l.jsx)(`div`,{className:`p-2.5 rounded-xl bg-[#1e1e1e] text-emerald-400`,children:(0,l.jsx)(c,{className:`w-5 h-5`})}),(0,l.jsxs)(`div`,{children:[(0,l.jsx)(`h4`,{className:`text-xs font-bold text-white`,children:`Direct Bank Deposit (ACH / NEFT)`}),(0,l.jsx)(`p`,{className:`text-[11px] text-gray-400`,children:`HDFC Bank •••••• 4821 (Verified)`})]})]}),(0,l.jsx)(`span`,{className:`px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-400`,children:`Primary`})]})]}),(0,l.jsx)(`div`,{className:`space-y-2`,children:(0,l.jsxs)(t,{to:`/transactions`,className:`p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between hover:bg-[#1a1a1a] transition`,children:[(0,l.jsxs)(`div`,{className:`flex items-center gap-3`,children:[(0,l.jsx)(`div`,{className:`p-2.5 rounded-xl bg-[#1e1e1e] text-purple-400`,children:(0,l.jsx)(a,{className:`w-5 h-5`})}),(0,l.jsxs)(`div`,{children:[(0,l.jsx)(`h4`,{className:`text-xs font-bold text-white`,children:`Transaction & Payout History`}),(0,l.jsx)(`p`,{className:`text-[11px] text-gray-400`,children:`Detailed receipts and past monthly remittances`})]})]}),(0,l.jsx)(i,{className:`w-4 h-4 text-gray-500`})]})})]})]})})}export{u as component};
+import { t as e } from "./jsx-runtime-B5yqYJvp.js";
+import { n as t, t as n } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { t as i } from "./arrow-right-DCS8A9mL.js";
+import { t as a } from "./history-DBuwN939.js";
+import { E as o, T as s } from "./index-BPJbQuiK.js";
+var c = n(`landmark`, [
+    [`path`, { d: `M10 18v-7`, key: `wt116b` }],
+    [
+      `path`,
+      {
+        d: `M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z`,
+        key: `1m329m`,
+      },
+    ],
+    [`path`, { d: `M14 18v-7`, key: `vav6t3` }],
+    [`path`, { d: `M18 18v-7`, key: `aexdmj` }],
+    [`path`, { d: `M3 22h18`, key: `8prr45` }],
+    [`path`, { d: `M6 18v-7`, key: `1ivflk` }],
+  ]),
+  l = e();
+function u() {
+  let e = r();
+  return (0, l.jsx)(s, {
+    activeTab: `profile`,
+    children: (0, l.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, l.jsx)(o, {
+          title: `Payouts & Banking`,
+          showBack: !0,
+          onBack: () => e({ to: `/monetization` }),
+        }),
+        (0, l.jsxs)(`div`, {
+          className: `p-4 space-y-6`,
+          children: [
+            (0, l.jsxs)(`div`, {
+              className: `p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-2`,
+              children: [
+                (0, l.jsx)(`span`, {
+                  className: `text-xs text-gray-400 font-medium`,
+                  children: `Estimated Upcoming Disbursement`,
+                }),
+                (0, l.jsx)(`p`, {
+                  className: `text-3xl font-extrabold text-white`,
+                  children: `$142.50`,
+                }),
+                (0, l.jsx)(`p`, {
+                  className: `text-[11px] text-emerald-400 font-medium`,
+                  children: `Scheduled for 21st of next month via direct bank deposit`,
+                }),
+              ],
+            }),
+            (0, l.jsxs)(`div`, {
+              className: `space-y-3`,
+              children: [
+                (0, l.jsx)(`h3`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Payment Receiving Methods`,
+                }),
+                (0, l.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between`,
+                  children: [
+                    (0, l.jsxs)(`div`, {
+                      className: `flex items-center gap-3`,
+                      children: [
+                        (0, l.jsx)(`div`, {
+                          className: `p-2.5 rounded-xl bg-[#1e1e1e] text-emerald-400`,
+                          children: (0, l.jsx)(c, { className: `w-5 h-5` }),
+                        }),
+                        (0, l.jsxs)(`div`, {
+                          children: [
+                            (0, l.jsx)(`h4`, {
+                              className: `text-xs font-bold text-white`,
+                              children: `Direct Bank Deposit (ACH / NEFT)`,
+                            }),
+                            (0, l.jsx)(`p`, {
+                              className: `text-[11px] text-gray-400`,
+                              children: `HDFC Bank •••••• 4821 (Verified)`,
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    (0, l.jsx)(`span`, {
+                      className: `px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-400`,
+                      children: `Primary`,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            (0, l.jsx)(`div`, {
+              className: `space-y-2`,
+              children: (0, l.jsxs)(t, {
+                to: `/transactions`,
+                className: `p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between hover:bg-[#1a1a1a] transition`,
+                children: [
+                  (0, l.jsxs)(`div`, {
+                    className: `flex items-center gap-3`,
+                    children: [
+                      (0, l.jsx)(`div`, {
+                        className: `p-2.5 rounded-xl bg-[#1e1e1e] text-purple-400`,
+                        children: (0, l.jsx)(a, { className: `w-5 h-5` }),
+                      }),
+                      (0, l.jsxs)(`div`, {
+                        children: [
+                          (0, l.jsx)(`h4`, {
+                            className: `text-xs font-bold text-white`,
+                            children: `Transaction & Payout History`,
+                          }),
+                          (0, l.jsx)(`p`, {
+                            className: `text-[11px] text-gray-400`,
+                            children: `Detailed receipts and past monthly remittances`,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  (0, l.jsx)(i, { className: `w-4 h-4 text-gray-500` }),
+                ],
+              }),
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { u as component };

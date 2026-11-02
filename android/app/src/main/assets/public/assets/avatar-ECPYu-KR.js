@@ -1,1 +1,42 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./utils-DojpP95n.js";import{a as i}from"./profile-qFNPerqP.js";var a=t(e(),1),o=n();function s({path:e,fallback:t,className:n,ring:s,alt:c}){let[l,u]=(0,a.useState)(null);(0,a.useEffect)(()=>{let t=!0;return i(e).then(e=>t&&u(e)).catch(()=>t&&u(null)),()=>{t=!1}},[e]);let d=(0,o.jsx)(`div`,{className:r(`flex items-center justify-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-muted-foreground`,n),children:l?(0,o.jsx)(`img`,{src:l,alt:c??`Profile photo`,className:`h-full w-full object-cover`}):(0,o.jsx)(`span`,{"aria-hidden":`true`,children:t})});return s?(0,o.jsx)(`div`,{className:`story-ring rounded-full p-[2px]`,children:(0,o.jsx)(`div`,{className:`rounded-full bg-background p-[2px]`,children:d})}):d}export{s as t};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./utils-DojpP95n.js";
+import { a as i } from "./profile-qFNPerqP.js";
+var a = t(e(), 1),
+  o = n();
+function s({ path: e, fallback: t, className: n, ring: s, alt: c }) {
+  let [l, u] = (0, a.useState)(null);
+  (0, a.useEffect)(() => {
+    let t = !0;
+    return (
+      i(e)
+        .then((e) => t && u(e))
+        .catch(() => t && u(null)),
+      () => {
+        t = !1;
+      }
+    );
+  }, [e]);
+  let d = (0, o.jsx)(`div`, {
+    className: r(
+      `flex items-center justify-center overflow-hidden rounded-full bg-secondary text-sm font-semibold text-muted-foreground`,
+      n,
+    ),
+    children: l
+      ? (0, o.jsx)(`img`, {
+          src: l,
+          alt: c ?? `Profile photo`,
+          className: `h-full w-full object-cover`,
+        })
+      : (0, o.jsx)(`span`, { "aria-hidden": `true`, children: t }),
+  });
+  return s
+    ? (0, o.jsx)(`div`, {
+        className: `story-ring rounded-full p-[2px]`,
+        children: (0, o.jsx)(`div`, {
+          className: `rounded-full bg-background p-[2px]`,
+          children: d,
+        }),
+      })
+    : d;
+}
+export { s as t };

@@ -1,1 +1,162 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{j as i}from"./removable-Bti6oWPM.js";import{t as a}from"./useQuery-Sthak1vL.js";import{t as o}from"./useMutation-DAlJQPHF.js";import{t as s}from"./loader-circle-CbE-4Efj.js";import{t as c}from"./save-AfvqHWga.js";import{E as l,T as u,f as d,g as f,lt as p,p as m,u as h}from"./index-BPJbQuiK.js";var g=t(e()),_=n();function v(){let e=r(),t=i(),{session:n}=h(),v=n?.userId||`user_maya`,{data:y}=a({queryKey:[`settings`,v],queryFn:()=>m(v)}),[b,x]=(0,g.useState)(y?.pauseAllNotifications??!1),[S,C]=(0,g.useState)(y?.quietModeEnabled??!1),[w,T]=(0,g.useState)(y?.bedtimeReminderEnabled??!0),[E,D]=(0,g.useState)(y?.securityAlertsEmail??!0),O=o({mutationFn:async()=>f(v,{pauseAllNotifications:b,quietModeEnabled:S,bedtimeReminderEnabled:w,securityAlertsEmail:E}),onSuccess:()=>{t.invalidateQueries({queryKey:[`settings`,v]}),p.success(`Notification preferences updated.`)},onError:()=>{p.error(`Failed to update notification settings.`)}});return(0,_.jsx)(u,{activeTab:`profile`,children:(0,_.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,_.jsx)(l,{title:`Notifications`,showBack:!0,onBack:()=>e({to:`/settings`})}),(0,_.jsxs)(`div`,{className:`p-4 space-y-6`,children:[(0,_.jsxs)(`div`,{className:`space-y-3`,children:[(0,_.jsx)(`h3`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Push Notifications`}),(0,_.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,_.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,_.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Pause All`}),(0,_.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Temporarily silence all push notifications`})]}),(0,_.jsx)(d,{checked:b,onCheckedChange:x})]}),(0,_.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,_.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,_.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Quiet Mode`}),(0,_.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Automatically mute notifications overnight (11 PM - 7 AM)`})]}),(0,_.jsx)(d,{checked:S,onCheckedChange:C})]}),(0,_.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,_.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,_.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Sleep & Bedtime Reminder`}),(0,_.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Receive gentle alerts to wind down screen time`})]}),(0,_.jsx)(d,{checked:w,onCheckedChange:T})]})]}),(0,_.jsxs)(`div`,{className:`space-y-3`,children:[(0,_.jsx)(`h3`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Security & Email`}),(0,_.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,_.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,_.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Security Alerts by Email`}),(0,_.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Immediate email whenever a new login or password reset occurs`})]}),(0,_.jsx)(d,{checked:E,onCheckedChange:D})]})]}),(0,_.jsxs)(`button`,{type:`button`,onClick:()=>O.mutate(),disabled:O.isPending,className:`w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2`,children:[O.isPending?(0,_.jsx)(s,{className:`w-4 h-4 animate-spin`}):(0,_.jsx)(c,{className:`w-4 h-4`}),(0,_.jsx)(`span`,{children:`Save Preferences`})]})]})]})})}export{v as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { j as i } from "./removable-Bti6oWPM.js";
+import { t as a } from "./useQuery-Sthak1vL.js";
+import { t as o } from "./useMutation-DAlJQPHF.js";
+import { t as s } from "./loader-circle-CbE-4Efj.js";
+import { t as c } from "./save-AfvqHWga.js";
+import { E as l, T as u, f as d, g as f, lt as p, p as m, u as h } from "./index-BPJbQuiK.js";
+var g = t(e()),
+  _ = n();
+function v() {
+  let e = r(),
+    t = i(),
+    { session: n } = h(),
+    v = n?.userId || `user_maya`,
+    { data: y } = a({ queryKey: [`settings`, v], queryFn: () => m(v) }),
+    [b, x] = (0, g.useState)(y?.pauseAllNotifications ?? !1),
+    [S, C] = (0, g.useState)(y?.quietModeEnabled ?? !1),
+    [w, T] = (0, g.useState)(y?.bedtimeReminderEnabled ?? !0),
+    [E, D] = (0, g.useState)(y?.securityAlertsEmail ?? !0),
+    O = o({
+      mutationFn: async () =>
+        f(v, {
+          pauseAllNotifications: b,
+          quietModeEnabled: S,
+          bedtimeReminderEnabled: w,
+          securityAlertsEmail: E,
+        }),
+      onSuccess: () => {
+        (t.invalidateQueries({ queryKey: [`settings`, v] }),
+          p.success(`Notification preferences updated.`));
+      },
+      onError: () => {
+        p.error(`Failed to update notification settings.`);
+      },
+    });
+  return (0, _.jsx)(u, {
+    activeTab: `profile`,
+    children: (0, _.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, _.jsx)(l, {
+          title: `Notifications`,
+          showBack: !0,
+          onBack: () => e({ to: `/settings` }),
+        }),
+        (0, _.jsxs)(`div`, {
+          className: `p-4 space-y-6`,
+          children: [
+            (0, _.jsxs)(`div`, {
+              className: `space-y-3`,
+              children: [
+                (0, _.jsx)(`h3`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Push Notifications`,
+                }),
+                (0, _.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, _.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, _.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Pause All`,
+                        }),
+                        (0, _.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Temporarily silence all push notifications`,
+                        }),
+                      ],
+                    }),
+                    (0, _.jsx)(d, { checked: b, onCheckedChange: x }),
+                  ],
+                }),
+                (0, _.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, _.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, _.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Quiet Mode`,
+                        }),
+                        (0, _.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Automatically mute notifications overnight (11 PM - 7 AM)`,
+                        }),
+                      ],
+                    }),
+                    (0, _.jsx)(d, { checked: S, onCheckedChange: C }),
+                  ],
+                }),
+                (0, _.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, _.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, _.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Sleep & Bedtime Reminder`,
+                        }),
+                        (0, _.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Receive gentle alerts to wind down screen time`,
+                        }),
+                      ],
+                    }),
+                    (0, _.jsx)(d, { checked: w, onCheckedChange: T }),
+                  ],
+                }),
+              ],
+            }),
+            (0, _.jsxs)(`div`, {
+              className: `space-y-3`,
+              children: [
+                (0, _.jsx)(`h3`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Security & Email`,
+                }),
+                (0, _.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, _.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, _.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Security Alerts by Email`,
+                        }),
+                        (0, _.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Immediate email whenever a new login or password reset occurs`,
+                        }),
+                      ],
+                    }),
+                    (0, _.jsx)(d, { checked: E, onCheckedChange: D }),
+                  ],
+                }),
+              ],
+            }),
+            (0, _.jsxs)(`button`, {
+              type: `button`,
+              onClick: () => O.mutate(),
+              disabled: O.isPending,
+              className: `w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2`,
+              children: [
+                O.isPending
+                  ? (0, _.jsx)(s, { className: `w-4 h-4 animate-spin` })
+                  : (0, _.jsx)(c, { className: `w-4 h-4` }),
+                (0, _.jsx)(`span`, { children: `Save Preferences` }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { v as component };

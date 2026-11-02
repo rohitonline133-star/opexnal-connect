@@ -1,5 +1,5 @@
 {
-	"appId": "com.opexnal.connect",
-	"appName": "opexnal",
-	"webDir": ".output/public"
+  "appId": "com.opexnal.connect",
+  "appName": "opexnal",
+  "webDir": ".output/public"
 }

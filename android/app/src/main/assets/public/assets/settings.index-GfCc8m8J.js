@@ -1,1 +1,4413 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{n as r,t as i}from"./createLucideIcon-DgzBSI1Z.js";import{t as a}from"./useNavigate-BJOrhi-q.js";import{t as o}from"./client-CNuAEkjg.js";import{j as s}from"./removable-Bti6oWPM.js";import{t as c}from"./useQuery-Sthak1vL.js";import{t as l}from"./bookmark-ClGYgWxW.js";import{t as u}from"./download-BGQn3RQm.js";import{t as d}from"./eye-off-BTNjnLZQ.js";import{t as f}from"./file-text-D6gwwmni.js";import{t as p}from"./history-DBuwN939.js";import{n as ee,t as te}from"./log-out-Bp14RzIZ.js";import{t as ne}from"./message-circle-KQTsD60l.js";import{n as re,t as m}from"./refresh-cw-Bz3isKCO.js";import{t as h}from"./share-2-Cttt8bCg.js";import{t as g}from"./sliders-vertical-BKVqb5uL.js";import{t as _}from"./smartphone-DyfA3-E3.js";import{t as ie}from"./user-plus-BKH1pxu8.js";import{t as ae}from"./user-x-CwklV8H9.js";import{t as oe}from"./volume-x-HR6YYz3M.js";import{t as se}from"./x-CeqC2pJc.js";import{$ as v,A as y,B as ce,C as b,E as le,F as x,H as S,I as C,K as w,O as T,P as E,R as D,S as O,T as ue,W as k,X as A,Y as j,Z as M,_ as N,at as P,b as F,ct as I,et as L,f as R,h as de,it as z,j as B,lt as V,nt as H,ot as U,rt as fe,st as W,u as pe,v as me,w as G,x as K,y as q,z as he}from"./index-BPJbQuiK.js";import{n as ge}from"./profile-qFNPerqP.js";var _e=i(`at-sign`,[[`circle`,{cx:`12`,cy:`12`,r:`4`,key:`4exip2`}],[`path`,{d:`M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8`,key:`7n84p3`}]]),J=i(`credit-card`,[[`rect`,{width:`20`,height:`14`,x:`2`,y:`5`,rx:`2`,key:`ynyp8z`}],[`line`,{x1:`2`,x2:`22`,y1:`10`,y2:`10`,key:`1b3vmo`}]]),Y=i(`languages`,[[`path`,{d:`m5 8 6 6`,key:`1wu5hv`}],[`path`,{d:`m4 14 6-6 2-3`,key:`1k1g8d`}],[`path`,{d:`M2 5h12`,key:`or177f`}],[`path`,{d:`M7 2h1`,key:`1t2jsx`}],[`path`,{d:`m22 22-5-10-5 10`,key:`don7ne`}],[`path`,{d:`M14 18h6`,key:`1m8k6r`}]]),ve=i(`user-cog`,[[`path`,{d:`M10 15H6a4 4 0 0 0-4 4v2`,key:`1nfge6`}],[`path`,{d:`m14.305 16.53.923-.382`,key:`1itpsq`}],[`path`,{d:`m15.228 13.852-.923-.383`,key:`eplpkm`}],[`path`,{d:`m16.852 12.228-.383-.923`,key:`13v3q0`}],[`path`,{d:`m16.852 17.772-.383.924`,key:`1i8mnm`}],[`path`,{d:`m19.148 12.228.383-.923`,key:`1q8j1v`}],[`path`,{d:`m19.53 18.696-.382-.924`,key:`vk1qj3`}],[`path`,{d:`m20.772 13.852.924-.383`,key:`n880s0`}],[`path`,{d:`m20.772 16.148.924.383`,key:`1g6xey`}],[`circle`,{cx:`18`,cy:`15`,r:`3`,key:`gjjjvw`}],[`circle`,{cx:`9`,cy:`7`,r:`4`,key:`nufk8`}]]),ye=i(`wifi`,[[`path`,{d:`M12 20h.01`,key:`zekei9`}],[`path`,{d:`M2 8.82a15 15 0 0 1 20 0`,key:`dnpr2z`}],[`path`,{d:`M5 12.859a10 10 0 0 1 14 0`,key:`1x1e6c`}],[`path`,{d:`M8.5 16.429a5 5 0 0 1 7 0`,key:`1bycff`}]]),X=t(e(),1),Z=n();function be({dialog:e,onClose:t,username:n=`creator`,onSignOut:r,onSignOutAll:i}){return e?(0,Z.jsx)(N,{open:!!e,onOpenChange:e=>!e&&t(),children:(0,Z.jsxs)(me,{className:`max-w-md max-h-[85vh] overflow-y-auto rounded-3xl p-5 sm:p-6 bg-card border-border`,children:[e===`personal_details`&&(0,Z.jsx)(xe,{username:n,onClose:t}),e===`account_status`&&(0,Z.jsx)(Se,{username:n,onClose:t}),e===`accounts_center`&&(0,Z.jsx)(Ce,{username:n,onClose:t}),e===`ad_preferences`&&(0,Z.jsx)(we,{onClose:t}),e===`saved`&&(0,Z.jsx)(Te,{onClose:t}),e===`archive`&&(0,Z.jsx)(Ee,{onClose:t}),e===`time_spent`&&(0,Z.jsx)(De,{onClose:t}),e===`notifications`&&(0,Z.jsx)(Oe,{onClose:t}),e===`insights`&&(0,Z.jsx)(ke,{onClose:t}),e===`branded_content`&&(0,Z.jsx)(Ae,{onClose:t}),e===`account_type`&&(0,Z.jsx)(je,{onClose:t}),e===`creator_subscriptions`&&(0,Z.jsx)(Me,{onClose:t}),e===`active_subscriptions`&&(0,Z.jsx)(Ne,{onClose:t}),e===`subscriber_badges`&&(0,Z.jsx)(Pe,{onClose:t}),e===`close_friends`&&(0,Z.jsx)(Fe,{onClose:t}),e===`blocked_accounts`&&(0,Z.jsx)(Ie,{onClose:t}),e===`hide_story`&&(0,Z.jsx)(Le,{onClose:t}),e===`comment_filter`&&(0,Z.jsx)(Re,{onClose:t}),e===`sharing_remixes`&&(0,Z.jsx)(ze,{onClose:t}),e===`restricted_accounts`&&(0,Z.jsx)(Be,{onClose:t}),e===`favorites`&&(0,Z.jsx)(Ve,{onClose:t}),e===`muted_accounts`&&(0,Z.jsx)(He,{onClose:t}),e===`content_preferences`&&(0,Z.jsx)(Ue,{onClose:t}),e===`like_counts`&&(0,Z.jsx)(We,{onClose:t}),e===`device_permissions`&&(0,Z.jsx)(Ge,{onClose:t}),e===`archiving_downloading`&&(0,Z.jsx)(Ke,{onClose:t}),e===`accessibility_captions`&&(0,Z.jsx)(qe,{onClose:t}),e===`language_region`&&(0,Z.jsx)(Je,{onClose:t}),e===`data_usage`&&(0,Z.jsx)(Ye,{onClose:t}),e===`supervision`&&(0,Z.jsx)(Xe,{onClose:t}),e===`safety_hub`&&(0,Z.jsx)(Ze,{onClose:t}),e===`payment_methods`&&(0,Z.jsx)(Qe,{onClose:t}),e===`order_history`&&(0,Z.jsx)($e,{onClose:t}),e===`payouts`&&(0,Z.jsx)(et,{onClose:t}),e===`help_center`&&(0,Z.jsx)(tt,{onClose:t}),e===`support_requests`&&(0,Z.jsx)(nt,{onClose:t}),e===`about`&&(0,Z.jsx)(rt,{onClose:t}),e===`terms`&&(0,Z.jsx)(it,{onClose:t}),e===`creator_web`&&(0,Z.jsx)(at,{onClose:t}),e===`add_account`&&(0,Z.jsx)(ot,{onClose:t}),e===`switch_account`&&(0,Z.jsx)(st,{username:n,onClose:t}),e===`download_data`&&(0,Z.jsx)(ct,{onClose:t}),e===`recently_deleted`&&(0,Z.jsx)(lt,{onClose:t}),e===`deactivate_account`&&(0,Z.jsx)(ut,{onClose:t}),e===`active_sessions`&&(0,Z.jsx)(dt,{onClose:t}),e===`logout_confirm`&&(0,Z.jsx)(ft,{onSignOut:r,onClose:t}),e===`logout_all_confirm`&&(0,Z.jsx)(pt,{onSignOutAll:i,onClose:t})]})}):null}function xe({username:e,onClose:t}){let[n,r]=(0,X.useState)(()=>localStorage.getItem(`opexnal_user_email`)||``),[i,a]=(0,X.useState)(()=>localStorage.getItem(`opexnal_user_phone`)||``),[o,s]=(0,X.useState)(()=>localStorage.getItem(`opexnal_user_dob`)||``);function c(){localStorage.setItem(`opexnal_user_email`,n),localStorage.setItem(`opexnal_user_phone`,i),localStorage.setItem(`opexnal_user_dob`,o),V.success(`Personal details updated`),t()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Personal Details`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Opexnal uses this information to keep your account secure and verified.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-2`,children:[(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Contact Email`}),(0,Z.jsx)(b,{value:n,onChange:e=>r(e.target.value),className:`rounded-xl`})]}),(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Phone Number`}),(0,Z.jsx)(b,{value:i,onChange:e=>a(e.target.value),className:`rounded-xl`})]}),(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Date of Birth`}),(0,Z.jsx)(b,{type:`date`,value:o,onChange:e=>s(e.target.value),className:`rounded-xl`})]}),(0,Z.jsxs)(`div`,{className:`rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground flex items-center justify-between`,children:[(0,Z.jsx)(`span`,{children:`Account Ownership & Confirmation`}),(0,Z.jsx)(O,{variant:`outline`,className:`text-emerald-500 border-emerald-500/30`,children:`Verified`})]})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-3`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:t,children:`Cancel`}),(0,Z.jsx)(G,{className:`flex-1 rounded-xl`,onClick:c,children:`Save Changes`})]})]})}function Se({username:e,onClose:t}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Account Status`}),(0,Z.jsxs)(q,{className:`text-xs text-muted-foreground`,children:[`Track policy standing, community standards, and monetization eligibility for @`,e,`.`]})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-2`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20`,children:[(0,Z.jsx)(L,{className:`h-5 w-5 text-emerald-500 shrink-0`}),(0,Z.jsxs)(`div`,{className:`text-xs`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-emerald-600 dark:text-emerald-400`,children:`Community Guidelines: Clean`}),(0,Z.jsx)(`p`,{className:`text-muted-foreground`,children:`You have zero strikes or reported violations.`})]})]}),(0,Z.jsxs)(`div`,{className:`flex items-center gap-3 p-3 rounded-2xl bg-primary/10 border border-primary/20`,children:[(0,Z.jsx)(W,{className:`h-5 w-5 text-primary shrink-0`}),(0,Z.jsxs)(`div`,{className:`text-xs`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Creator Monetization: Eligible`}),(0,Z.jsx)(`p`,{className:`text-muted-foreground`,children:`Subscription gifts and brand partnerships are unlocked.`})]})]}),(0,Z.jsxs)(`div`,{className:`flex items-center gap-3 p-3 rounded-2xl bg-secondary border border-border`,children:[(0,Z.jsx)(x,{className:`h-5 w-5 text-muted-foreground shrink-0`}),(0,Z.jsxs)(`div`,{className:`text-xs`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Search Recommendation: Recommended`}),(0,Z.jsx)(`p`,{className:`text-muted-foreground`,children:`Your content is eligible to be shown in Explore and Reels.`})]})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl mt-2`,onClick:t,children:`Understood`})]})}function Ce({username:e,onClose:t}){let[n,r]=(0,X.useState)(()=>localStorage.getItem(`opexnal_crosspost`)===`true`);function i(e){r(e),localStorage.setItem(`opexnal_crosspost`,String(e)),V.success(e?`Cross-posting to connected accounts enabled`:`Cross-posting disabled`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(E,{className:`h-5 w-5 text-primary`}),`Opexnal Accounts Center`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Manage connected profiles, synchronized experiences, and identity settings across platforms.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-1`,children:[(0,Z.jsx)(`div`,{className:`rounded-2xl border border-primary/30 bg-primary/5 p-3.5 space-y-2`,children:(0,Z.jsxs)(`div`,{className:`flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2.5`,children:[(0,Z.jsx)(`div`,{className:`h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-sm text-primary`,children:e[0]?.toUpperCase()||`O`}),(0,Z.jsxs)(`div`,{children:[(0,Z.jsxs)(`p`,{className:`text-sm font-semibold`,children:[`@`,e]}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Primary Opexnal Profile`})]})]}),(0,Z.jsx)(O,{variant:`secondary`,children:`Active`})]})}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Cross-Posting & Stories Sync`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Automatically share reels and stories to connected networks`})]}),(0,Z.jsx)(R,{checked:n,onCheckedChange:i})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Sync Name & Profile Picture`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Keep avatar and display name updated across services`})]}),(0,Z.jsx)(R,{defaultChecked:!0,onCheckedChange:e=>V.success(e?`Profile sync active`:`Profile sync stopped`)})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:t,children:`Close Accounts Center`})]})}function we({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_personalized_ads`)!==`false`);function r(e){n(e),localStorage.setItem(`opexnal_personalized_ads`,String(e)),V.success(e?`Personalized recommendations enabled`:`Generic ad delivery enabled`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Personal Details & Ad Preferences`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Control how your interests and creator interactions shape sponsored posts and recommendations.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-2`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Interest-Based Ads`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Show brand sponsorships relevant to your content tags`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:r})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-secondary/30 space-y-1.5`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Top Creator Topics`}),(0,Z.jsx)(`div`,{className:`flex flex-wrap gap-1.5 pt-1`,children:[`Technology`,`Photography`,`AI & Design`,`Music`,`Travel`].map(e=>(0,Z.jsx)(O,{variant:`outline`,className:`text-[11px]`,children:e},e))})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function Te({onClose:e}){let[t,n]=(0,X.useState)(`posts`);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(l,{className:`h-5 w-5 text-primary`}),`Saved & Collections`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Only you can see what you have saved in your private bookmarks.`})]}),(0,Z.jsx)(`div`,{className:`flex gap-2 border-b border-border pb-2`,children:[`posts`,`audio`,`collections`].map(e=>(0,Z.jsx)(G,{variant:t===e?`secondary`:`ghost`,size:`sm`,className:`capitalize rounded-xl text-xs`,onClick:()=>n(e),children:e},e))}),(0,Z.jsxs)(`div`,{className:`py-6 text-center space-y-2`,children:[(0,Z.jsx)(l,{className:`h-8 w-8 text-muted-foreground/50 mx-auto`}),(0,Z.jsx)(`p`,{className:`text-sm font-semibold`,children:`All Saved Items`}),(0,Z.jsx)(`p`,{className:`text-xs text-muted-foreground max-w-xs mx-auto`,children:`Posts, reels, and audio tracks you bookmark while exploring Opexnal will appear here.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Back to Settings`})]})}function Ee({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(I,{className:`h-5 w-5 text-primary`}),`Archive`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Archived stories, reels, and posts are safely preserved and visible only to you.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Stories Archive`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Automatic 24-hour retention enabled`})]}),(0,Z.jsx)(O,{variant:`outline`,className:`text-emerald-500`,children:`Active`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Posts & Reels Archive`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Temporarily unpublish without deleting`})]}),(0,Z.jsx)(G,{size:`sm`,variant:`outline`,className:`rounded-xl text-xs`,onClick:()=>V.info(`No posts currently archived`),children:`View`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function De({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_time_reminder`)||`30`),[r,i]=(0,X.useState)(()=>localStorage.getItem(`opexnal_break_reminders`)!==`false`);function a(){localStorage.setItem(`opexnal_time_reminder`,t),localStorage.setItem(`opexnal_break_reminders`,String(r)),V.success(`Time management goals updated`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(M,{className:`h-5 w-5 text-primary`}),`Time Spent & Digital Wellbeing`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Monitor your time on Opexnal and configure mindful break alerts.`})]}),(0,Z.jsxs)(`div`,{className:`p-4 rounded-2xl bg-primary/10 border border-primary/20 text-center space-y-1`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] font-semibold text-primary uppercase tracking-wider`,children:`Daily Average`}),(0,Z.jsx)(`p`,{className:`text-3xl font-extrabold text-foreground`,children:`24m`}),(0,Z.jsx)(`p`,{className:`text-xs text-muted-foreground`,children:`You spent 12% less time this week compared to last week.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3`,children:[(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Daily Usage Reminder`}),(0,Z.jsx)(`div`,{className:`flex gap-2`,children:[`15`,`30`,`45`,`60`].map(e=>(0,Z.jsxs)(G,{type:`button`,variant:t===e?`default`:`outline`,size:`sm`,className:`flex-1 rounded-xl text-xs`,onClick:()=>n(e),children:[e,`m`]},e))})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Take a Break Notifications`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Reminder to step away after 20 minutes of scrolling`})]}),(0,Z.jsx)(R,{checked:r,onCheckedChange:i})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:a,children:`Save Preferences`})]})}function Oe({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_notif_pause`)===`true`),[r,i]=(0,X.useState)(!0),[a,o]=(0,X.useState)(!0),[s,c]=(0,X.useState)(!0),[l,u]=(0,X.useState)(!0);function d(e){n(e),localStorage.setItem(`opexnal_notif_pause`,String(e)),V.success(e?`All push notifications paused`:`Push notifications resumed`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(U,{className:`h-5 w-5 text-primary`}),`Notification Preferences`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Choose what alerts reach your device and email inbox.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-primary/30 bg-primary/5`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-bold text-foreground`,children:`Pause All Notifications`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Temporarily silence all activity pushes`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:d})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`text-xs font-semibold`,children:`Likes & Reactions`}),(0,Z.jsx)(R,{checked:r&&!t,disabled:t,onCheckedChange:i})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`text-xs font-semibold`,children:`Comments & Replies`}),(0,Z.jsx)(R,{checked:a&&!t,disabled:t,onCheckedChange:o})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`text-xs font-semibold`,children:`Direct Messages & Chats`}),(0,Z.jsx)(R,{checked:s&&!t,disabled:t,onCheckedChange:c})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`text-xs font-semibold`,children:`Reels & Live Broadcasts`}),(0,Z.jsx)(R,{checked:l&&!t,disabled:t,onCheckedChange:u})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function ke({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(P,{className:`h-5 w-5 text-primary`}),`Creator Insights & Analytics`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Performance metrics over the last 7 days for your profile and stories.`})]}),(0,Z.jsxs)(`div`,{className:`grid grid-cols-2 gap-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Accounts Reached`}),(0,Z.jsx)(`p`,{className:`text-xl font-bold text-foreground`,children:`14,280`}),(0,Z.jsx)(`span`,{className:`text-[10px] text-emerald-500 font-semibold`,children:`+18.4% vs last week`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Interactions`}),(0,Z.jsx)(`p`,{className:`text-xl font-bold text-foreground`,children:`1,894`}),(0,Z.jsx)(`span`,{className:`text-[10px] text-emerald-500 font-semibold`,children:`+9.2% engagement`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Profile Visits`}),(0,Z.jsx)(`p`,{className:`text-xl font-bold text-foreground`,children:`640`}),(0,Z.jsx)(`span`,{className:`text-[10px] text-primary font-semibold`,children:`Top referral: Reels`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`New Followers`}),(0,Z.jsx)(`p`,{className:`text-xl font-bold text-foreground`,children:`+85`}),(0,Z.jsx)(`span`,{className:`text-[10px] text-emerald-500 font-semibold`,children:`98% organic`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Close Insights`})]})}function Ae({onClose:e}){let[t,n]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(j,{className:`h-5 w-5 text-primary`}),`Branded Content & Partnerships`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Tools for commercial tags, paid partnership disclosures, and brand partner approvals.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:`Partnership Eligibility Status`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Compliant with Opexnal Branded Content policies`})]}),(0,Z.jsx)(O,{variant:`outline`,className:`text-emerald-500 border-emerald-500/30`,children:`Eligible`})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Require Brand Partner Approval`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Only approved brand tags can feature your content`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function je({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_account_type`)||`Creator`);function r(t){n(t),localStorage.setItem(`opexnal_account_type`,t),V.success(`Account switched to ${t}`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Account Type & Professional Tools`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Choose the account configuration that best matches your workflow.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:[{id:`Creator`,title:`Creator Account`,desc:`Best for influencers, artists, filmmakers & content producers`},{id:`Business`,title:`Business Account`,desc:`Best for retailers, local businesses, brands & organizations`},{id:`Personal`,title:`Personal Account`,desc:`Standard private or casual personal social profile`}].map(e=>(0,Z.jsxs)(`div`,{onClick:()=>r(e.id),className:`p-3.5 rounded-2xl border cursor-pointer transition-colors flex items-center justify-between ${t===e.id?`border-primary bg-primary/10`:`border-border bg-surface hover:bg-secondary`}`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-bold text-foreground`,children:e.title}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:e.desc})]}),t===e.id&&(0,Z.jsx)(z,{className:`h-4 w-4 text-primary`})]},e.id))})]})}function Me({onClose:e}){let[t,n]=(0,X.useState)(`4.99`),[r,i]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between gap-2`,children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(A,{className:`h-5 w-5 text-amber-500`}),`Creator Subscriptions`]}),(0,Z.jsx)(O,{variant:`outline`,className:`border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,children:`NEEDS PAYMENT PROVIDER CONFIGURATION`})]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Offer monthly subscriber-only stories, exclusive reels, and badges to supporters.`})]}),(0,Z.jsxs)(`div`,{className:`rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs space-y-1`,children:[(0,Z.jsxs)(`p`,{className:`font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5`,children:[(0,Z.jsx)(y,{className:`h-3.5 w-3.5`}),`Server-Authoritative Billing Notice`]}),(0,Z.jsx)(`p`,{className:`text-muted-foreground text-[11px] leading-relaxed`,children:`Creator tier pricing and subscriber-exclusive access are validated server-side. Live payment processing and automated recurring renewals require an active Stripe Connect or payment gateway integration.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Enable Fan Subscriptions`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Allow followers to subscribe monthly`})]}),(0,Z.jsx)(R,{checked:r,onCheckedChange:i})]}),(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Monthly Subscription Tier`}),(0,Z.jsx)(`div`,{className:`flex gap-2`,children:[`2.99`,`4.99`,`9.99`].map(e=>(0,Z.jsxs)(G,{variant:t===e?`default`:`outline`,size:`sm`,className:`flex-1 rounded-xl`,onClick:()=>n(e),children:[`$`,e,`/mo`]},e))})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:()=>{V.success(`Subscription configuration saved (Awaiting payment gateway activation)`),e()},children:`Save Subscription Configuration`})]})}function Ne({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between gap-2`,children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Your Active Subscriptions`}),(0,Z.jsx)(O,{variant:`outline`,className:`border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,children:`NEEDS PAYMENT PROVIDER CONFIGURATION`})]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Manage creators you support, Opexnal One / Plus plans, and active billing cycles.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`p-3.5 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2.5`,children:[(0,Z.jsx)(`div`,{className:`h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-sm text-primary`,children:`★`}),(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Opexnal One Membership`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`$9.99/mo • AI Studio Pro + 4K HD Uploads`})]})]}),(0,Z.jsx)(O,{variant:`secondary`,className:`text-[10px]`,children:`Server Preview`})]}),(0,Z.jsxs)(`div`,{className:`p-3.5 rounded-2xl border border-border bg-surface flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2.5`,children:[(0,Z.jsx)(`div`,{className:`h-9 w-9 rounded-full bg-secondary flex items-center justify-center font-bold text-sm text-foreground`,children:`A`}),(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`@alex_creative`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`$4.99/mo • Renews in 18 days`})]})]}),(0,Z.jsx)(O,{variant:`outline`,className:`text-emerald-500 border-emerald-500/30 text-[10px]`,children:`Active`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function Pe({onClose:e}){let[t,n]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(A,{className:`h-5 w-5 text-purple-500`}),`Subscriber Badges & Perks`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Custom badges displayed beside your name in comments and direct messages.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Display Subscriber Crown`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Show badge beside comments on creator posts`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]}),(0,Z.jsx)(`div`,{className:`p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-700 dark:text-purple-300`,children:`Exclusive subscriber perks include priority DM inbox placement and subscriber broadcast channels.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Understood`})]})}function Fe({onClose:e}){let[t,n]=(0,X.useState)([{username:`sophia_v`,name:`Sophia Vance`,selected:!0},{username:`dev_raj`,name:`Raj Sharma`,selected:!0},{username:`elena_lens`,name:`Elena Rostova`,selected:!1},{username:`marcus_k`,name:`Marcus Klein`,selected:!1}]);function r(e){n(t=>t.map(t=>t.username===e?{...t,selected:!t.selected}:t))}function i(){V.success(`Close Friends list updated (${t.filter(e=>e.selected).length} accounts)`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(`span`,{className:`h-3 w-3 rounded-full bg-emerald-500 inline-block`}),`Close Friends`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`We do not send notifications when you add or remove people from Close Friends.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1 max-h-56 overflow-y-auto`,children:t.map(e=>(0,Z.jsxs)(`div`,{onClick:()=>r(e.username),className:`flex items-center justify-between p-2.5 rounded-2xl border border-border bg-surface hover:bg-secondary cursor-pointer`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:e.name}),(0,Z.jsxs)(`p`,{className:`text-[11px] text-muted-foreground`,children:[`@`,e.username]})]}),(0,Z.jsx)(`div`,{className:`h-5 w-5 rounded-full border flex items-center justify-center ${e.selected?`bg-emerald-500 border-emerald-500 text-white`:`border-muted-foreground`}`,children:e.selected&&(0,Z.jsx)(z,{className:`h-3 w-3`})})]},e.username))}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:i,children:`Save Close Friends`})]})}function Ie({onClose:e}){let[t,n]=(0,X.useState)([`spam_bot_09`,`promo_aggregator_22`]);function r(e){n(t=>t.filter(t=>t!==e)),V.success(`@${e} unblocked`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(ae,{className:`h-5 w-5 text-destructive`}),`Blocked Accounts`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Blocked accounts cannot find your profile, posts, or stories on Opexnal.`})]}),t.length===0?(0,Z.jsx)(`div`,{className:`py-8 text-center text-xs text-muted-foreground`,children:`You haven't blocked any accounts.`}):(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:t.map(e=>(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`span`,{className:`text-xs font-semibold`,children:[`@`,e]}),(0,Z.jsx)(G,{size:`sm`,variant:`outline`,className:`rounded-xl text-xs h-7`,onClick:()=>r(e),children:`Unblock`})]},e))}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function Le({onClose:e}){let[t,n]=(0,X.useState)(0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(d,{className:`h-5 w-5 text-primary`}),`Hide Story and Live`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Hide your story, highlights, and live broadcasts from specific users without blocking them.`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Hidden From`}),(0,Z.jsxs)(`p`,{className:`text-[11px] text-muted-foreground`,children:[t,` accounts selected`]})]}),(0,Z.jsx)(G,{size:`sm`,variant:`outline`,className:`rounded-xl text-xs`,onClick:()=>{n(1),V.success(`Story hidden from selected accounts`)},children:`Manage Accounts`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function Re({onClose:e}){let[t,n]=(0,X.useState)(!0),[r,i]=(0,X.useState)(``);function a(){V.success(`Comment moderation rules applied`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Comments & Hidden Words`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Automatically hide offensive comments and messages containing custom keywords.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Hide Offensive Words`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`AI filter for profanity and hate speech`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]}),(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Custom Keyword Filter (comma separated)`}),(0,Z.jsx)(b,{placeholder:`e.g. crypto, giveaway, spam`,value:r,onChange:e=>i(e.target.value),className:`rounded-xl text-xs`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:a,children:`Save Filters`})]})}function ze({onClose:e}){let[t,n]=(0,X.useState)(!0),[r,i]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(h,{className:`h-5 w-5 text-primary`}),`Sharing & Remixes`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Control how others can reshare your posts to stories or create video remix collaborations.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Allow Reels Remixing`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Anyone can create a remix side-by-side with your reel`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Allow Resharing to Stories`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Others can share your public posts in their story`})]}),(0,Z.jsx)(R,{checked:r,onCheckedChange:i})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:()=>{V.success(`Sharing permissions updated`),e()},children:`Done`})]})}function Be({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Restricted Accounts`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Protect yourself from unwanted interactions without blocking. Only you and the restricted person can see their comments on your posts.`})]}),(0,Z.jsx)(`div`,{className:`p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,children:`No accounts currently restricted.`}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Close`})]})}function Ve({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(w,{className:`h-5 w-5 text-rose-500`}),`Favorites Feed`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Posts from your favorites appear higher in your home feed with a red star indicator.`})]}),(0,Z.jsxs)(`div`,{className:`p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground space-y-1`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`You haven't added favorites yet`}),(0,Z.jsx)(`p`,{children:`Add up to 50 creators to see their content first.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function He({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(oe,{className:`h-5 w-5 text-muted-foreground`}),`Muted Accounts`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Manage accounts whose posts, stories, or notes you have temporarily muted.`})]}),(0,Z.jsx)(`div`,{className:`p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,children:`No muted accounts.`}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Close`})]})}function Ue({onClose:e}){let[t,n]=(0,X.useState)(`standard`);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(g,{className:`h-5 w-5 text-primary`}),`Content Preferences & Sensitive Control`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Customize what appears in your Explore feed and search suggestions.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:[{id:`less`,label:`Less`,desc:`Filter out more borderline or intense content`},{id:`standard`,label:`Standard (Default)`,desc:`Balanced feed according to community standards`},{id:`more`,label:`More`,desc:`Allows broader range of creator topics`}].map(e=>(0,Z.jsxs)(`div`,{onClick:()=>{n(e.id),V.success(`Content level set to ${e.label}`)},className:`p-3 rounded-2xl border cursor-pointer flex items-center justify-between ${t===e.id?`border-primary bg-primary/10`:`border-border bg-surface`}`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-bold text-foreground`,children:e.label}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:e.desc})]}),t===e.id&&(0,Z.jsx)(z,{className:`h-4 w-4 text-primary`})]},e.id))}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function We({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_hide_likes`)===`true`);function r(e){n(e),localStorage.setItem(`opexnal_hide_likes`,String(e)),V.success(e?`Like counts hidden on your posts`:`Like counts visible`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Like and View Counts`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Hide total likes and view counts on posts from other accounts and your own posts.`})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3.5 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Hide Like and View Counts`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Focus on content quality rather than numbers`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:r})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function Ge({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(_,{className:`h-5 w-5 text-primary`}),`Device & App Permissions`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Permissions granted to Opexnal for camera capture, audio recording, and media upload.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:[{name:`Camera`,desc:`Stories, reels recording & photo posts`,status:`Authorized`},{name:`Microphone`,desc:`Audio for reels and voice messages`,status:`Authorized`},{name:`Photo Library`,desc:`Uploading images and videos from device`,status:`Full Access`},{name:`Notifications`,desc:`Direct messages and creator alerts`,status:`Enabled`}].map(e=>(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:e.name}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:e.desc})]}),(0,Z.jsx)(O,{variant:`outline`,className:`text-emerald-500 border-emerald-500/30 text-[10px]`,children:e.status})]},e.name))}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Understood`})]})}function Ke({onClose:e}){let[t,n]=(0,X.useState)(!1),[r,i]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(u,{className:`h-5 w-5 text-primary`}),`Archiving & Downloading`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Configure automatic story preservation and local camera roll downloads.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Save Story to Archive`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Preserve stories automatically after 24 hours`})]}),(0,Z.jsx)(R,{checked:r,onCheckedChange:i})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Save to Camera Roll`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Automatically download captured reels to device storage`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:()=>{V.success(`Archive preferences updated`),e()},children:`Done`})]})}function qe({onClose:e}){let[t,n]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Accessibility & Captions`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Features designed to make video and creator content accessible to all audiences.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2.5 pt-1`,children:(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Auto-Generated Captions`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Display real-time speech-to-text on video reels`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]})}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:()=>{V.success(`Accessibility settings saved`),e()},children:`Done`})]})}function Je({onClose:e}){let[t,n]=(0,X.useState)(()=>localStorage.getItem(`opexnal_lang`)||`English`);function r(t){n(t),localStorage.setItem(`opexnal_lang`,t),V.success(`Language set to ${t}`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(Y,{className:`h-5 w-5 text-primary`}),`Language & Region`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Select interface language and automatic story translation preferences.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:[`English (US)`,`Hindi (हिंदी)`,`Hinglish (Conversational)`,`Spanish (Español)`,`French (Français)`].map(e=>(0,Z.jsxs)(`div`,{onClick:()=>r(e),className:`p-3 rounded-2xl border cursor-pointer flex items-center justify-between ${t===e?`border-primary bg-primary/10`:`border-border bg-surface hover:bg-secondary`}`,children:[(0,Z.jsx)(`span`,{className:`text-xs font-semibold`,children:e}),t===e&&(0,Z.jsx)(z,{className:`h-4 w-4 text-primary`})]},e))})]})}function Ye({onClose:e}){let[t,n]=(0,X.useState)(!1),[r,i]=(0,X.useState)(!0);return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(ye,{className:`h-5 w-5 text-primary`}),`Data Usage & Media Quality`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Optimize bandwidth consumption or prioritize crisp 4K uploads for reels.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Upload at Highest Quality`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Always upload high-resolution video even on cellular data`})]}),(0,Z.jsx)(R,{checked:r,onCheckedChange:i})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Cellular Data Saver`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Videos will not load in advance to reduce data usage`})]}),(0,Z.jsx)(R,{checked:t,onCheckedChange:n})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:()=>{V.success(`Media quality settings saved`),e()},children:`Done`})]})}function Xe({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(x,{className:`h-5 w-5 text-primary`}),`Parental Supervision`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Tools for parents and guardians to support their teens and monitor healthy usage patterns.`})]}),(0,Z.jsxs)(`div`,{className:`p-4 rounded-2xl bg-secondary/50 border border-border text-center space-y-2`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:`Set Up Family Supervision`}),(0,Z.jsx)(`p`,{className:`text-xs text-muted-foreground`,children:`Invite a parent or guardian to see time spent, followers list, and manage downtime boundaries.`}),(0,Z.jsx)(G,{size:`sm`,className:`rounded-xl mt-2`,onClick:()=>V.success(`Supervision invitation link copied to clipboard`),children:`Create Guardian Invite Link`})]}),(0,Z.jsx)(G,{variant:`outline`,className:`w-full rounded-xl`,onClick:e,children:`Close`})]})}function Ze({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Safety & Education Hub`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Expert resources on digital literacy, anti-bullying tools, and teen privacy defaults.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 pt-1 text-xs text-muted-foreground`,children:[(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Default Privacy for Teens`}),(0,Z.jsx)(`p`,{className:`mt-0.5`,children:`Accounts for creators under 18 default to private with restricted adult messaging.`})]}),(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Anti-Bullying & Comment Moderation`}),(0,Z.jsx)(`p`,{className:`mt-0.5`,children:`Automated screening prevents repetitive unwanted harassment in reels and comments.`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Understood`})]})}function Qe({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between gap-2`,children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(J,{className:`h-5 w-5 text-primary`}),`Payment Methods`]}),(0,Z.jsx)(O,{variant:`outline`,className:`border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,children:`NEEDS PAYMENT PROVIDER CONFIGURATION`})]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Manage cards and billing methods for in-app tipping and creator subscriptions.`})]}),(0,Z.jsxs)(`div`,{className:`rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs space-y-1`,children:[(0,Z.jsxs)(`p`,{className:`font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5`,children:[(0,Z.jsx)(C,{className:`h-3.5 w-3.5`}),`Gateway Credentials Required`]}),(0,Z.jsx)(`p`,{className:`text-muted-foreground text-[11px] leading-relaxed`,children:`In production, card collection must use tokenized iframes (Stripe Elements / Razorpay SDK) without raw card storage. Live card authorization is disabled until gateway keys are connected.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3.5 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-3`,children:[(0,Z.jsx)(`div`,{className:`h-8 w-12 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center font-bold text-xs`,children:`VISA`}),(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Visa ending in 4242`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Expires 08/28 • Server Vault Mock`})]})]}),(0,Z.jsx)(O,{variant:`secondary`,children:`Saved Method`})]}),(0,Z.jsx)(G,{variant:`outline`,className:`w-full rounded-xl text-xs`,onClick:()=>V.info(`Payment provider gateway is required for live card tokens`),children:`+ Add New Payment Method (Gateway Required)`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function $e({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Orders & Purchase History`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Receipts for subscriptions, creator support tips, and merchandise transactions.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold`,children:`Creator Subscription — @alex_creative`}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Sep 1, 2026 • Receipt #OPX-9182`})]}),(0,Z.jsx)(`span`,{className:`text-xs font-bold text-foreground`,children:`$4.99`})]})}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Close`})]})}function et({onClose:e}){let[t,n]=(0,X.useState)(`50.00`),[r,i]=(0,X.useState)(142.5),[a,o]=(0,X.useState)(!1);function s(){let e=parseFloat(t);if(isNaN(e)||e<=0){V.error(`Withdrawal amount must be greater than $0.00`);return}if(e<50){V.error(`Minimum payout withdrawal threshold is $50.00`);return}if(e>r){V.error(`Insufficient creator balance. Overdraft rejected by server.`);return}o(!0);let n=`payout_${Date.now()}_${Math.random().toString(36).substring(2,9)}`;setTimeout(()=>{o(!1),i(t=>+(t-e).toFixed(2)),V.success(`Withdrawal of $${e.toFixed(2)} initiated with key ${n.slice(0,14)}... (Awaiting payment gateway payout clearance)`)},600)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between gap-2`,children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(j,{className:`h-5 w-5 text-emerald-500`}),`Monetization Payouts`]}),(0,Z.jsx)(O,{variant:`outline`,className:`border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,children:`NEEDS PAYMENT PROVIDER CONFIGURATION`})]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Server-authoritative creator balance, bank direct deposit, and payout controls.`})]}),(0,Z.jsxs)(`div`,{className:`p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1`,children:[(0,Z.jsx)(`p`,{className:`text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider`,children:`Available Creator Balance`}),(0,Z.jsxs)(`p`,{className:`text-3xl font-extrabold text-foreground`,children:[`$`,r.toFixed(2)]}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground`,children:`Minimum withdrawal threshold: $50.00 • Direct Deposit: Bank ending in 4819`})]}),(0,Z.jsxs)(`div`,{className:`rounded-2xl border border-border bg-surface p-3.5 space-y-2.5`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-semibold text-foreground`,children:`Request Payout (Idempotent Transaction)`}),(0,Z.jsxs)(`div`,{className:`flex gap-2`,children:[(0,Z.jsxs)(`div`,{className:`relative flex-1`,children:[(0,Z.jsx)(`span`,{className:`absolute left-3 top-2.5 text-xs text-muted-foreground font-semibold`,children:`$`}),(0,Z.jsx)(b,{type:`number`,min:`50`,max:r,step:`5`,value:t,onChange:e=>n(e.target.value),className:`pl-7 rounded-xl text-xs`})]}),(0,Z.jsx)(G,{className:`rounded-xl text-xs`,disabled:a||r<50,onClick:s,children:a?`Validating...`:`Withdraw`})]}),(0,Z.jsx)(`p`,{className:`text-[10px] text-muted-foreground`,children:`* Server checks: Negative amounts and overdrafts are strictly blocked. Unique idempotency keys prevent duplicate payouts.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function tt({onClose:e}){let[t,n]=(0,X.useState)(``);function r(){if(!t.trim()){V.error(`Please describe your question or issue`);return}V.success(`Support ticket created. Our team will follow up via email.`),n(``),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(v,{className:`h-5 w-5 text-primary`}),`Help Center & Support`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Browse common creator guides or submit an issue directly to the Opexnal support team.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border text-xs space-y-1.5`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Frequently Asked Questions`}),(0,Z.jsxs)(`ul`,{className:`list-disc pl-4 space-y-1 text-muted-foreground`,children:[(0,Z.jsx)(`li`,{children:`How to verify creator status and earn verification badges`}),(0,Z.jsx)(`li`,{children:`Setting up two-factor authentication (TOTP)`}),(0,Z.jsx)(`li`,{children:`Content monetization guidelines & payout dates`})]})]}),(0,Z.jsxs)(`div`,{className:`space-y-1`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-medium text-foreground`,children:`Report a Problem`}),(0,Z.jsx)(b,{placeholder:`Briefly explain what happened...`,value:t,onChange:e=>n(e.target.value),className:`rounded-xl text-xs`})]})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:e,children:`Close`}),(0,Z.jsx)(G,{className:`flex-1 rounded-xl`,onClick:r,children:`Send Report`})]})]})}function nt({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Support Requests & Appeals`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Track the status of reports you have submitted and active appeal requests.`})]}),(0,Z.jsx)(`div`,{className:`p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,children:`You have no active support requests or pending appeals.`}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function rt({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(k,{className:`h-5 w-5 text-primary`}),`About Opexnal`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`The next-generation social and creator platform engineered for velocity and intelligence.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1 text-xs`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`font-medium text-foreground`,children:`Platform Release`}),(0,Z.jsx)(`span`,{className:`font-semibold text-primary`,children:`v2.5 Production Build`})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`font-medium text-foreground`,children:`AI Foundation`}),(0,Z.jsx)(`span`,{className:`font-medium text-muted-foreground`,children:`Google Gemini 3.7 Flash`})]}),(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,children:[(0,Z.jsx)(`span`,{className:`font-medium text-foreground`,children:`Backend & Storage`}),(0,Z.jsx)(`span`,{className:`font-medium text-muted-foreground`,children:`Supabase Enterprise Auth & DB`})]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Close`})]})}function it({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(f,{className:`h-5 w-5 text-primary`}),`Terms of Service`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Opexnal platform guidelines, creator ownership, and community standards.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 max-h-56 overflow-y-auto text-xs text-muted-foreground p-3 rounded-2xl bg-secondary/30 border border-border leading-relaxed`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`1. Creator Ownership`}),(0,Z.jsx)(`p`,{children:`You retain 100% intellectual property ownership of all media, text, reels, and stories you post.`}),(0,Z.jsx)(`p`,{className:`font-semibold text-foreground mt-2`,children:`2. Respect & Integrity`}),(0,Z.jsx)(`p`,{children:`Harassment, abusive automation, and copyright infringement are strictly prohibited.`}),(0,Z.jsx)(`p`,{className:`font-semibold text-foreground mt-2`,children:`3. Monetization Integrity`}),(0,Z.jsx)(`p`,{children:`Fan subscriptions and payouts are subject to verified identity and good standing.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Understood`})]})}function at({onClose:e}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(E,{className:`h-5 w-5 text-primary`}),`Opexnal Studio for Web`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Desktop publishing, multi-reel scheduling, and professional analytics for creators.`})]}),(0,Z.jsxs)(`div`,{className:`p-4 rounded-2xl bg-primary/10 border border-primary/20 text-xs text-muted-foreground space-y-2`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Desktop Creator Suite`}),(0,Z.jsx)(`p`,{children:`Opexnal is fully responsive and optimized for desktop workflows. Access high-resolution video uploads, scheduled posts, and in-depth analytics directly on your desktop browser.`})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Got It`})]})}function ot({onClose:e}){let[t,n]=(0,X.useState)(``);function r(){if(!t.trim()){V.error(`Please enter a username or email`);return}V.success(`Account @${t.replace(/^@/,``)} registered for multi-account login`),e()}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(ie,{className:`h-5 w-5 text-primary`}),`Add Existing Account`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Log into another Opexnal account to switch seamlessly between profiles.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2 pt-1`,children:[(0,Z.jsx)(b,{placeholder:`Phone, username or email`,value:t,onChange:e=>n(e.target.value),className:`rounded-xl`}),(0,Z.jsx)(b,{type:`password`,placeholder:`Password`,className:`rounded-xl`})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:e,children:`Cancel`}),(0,Z.jsx)(G,{className:`flex-1 rounded-xl`,onClick:r,children:`Log In`})]})]})}function st({username:e,onClose:t}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(m,{className:`h-5 w-5 text-primary`}),`Switch Accounts`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Select an active profile to switch your current workspace.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1`,children:(0,Z.jsxs)(`div`,{className:`flex items-center justify-between p-3 rounded-2xl border border-primary bg-primary/10`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2.5`,children:[(0,Z.jsx)(`div`,{className:`h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-xs text-primary`,children:e[0]?.toUpperCase()||`U`}),(0,Z.jsxs)(`div`,{children:[(0,Z.jsxs)(`p`,{className:`text-xs font-semibold text-foreground`,children:[`@`,e]}),(0,Z.jsx)(`p`,{className:`text-[10px] text-muted-foreground`,children:`Current Account`})]})]}),(0,Z.jsx)(z,{className:`h-4 w-4 text-primary`})]})}),(0,Z.jsx)(G,{variant:`outline`,className:`w-full rounded-xl`,onClick:t,children:`Done`})]})}function ct({onClose:e}){let[t,n]=(0,X.useState)(`json`),[r,i]=(0,X.useState)([`Profile Information`,`Posts & Reels`,`Messages & Comments`,`Activity & Media Metadata`]),[a,o]=(0,X.useState)(!1),[s,c]=(0,X.useState)({id:`exp_2026_01`,createdAt:`Feb 15, 2026`,size:`14.2 MB`});function l(e){i(t=>t.includes(e)?t.filter(t=>t!==e):[...t,e])}function d(){if(r.length===0){V.error(`Please select at least one data category to include in the export`);return}o(!0),setTimeout(()=>{o(!1),c({id:`exp_${Date.now()}`,createdAt:`Just now`,size:`18.6 MB`}),V.success(`Data export package generated. You can download the archive.`)},800)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(u,{className:`h-5 w-5 text-primary`}),`Download Your Data`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Request a secure copy of your Opexnal profile, media, comments, and interactions.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-3 pt-1`,children:[(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-semibold text-foreground`,children:`Archive Format`}),(0,Z.jsxs)(`div`,{className:`grid grid-cols-2 gap-2`,children:[(0,Z.jsx)(G,{type:`button`,variant:t===`json`?`default`:`outline`,size:`sm`,className:`rounded-xl text-xs`,onClick:()=>n(`json`),children:`JSON (Machine-Readable)`}),(0,Z.jsx)(G,{type:`button`,variant:t===`html`?`default`:`outline`,size:`sm`,className:`rounded-xl text-xs`,onClick:()=>n(`html`),children:`HTML (Web Viewable)`})]})]}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-semibold text-foreground`,children:`Categories to Include`}),(0,Z.jsx)(`div`,{className:`space-y-1.5`,children:[`Profile Information`,`Posts & Reels`,`Messages & Comments`,`Activity & Media Metadata`].map(e=>(0,Z.jsxs)(`label`,{className:`flex items-center justify-between p-2.5 rounded-xl border border-border bg-surface text-xs cursor-pointer hover:bg-secondary/40`,children:[(0,Z.jsx)(`span`,{children:e}),(0,Z.jsx)(`input`,{type:`checkbox`,checked:r.includes(e),onChange:()=>l(e),className:`rounded border-border`})]},e))})]}),s&&(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{className:`text-xs`,children:[(0,Z.jsx)(`p`,{className:`font-semibold text-emerald-700 dark:text-emerald-400`,children:`Export Archive Ready`}),(0,Z.jsxs)(`p`,{className:`text-[11px] text-muted-foreground`,children:[`Created: `,s.createdAt,` • `,s.size]})]}),(0,Z.jsx)(G,{size:`sm`,className:`rounded-xl text-xs h-8`,onClick:()=>V.success(`Downloading export ZIP archive...`),children:`Download`})]})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:e,children:`Close`}),(0,Z.jsx)(G,{className:`flex-1 rounded-xl`,disabled:a,onClick:d,children:a?`Preparing Export...`:`Request Export`})]})]})}function lt({onClose:e}){let[t,n]=(0,X.useState)([{id:`del_post_1`,type:`post`,title:`Draft sunset reel with 4K color grade`,deletedAt:`2026-03-01T10:00:00Z`,daysRemaining:27},{id:`del_story_2`,type:`story`,title:`Behind the scenes in studio`,deletedAt:`2026-03-02T15:00:00Z`,daysRemaining:28}]);function r(e){n(t=>t.filter(t=>t.id!==e)),V.success(`Item restored to your profile and active feed`)}function i(e){n(t=>t.filter(t=>t.id!==e)),V.success(`Item permanently purged from server`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(p,{className:`h-5 w-5 text-primary`}),`Recently Deleted`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Items here are held for 30 days before permanent deletion. Only you can view this bin.`})]}),(0,Z.jsx)(`div`,{className:`space-y-2 pt-1 max-h-60 overflow-y-auto`,children:t.length===0?(0,Z.jsxs)(`div`,{className:`py-8 text-center text-xs text-muted-foreground space-y-1`,children:[(0,Z.jsx)(B,{className:`h-8 w-8 mx-auto text-muted-foreground/40`}),(0,Z.jsx)(`p`,{className:`font-semibold text-foreground`,children:`Recently Deleted is Empty`}),(0,Z.jsx)(`p`,{children:`Deleted posts, stories, and reels will appear here for 30 days.`})]}):t.map(e=>(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border border-border bg-surface flex items-center justify-between gap-2`,children:[(0,Z.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold truncate text-foreground`,children:e.title}),(0,Z.jsxs)(`p`,{className:`text-[11px] text-muted-foreground capitalize`,children:[e.type,` • `,e.daysRemaining,` days remaining`]})]}),(0,Z.jsxs)(`div`,{className:`flex items-center gap-1.5 shrink-0`,children:[(0,Z.jsxs)(G,{size:`sm`,variant:`outline`,className:`h-8 rounded-xl text-xs flex items-center gap-1`,onClick:()=>r(e.id),children:[(0,Z.jsx)(he,{className:`h-3 w-3`}),`Restore`]}),(0,Z.jsx)(G,{size:`sm`,variant:`ghost`,className:`h-8 w-8 p-0 rounded-xl text-destructive hover:bg-destructive/10`,onClick:()=>i(e.id),children:(0,Z.jsx)(B,{className:`h-3.5 w-3.5`})})]})]},e.id))}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function ut({onClose:e}){let[t,n]=(0,X.useState)(`deactivate`),[r,i]=(0,X.useState)(``),[a,o]=(0,X.useState)(!1);function s(){if(!r){V.error(`Please enter your current password to authorize this action`);return}o(!0),setTimeout(()=>{o(!1),t===`deactivate`?V.success(`Account temporarily deactivated. Log in anytime to reactivate.`):V.success(`Account deletion initiated. 30-day grace period started.`),e()},700)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2 text-destructive`,children:[(0,Z.jsx)(y,{className:`h-5 w-5 text-destructive`}),`Deactivate or Delete Account`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Choose whether to temporarily take a break or permanently erase your Opexnal profile.`})]}),(0,Z.jsxs)(`div`,{className:`grid grid-cols-2 gap-2 pt-1`,children:[(0,Z.jsx)(G,{type:`button`,variant:t===`deactivate`?`default`:`outline`,size:`sm`,className:`rounded-xl text-xs`,onClick:()=>n(`deactivate`),children:`Deactivate (Temporary)`}),(0,Z.jsx)(G,{type:`button`,variant:t===`delete`?`destructive`:`outline`,size:`sm`,className:`rounded-xl text-xs`,onClick:()=>n(`delete`),children:`Delete (Permanent)`})]}),(0,Z.jsx)(`div`,{className:`p-3 rounded-2xl bg-secondary/50 border border-border text-xs text-muted-foreground space-y-1`,children:t===`deactivate`?(0,Z.jsx)(`p`,{children:`Deactivating your account will hide your profile, posts, comments, and likes until you log back in. Your data remains safe and preserved.`}):(0,Z.jsx)(`p`,{className:`text-destructive font-medium`,children:`Permanent deletion will queue your profile, followers, posts, reels, and messages for total erasure after a 30-day grace period.`})}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(`label`,{className:`text-xs font-semibold text-foreground`,children:`Confirm With Your Password`}),(0,Z.jsx)(b,{type:`password`,placeholder:`Enter current password`,value:r,onChange:e=>i(e.target.value),className:`rounded-xl text-xs`})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:e,children:`Cancel`}),(0,Z.jsx)(G,{variant:t===`delete`?`destructive`:`default`,className:`flex-1 rounded-xl`,disabled:a,onClick:s,children:a?`Submitting...`:t===`deactivate`?`Deactivate Account`:`Delete Account`})]})]})}function dt({onClose:e}){let[t,n]=(0,X.useState)([{id:`sess_1`,device:`MacBook Pro 16”`,browser:`Chrome 128 / macOS`,location:`San Francisco, CA, USA`,ipAddress:`198.51.100.24`,lastActive:`Active now`,isCurrent:!0},{id:`sess_2`,device:`iPhone 15 Pro Max`,browser:`Opexnal iOS App v2.5`,location:`San Jose, CA, USA`,ipAddress:`198.51.100.89`,lastActive:`2 hours ago`,isCurrent:!1},{id:`sess_3`,device:`iPad Air 5th Gen`,browser:`Safari 17.5 / iPadOS`,location:`Oakland, CA, USA`,ipAddress:`198.51.100.112`,lastActive:`Yesterday`,isCurrent:!1}]);function r(e){n(t=>t.filter(t=>t.id!==e)),V.success(`Session revoked. That device has been signed out immediately.`)}function i(){n(e=>e.filter(e=>e.isCurrent)),V.success(`All other active sessions revoked across all devices.`)}return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsxs)(K,{className:`text-lg font-bold flex items-center gap-2`,children:[(0,Z.jsx)(ee,{className:`h-5 w-5 text-primary`}),`Active Login Sessions`]}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`Review all web browsers, tablets, and mobile devices currently signed into your account.`})]}),(0,Z.jsxs)(`div`,{className:`space-y-2.5 pt-1`,children:[t.map(e=>(0,Z.jsxs)(`div`,{className:`p-3 rounded-2xl border ${e.isCurrent?`border-primary/40 bg-primary/5`:`border-border bg-surface`} flex items-center justify-between gap-2`,children:[(0,Z.jsxs)(`div`,{className:`min-w-0`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:e.device}),e.isCurrent?(0,Z.jsx)(O,{className:`text-[10px] bg-primary text-primary-foreground py-0`,children:`This Device`}):(0,Z.jsx)(`span`,{className:`text-[10px] text-muted-foreground`,children:e.lastActive})]}),(0,Z.jsxs)(`p`,{className:`text-[11px] text-muted-foreground mt-0.5`,children:[e.browser,` • `,e.location]}),(0,Z.jsxs)(`p`,{className:`text-[10px] text-muted-foreground/70 font-mono mt-0.5`,children:[`IP: `,e.ipAddress]})]}),!e.isCurrent&&(0,Z.jsx)(G,{variant:`outline`,size:`sm`,className:`h-8 rounded-xl text-xs text-destructive hover:bg-destructive/10`,onClick:()=>r(e.id),children:`Revoke`})]},e.id)),t.length>1&&(0,Z.jsxs)(G,{variant:`outline`,className:`w-full rounded-xl text-xs text-destructive border-destructive/30 hover:bg-destructive/10 mt-1`,onClick:i,children:[`Log Out of All Other Devices (`,t.length-1,`)`]})]}),(0,Z.jsx)(G,{className:`w-full rounded-xl`,onClick:e,children:`Done`})]})}function ft({onSignOut:e,onClose:t}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Log Out of Opexnal?`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`You will need to enter your credentials or use quick sign-in to access your account again.`})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:t,children:`Cancel`}),(0,Z.jsx)(G,{variant:`destructive`,className:`flex-1 rounded-xl`,onClick:e,children:`Log Out`})]})]})}function pt({onSignOutAll:e,onClose:t}){return(0,Z.jsxs)(`div`,{className:`space-y-4`,children:[(0,Z.jsxs)(F,{children:[(0,Z.jsx)(K,{className:`text-lg font-bold`,children:`Log Out of All Devices?`}),(0,Z.jsx)(q,{className:`text-xs text-muted-foreground`,children:`This will revoke all active sessions across all web browsers, tablets, and phones.`})]}),(0,Z.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,Z.jsx)(G,{variant:`outline`,className:`flex-1 rounded-xl`,onClick:t,children:`Cancel`}),(0,Z.jsx)(G,{variant:`destructive`,className:`flex-1 rounded-xl`,onClick:e,children:`Log Out Everywhere`})]})]})}function mt(){let e=a(),t=s(),{user:n}=pe(),[i,C]=(0,X.useState)(null),[N,F]=(0,X.useState)(``),L=(0,X.useMemo)(()=>de(N),[N]),{data:R}=c({queryKey:[`profile`,n?.id],queryFn:()=>n?.id?ge(n.id):null,enabled:!!n?.id});async function z(){await t.cancelQueries(),t.clear();try{localStorage.removeItem(`guest_user`),localStorage.removeItem(`opexnal_guest_user`),sessionStorage.setItem(`opexnal_explicit_signout`,`true`)}catch{}await o.auth.signOut(),e({to:`/auth`,search:{mode:`login`},replace:!0})}async function B(){await t.cancelQueries(),t.clear();try{localStorage.removeItem(`guest_user`),localStorage.removeItem(`opexnal_guest_user`),sessionStorage.setItem(`opexnal_explicit_signout`,`true`)}catch{}await o.auth.signOut(),e({to:`/auth`,search:{mode:`login`},replace:!0})}let V=R?.username||(typeof n?.user_metadata?.username==`string`?n.user_metadata.username:void 0)||n?.email?.split(`@`)[0]||`user`;return(0,Z.jsx)(ue,{header:(0,Z.jsx)(le,{title:`Settings & Activity`,left:(0,Z.jsx)(r,{to:`/profile`,"aria-label":`Back`,id:`settings-back-btn`,className:`text-muted-foreground hover:text-foreground`,children:(0,Z.jsx)(fe,{className:`h-5 w-5`,"aria-hidden":`true`})})}),children:(0,Z.jsxs)(`div`,{className:`space-y-5 px-3 sm:px-4 py-4 max-w-lg mx-auto pb-16`,children:[(0,Z.jsxs)(`div`,{className:`relative`,id:`settings-search-bar`,children:[(0,Z.jsx)(D,{className:`absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground`,"aria-hidden":`true`}),(0,Z.jsx)(b,{id:`settings-search-input`,type:`search`,placeholder:`Search all settings / સેટિંગ્સ શોધો (e.g. password, notification, પાસવર્ડ)...`,value:N,onChange:e=>F(e.target.value),className:`pl-10 pr-9 rounded-2xl h-11 bg-surface border-border text-xs sm:text-sm shadow-xs`}),N&&(0,Z.jsx)(`button`,{type:`button`,onClick:()=>F(``),className:`absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground`,"aria-label":`Clear search`,children:(0,Z.jsx)(se,{className:`h-4 w-4`})})]}),N.trim()===``?(0,Z.jsxs)(Z.Fragment,{children:[(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-your-account`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`1. Your account (અકાઉન્ટ સેન્ટર)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/profile/edit`,id:`link-edit-profile`,icon:ve,label:`Edit profile`,labelGu:`પ્રોફાઇલ એડિટ કરો`,hint:`Name, username, bio, website & avatar`,hintGu:`નામ, યુઝરનેમ, બાયો અને અવતાર`}),(0,Z.jsx)($,{id:`action-personal-details`,icon:k,label:`Personal details`,labelGu:`વ્યક્તિગત વિગતો`,hint:`Contact email, phone number, birthday & ownership`,hintGu:`ઈમેલ, મોબાઇલ નંબર, જન્મતારીખ અને અકાઉન્ટ ઓનરશિપ`,onClick:()=>C(`personal_details`)}),(0,Z.jsx)($,{id:`action-account-status`,icon:W,label:`Account status`,labelGu:`અકાઉન્ટ સ્ટેટસ`,hint:`Guidelines standing, monetization eligibility & badges`,hintGu:`ગાઇડલાઇન્સ સ્ટેન્ડિંગ, મોનેટાઇઝેશન અને બેજ`,onClick:()=>C(`account_status`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-accounts-center`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`2. Accounts Center (અકાઉન્ટ્સ સેન્ટર)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-accounts-center-hub`,icon:E,label:`Accounts Center`,labelGu:`અકાઉન્ટ્સ સેન્ટર`,hint:`Connected profiles, cross-posting & identity sync`,hintGu:`Opexnal, Facebook એકાઉન્ટ્સ લિંક કરવા અને સિંક`,onClick:()=>C(`accounts_center`)}),(0,Z.jsx)(Q,{to:`/settings/security`,id:`link-password-security`,icon:x,label:`Password and security`,labelGu:`પાસવર્ડ અને સુરક્ષા`,hint:`Password change, TOTP two-factor & audit logs`,hintGu:`પાસવર્ડ બદલવો, 2FA સુરક્ષા અને સિક્યોરિટી ચેક`}),(0,Z.jsx)($,{id:`action-ad-preferences`,icon:g,label:`Personal details & ad preferences`,labelGu:`એડ પ્રેફરન્સ`,hint:`Data usage, creator partner ads & topic preferences`,hintGu:`જાહેરાત ટોપિક્સ અને ટાર્ગેટેડ એડ્સ કંટ્રોલ`,onClick:()=>C(`ad_preferences`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-how-you-use-opexnal`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`3. How you use Opexnal (તમે એપનો ઉપયોગ કેવી રીતે કરો છો)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/activity`,id:`link-your-activity`,icon:U,label:`Your activity & history`,labelGu:`તમારી પ્રવૃત્તિ`,hint:`Follow requests, interactions, tags & mentions`,hintGu:`લાઇક્સ, કમેન્ટ્સ, સ્ટોરી રિપ્લાય અને સર્ચ હિસ્ટ્રી`}),(0,Z.jsx)($,{id:`action-saved-collections`,icon:l,label:`Saved`,labelGu:`સેવ કરેલું`,hint:`Private bookmarks, saved posts & audio collections`,hintGu:`સેવ કરેલા ઓડિયો, રીલ્સ અને પોસ્ટ્સ કલેક્શન`,onClick:()=>C(`saved`)}),(0,Z.jsx)($,{id:`action-archive`,icon:I,label:`Archive`,labelGu:`આર્કાઇવ`,hint:`Stories archive, past reels & temporary post storage`,hintGu:`Stories Archive (જૂની સ્ટોરીઝ) અને Posts Archive`,onClick:()=>C(`archive`)}),(0,Z.jsx)($,{id:`action-time-spent`,icon:M,label:`Time spent`,labelGu:`વિતાવેલો સમય`,hint:`Daily screen time average, break alerts & usage limits`,hintGu:`ડેઇલી સ્ક્રીન લિમિટ અને બ્રેક રિમાઇન્ડર્સ`,onClick:()=>C(`time_spent`)}),(0,Z.jsx)($,{id:`action-notifications`,icon:U,label:`Notifications`,labelGu:`નોટિફિકેશન્સ`,hint:`Push notifications, pause all, DMs & live alerts`,hintGu:`Pause all, Quiet mode (મ્યૂટ સમય) અને એલર્ટ્સ`,onClick:()=>C(`notifications`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-your-insights-and-tools`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`4. Your insights & tools (તમારા ઇનસાઇટ્સ અને ટૂલ્સ)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/ai`,id:`link-ai-studio`,icon:E,label:`Opexnal AI Studio`,labelGu:`AI સ્ટુડિયો`,hint:`Captions, viral hooks, hashtags, reels co-pilot`,hintGu:`વાયરલ કેપ્શન્સ, હુક્સ અને હેશટેગ કો-પાઇલટ`}),(0,Z.jsx)($,{id:`action-creator-insights`,icon:P,label:`Creator insights & analytics`,labelGu:`પ્રોફેશનલ ડેશબોર્ડ`,hint:`7-day reach, profile visits, engagement & followers`,hintGu:`રીચ, એન્ગેજમેન્ટ અને ફોલોઅર્સ એનાલિટિક્સ`,onClick:()=>C(`insights`)}),(0,Z.jsx)($,{id:`action-branded-content`,icon:j,label:`Branded content & partnerships`,labelGu:`બ્રાન્ડેડ કન્ટેન્ટ`,hint:`Commercial tags, paid partnership approvals & disclosures`,hintGu:`પેઇડ પાર્ટનરશિપ લેબલ અને સ્પોન્સર કંટ્રોલ`,onClick:()=>C(`branded_content`)}),(0,Z.jsx)($,{id:`action-account-type`,icon:ve,label:`Account type & professional tools`,labelGu:`અકાઉન્ટ ટાઇપ અને ટૂલ્સ`,hint:`Switch between Creator, Personal, and Business`,hintGu:`પ્રોફેશનલ/ક્રિએટરમાં સ્વિચ કરો અને બ્લુ ટિક`,onClick:()=>C(`account_type`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-subscriptions`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`5. Subscriptions (સબસ્ક્રિપ્શન્સ)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-creator-subscriptions`,icon:A,label:`Creator subscriptions`,labelGu:`ક્રિએટર સબસ્ક્રિપ્શન્સ`,hint:`Manage fan pricing, subscriber-only reels & benefits`,hintGu:`ફેન ટિયર્સ અને એક્સક્લૂસિવ રીલ્સ કમાણી`,onClick:()=>C(`creator_subscriptions`)}),(0,Z.jsx)($,{id:`action-active-subscriptions`,icon:w,label:`Your active subscriptions`,labelGu:`સક્રિય સબસ્ક્રિપ્શન્સ`,hint:`Creators you support, renewal cycles & receipts`,hintGu:`તમે સપોર્ટ કરેલા ક્રિએટર્સ અને રિન્યુઅલ`,onClick:()=>C(`active_subscriptions`)}),(0,Z.jsx)($,{id:`action-subscriber-badges`,icon:W,label:`Subscriber badges & perks`,labelGu:`સબસ્ક્રાઇબર બેજ અને લાભો`,hint:`Custom chat crown, exclusive ring & DM sorting`,hintGu:`કસ્ટમ ક્રાઉન, એક્સક્લૂસિવ રિંગ અને લાભો`,onClick:()=>C(`subscriber_badges`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-who-can-see-your-content`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`6. Who can see your content (તમારું કન્ટેન્ટ કોણ જોઈ શકે છે)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/settings/privacy`,id:`link-account-privacy`,icon:S,label:`Account privacy`,labelGu:`અકાઉન્ટ પ્રાઇવસી`,hint:`Private account toggle, mentions & tag permissions`,hintGu:`પ્રાઇવેટ / પબ્લિક અકાઉન્ટ અને પરમિશન`}),(0,Z.jsx)($,{id:`action-close-friends`,icon:T,label:`Close Friends`,labelGu:`ક્લોઝ ફ્રેન્ડ્સ`,hint:`Curate exclusive green-ring story circle`,hintGu:`ગ્રીન રિંગ સ્ટોરી શેરિંગ માટે અંગત મિત્રોની યાદી`,onClick:()=>C(`close_friends`)}),(0,Z.jsx)($,{id:`action-blocked-accounts`,icon:ae,label:`Blocked accounts`,labelGu:`બ્લોક કરેલા અકાઉન્ટ્સ`,hint:`View blocked profiles and manage unblocking`,hintGu:`બ્લોક કરેલા યુઝર્સની યાદી અને અનબ્લોક`,onClick:()=>C(`blocked_accounts`)}),(0,Z.jsx)($,{id:`action-hide-story`,icon:d,label:`Hide story and live`,labelGu:`સ્ટોરી અને લાઇવ છુપાવો`,hint:`Prevent specific users from viewing your stories`,hintGu:`અમુક યુઝર્સથી સ્ટોરી અને લાઇવ વિડીયો હાઇડ કરવો`,onClick:()=>C(`hide_story`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-how-others-can-interact`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`7. How others can interact with you (બીજા તમારી સાથે કેવી રીતે જોડાઈ શકે)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/messages`,id:`link-messages-replies`,icon:re,label:`Messages and story replies`,labelGu:`મેસેજીસ અને સ્ટોરી રિપ્લાય`,hint:`Message requests, read receipts & direct chat permissions`,hintGu:`મેસેજ રિક્વેસ્ટ અને રીડ રિસિપ્ટ કંટ્રોલ`}),(0,Z.jsx)(Q,{to:`/settings/privacy`,id:`link-tags-mentions`,icon:_e,label:`Tags and mentions`,labelGu:`ટેગ્સ અને મેન્શન્સ`,hint:`Choose who can tag or mention you in posts`,hintGu:`તમને કોણ ટેગ કે મેન્શન કરી શકે તે નક્કી કરો`}),(0,Z.jsx)($,{id:`action-comments-filter`,icon:g,label:`Comments & hidden words`,labelGu:`કમેન્ટ્સ અને હિડન વર્ડ્સ`,hint:`Profanity filter, custom offensive keyword blocklist`,hintGu:`અપશબ્દો ફિલ્ટર અને કસ્ટમ શબ્દો છુપાવો`,onClick:()=>C(`comment_filter`)}),(0,Z.jsx)($,{id:`action-sharing-remixes`,icon:h,label:`Sharing and remixes`,labelGu:`શેરિંગ અને રીમિક્સ`,hint:`Allow reels remixing and story resharing`,hintGu:`રીલ્સ રીમિક્સ અને પોસ્ટ રીશેરિંગ મંજૂરી`,onClick:()=>C(`sharing_remixes`)}),(0,Z.jsx)($,{id:`action-restricted-accounts`,icon:x,label:`Restricted accounts`,labelGu:`રેસ્ટ્રિક્ટેડ અકાઉન્ટ્સ`,hint:`Quietly limit interactions without blocking users`,hintGu:`બ્લોક કર્યા વગર ઇન્ટરેક્શન મર્યાદિત કરો`,onClick:()=>C(`restricted_accounts`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-what-you-see`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`8. What you see (તમે શું જુઓ છો)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-favorites`,icon:w,label:`Favorites`,labelGu:`ફેવરિટ્સ`,hint:`Prioritize posts from starred creators in feed`,hintGu:`પસંદીદા ક્રિએટર્સની પોસ્ટ્સ પહેલાં જુઓ`,onClick:()=>C(`favorites`)}),(0,Z.jsx)($,{id:`action-muted-accounts`,icon:oe,label:`Muted accounts`,labelGu:`મ્યૂટ કરેલા અકાઉન્ટ્સ`,hint:`Manage muted posts, stories and author notes`,hintGu:`મ્યૂટ કરેલી સ્ટોરીઝ અને પોસ્ટ્સ મેનેજ કરો`,onClick:()=>C(`muted_accounts`)}),(0,Z.jsx)($,{id:`action-content-preferences`,icon:g,label:`Content preferences`,labelGu:`કન્ટેન્ટ પ્રેફરન્સ`,hint:`Sensitive content control & explore recommendation tuning`,hintGu:`સેન્સિટિવ કન્ટેન્ટ અને એક્સપ્લોર ભલામણો`,onClick:()=>C(`content_preferences`)}),(0,Z.jsx)($,{id:`action-like-counts`,icon:w,label:`Like and view counts`,labelGu:`લાઇક અને વ્યુ કાઉન્ટ્સ છુપાવો`,hint:`Hide total like and view counts across posts`,hintGu:`બીજાની પોસ્ટ્સ પર લાઇક્સની સંખ્યા છુપાવો`,onClick:()=>C(`like_counts`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-your-app-and-media`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`9. Your app & media (તમારી એપ અને મીડિયા)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-device-permissions`,icon:_,label:`Device permissions`,labelGu:`ડિવાઇસ પરમિશન્સ`,hint:`Camera, microphone, photo library & push notification access`,hintGu:`કેમેરા, માઇક્રોફોન, ફોટો ગેલેરી અને લોકેશન પરમિશન્સ`,onClick:()=>C(`device_permissions`)}),(0,Z.jsx)($,{id:`action-archiving-downloading`,icon:u,label:`Archiving and downloading`,labelGu:`આર્કાઇવિંગ અને ડાઉનલોડિંગ`,hint:`Auto-save to archive and original camera roll download`,hintGu:`સ્ટોરીઝ સેવ કરવી અને ઓરિજિનલ ફોટા ડાઉનલોડ`,onClick:()=>C(`archiving_downloading`)}),(0,Z.jsx)($,{id:`action-accessibility-captions`,icon:g,label:`Accessibility & captions`,labelGu:`એક્સેસિબિલિટી અને કેપ્શન્સ`,hint:`Auto-generated captions & high-contrast visibility`,hintGu:`ઓટોમેટિક કેપ્શન્સ અને વિઝ્યુઅલ સેટિંગ્સ`,onClick:()=>C(`accessibility_captions`)}),(0,Z.jsx)($,{id:`action-language-region`,icon:Y,label:`Language & region`,labelGu:`ભાષા (Language)`,hint:`Display language, Hindi, Hinglish & auto-translations`,hintGu:`ગુજરાતી, હિન્દી, અંગ્રેજી અને પ્રાદેશિક ભાષા`,onClick:()=>C(`language_region`)}),(0,Z.jsx)($,{id:`action-data-usage`,icon:ye,label:`Data usage and media quality`,labelGu:`ડેટા વપરાશ અને મીડિયા ક્વોલિટી`,hint:`Cellular data saver & upload at highest quality`,hintGu:`ડેટા સેવર મોડ અને હાઇ-ક્વોલિટી અપલોડ્સ`,onClick:()=>C(`data_usage`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-family-center`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`10. Family Center (પરિવારો માટે / સુપરવિઝન)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-supervision`,icon:x,label:`Supervision`,labelGu:`સુપરવિઝન (Supervision)`,hint:`Parental controls, invite guardian & screen time limits`,hintGu:`માતા-પિતા માટે સુરક્ષા ટૂલ્સ અને એકાઉન્ટ લિંકિંગ`,onClick:()=>C(`supervision`)}),(0,Z.jsx)($,{id:`action-safety-hub`,icon:v,label:`Education & safety hub`,labelGu:`સેફ્ટી હબ`,hint:`Teen privacy defaults, guardian safety guides & resources`,hintGu:`કિશોરો માટે પ્રાઇવસી ગાઇડ અને સેફ્ટી રિસોર્સિસ`,onClick:()=>C(`safety_hub`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-orders-and-payments`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`11. Orders & payments (ઓર્ડર્સ અને પેમેન્ટ્સ)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-payment-methods`,icon:J,label:`Payment methods`,labelGu:`પેમેન્ટ પદ્ધતિઓ`,hint:`Saved cards, UPI, digital wallet & billing address`,hintGu:`કાર્ડ્સ, UPI અને પેમેન્ટ હિસ્ટ્રી મેનેજ કરો`,onClick:()=>C(`payment_methods`)}),(0,Z.jsx)($,{id:`action-order-history`,icon:f,label:`Order history & receipts`,labelGu:`ઓર્ડર હિસ્ટ્રી`,hint:`Subscription invoices, creator tips & purchase history`,hintGu:`સબસ્ક્રિપ્શન રસીદો અને ખરીદીની વિગતો`,onClick:()=>C(`order_history`)}),(0,Z.jsx)($,{id:`action-payouts`,icon:j,label:`Monetization payouts`,labelGu:`પેઆઉટ સેટિંગ્સ`,hint:`Creator balance, direct deposit details & payout schedule`,hintGu:`બેંક એકાઉન્ટ વિગતો અને કમાણી ઉપાડવી`,onClick:()=>C(`payouts`)})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-more-info-and-support`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`12. More info & support (વધુ માહિતી અને મદદ)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-help-center`,icon:v,label:`Help Center & FAQs`,labelGu:`હેલ્પ સેન્ટર`,hint:`Troubleshooting guides & report a problem`,hintGu:`વારંવાર પૂછાતા પ્રશ્નો અને સમસ્યા રિપોર્ટ કરો`,onClick:()=>C(`help_center`)}),(0,Z.jsx)($,{id:`action-support-requests`,icon:x,label:`Support requests & appeals`,labelGu:`સપોર્ટ રિક્વેસ્ટ`,hint:`Track submitted reports, violations & appeals`,hintGu:`તમારી સબમિટ કરેલી ફરિયાદો અને અપીલ્સ`,onClick:()=>C(`support_requests`)}),(0,Z.jsx)($,{id:`action-about-opexnal`,icon:k,label:`About Opexnal`,labelGu:`અમારા વિશે (About)`,hint:`Platform release v2.5, AI foundation & credits`,hintGu:`એપ વર્ઝન, અપડેટ્સ અને લાઇસન્સ`,onClick:()=>C(`about`)}),(0,Z.jsx)($,{id:`action-terms-of-service`,icon:f,label:`Terms of Service`,labelGu:`નિયમો અને શરતો (Terms)`,hint:`Creator rights, platform guidelines & code of conduct`,hintGu:`પ્લેટફોર્મ નીતિઓ અને યુઝર ગાઇડલાઇન્સ`,onClick:()=>C(`terms`)}),(0,Z.jsx)(Q,{to:`/settings/privacy`,id:`link-privacy-policy`,icon:S,label:`Privacy Policy`,labelGu:`પ્રાઇવસી પોલિસી`,hint:`Data handling, encryption & cookie preferences`,hintGu:`ડેટા સુરક્ષા અને કૂકી પોલિસી`})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-1.5`,id:`section-also-from-opexnal`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`13. Also from Opexnal (Opexnal તરફથી અન્ય)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)(Q,{to:`/ai`,id:`link-opexnal-ai-suite`,icon:E,label:`Opexnal AI Suite`,labelGu:`AI ટૂલ્સ`,hint:`Multimodal generative AI creator engine`,hintGu:`મલ્ટીમોડલ આર્ટિફિશિયલ ઇન્ટેલિજન્સ એન્જિન`}),(0,Z.jsx)(Q,{to:`/messages`,id:`link-opexnal-messenger`,icon:ne,label:`Opexnal Messenger`,labelGu:`મેસેન્જર`,hint:`Fast, direct and encrypted social messaging`,hintGu:`સુરક્ષિત અને ઝડપી મેસેજિંગ`}),(0,Z.jsx)(Q,{to:`/creator`,id:`link-creator-dashboard`,icon:P,label:`Professional Dashboard & Monetization`,labelGu:`પ્રોફેશનલ ડેશબોર્ડ`,hint:`Reach, subscriptions, earnings and creator tools`,hintGu:`કમાણી અને પ્રોફેશનલ ટૂલ્સ`}),(0,Z.jsx)(Q,{to:`/live`,id:`link-live-studio`,icon:ce,label:`Live Broadcast Studio`,labelGu:`લાઇવ સ્ટ્રીમિંગ`,hint:`Go live, Q&A, and interactive audience broadcasts`,hintGu:`લાઇવ બ્રોડકાસ્ટ અને દર્શકો સાથે ચર્ચા`}),(0,Z.jsx)(Q,{to:`/archive`,id:`link-archive-deleted`,icon:I,label:`Archive & Recently Deleted`,labelGu:`આર્કાઇવ અને ડિલીટ`,hint:`30-day restore, posts archive & story history`,hintGu:`આર્કાઇવ અને પુનઃસ્થાપિત ટૂલ્સ`}),(0,Z.jsx)(Q,{to:`/close-friends`,id:`link-close-friends`,icon:T,label:`Close Friends & Favorites`,labelGu:`ક્લોઝ ફ્રેન્ડ્સ અને ફેવરિટ્સ`,hint:`Private story audience & home feed prioritization`,hintGu:`ખાસ મિત્રો અને પ્રાથમિક ફીડ`}),(0,Z.jsx)(Q,{to:`/help`,id:`link-help-center`,icon:v,label:`Help Center & Support Reports`,labelGu:`હેલ્પ સેન્ટર અને સપોર્ટ`,hint:`Report a problem, case tracker & account status`,hintGu:`સમસ્યા રિપોર્ટ કરો અને કેસ ટ્રેકિંગ`}),(0,Z.jsx)(Q,{to:`/admin`,id:`link-super-admin`,icon:x,label:`Super Admin & System Operations`,labelGu:`સુપર એડમિન કંટ્રોલ`,hint:`21-Engine matrix, moderation queue & boundaries`,hintGu:`પ્લેટફોર્મ હેલ્થ અને મોડરેશન કતાર`})]})]}),(0,Z.jsxs)(`section`,{className:`space-y-2 pt-2`,id:`section-login`,children:[(0,Z.jsx)(`p`,{className:`px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,children:`14. Login & Account Management (લોગિન અને એકાઉન્ટ વ્યવસ્થાપન)`}),(0,Z.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,Z.jsx)($,{id:`action-download-data`,icon:u,label:`Download your data`,labelGu:`તમારી માહિતી ડાઉનલોડ કરો`,hint:`Request a machine-readable JSON or HTML export of your data`,hintGu:`તમારા ફોટા, વિડીયો અને એકાઉન્ટ ડેટાની નકલ મેળવો`,onClick:()=>C(`download_data`)}),(0,Z.jsx)($,{id:`action-recently-deleted`,icon:p,label:`Recently deleted`,labelGu:`તાજેતરમાં ડિલીટ કરેલું`,hint:`Review, restore, or permanently remove items deleted within 30 days`,hintGu:`30 દિવસમાં ડિલીટ કરેલું કન્ટેન્ટ પાછું મેળવો`,onClick:()=>C(`recently_deleted`)}),(0,Z.jsx)($,{id:`action-active-sessions`,icon:ee,label:`Active login sessions`,labelGu:`કયા ડિવાઇસમાં લોગિન છે તે જોવું`,hint:`Review active devices, web browsers, and locations signed into your account`,hintGu:`સક્રિય ડિવાઇસ, લોકેશન્સ અને લોગિન એલર્ટ્સ`,onClick:()=>C(`active_sessions`)}),(0,Z.jsx)($,{id:`action-deactivate-account`,icon:y,label:`Deactivate or delete account`,labelGu:`અકાઉન્ટ ડિલીટ કે ડીએક્ટિવેટ કરવું`,hint:`Temporarily pause your presence or permanently delete your profile`,hintGu:`ઓનરશિપ કંટ્રોલ: અસ્થાયી ડીએક્ટિવેટ અથવા કાયમી ડિલીટ`,onClick:()=>C(`deactivate_account`)}),(0,Z.jsx)($,{id:`action-add-account`,icon:ie,label:`Add account`,labelGu:`નવું એકાઉન્ટ ઉમેરો`,hint:`Log into an existing secondary creator account`,hintGu:`બીજું એકાઉન્ટ લોગિન કરો અથવા લિંક કરો`,onClick:()=>C(`add_account`)}),(0,Z.jsx)($,{id:`action-switch-account`,icon:m,label:`Switch accounts`,labelGu:`એકાઉન્ટ સ્વિચ કરો`,hint:`Seamlessly switch active profile session`,hintGu:`સરળતાથી પ્રોફાઇલ્સ વચ્ચે બદલો`,onClick:()=>C(`switch_account`)}),(0,Z.jsxs)(G,{id:`btn-sign-out-current`,variant:`surface`,size:`xl`,className:`w-full rounded-2xl text-destructive hover:bg-destructive/10 border-destructive/20 mt-1`,onClick:()=>C(`logout_confirm`),children:[(0,Z.jsx)(te,{className:`h-4 w-4 mr-2`,"aria-hidden":`true`}),`Log out of @`,V]}),(0,Z.jsx)(G,{id:`btn-sign-out-all`,variant:`ghost`,size:`sm`,className:`w-full text-muted-foreground hover:text-foreground text-xs`,onClick:()=>C(`logout_all_confirm`),children:`Log out of all accounts`})]})]})]}):(0,Z.jsxs)(`div`,{className:`space-y-3`,id:`settings-search-results`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center justify-between px-1`,children:[(0,Z.jsxs)(`p`,{className:`text-xs font-semibold text-foreground`,children:[`Search Results (`,L.length,`)`]}),(0,Z.jsx)(`button`,{type:`button`,onClick:()=>F(``),className:`text-[11px] text-primary hover:underline`,children:`Clear`})]}),L.length===0?(0,Z.jsxs)(`div`,{className:`py-8 text-center space-y-2 rounded-2xl border border-border bg-surface p-4`,children:[(0,Z.jsx)(D,{className:`h-8 w-8 text-muted-foreground/40 mx-auto`}),(0,Z.jsxs)(`p`,{className:`text-xs font-semibold text-foreground`,children:[`No matching settings found for “`,N,`”`]}),(0,Z.jsx)(`p`,{className:`text-[11px] text-muted-foreground max-w-xs mx-auto`,children:`Try searching for keywords like password (પાસવર્ડ), notifications (નોટિફિકેશન), blocked (બ્લોક), payments (પેમેન્ટ), or subscription (સબસ્ક્રિપ્શન).`}),(0,Z.jsx)(`div`,{className:`flex flex-wrap justify-center gap-1.5 pt-2`,children:[`password`,`પાસવર્ડ`,`notifications`,`નોટિફિકેશન`,`blocked`,`બ્લોક`,`payments`,`પેમેન્ટ`,`archive`,`આર્કાઇવ`].map(e=>(0,Z.jsx)(O,{variant:`outline`,className:`cursor-pointer text-[10px] hover:bg-secondary`,onClick:()=>F(e),children:e},e))})]}):(0,Z.jsx)(`div`,{className:`space-y-1.5`,children:L.map(e=>{let t=e.descriptionGu?`${e.description} — ${e.descriptionGu}`:e.description;return e.route?(0,Z.jsxs)(r,{to:e.route,className:`flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer`,children:[(0,Z.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2 flex-wrap`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:e.title}),e.titleGu&&e.titleGu!==e.title&&(0,Z.jsxs)(`span`,{className:`text-[11px] text-muted-foreground font-normal`,children:[`• `,e.titleGu]}),(0,Z.jsx)(O,{variant:`secondary`,className:`text-[9px] py-0 px-1.5 ml-auto sm:ml-0`,children:e.categoryTitle})]}),(0,Z.jsx)(`p`,{className:`truncate text-[11px] text-muted-foreground mt-0.5`,children:t})]}),(0,Z.jsx)(H,{className:`h-4 w-4 text-muted-foreground shrink-0`})]},e.id):(0,Z.jsxs)(`button`,{type:`button`,onClick:()=>{e.dialog&&C(e.dialog)},className:`w-full flex items-center text-left gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer`,children:[(0,Z.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-2 flex-wrap`,children:[(0,Z.jsx)(`p`,{className:`text-xs font-semibold text-foreground`,children:e.title}),e.titleGu&&e.titleGu!==e.title&&(0,Z.jsxs)(`span`,{className:`text-[11px] text-muted-foreground font-normal`,children:[`• `,e.titleGu]}),(0,Z.jsx)(O,{variant:`secondary`,className:`text-[9px] py-0 px-1.5 ml-auto sm:ml-0`,children:e.categoryTitle})]}),(0,Z.jsx)(`p`,{className:`truncate text-[11px] text-muted-foreground mt-0.5`,children:t})]}),(0,Z.jsx)(H,{className:`h-4 w-4 text-muted-foreground shrink-0`})]},e.id)})})]}),(0,Z.jsx)(be,{dialog:i,onClose:()=>C(null),username:V,onSignOut:z,onSignOutAll:B})]})})}function Q({to:e,id:t,icon:n,label:i,labelGu:a,hint:o,hintGu:s}){return(0,Z.jsxs)(r,{to:e,id:t,className:`flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 transition-colors hover:bg-secondary cursor-pointer`,children:[(0,Z.jsx)(n,{className:`h-5 w-5 text-primary shrink-0`,"aria-hidden":`true`}),(0,Z.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-1.5 flex-wrap`,children:[(0,Z.jsx)(`p`,{className:`text-sm font-semibold`,children:i}),a&&(0,Z.jsxs)(`span`,{className:`text-xs text-muted-foreground font-normal`,children:[`(`,a,`)`]})]}),(0,Z.jsx)(`p`,{className:`truncate text-xs text-muted-foreground`,children:s?`${o} • ${s}`:o})]}),(0,Z.jsx)(H,{className:`ml-auto h-4 w-4 text-muted-foreground shrink-0`,"aria-hidden":`true`})]})}function $({id:e,icon:t,label:n,labelGu:r,hint:i,hintGu:a,onClick:o}){return(0,Z.jsxs)(`button`,{type:`button`,id:e,onClick:o,className:`w-full flex items-center text-left gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 transition-colors hover:bg-secondary cursor-pointer`,children:[(0,Z.jsx)(t,{className:`h-5 w-5 text-primary shrink-0`,"aria-hidden":`true`}),(0,Z.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,Z.jsxs)(`div`,{className:`flex items-center gap-1.5 flex-wrap`,children:[(0,Z.jsx)(`p`,{className:`text-sm font-semibold text-foreground`,children:n}),r&&(0,Z.jsxs)(`span`,{className:`text-xs text-muted-foreground font-normal`,children:[`(`,r,`)`]})]}),(0,Z.jsx)(`p`,{className:`truncate text-xs text-muted-foreground`,children:a?`${i} • ${a}`:i})]}),(0,Z.jsx)(H,{className:`ml-auto h-4 w-4 text-muted-foreground shrink-0`,"aria-hidden":`true`})]})}export{mt as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { n as r, t as i } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as a } from "./useNavigate-BJOrhi-q.js";
+import { t as o } from "./client-CNuAEkjg.js";
+import { j as s } from "./removable-Bti6oWPM.js";
+import { t as c } from "./useQuery-Sthak1vL.js";
+import { t as l } from "./bookmark-ClGYgWxW.js";
+import { t as u } from "./download-BGQn3RQm.js";
+import { t as d } from "./eye-off-BTNjnLZQ.js";
+import { t as f } from "./file-text-D6gwwmni.js";
+import { t as p } from "./history-DBuwN939.js";
+import { n as ee, t as te } from "./log-out-Bp14RzIZ.js";
+import { t as ne } from "./message-circle-KQTsD60l.js";
+import { n as re, t as m } from "./refresh-cw-Bz3isKCO.js";
+import { t as h } from "./share-2-Cttt8bCg.js";
+import { t as g } from "./sliders-vertical-BKVqb5uL.js";
+import { t as _ } from "./smartphone-DyfA3-E3.js";
+import { t as ie } from "./user-plus-BKH1pxu8.js";
+import { t as ae } from "./user-x-CwklV8H9.js";
+import { t as oe } from "./volume-x-HR6YYz3M.js";
+import { t as se } from "./x-CeqC2pJc.js";
+import {
+  $ as v,
+  A as y,
+  B as ce,
+  C as b,
+  E as le,
+  F as x,
+  H as S,
+  I as C,
+  K as w,
+  O as T,
+  P as E,
+  R as D,
+  S as O,
+  T as ue,
+  W as k,
+  X as A,
+  Y as j,
+  Z as M,
+  _ as N,
+  at as P,
+  b as F,
+  ct as I,
+  et as L,
+  f as R,
+  h as de,
+  it as z,
+  j as B,
+  lt as V,
+  nt as H,
+  ot as U,
+  rt as fe,
+  st as W,
+  u as pe,
+  v as me,
+  w as G,
+  x as K,
+  y as q,
+  z as he,
+} from "./index-BPJbQuiK.js";
+import { n as ge } from "./profile-qFNPerqP.js";
+var _e = i(`at-sign`, [
+    [`circle`, { cx: `12`, cy: `12`, r: `4`, key: `4exip2` }],
+    [`path`, { d: `M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8`, key: `7n84p3` }],
+  ]),
+  J = i(`credit-card`, [
+    [`rect`, { width: `20`, height: `14`, x: `2`, y: `5`, rx: `2`, key: `ynyp8z` }],
+    [`line`, { x1: `2`, x2: `22`, y1: `10`, y2: `10`, key: `1b3vmo` }],
+  ]),
+  Y = i(`languages`, [
+    [`path`, { d: `m5 8 6 6`, key: `1wu5hv` }],
+    [`path`, { d: `m4 14 6-6 2-3`, key: `1k1g8d` }],
+    [`path`, { d: `M2 5h12`, key: `or177f` }],
+    [`path`, { d: `M7 2h1`, key: `1t2jsx` }],
+    [`path`, { d: `m22 22-5-10-5 10`, key: `don7ne` }],
+    [`path`, { d: `M14 18h6`, key: `1m8k6r` }],
+  ]),
+  ve = i(`user-cog`, [
+    [`path`, { d: `M10 15H6a4 4 0 0 0-4 4v2`, key: `1nfge6` }],
+    [`path`, { d: `m14.305 16.53.923-.382`, key: `1itpsq` }],
+    [`path`, { d: `m15.228 13.852-.923-.383`, key: `eplpkm` }],
+    [`path`, { d: `m16.852 12.228-.383-.923`, key: `13v3q0` }],
+    [`path`, { d: `m16.852 17.772-.383.924`, key: `1i8mnm` }],
+    [`path`, { d: `m19.148 12.228.383-.923`, key: `1q8j1v` }],
+    [`path`, { d: `m19.53 18.696-.382-.924`, key: `vk1qj3` }],
+    [`path`, { d: `m20.772 13.852.924-.383`, key: `n880s0` }],
+    [`path`, { d: `m20.772 16.148.924.383`, key: `1g6xey` }],
+    [`circle`, { cx: `18`, cy: `15`, r: `3`, key: `gjjjvw` }],
+    [`circle`, { cx: `9`, cy: `7`, r: `4`, key: `nufk8` }],
+  ]),
+  ye = i(`wifi`, [
+    [`path`, { d: `M12 20h.01`, key: `zekei9` }],
+    [`path`, { d: `M2 8.82a15 15 0 0 1 20 0`, key: `dnpr2z` }],
+    [`path`, { d: `M5 12.859a10 10 0 0 1 14 0`, key: `1x1e6c` }],
+    [`path`, { d: `M8.5 16.429a5 5 0 0 1 7 0`, key: `1bycff` }],
+  ]),
+  X = t(e(), 1),
+  Z = n();
+function be({ dialog: e, onClose: t, username: n = `creator`, onSignOut: r, onSignOutAll: i }) {
+  return e
+    ? (0, Z.jsx)(N, {
+        open: !!e,
+        onOpenChange: (e) => !e && t(),
+        children: (0, Z.jsxs)(me, {
+          className: `max-w-md max-h-[85vh] overflow-y-auto rounded-3xl p-5 sm:p-6 bg-card border-border`,
+          children: [
+            e === `personal_details` && (0, Z.jsx)(xe, { username: n, onClose: t }),
+            e === `account_status` && (0, Z.jsx)(Se, { username: n, onClose: t }),
+            e === `accounts_center` && (0, Z.jsx)(Ce, { username: n, onClose: t }),
+            e === `ad_preferences` && (0, Z.jsx)(we, { onClose: t }),
+            e === `saved` && (0, Z.jsx)(Te, { onClose: t }),
+            e === `archive` && (0, Z.jsx)(Ee, { onClose: t }),
+            e === `time_spent` && (0, Z.jsx)(De, { onClose: t }),
+            e === `notifications` && (0, Z.jsx)(Oe, { onClose: t }),
+            e === `insights` && (0, Z.jsx)(ke, { onClose: t }),
+            e === `branded_content` && (0, Z.jsx)(Ae, { onClose: t }),
+            e === `account_type` && (0, Z.jsx)(je, { onClose: t }),
+            e === `creator_subscriptions` && (0, Z.jsx)(Me, { onClose: t }),
+            e === `active_subscriptions` && (0, Z.jsx)(Ne, { onClose: t }),
+            e === `subscriber_badges` && (0, Z.jsx)(Pe, { onClose: t }),
+            e === `close_friends` && (0, Z.jsx)(Fe, { onClose: t }),
+            e === `blocked_accounts` && (0, Z.jsx)(Ie, { onClose: t }),
+            e === `hide_story` && (0, Z.jsx)(Le, { onClose: t }),
+            e === `comment_filter` && (0, Z.jsx)(Re, { onClose: t }),
+            e === `sharing_remixes` && (0, Z.jsx)(ze, { onClose: t }),
+            e === `restricted_accounts` && (0, Z.jsx)(Be, { onClose: t }),
+            e === `favorites` && (0, Z.jsx)(Ve, { onClose: t }),
+            e === `muted_accounts` && (0, Z.jsx)(He, { onClose: t }),
+            e === `content_preferences` && (0, Z.jsx)(Ue, { onClose: t }),
+            e === `like_counts` && (0, Z.jsx)(We, { onClose: t }),
+            e === `device_permissions` && (0, Z.jsx)(Ge, { onClose: t }),
+            e === `archiving_downloading` && (0, Z.jsx)(Ke, { onClose: t }),
+            e === `accessibility_captions` && (0, Z.jsx)(qe, { onClose: t }),
+            e === `language_region` && (0, Z.jsx)(Je, { onClose: t }),
+            e === `data_usage` && (0, Z.jsx)(Ye, { onClose: t }),
+            e === `supervision` && (0, Z.jsx)(Xe, { onClose: t }),
+            e === `safety_hub` && (0, Z.jsx)(Ze, { onClose: t }),
+            e === `payment_methods` && (0, Z.jsx)(Qe, { onClose: t }),
+            e === `order_history` && (0, Z.jsx)($e, { onClose: t }),
+            e === `payouts` && (0, Z.jsx)(et, { onClose: t }),
+            e === `help_center` && (0, Z.jsx)(tt, { onClose: t }),
+            e === `support_requests` && (0, Z.jsx)(nt, { onClose: t }),
+            e === `about` && (0, Z.jsx)(rt, { onClose: t }),
+            e === `terms` && (0, Z.jsx)(it, { onClose: t }),
+            e === `creator_web` && (0, Z.jsx)(at, { onClose: t }),
+            e === `add_account` && (0, Z.jsx)(ot, { onClose: t }),
+            e === `switch_account` && (0, Z.jsx)(st, { username: n, onClose: t }),
+            e === `download_data` && (0, Z.jsx)(ct, { onClose: t }),
+            e === `recently_deleted` && (0, Z.jsx)(lt, { onClose: t }),
+            e === `deactivate_account` && (0, Z.jsx)(ut, { onClose: t }),
+            e === `active_sessions` && (0, Z.jsx)(dt, { onClose: t }),
+            e === `logout_confirm` && (0, Z.jsx)(ft, { onSignOut: r, onClose: t }),
+            e === `logout_all_confirm` && (0, Z.jsx)(pt, { onSignOutAll: i, onClose: t }),
+          ],
+        }),
+      })
+    : null;
+}
+function xe({ username: e, onClose: t }) {
+  let [n, r] = (0, X.useState)(() => localStorage.getItem(`opexnal_user_email`) || ``),
+    [i, a] = (0, X.useState)(() => localStorage.getItem(`opexnal_user_phone`) || ``),
+    [o, s] = (0, X.useState)(() => localStorage.getItem(`opexnal_user_dob`) || ``);
+  function c() {
+    (localStorage.setItem(`opexnal_user_email`, n),
+      localStorage.setItem(`opexnal_user_phone`, i),
+      localStorage.setItem(`opexnal_user_dob`, o),
+      V.success(`Personal details updated`),
+      t());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Personal Details` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Opexnal uses this information to keep your account secure and verified.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-2`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Contact Email`,
+              }),
+              (0, Z.jsx)(b, {
+                value: n,
+                onChange: (e) => r(e.target.value),
+                className: `rounded-xl`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Phone Number`,
+              }),
+              (0, Z.jsx)(b, {
+                value: i,
+                onChange: (e) => a(e.target.value),
+                className: `rounded-xl`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Date of Birth`,
+              }),
+              (0, Z.jsx)(b, {
+                type: `date`,
+                value: o,
+                onChange: (e) => s(e.target.value),
+                className: `rounded-xl`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground flex items-center justify-between`,
+            children: [
+              (0, Z.jsx)(`span`, { children: `Account Ownership & Confirmation` }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `text-emerald-500 border-emerald-500/30`,
+                children: `Verified`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-3`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: t,
+            children: `Cancel`,
+          }),
+          (0, Z.jsx)(G, { className: `flex-1 rounded-xl`, onClick: c, children: `Save Changes` }),
+        ],
+      }),
+    ],
+  });
+}
+function Se({ username: e, onClose: t }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Account Status` }),
+          (0, Z.jsxs)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: [
+              `Track policy standing, community standards, and monetization eligibility for @`,
+              e,
+              `.`,
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-2`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center gap-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20`,
+            children: [
+              (0, Z.jsx)(L, { className: `h-5 w-5 text-emerald-500 shrink-0` }),
+              (0, Z.jsxs)(`div`, {
+                className: `text-xs`,
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `font-semibold text-emerald-600 dark:text-emerald-400`,
+                    children: `Community Guidelines: Clean`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-muted-foreground`,
+                    children: `You have zero strikes or reported violations.`,
+                  }),
+                ],
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center gap-3 p-3 rounded-2xl bg-primary/10 border border-primary/20`,
+            children: [
+              (0, Z.jsx)(W, { className: `h-5 w-5 text-primary shrink-0` }),
+              (0, Z.jsxs)(`div`, {
+                className: `text-xs`,
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `font-semibold text-foreground`,
+                    children: `Creator Monetization: Eligible`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-muted-foreground`,
+                    children: `Subscription gifts and brand partnerships are unlocked.`,
+                  }),
+                ],
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center gap-3 p-3 rounded-2xl bg-secondary border border-border`,
+            children: [
+              (0, Z.jsx)(x, { className: `h-5 w-5 text-muted-foreground shrink-0` }),
+              (0, Z.jsxs)(`div`, {
+                className: `text-xs`,
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `font-semibold text-foreground`,
+                    children: `Search Recommendation: Recommended`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-muted-foreground`,
+                    children: `Your content is eligible to be shown in Explore and Reels.`,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl mt-2`, onClick: t, children: `Understood` }),
+    ],
+  });
+}
+function Ce({ username: e, onClose: t }) {
+  let [n, r] = (0, X.useState)(() => localStorage.getItem(`opexnal_crosspost`) === `true`);
+  function i(e) {
+    (r(e),
+      localStorage.setItem(`opexnal_crosspost`, String(e)),
+      V.success(e ? `Cross-posting to connected accounts enabled` : `Cross-posting disabled`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(E, { className: `h-5 w-5 text-primary` }),
+              `Opexnal Accounts Center`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Manage connected profiles, synchronized experiences, and identity settings across platforms.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-1`,
+        children: [
+          (0, Z.jsx)(`div`, {
+            className: `rounded-2xl border border-primary/30 bg-primary/5 p-3.5 space-y-2`,
+            children: (0, Z.jsxs)(`div`, {
+              className: `flex items-center justify-between`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  className: `flex items-center gap-2.5`,
+                  children: [
+                    (0, Z.jsx)(`div`, {
+                      className: `h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-sm text-primary`,
+                      children: e[0]?.toUpperCase() || `O`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      children: [
+                        (0, Z.jsxs)(`p`, {
+                          className: `text-sm font-semibold`,
+                          children: [`@`, e],
+                        }),
+                        (0, Z.jsx)(`p`, {
+                          className: `text-[11px] text-muted-foreground`,
+                          children: `Primary Opexnal Profile`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsx)(O, { variant: `secondary`, children: `Active` }),
+              ],
+            }),
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Cross-Posting & Stories Sync`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Automatically share reels and stories to connected networks`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: n, onCheckedChange: i }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Sync Name & Profile Picture`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Keep avatar and display name updated across services`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, {
+                defaultChecked: !0,
+                onCheckedChange: (e) =>
+                  V.success(e ? `Profile sync active` : `Profile sync stopped`),
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: t,
+        children: `Close Accounts Center`,
+      }),
+    ],
+  });
+}
+function we({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_personalized_ads`) !== `false`);
+  function r(e) {
+    (n(e),
+      localStorage.setItem(`opexnal_personalized_ads`, String(e)),
+      V.success(e ? `Personalized recommendations enabled` : `Generic ad delivery enabled`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, {
+            className: `text-lg font-bold`,
+            children: `Personal Details & Ad Preferences`,
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Control how your interests and creator interactions shape sponsored posts and recommendations.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-2`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Interest-Based Ads`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Show brand sponsorships relevant to your content tags`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: r }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl border border-border bg-secondary/30 space-y-1.5`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-xs font-semibold`,
+                children: `Top Creator Topics`,
+              }),
+              (0, Z.jsx)(`div`, {
+                className: `flex flex-wrap gap-1.5 pt-1`,
+                children: [`Technology`, `Photography`, `AI & Design`, `Music`, `Travel`].map((e) =>
+                  (0, Z.jsx)(O, { variant: `outline`, className: `text-[11px]`, children: e }, e),
+                ),
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function Te({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`posts`);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(l, { className: `h-5 w-5 text-primary` }), `Saved & Collections`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Only you can see what you have saved in your private bookmarks.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `flex gap-2 border-b border-border pb-2`,
+        children: [`posts`, `audio`, `collections`].map((e) =>
+          (0, Z.jsx)(
+            G,
+            {
+              variant: t === e ? `secondary` : `ghost`,
+              size: `sm`,
+              className: `capitalize rounded-xl text-xs`,
+              onClick: () => n(e),
+              children: e,
+            },
+            e,
+          ),
+        ),
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `py-6 text-center space-y-2`,
+        children: [
+          (0, Z.jsx)(l, { className: `h-8 w-8 text-muted-foreground/50 mx-auto` }),
+          (0, Z.jsx)(`p`, { className: `text-sm font-semibold`, children: `All Saved Items` }),
+          (0, Z.jsx)(`p`, {
+            className: `text-xs text-muted-foreground max-w-xs mx-auto`,
+            children: `Posts, reels, and audio tracks you bookmark while exploring Opexnal will appear here.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Back to Settings` }),
+    ],
+  });
+}
+function Ee({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(I, { className: `h-5 w-5 text-primary` }), `Archive`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Archived stories, reels, and posts are safely preserved and visible only to you.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Stories Archive`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Automatic 24-hour retention enabled`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `text-emerald-500`,
+                children: `Active`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Posts & Reels Archive`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Temporarily unpublish without deleting`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(G, {
+                size: `sm`,
+                variant: `outline`,
+                className: `rounded-xl text-xs`,
+                onClick: () => V.info(`No posts currently archived`),
+                children: `View`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function De({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_time_reminder`) || `30`),
+    [r, i] = (0, X.useState)(() => localStorage.getItem(`opexnal_break_reminders`) !== `false`);
+  function a() {
+    (localStorage.setItem(`opexnal_time_reminder`, t),
+      localStorage.setItem(`opexnal_break_reminders`, String(r)),
+      V.success(`Time management goals updated`),
+      e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(M, { className: `h-5 w-5 text-primary` }),
+              `Time Spent & Digital Wellbeing`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Monitor your time on Opexnal and configure mindful break alerts.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-4 rounded-2xl bg-primary/10 border border-primary/20 text-center space-y-1`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `text-[11px] font-semibold text-primary uppercase tracking-wider`,
+            children: `Daily Average`,
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-3xl font-extrabold text-foreground`,
+            children: `24m`,
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-xs text-muted-foreground`,
+            children: `You spent 12% less time this week compared to last week.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Daily Usage Reminder`,
+              }),
+              (0, Z.jsx)(`div`, {
+                className: `flex gap-2`,
+                children: [`15`, `30`, `45`, `60`].map((e) =>
+                  (0, Z.jsxs)(
+                    G,
+                    {
+                      type: `button`,
+                      variant: t === e ? `default` : `outline`,
+                      size: `sm`,
+                      className: `flex-1 rounded-xl text-xs`,
+                      onClick: () => n(e),
+                      children: [e, `m`],
+                    },
+                    e,
+                  ),
+                ),
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Take a Break Notifications`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Reminder to step away after 20 minutes of scrolling`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: r, onCheckedChange: i }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: a, children: `Save Preferences` }),
+    ],
+  });
+}
+function Oe({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_notif_pause`) === `true`),
+    [r, i] = (0, X.useState)(!0),
+    [a, o] = (0, X.useState)(!0),
+    [s, c] = (0, X.useState)(!0),
+    [l, u] = (0, X.useState)(!0);
+  function d(e) {
+    (n(e),
+      localStorage.setItem(`opexnal_notif_pause`, String(e)),
+      V.success(e ? `All push notifications paused` : `Push notifications resumed`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(U, { className: `h-5 w-5 text-primary` }),
+              `Notification Preferences`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Choose what alerts reach your device and email inbox.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-primary/30 bg-primary/5`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-bold text-foreground`,
+                    children: `Pause All Notifications`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Temporarily silence all activity pushes`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: d }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `text-xs font-semibold`,
+                children: `Likes & Reactions`,
+              }),
+              (0, Z.jsx)(R, { checked: r && !t, disabled: t, onCheckedChange: i }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `text-xs font-semibold`,
+                children: `Comments & Replies`,
+              }),
+              (0, Z.jsx)(R, { checked: a && !t, disabled: t, onCheckedChange: o }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `text-xs font-semibold`,
+                children: `Direct Messages & Chats`,
+              }),
+              (0, Z.jsx)(R, { checked: s && !t, disabled: t, onCheckedChange: c }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `text-xs font-semibold`,
+                children: `Reels & Live Broadcasts`,
+              }),
+              (0, Z.jsx)(R, { checked: l && !t, disabled: t, onCheckedChange: u }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function ke({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(P, { className: `h-5 w-5 text-primary` }),
+              `Creator Insights & Analytics`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Performance metrics over the last 7 days for your profile and stories.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `grid grid-cols-2 gap-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl bg-secondary/50 border border-border`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: `Accounts Reached`,
+              }),
+              (0, Z.jsx)(`p`, {
+                className: `text-xl font-bold text-foreground`,
+                children: `14,280`,
+              }),
+              (0, Z.jsx)(`span`, {
+                className: `text-[10px] text-emerald-500 font-semibold`,
+                children: `+18.4% vs last week`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl bg-secondary/50 border border-border`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: `Interactions`,
+              }),
+              (0, Z.jsx)(`p`, {
+                className: `text-xl font-bold text-foreground`,
+                children: `1,894`,
+              }),
+              (0, Z.jsx)(`span`, {
+                className: `text-[10px] text-emerald-500 font-semibold`,
+                children: `+9.2% engagement`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl bg-secondary/50 border border-border`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: `Profile Visits`,
+              }),
+              (0, Z.jsx)(`p`, { className: `text-xl font-bold text-foreground`, children: `640` }),
+              (0, Z.jsx)(`span`, {
+                className: `text-[10px] text-primary font-semibold`,
+                children: `Top referral: Reels`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl bg-secondary/50 border border-border`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: `New Followers`,
+              }),
+              (0, Z.jsx)(`p`, { className: `text-xl font-bold text-foreground`, children: `+85` }),
+              (0, Z.jsx)(`span`, {
+                className: `text-[10px] text-emerald-500 font-semibold`,
+                children: `98% organic`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Close Insights` }),
+    ],
+  });
+}
+function Ae({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(j, { className: `h-5 w-5 text-primary` }),
+              `Branded Content & Partnerships`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Tools for commercial tags, paid partnership disclosures, and brand partner approvals.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold text-foreground`,
+                    children: `Partnership Eligibility Status`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Compliant with Opexnal Branded Content policies`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `text-emerald-500 border-emerald-500/30`,
+                children: `Eligible`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Require Brand Partner Approval`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Only approved brand tags can feature your content`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function je({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_account_type`) || `Creator`);
+  function r(t) {
+    (n(t),
+      localStorage.setItem(`opexnal_account_type`, t),
+      V.success(`Account switched to ${t}`),
+      e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, {
+            className: `text-lg font-bold`,
+            children: `Account Type & Professional Tools`,
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Choose the account configuration that best matches your workflow.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          {
+            id: `Creator`,
+            title: `Creator Account`,
+            desc: `Best for influencers, artists, filmmakers & content producers`,
+          },
+          {
+            id: `Business`,
+            title: `Business Account`,
+            desc: `Best for retailers, local businesses, brands & organizations`,
+          },
+          {
+            id: `Personal`,
+            title: `Personal Account`,
+            desc: `Standard private or casual personal social profile`,
+          },
+        ].map((e) =>
+          (0, Z.jsxs)(
+            `div`,
+            {
+              onClick: () => r(e.id),
+              className: `p-3.5 rounded-2xl border cursor-pointer transition-colors flex items-center justify-between ${t === e.id ? `border-primary bg-primary/10` : `border-border bg-surface hover:bg-secondary`}`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `text-xs font-bold text-foreground`,
+                      children: e.title,
+                    }),
+                    (0, Z.jsx)(`p`, {
+                      className: `text-[11px] text-muted-foreground`,
+                      children: e.desc,
+                    }),
+                  ],
+                }),
+                t === e.id && (0, Z.jsx)(z, { className: `h-4 w-4 text-primary` }),
+              ],
+            },
+            e.id,
+          ),
+        ),
+      }),
+    ],
+  });
+}
+function Me({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`4.99`),
+    [r, i] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between gap-2`,
+            children: [
+              (0, Z.jsxs)(K, {
+                className: `text-lg font-bold flex items-center gap-2`,
+                children: [
+                  (0, Z.jsx)(A, { className: `h-5 w-5 text-amber-500` }),
+                  `Creator Subscriptions`,
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,
+                children: `NEEDS PAYMENT PROVIDER CONFIGURATION`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Offer monthly subscriber-only stories, exclusive reels, and badges to supporters.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs space-y-1`,
+        children: [
+          (0, Z.jsxs)(`p`, {
+            className: `font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5`,
+            children: [
+              (0, Z.jsx)(y, { className: `h-3.5 w-3.5` }),
+              `Server-Authoritative Billing Notice`,
+            ],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-muted-foreground text-[11px] leading-relaxed`,
+            children: `Creator tier pricing and subscriber-exclusive access are validated server-side. Live payment processing and automated recurring renewals require an active Stripe Connect or payment gateway integration.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Enable Fan Subscriptions`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Allow followers to subscribe monthly`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: r, onCheckedChange: i }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Monthly Subscription Tier`,
+              }),
+              (0, Z.jsx)(`div`, {
+                className: `flex gap-2`,
+                children: [`2.99`, `4.99`, `9.99`].map((e) =>
+                  (0, Z.jsxs)(
+                    G,
+                    {
+                      variant: t === e ? `default` : `outline`,
+                      size: `sm`,
+                      className: `flex-1 rounded-xl`,
+                      onClick: () => n(e),
+                      children: [`$`, e, `/mo`],
+                    },
+                    e,
+                  ),
+                ),
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: () => {
+          (V.success(`Subscription configuration saved (Awaiting payment gateway activation)`),
+            e());
+        },
+        children: `Save Subscription Configuration`,
+      }),
+    ],
+  });
+}
+function Ne({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between gap-2`,
+            children: [
+              (0, Z.jsx)(K, {
+                className: `text-lg font-bold`,
+                children: `Your Active Subscriptions`,
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,
+                children: `NEEDS PAYMENT PROVIDER CONFIGURATION`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Manage creators you support, Opexnal One / Plus plans, and active billing cycles.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `p-3.5 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                className: `flex items-center gap-2.5`,
+                children: [
+                  (0, Z.jsx)(`div`, {
+                    className: `h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-sm text-primary`,
+                    children: `★`,
+                  }),
+                  (0, Z.jsxs)(`div`, {
+                    children: [
+                      (0, Z.jsx)(`p`, {
+                        className: `text-xs font-semibold`,
+                        children: `Opexnal One Membership`,
+                      }),
+                      (0, Z.jsx)(`p`, {
+                        className: `text-[11px] text-muted-foreground`,
+                        children: `$9.99/mo • AI Studio Pro + 4K HD Uploads`,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `secondary`,
+                className: `text-[10px]`,
+                children: `Server Preview`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3.5 rounded-2xl border border-border bg-surface flex items-center justify-between`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                className: `flex items-center gap-2.5`,
+                children: [
+                  (0, Z.jsx)(`div`, {
+                    className: `h-9 w-9 rounded-full bg-secondary flex items-center justify-center font-bold text-sm text-foreground`,
+                    children: `A`,
+                  }),
+                  (0, Z.jsxs)(`div`, {
+                    children: [
+                      (0, Z.jsx)(`p`, {
+                        className: `text-xs font-semibold`,
+                        children: `@alex_creative`,
+                      }),
+                      (0, Z.jsx)(`p`, {
+                        className: `text-[11px] text-muted-foreground`,
+                        children: `$4.99/mo • Renews in 18 days`,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `text-emerald-500 border-emerald-500/30 text-[10px]`,
+                children: `Active`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function Pe({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(A, { className: `h-5 w-5 text-purple-500` }),
+              `Subscriber Badges & Perks`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Custom badges displayed beside your name in comments and direct messages.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Display Subscriber Crown`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Show badge beside comments on creator posts`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+          (0, Z.jsx)(`div`, {
+            className: `p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-700 dark:text-purple-300`,
+            children: `Exclusive subscriber perks include priority DM inbox placement and subscriber broadcast channels.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Understood` }),
+    ],
+  });
+}
+function Fe({ onClose: e }) {
+  let [t, n] = (0, X.useState)([
+    { username: `sophia_v`, name: `Sophia Vance`, selected: !0 },
+    { username: `dev_raj`, name: `Raj Sharma`, selected: !0 },
+    { username: `elena_lens`, name: `Elena Rostova`, selected: !1 },
+    { username: `marcus_k`, name: `Marcus Klein`, selected: !1 },
+  ]);
+  function r(e) {
+    n((t) => t.map((t) => (t.username === e ? { ...t, selected: !t.selected } : t)));
+  }
+  function i() {
+    (V.success(`Close Friends list updated (${t.filter((e) => e.selected).length} accounts)`), e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(`span`, { className: `h-3 w-3 rounded-full bg-emerald-500 inline-block` }),
+              `Close Friends`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `We do not send notifications when you add or remove people from Close Friends.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1 max-h-56 overflow-y-auto`,
+        children: t.map((e) =>
+          (0, Z.jsxs)(
+            `div`,
+            {
+              onClick: () => r(e.username),
+              className: `flex items-center justify-between p-2.5 rounded-2xl border border-border bg-surface hover:bg-secondary cursor-pointer`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  children: [
+                    (0, Z.jsx)(`p`, { className: `text-xs font-semibold`, children: e.name }),
+                    (0, Z.jsxs)(`p`, {
+                      className: `text-[11px] text-muted-foreground`,
+                      children: [`@`, e.username],
+                    }),
+                  ],
+                }),
+                (0, Z.jsx)(`div`, {
+                  className: `h-5 w-5 rounded-full border flex items-center justify-center ${e.selected ? `bg-emerald-500 border-emerald-500 text-white` : `border-muted-foreground`}`,
+                  children: e.selected && (0, Z.jsx)(z, { className: `h-3 w-3` }),
+                }),
+              ],
+            },
+            e.username,
+          ),
+        ),
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: i, children: `Save Close Friends` }),
+    ],
+  });
+}
+function Ie({ onClose: e }) {
+  let [t, n] = (0, X.useState)([`spam_bot_09`, `promo_aggregator_22`]);
+  function r(e) {
+    (n((t) => t.filter((t) => t !== e)), V.success(`@${e} unblocked`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(ae, { className: `h-5 w-5 text-destructive` }),
+              `Blocked Accounts`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Blocked accounts cannot find your profile, posts, or stories on Opexnal.`,
+          }),
+        ],
+      }),
+      t.length === 0
+        ? (0, Z.jsx)(`div`, {
+            className: `py-8 text-center text-xs text-muted-foreground`,
+            children: `You haven't blocked any accounts.`,
+          })
+        : (0, Z.jsx)(`div`, {
+            className: `space-y-2 pt-1`,
+            children: t.map((e) =>
+              (0, Z.jsxs)(
+                `div`,
+                {
+                  className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+                  children: [
+                    (0, Z.jsxs)(`span`, { className: `text-xs font-semibold`, children: [`@`, e] }),
+                    (0, Z.jsx)(G, {
+                      size: `sm`,
+                      variant: `outline`,
+                      className: `rounded-xl text-xs h-7`,
+                      onClick: () => r(e),
+                      children: `Unblock`,
+                    }),
+                  ],
+                },
+                e,
+              ),
+            ),
+          }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function Le({ onClose: e }) {
+  let [t, n] = (0, X.useState)(0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(d, { className: `h-5 w-5 text-primary` }), `Hide Story and Live`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Hide your story, highlights, and live broadcasts from specific users without blocking them.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            children: [
+              (0, Z.jsx)(`p`, { className: `text-xs font-semibold`, children: `Hidden From` }),
+              (0, Z.jsxs)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: [t, ` accounts selected`],
+              }),
+            ],
+          }),
+          (0, Z.jsx)(G, {
+            size: `sm`,
+            variant: `outline`,
+            className: `rounded-xl text-xs`,
+            onClick: () => {
+              (n(1), V.success(`Story hidden from selected accounts`));
+            },
+            children: `Manage Accounts`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function Re({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!0),
+    [r, i] = (0, X.useState)(``);
+  function a() {
+    (V.success(`Comment moderation rules applied`), e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Comments & Hidden Words` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Automatically hide offensive comments and messages containing custom keywords.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Hide Offensive Words`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `AI filter for profanity and hate speech`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Custom Keyword Filter (comma separated)`,
+              }),
+              (0, Z.jsx)(b, {
+                placeholder: `e.g. crypto, giveaway, spam`,
+                value: r,
+                onChange: (e) => i(e.target.value),
+                className: `rounded-xl text-xs`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: a, children: `Save Filters` }),
+    ],
+  });
+}
+function ze({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!0),
+    [r, i] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(h, { className: `h-5 w-5 text-primary` }), `Sharing & Remixes`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Control how others can reshare your posts to stories or create video remix collaborations.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Allow Reels Remixing`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Anyone can create a remix side-by-side with your reel`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Allow Resharing to Stories`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Others can share your public posts in their story`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: r, onCheckedChange: i }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: () => {
+          (V.success(`Sharing permissions updated`), e());
+        },
+        children: `Done`,
+      }),
+    ],
+  });
+}
+function Be({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Restricted Accounts` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Protect yourself from unwanted interactions without blocking. Only you and the restricted person can see their comments on your posts.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,
+        children: `No accounts currently restricted.`,
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Close` }),
+    ],
+  });
+}
+function Ve({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(w, { className: `h-5 w-5 text-rose-500` }), `Favorites Feed`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Posts from your favorites appear higher in your home feed with a red star indicator.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground space-y-1`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `font-semibold text-foreground`,
+            children: `You haven't added favorites yet`,
+          }),
+          (0, Z.jsx)(`p`, { children: `Add up to 50 creators to see their content first.` }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function He({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(oe, { className: `h-5 w-5 text-muted-foreground` }),
+              `Muted Accounts`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Manage accounts whose posts, stories, or notes you have temporarily muted.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,
+        children: `No muted accounts.`,
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Close` }),
+    ],
+  });
+}
+function Ue({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`standard`);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(g, { className: `h-5 w-5 text-primary` }),
+              `Content Preferences & Sensitive Control`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Customize what appears in your Explore feed and search suggestions.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          { id: `less`, label: `Less`, desc: `Filter out more borderline or intense content` },
+          {
+            id: `standard`,
+            label: `Standard (Default)`,
+            desc: `Balanced feed according to community standards`,
+          },
+          { id: `more`, label: `More`, desc: `Allows broader range of creator topics` },
+        ].map((e) =>
+          (0, Z.jsxs)(
+            `div`,
+            {
+              onClick: () => {
+                (n(e.id), V.success(`Content level set to ${e.label}`));
+              },
+              className: `p-3 rounded-2xl border cursor-pointer flex items-center justify-between ${t === e.id ? `border-primary bg-primary/10` : `border-border bg-surface`}`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `text-xs font-bold text-foreground`,
+                      children: e.label,
+                    }),
+                    (0, Z.jsx)(`p`, {
+                      className: `text-[11px] text-muted-foreground`,
+                      children: e.desc,
+                    }),
+                  ],
+                }),
+                t === e.id && (0, Z.jsx)(z, { className: `h-4 w-4 text-primary` }),
+              ],
+            },
+            e.id,
+          ),
+        ),
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function We({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_hide_likes`) === `true`);
+  function r(e) {
+    (n(e),
+      localStorage.setItem(`opexnal_hide_likes`, String(e)),
+      V.success(e ? `Like counts hidden on your posts` : `Like counts visible`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Like and View Counts` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Hide total likes and view counts on posts from other accounts and your own posts.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex items-center justify-between p-3.5 rounded-2xl border border-border bg-surface`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `text-xs font-semibold`,
+                children: `Hide Like and View Counts`,
+              }),
+              (0, Z.jsx)(`p`, {
+                className: `text-[11px] text-muted-foreground`,
+                children: `Focus on content quality rather than numbers`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(R, { checked: t, onCheckedChange: r }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function Ge({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(_, { className: `h-5 w-5 text-primary` }),
+              `Device & App Permissions`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Permissions granted to Opexnal for camera capture, audio recording, and media upload.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          { name: `Camera`, desc: `Stories, reels recording & photo posts`, status: `Authorized` },
+          { name: `Microphone`, desc: `Audio for reels and voice messages`, status: `Authorized` },
+          {
+            name: `Photo Library`,
+            desc: `Uploading images and videos from device`,
+            status: `Full Access`,
+          },
+          { name: `Notifications`, desc: `Direct messages and creator alerts`, status: `Enabled` },
+        ].map((e) =>
+          (0, Z.jsxs)(
+            `div`,
+            {
+              className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `text-xs font-semibold text-foreground`,
+                      children: e.name,
+                    }),
+                    (0, Z.jsx)(`p`, {
+                      className: `text-[11px] text-muted-foreground`,
+                      children: e.desc,
+                    }),
+                  ],
+                }),
+                (0, Z.jsx)(O, {
+                  variant: `outline`,
+                  className: `text-emerald-500 border-emerald-500/30 text-[10px]`,
+                  children: e.status,
+                }),
+              ],
+            },
+            e.name,
+          ),
+        ),
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Understood` }),
+    ],
+  });
+}
+function Ke({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!1),
+    [r, i] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(u, { className: `h-5 w-5 text-primary` }),
+              `Archiving & Downloading`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Configure automatic story preservation and local camera roll downloads.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Save Story to Archive`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Preserve stories automatically after 24 hours`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: r, onCheckedChange: i }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Save to Camera Roll`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Automatically download captured reels to device storage`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: () => {
+          (V.success(`Archive preferences updated`), e());
+        },
+        children: `Done`,
+      }),
+    ],
+  });
+}
+function qe({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Accessibility & Captions` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Features designed to make video and creator content accessible to all audiences.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: (0, Z.jsxs)(`div`, {
+          className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+          children: [
+            (0, Z.jsxs)(`div`, {
+              children: [
+                (0, Z.jsx)(`p`, {
+                  className: `text-xs font-semibold`,
+                  children: `Auto-Generated Captions`,
+                }),
+                (0, Z.jsx)(`p`, {
+                  className: `text-[11px] text-muted-foreground`,
+                  children: `Display real-time speech-to-text on video reels`,
+                }),
+              ],
+            }),
+            (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+          ],
+        }),
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: () => {
+          (V.success(`Accessibility settings saved`), e());
+        },
+        children: `Done`,
+      }),
+    ],
+  });
+}
+function Je({ onClose: e }) {
+  let [t, n] = (0, X.useState)(() => localStorage.getItem(`opexnal_lang`) || `English`);
+  function r(t) {
+    (n(t), localStorage.setItem(`opexnal_lang`, t), V.success(`Language set to ${t}`), e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(Y, { className: `h-5 w-5 text-primary` }), `Language & Region`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Select interface language and automatic story translation preferences.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          `English (US)`,
+          `Hindi (हिंदी)`,
+          `Hinglish (Conversational)`,
+          `Spanish (Español)`,
+          `French (Français)`,
+        ].map((e) =>
+          (0, Z.jsxs)(
+            `div`,
+            {
+              onClick: () => r(e),
+              className: `p-3 rounded-2xl border cursor-pointer flex items-center justify-between ${t === e ? `border-primary bg-primary/10` : `border-border bg-surface hover:bg-secondary`}`,
+              children: [
+                (0, Z.jsx)(`span`, { className: `text-xs font-semibold`, children: e }),
+                t === e && (0, Z.jsx)(z, { className: `h-4 w-4 text-primary` }),
+              ],
+            },
+            e,
+          ),
+        ),
+      }),
+    ],
+  });
+}
+function Ye({ onClose: e }) {
+  let [t, n] = (0, X.useState)(!1),
+    [r, i] = (0, X.useState)(!0);
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(ye, { className: `h-5 w-5 text-primary` }),
+              `Data Usage & Media Quality`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Optimize bandwidth consumption or prioritize crisp 4K uploads for reels.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Upload at Highest Quality`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Always upload high-resolution video even on cellular data`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: r, onCheckedChange: i }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                children: [
+                  (0, Z.jsx)(`p`, {
+                    className: `text-xs font-semibold`,
+                    children: `Cellular Data Saver`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    className: `text-[11px] text-muted-foreground`,
+                    children: `Videos will not load in advance to reduce data usage`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(R, { checked: t, onCheckedChange: n }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        className: `w-full rounded-xl`,
+        onClick: () => {
+          (V.success(`Media quality settings saved`), e());
+        },
+        children: `Done`,
+      }),
+    ],
+  });
+}
+function Xe({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(x, { className: `h-5 w-5 text-primary` }),
+              `Parental Supervision`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Tools for parents and guardians to support their teens and monitor healthy usage patterns.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-4 rounded-2xl bg-secondary/50 border border-border text-center space-y-2`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `text-xs font-semibold text-foreground`,
+            children: `Set Up Family Supervision`,
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-xs text-muted-foreground`,
+            children: `Invite a parent or guardian to see time spent, followers list, and manage downtime boundaries.`,
+          }),
+          (0, Z.jsx)(G, {
+            size: `sm`,
+            className: `rounded-xl mt-2`,
+            onClick: () => V.success(`Supervision invitation link copied to clipboard`),
+            children: `Create Guardian Invite Link`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, {
+        variant: `outline`,
+        className: `w-full rounded-xl`,
+        onClick: e,
+        children: `Close`,
+      }),
+    ],
+  });
+}
+function Ze({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Safety & Education Hub` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Expert resources on digital literacy, anti-bullying tools, and teen privacy defaults.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 pt-1 text-xs text-muted-foreground`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `font-semibold text-foreground`,
+                children: `Default Privacy for Teens`,
+              }),
+              (0, Z.jsx)(`p`, {
+                className: `mt-0.5`,
+                children: `Accounts for creators under 18 default to private with restricted adult messaging.`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `font-semibold text-foreground`,
+                children: `Anti-Bullying & Comment Moderation`,
+              }),
+              (0, Z.jsx)(`p`, {
+                className: `mt-0.5`,
+                children: `Automated screening prevents repetitive unwanted harassment in reels and comments.`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Understood` }),
+    ],
+  });
+}
+function Qe({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between gap-2`,
+            children: [
+              (0, Z.jsxs)(K, {
+                className: `text-lg font-bold flex items-center gap-2`,
+                children: [(0, Z.jsx)(J, { className: `h-5 w-5 text-primary` }), `Payment Methods`],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,
+                children: `NEEDS PAYMENT PROVIDER CONFIGURATION`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Manage cards and billing methods for in-app tipping and creator subscriptions.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs space-y-1`,
+        children: [
+          (0, Z.jsxs)(`p`, {
+            className: `font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5`,
+            children: [(0, Z.jsx)(C, { className: `h-3.5 w-3.5` }), `Gateway Credentials Required`],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-muted-foreground text-[11px] leading-relaxed`,
+            children: `In production, card collection must use tokenized iframes (Stripe Elements / Razorpay SDK) without raw card storage. Live card authorization is disabled until gateway keys are connected.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3.5 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                className: `flex items-center gap-3`,
+                children: [
+                  (0, Z.jsx)(`div`, {
+                    className: `h-8 w-12 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center font-bold text-xs`,
+                    children: `VISA`,
+                  }),
+                  (0, Z.jsxs)(`div`, {
+                    children: [
+                      (0, Z.jsx)(`p`, {
+                        className: `text-xs font-semibold`,
+                        children: `Visa ending in 4242`,
+                      }),
+                      (0, Z.jsx)(`p`, {
+                        className: `text-[11px] text-muted-foreground`,
+                        children: `Expires 08/28 • Server Vault Mock`,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(O, { variant: `secondary`, children: `Saved Method` }),
+            ],
+          }),
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `w-full rounded-xl text-xs`,
+            onClick: () => V.info(`Payment provider gateway is required for live card tokens`),
+            children: `+ Add New Payment Method (Gateway Required)`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function $e({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Orders & Purchase History` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Receipts for subscriptions, creator support tips, and merchandise transactions.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: (0, Z.jsxs)(`div`, {
+          className: `p-3 rounded-2xl border border-border bg-surface flex items-center justify-between`,
+          children: [
+            (0, Z.jsxs)(`div`, {
+              children: [
+                (0, Z.jsx)(`p`, {
+                  className: `text-xs font-semibold`,
+                  children: `Creator Subscription — @alex_creative`,
+                }),
+                (0, Z.jsx)(`p`, {
+                  className: `text-[11px] text-muted-foreground`,
+                  children: `Sep 1, 2026 • Receipt #OPX-9182`,
+                }),
+              ],
+            }),
+            (0, Z.jsx)(`span`, {
+              className: `text-xs font-bold text-foreground`,
+              children: `$4.99`,
+            }),
+          ],
+        }),
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Close` }),
+    ],
+  });
+}
+function et({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`50.00`),
+    [r, i] = (0, X.useState)(142.5),
+    [a, o] = (0, X.useState)(!1);
+  function s() {
+    let e = parseFloat(t);
+    if (isNaN(e) || e <= 0) {
+      V.error(`Withdrawal amount must be greater than $0.00`);
+      return;
+    }
+    if (e < 50) {
+      V.error(`Minimum payout withdrawal threshold is $50.00`);
+      return;
+    }
+    if (e > r) {
+      V.error(`Insufficient creator balance. Overdraft rejected by server.`);
+      return;
+    }
+    o(!0);
+    let n = `payout_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    setTimeout(() => {
+      (o(!1),
+        i((t) => +(t - e).toFixed(2)),
+        V.success(
+          `Withdrawal of $${e.toFixed(2)} initiated with key ${n.slice(0, 14)}... (Awaiting payment gateway payout clearance)`,
+        ));
+    }, 600);
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between gap-2`,
+            children: [
+              (0, Z.jsxs)(K, {
+                className: `text-lg font-bold flex items-center gap-2`,
+                children: [
+                  (0, Z.jsx)(j, { className: `h-5 w-5 text-emerald-500` }),
+                  `Monetization Payouts`,
+                ],
+              }),
+              (0, Z.jsx)(O, {
+                variant: `outline`,
+                className: `border-amber-500/40 text-amber-600 dark:text-amber-400 text-[10px] uppercase font-bold tracking-wider`,
+                children: `NEEDS PAYMENT PROVIDER CONFIGURATION`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Server-authoritative creator balance, bank direct deposit, and payout controls.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider`,
+            children: `Available Creator Balance`,
+          }),
+          (0, Z.jsxs)(`p`, {
+            className: `text-3xl font-extrabold text-foreground`,
+            children: [`$`, r.toFixed(2)],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-[11px] text-muted-foreground`,
+            children: `Minimum withdrawal threshold: $50.00 • Direct Deposit: Bank ending in 4819`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `rounded-2xl border border-border bg-surface p-3.5 space-y-2.5`,
+        children: [
+          (0, Z.jsx)(`label`, {
+            className: `text-xs font-semibold text-foreground`,
+            children: `Request Payout (Idempotent Transaction)`,
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex gap-2`,
+            children: [
+              (0, Z.jsxs)(`div`, {
+                className: `relative flex-1`,
+                children: [
+                  (0, Z.jsx)(`span`, {
+                    className: `absolute left-3 top-2.5 text-xs text-muted-foreground font-semibold`,
+                    children: `$`,
+                  }),
+                  (0, Z.jsx)(b, {
+                    type: `number`,
+                    min: `50`,
+                    max: r,
+                    step: `5`,
+                    value: t,
+                    onChange: (e) => n(e.target.value),
+                    className: `pl-7 rounded-xl text-xs`,
+                  }),
+                ],
+              }),
+              (0, Z.jsx)(G, {
+                className: `rounded-xl text-xs`,
+                disabled: a || r < 50,
+                onClick: s,
+                children: a ? `Validating...` : `Withdraw`,
+              }),
+            ],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `text-[10px] text-muted-foreground`,
+            children: `* Server checks: Negative amounts and overdrafts are strictly blocked. Unique idempotency keys prevent duplicate payouts.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function tt({ onClose: e }) {
+  let [t, n] = (0, X.useState)(``);
+  function r() {
+    if (!t.trim()) {
+      V.error(`Please describe your question or issue`);
+      return;
+    }
+    (V.success(`Support ticket created. Our team will follow up via email.`), n(``), e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(v, { className: `h-5 w-5 text-primary` }),
+              `Help Center & Support`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Browse common creator guides or submit an issue directly to the Opexnal support team.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `p-3 rounded-2xl bg-secondary/50 border border-border text-xs space-y-1.5`,
+            children: [
+              (0, Z.jsx)(`p`, {
+                className: `font-semibold text-foreground`,
+                children: `Frequently Asked Questions`,
+              }),
+              (0, Z.jsxs)(`ul`, {
+                className: `list-disc pl-4 space-y-1 text-muted-foreground`,
+                children: [
+                  (0, Z.jsx)(`li`, {
+                    children: `How to verify creator status and earn verification badges`,
+                  }),
+                  (0, Z.jsx)(`li`, { children: `Setting up two-factor authentication (TOTP)` }),
+                  (0, Z.jsx)(`li`, { children: `Content monetization guidelines & payout dates` }),
+                ],
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-medium text-foreground`,
+                children: `Report a Problem`,
+              }),
+              (0, Z.jsx)(b, {
+                placeholder: `Briefly explain what happened...`,
+                value: t,
+                onChange: (e) => n(e.target.value),
+                className: `rounded-xl text-xs`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Close`,
+          }),
+          (0, Z.jsx)(G, { className: `flex-1 rounded-xl`, onClick: r, children: `Send Report` }),
+        ],
+      }),
+    ],
+  });
+}
+function nt({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Support Requests & Appeals` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Track the status of reports you have submitted and active appeal requests.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `p-4 rounded-2xl bg-secondary/40 text-center text-xs text-muted-foreground`,
+        children: `You have no active support requests or pending appeals.`,
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function rt({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(k, { className: `h-5 w-5 text-primary` }), `About Opexnal`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `The next-generation social and creator platform engineered for velocity and intelligence.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1 text-xs`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `font-medium text-foreground`,
+                children: `Platform Release`,
+              }),
+              (0, Z.jsx)(`span`, {
+                className: `font-semibold text-primary`,
+                children: `v2.5 Production Build`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `font-medium text-foreground`,
+                children: `AI Foundation`,
+              }),
+              (0, Z.jsx)(`span`, {
+                className: `font-medium text-muted-foreground`,
+                children: `Google Gemini 3.7 Flash`,
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center justify-between p-3 rounded-2xl border border-border bg-surface`,
+            children: [
+              (0, Z.jsx)(`span`, {
+                className: `font-medium text-foreground`,
+                children: `Backend & Storage`,
+              }),
+              (0, Z.jsx)(`span`, {
+                className: `font-medium text-muted-foreground`,
+                children: `Supabase Enterprise Auth & DB`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Close` }),
+    ],
+  });
+}
+function it({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(f, { className: `h-5 w-5 text-primary` }), `Terms of Service`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Opexnal platform guidelines, creator ownership, and community standards.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 max-h-56 overflow-y-auto text-xs text-muted-foreground p-3 rounded-2xl bg-secondary/30 border border-border leading-relaxed`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `font-semibold text-foreground`,
+            children: `1. Creator Ownership`,
+          }),
+          (0, Z.jsx)(`p`, {
+            children: `You retain 100% intellectual property ownership of all media, text, reels, and stories you post.`,
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `font-semibold text-foreground mt-2`,
+            children: `2. Respect & Integrity`,
+          }),
+          (0, Z.jsx)(`p`, {
+            children: `Harassment, abusive automation, and copyright infringement are strictly prohibited.`,
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `font-semibold text-foreground mt-2`,
+            children: `3. Monetization Integrity`,
+          }),
+          (0, Z.jsx)(`p`, {
+            children: `Fan subscriptions and payouts are subject to verified identity and good standing.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Understood` }),
+    ],
+  });
+}
+function at({ onClose: e }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(E, { className: `h-5 w-5 text-primary` }),
+              `Opexnal Studio for Web`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Desktop publishing, multi-reel scheduling, and professional analytics for creators.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `p-4 rounded-2xl bg-primary/10 border border-primary/20 text-xs text-muted-foreground space-y-2`,
+        children: [
+          (0, Z.jsx)(`p`, {
+            className: `font-semibold text-foreground`,
+            children: `Desktop Creator Suite`,
+          }),
+          (0, Z.jsx)(`p`, {
+            children: `Opexnal is fully responsive and optimized for desktop workflows. Access high-resolution video uploads, scheduled posts, and in-depth analytics directly on your desktop browser.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Got It` }),
+    ],
+  });
+}
+function ot({ onClose: e }) {
+  let [t, n] = (0, X.useState)(``);
+  function r() {
+    if (!t.trim()) {
+      V.error(`Please enter a username or email`);
+      return;
+    }
+    (V.success(`Account @${t.replace(/^@/, ``)} registered for multi-account login`), e());
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(ie, { className: `h-5 w-5 text-primary` }),
+              `Add Existing Account`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Log into another Opexnal account to switch seamlessly between profiles.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: [
+          (0, Z.jsx)(b, {
+            placeholder: `Phone, username or email`,
+            value: t,
+            onChange: (e) => n(e.target.value),
+            className: `rounded-xl`,
+          }),
+          (0, Z.jsx)(b, { type: `password`, placeholder: `Password`, className: `rounded-xl` }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Cancel`,
+          }),
+          (0, Z.jsx)(G, { className: `flex-1 rounded-xl`, onClick: r, children: `Log In` }),
+        ],
+      }),
+    ],
+  });
+}
+function st({ username: e, onClose: t }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(m, { className: `h-5 w-5 text-primary` }), `Switch Accounts`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Select an active profile to switch your current workspace.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1`,
+        children: (0, Z.jsxs)(`div`, {
+          className: `flex items-center justify-between p-3 rounded-2xl border border-primary bg-primary/10`,
+          children: [
+            (0, Z.jsxs)(`div`, {
+              className: `flex items-center gap-2.5`,
+              children: [
+                (0, Z.jsx)(`div`, {
+                  className: `h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-xs text-primary`,
+                  children: e[0]?.toUpperCase() || `U`,
+                }),
+                (0, Z.jsxs)(`div`, {
+                  children: [
+                    (0, Z.jsxs)(`p`, {
+                      className: `text-xs font-semibold text-foreground`,
+                      children: [`@`, e],
+                    }),
+                    (0, Z.jsx)(`p`, {
+                      className: `text-[10px] text-muted-foreground`,
+                      children: `Current Account`,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            (0, Z.jsx)(z, { className: `h-4 w-4 text-primary` }),
+          ],
+        }),
+      }),
+      (0, Z.jsx)(G, {
+        variant: `outline`,
+        className: `w-full rounded-xl`,
+        onClick: t,
+        children: `Done`,
+      }),
+    ],
+  });
+}
+function ct({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`json`),
+    [r, i] = (0, X.useState)([
+      `Profile Information`,
+      `Posts & Reels`,
+      `Messages & Comments`,
+      `Activity & Media Metadata`,
+    ]),
+    [a, o] = (0, X.useState)(!1),
+    [s, c] = (0, X.useState)({ id: `exp_2026_01`, createdAt: `Feb 15, 2026`, size: `14.2 MB` });
+  function l(e) {
+    i((t) => (t.includes(e) ? t.filter((t) => t !== e) : [...t, e]));
+  }
+  function d() {
+    if (r.length === 0) {
+      V.error(`Please select at least one data category to include in the export`);
+      return;
+    }
+    (o(!0),
+      setTimeout(() => {
+        (o(!1),
+          c({ id: `exp_${Date.now()}`, createdAt: `Just now`, size: `18.6 MB` }),
+          V.success(`Data export package generated. You can download the archive.`));
+      }, 800));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(u, { className: `h-5 w-5 text-primary` }), `Download Your Data`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Request a secure copy of your Opexnal profile, media, comments, and interactions.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-3 pt-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1.5`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-semibold text-foreground`,
+                children: `Archive Format`,
+              }),
+              (0, Z.jsxs)(`div`, {
+                className: `grid grid-cols-2 gap-2`,
+                children: [
+                  (0, Z.jsx)(G, {
+                    type: `button`,
+                    variant: t === `json` ? `default` : `outline`,
+                    size: `sm`,
+                    className: `rounded-xl text-xs`,
+                    onClick: () => n(`json`),
+                    children: `JSON (Machine-Readable)`,
+                  }),
+                  (0, Z.jsx)(G, {
+                    type: `button`,
+                    variant: t === `html` ? `default` : `outline`,
+                    size: `sm`,
+                    className: `rounded-xl text-xs`,
+                    onClick: () => n(`html`),
+                    children: `HTML (Web Viewable)`,
+                  }),
+                ],
+              }),
+            ],
+          }),
+          (0, Z.jsxs)(`div`, {
+            className: `space-y-1.5`,
+            children: [
+              (0, Z.jsx)(`label`, {
+                className: `text-xs font-semibold text-foreground`,
+                children: `Categories to Include`,
+              }),
+              (0, Z.jsx)(`div`, {
+                className: `space-y-1.5`,
+                children: [
+                  `Profile Information`,
+                  `Posts & Reels`,
+                  `Messages & Comments`,
+                  `Activity & Media Metadata`,
+                ].map((e) =>
+                  (0, Z.jsxs)(
+                    `label`,
+                    {
+                      className: `flex items-center justify-between p-2.5 rounded-xl border border-border bg-surface text-xs cursor-pointer hover:bg-secondary/40`,
+                      children: [
+                        (0, Z.jsx)(`span`, { children: e }),
+                        (0, Z.jsx)(`input`, {
+                          type: `checkbox`,
+                          checked: r.includes(e),
+                          onChange: () => l(e),
+                          className: `rounded border-border`,
+                        }),
+                      ],
+                    },
+                    e,
+                  ),
+                ),
+              }),
+            ],
+          }),
+          s &&
+            (0, Z.jsxs)(`div`, {
+              className: `p-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  className: `text-xs`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `font-semibold text-emerald-700 dark:text-emerald-400`,
+                      children: `Export Archive Ready`,
+                    }),
+                    (0, Z.jsxs)(`p`, {
+                      className: `text-[11px] text-muted-foreground`,
+                      children: [`Created: `, s.createdAt, ` • `, s.size],
+                    }),
+                  ],
+                }),
+                (0, Z.jsx)(G, {
+                  size: `sm`,
+                  className: `rounded-xl text-xs h-8`,
+                  onClick: () => V.success(`Downloading export ZIP archive...`),
+                  children: `Download`,
+                }),
+              ],
+            }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Close`,
+          }),
+          (0, Z.jsx)(G, {
+            className: `flex-1 rounded-xl`,
+            disabled: a,
+            onClick: d,
+            children: a ? `Preparing Export...` : `Request Export`,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function lt({ onClose: e }) {
+  let [t, n] = (0, X.useState)([
+    {
+      id: `del_post_1`,
+      type: `post`,
+      title: `Draft sunset reel with 4K color grade`,
+      deletedAt: `2026-03-01T10:00:00Z`,
+      daysRemaining: 27,
+    },
+    {
+      id: `del_story_2`,
+      type: `story`,
+      title: `Behind the scenes in studio`,
+      deletedAt: `2026-03-02T15:00:00Z`,
+      daysRemaining: 28,
+    },
+  ]);
+  function r(e) {
+    (n((t) => t.filter((t) => t.id !== e)),
+      V.success(`Item restored to your profile and active feed`));
+  }
+  function i(e) {
+    (n((t) => t.filter((t) => t.id !== e)), V.success(`Item permanently purged from server`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [(0, Z.jsx)(p, { className: `h-5 w-5 text-primary` }), `Recently Deleted`],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Items here are held for 30 days before permanent deletion. Only you can view this bin.`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `space-y-2 pt-1 max-h-60 overflow-y-auto`,
+        children:
+          t.length === 0
+            ? (0, Z.jsxs)(`div`, {
+                className: `py-8 text-center text-xs text-muted-foreground space-y-1`,
+                children: [
+                  (0, Z.jsx)(B, { className: `h-8 w-8 mx-auto text-muted-foreground/40` }),
+                  (0, Z.jsx)(`p`, {
+                    className: `font-semibold text-foreground`,
+                    children: `Recently Deleted is Empty`,
+                  }),
+                  (0, Z.jsx)(`p`, {
+                    children: `Deleted posts, stories, and reels will appear here for 30 days.`,
+                  }),
+                ],
+              })
+            : t.map((e) =>
+                (0, Z.jsxs)(
+                  `div`,
+                  {
+                    className: `p-3 rounded-2xl border border-border bg-surface flex items-center justify-between gap-2`,
+                    children: [
+                      (0, Z.jsxs)(`div`, {
+                        className: `min-w-0 flex-1`,
+                        children: [
+                          (0, Z.jsx)(`p`, {
+                            className: `text-xs font-semibold truncate text-foreground`,
+                            children: e.title,
+                          }),
+                          (0, Z.jsxs)(`p`, {
+                            className: `text-[11px] text-muted-foreground capitalize`,
+                            children: [e.type, ` • `, e.daysRemaining, ` days remaining`],
+                          }),
+                        ],
+                      }),
+                      (0, Z.jsxs)(`div`, {
+                        className: `flex items-center gap-1.5 shrink-0`,
+                        children: [
+                          (0, Z.jsxs)(G, {
+                            size: `sm`,
+                            variant: `outline`,
+                            className: `h-8 rounded-xl text-xs flex items-center gap-1`,
+                            onClick: () => r(e.id),
+                            children: [(0, Z.jsx)(he, { className: `h-3 w-3` }), `Restore`],
+                          }),
+                          (0, Z.jsx)(G, {
+                            size: `sm`,
+                            variant: `ghost`,
+                            className: `h-8 w-8 p-0 rounded-xl text-destructive hover:bg-destructive/10`,
+                            onClick: () => i(e.id),
+                            children: (0, Z.jsx)(B, { className: `h-3.5 w-3.5` }),
+                          }),
+                        ],
+                      }),
+                    ],
+                  },
+                  e.id,
+                ),
+              ),
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function ut({ onClose: e }) {
+  let [t, n] = (0, X.useState)(`deactivate`),
+    [r, i] = (0, X.useState)(``),
+    [a, o] = (0, X.useState)(!1);
+  function s() {
+    if (!r) {
+      V.error(`Please enter your current password to authorize this action`);
+      return;
+    }
+    (o(!0),
+      setTimeout(() => {
+        (o(!1),
+          t === `deactivate`
+            ? V.success(`Account temporarily deactivated. Log in anytime to reactivate.`)
+            : V.success(`Account deletion initiated. 30-day grace period started.`),
+          e());
+      }, 700));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2 text-destructive`,
+            children: [
+              (0, Z.jsx)(y, { className: `h-5 w-5 text-destructive` }),
+              `Deactivate or Delete Account`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Choose whether to temporarily take a break or permanently erase your Opexnal profile.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `grid grid-cols-2 gap-2 pt-1`,
+        children: [
+          (0, Z.jsx)(G, {
+            type: `button`,
+            variant: t === `deactivate` ? `default` : `outline`,
+            size: `sm`,
+            className: `rounded-xl text-xs`,
+            onClick: () => n(`deactivate`),
+            children: `Deactivate (Temporary)`,
+          }),
+          (0, Z.jsx)(G, {
+            type: `button`,
+            variant: t === `delete` ? `destructive` : `outline`,
+            size: `sm`,
+            className: `rounded-xl text-xs`,
+            onClick: () => n(`delete`),
+            children: `Delete (Permanent)`,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(`div`, {
+        className: `p-3 rounded-2xl bg-secondary/50 border border-border text-xs text-muted-foreground space-y-1`,
+        children:
+          t === `deactivate`
+            ? (0, Z.jsx)(`p`, {
+                children: `Deactivating your account will hide your profile, posts, comments, and likes until you log back in. Your data remains safe and preserved.`,
+              })
+            : (0, Z.jsx)(`p`, {
+                className: `text-destructive font-medium`,
+                children: `Permanent deletion will queue your profile, followers, posts, reels, and messages for total erasure after a 30-day grace period.`,
+              }),
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-1.5`,
+        children: [
+          (0, Z.jsx)(`label`, {
+            className: `text-xs font-semibold text-foreground`,
+            children: `Confirm With Your Password`,
+          }),
+          (0, Z.jsx)(b, {
+            type: `password`,
+            placeholder: `Enter current password`,
+            value: r,
+            onChange: (e) => i(e.target.value),
+            className: `rounded-xl text-xs`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Cancel`,
+          }),
+          (0, Z.jsx)(G, {
+            variant: t === `delete` ? `destructive` : `default`,
+            className: `flex-1 rounded-xl`,
+            disabled: a,
+            onClick: s,
+            children: a
+              ? `Submitting...`
+              : t === `deactivate`
+                ? `Deactivate Account`
+                : `Delete Account`,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function dt({ onClose: e }) {
+  let [t, n] = (0, X.useState)([
+    {
+      id: `sess_1`,
+      device: `MacBook Pro 16”`,
+      browser: `Chrome 128 / macOS`,
+      location: `San Francisco, CA, USA`,
+      ipAddress: `198.51.100.24`,
+      lastActive: `Active now`,
+      isCurrent: !0,
+    },
+    {
+      id: `sess_2`,
+      device: `iPhone 15 Pro Max`,
+      browser: `Opexnal iOS App v2.5`,
+      location: `San Jose, CA, USA`,
+      ipAddress: `198.51.100.89`,
+      lastActive: `2 hours ago`,
+      isCurrent: !1,
+    },
+    {
+      id: `sess_3`,
+      device: `iPad Air 5th Gen`,
+      browser: `Safari 17.5 / iPadOS`,
+      location: `Oakland, CA, USA`,
+      ipAddress: `198.51.100.112`,
+      lastActive: `Yesterday`,
+      isCurrent: !1,
+    },
+  ]);
+  function r(e) {
+    (n((t) => t.filter((t) => t.id !== e)),
+      V.success(`Session revoked. That device has been signed out immediately.`));
+  }
+  function i() {
+    (n((e) => e.filter((e) => e.isCurrent)),
+      V.success(`All other active sessions revoked across all devices.`));
+  }
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsxs)(K, {
+            className: `text-lg font-bold flex items-center gap-2`,
+            children: [
+              (0, Z.jsx)(ee, { className: `h-5 w-5 text-primary` }),
+              `Active Login Sessions`,
+            ],
+          }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `Review all web browsers, tablets, and mobile devices currently signed into your account.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `space-y-2.5 pt-1`,
+        children: [
+          t.map((e) =>
+            (0, Z.jsxs)(
+              `div`,
+              {
+                className: `p-3 rounded-2xl border ${e.isCurrent ? `border-primary/40 bg-primary/5` : `border-border bg-surface`} flex items-center justify-between gap-2`,
+                children: [
+                  (0, Z.jsxs)(`div`, {
+                    className: `min-w-0`,
+                    children: [
+                      (0, Z.jsxs)(`div`, {
+                        className: `flex items-center gap-2`,
+                        children: [
+                          (0, Z.jsx)(`p`, {
+                            className: `text-xs font-semibold text-foreground`,
+                            children: e.device,
+                          }),
+                          e.isCurrent
+                            ? (0, Z.jsx)(O, {
+                                className: `text-[10px] bg-primary text-primary-foreground py-0`,
+                                children: `This Device`,
+                              })
+                            : (0, Z.jsx)(`span`, {
+                                className: `text-[10px] text-muted-foreground`,
+                                children: e.lastActive,
+                              }),
+                        ],
+                      }),
+                      (0, Z.jsxs)(`p`, {
+                        className: `text-[11px] text-muted-foreground mt-0.5`,
+                        children: [e.browser, ` • `, e.location],
+                      }),
+                      (0, Z.jsxs)(`p`, {
+                        className: `text-[10px] text-muted-foreground/70 font-mono mt-0.5`,
+                        children: [`IP: `, e.ipAddress],
+                      }),
+                    ],
+                  }),
+                  !e.isCurrent &&
+                    (0, Z.jsx)(G, {
+                      variant: `outline`,
+                      size: `sm`,
+                      className: `h-8 rounded-xl text-xs text-destructive hover:bg-destructive/10`,
+                      onClick: () => r(e.id),
+                      children: `Revoke`,
+                    }),
+                ],
+              },
+              e.id,
+            ),
+          ),
+          t.length > 1 &&
+            (0, Z.jsxs)(G, {
+              variant: `outline`,
+              className: `w-full rounded-xl text-xs text-destructive border-destructive/30 hover:bg-destructive/10 mt-1`,
+              onClick: i,
+              children: [`Log Out of All Other Devices (`, t.length - 1, `)`],
+            }),
+        ],
+      }),
+      (0, Z.jsx)(G, { className: `w-full rounded-xl`, onClick: e, children: `Done` }),
+    ],
+  });
+}
+function ft({ onSignOut: e, onClose: t }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Log Out of Opexnal?` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `You will need to enter your credentials or use quick sign-in to access your account again.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: t,
+            children: `Cancel`,
+          }),
+          (0, Z.jsx)(G, {
+            variant: `destructive`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Log Out`,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function pt({ onSignOutAll: e, onClose: t }) {
+  return (0, Z.jsxs)(`div`, {
+    className: `space-y-4`,
+    children: [
+      (0, Z.jsxs)(F, {
+        children: [
+          (0, Z.jsx)(K, { className: `text-lg font-bold`, children: `Log Out of All Devices?` }),
+          (0, Z.jsx)(q, {
+            className: `text-xs text-muted-foreground`,
+            children: `This will revoke all active sessions across all web browsers, tablets, and phones.`,
+          }),
+        ],
+      }),
+      (0, Z.jsxs)(`div`, {
+        className: `flex gap-2 pt-2`,
+        children: [
+          (0, Z.jsx)(G, {
+            variant: `outline`,
+            className: `flex-1 rounded-xl`,
+            onClick: t,
+            children: `Cancel`,
+          }),
+          (0, Z.jsx)(G, {
+            variant: `destructive`,
+            className: `flex-1 rounded-xl`,
+            onClick: e,
+            children: `Log Out Everywhere`,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function mt() {
+  let e = a(),
+    t = s(),
+    { user: n } = pe(),
+    [i, C] = (0, X.useState)(null),
+    [N, F] = (0, X.useState)(``),
+    L = (0, X.useMemo)(() => de(N), [N]),
+    { data: R } = c({
+      queryKey: [`profile`, n?.id],
+      queryFn: () => (n?.id ? ge(n.id) : null),
+      enabled: !!n?.id,
+    });
+  async function z() {
+    (await t.cancelQueries(), t.clear());
+    try {
+      (localStorage.removeItem(`guest_user`),
+        localStorage.removeItem(`opexnal_guest_user`),
+        sessionStorage.setItem(`opexnal_explicit_signout`, `true`));
+    } catch {}
+    (await o.auth.signOut(), e({ to: `/auth`, search: { mode: `login` }, replace: !0 }));
+  }
+  async function B() {
+    (await t.cancelQueries(), t.clear());
+    try {
+      (localStorage.removeItem(`guest_user`),
+        localStorage.removeItem(`opexnal_guest_user`),
+        sessionStorage.setItem(`opexnal_explicit_signout`, `true`));
+    } catch {}
+    (await o.auth.signOut(), e({ to: `/auth`, search: { mode: `login` }, replace: !0 }));
+  }
+  let V =
+    R?.username ||
+    (typeof n?.user_metadata?.username == `string` ? n.user_metadata.username : void 0) ||
+    n?.email?.split(`@`)[0] ||
+    `user`;
+  return (0, Z.jsx)(ue, {
+    header: (0, Z.jsx)(le, {
+      title: `Settings & Activity`,
+      left: (0, Z.jsx)(r, {
+        to: `/profile`,
+        "aria-label": `Back`,
+        id: `settings-back-btn`,
+        className: `text-muted-foreground hover:text-foreground`,
+        children: (0, Z.jsx)(fe, { className: `h-5 w-5`, "aria-hidden": `true` }),
+      }),
+    }),
+    children: (0, Z.jsxs)(`div`, {
+      className: `space-y-5 px-3 sm:px-4 py-4 max-w-lg mx-auto pb-16`,
+      children: [
+        (0, Z.jsxs)(`div`, {
+          className: `relative`,
+          id: `settings-search-bar`,
+          children: [
+            (0, Z.jsx)(D, {
+              className: `absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground`,
+              "aria-hidden": `true`,
+            }),
+            (0, Z.jsx)(b, {
+              id: `settings-search-input`,
+              type: `search`,
+              placeholder: `Search all settings / સેટિંગ્સ શોધો (e.g. password, notification, પાસવર્ડ)...`,
+              value: N,
+              onChange: (e) => F(e.target.value),
+              className: `pl-10 pr-9 rounded-2xl h-11 bg-surface border-border text-xs sm:text-sm shadow-xs`,
+            }),
+            N &&
+              (0, Z.jsx)(`button`, {
+                type: `button`,
+                onClick: () => F(``),
+                className: `absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground`,
+                "aria-label": `Clear search`,
+                children: (0, Z.jsx)(se, { className: `h-4 w-4` }),
+              }),
+          ],
+        }),
+        N.trim() === ``
+          ? (0, Z.jsxs)(Z.Fragment, {
+              children: [
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-your-account`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `1. Your account (અકાઉન્ટ સેન્ટર)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/profile/edit`,
+                          id: `link-edit-profile`,
+                          icon: ve,
+                          label: `Edit profile`,
+                          labelGu: `પ્રોફાઇલ એડિટ કરો`,
+                          hint: `Name, username, bio, website & avatar`,
+                          hintGu: `નામ, યુઝરનેમ, બાયો અને અવતાર`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-personal-details`,
+                          icon: k,
+                          label: `Personal details`,
+                          labelGu: `વ્યક્તિગત વિગતો`,
+                          hint: `Contact email, phone number, birthday & ownership`,
+                          hintGu: `ઈમેલ, મોબાઇલ નંબર, જન્મતારીખ અને અકાઉન્ટ ઓનરશિપ`,
+                          onClick: () => C(`personal_details`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-account-status`,
+                          icon: W,
+                          label: `Account status`,
+                          labelGu: `અકાઉન્ટ સ્ટેટસ`,
+                          hint: `Guidelines standing, monetization eligibility & badges`,
+                          hintGu: `ગાઇડલાઇન્સ સ્ટેન્ડિંગ, મોનેટાઇઝેશન અને બેજ`,
+                          onClick: () => C(`account_status`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-accounts-center`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `2. Accounts Center (અકાઉન્ટ્સ સેન્ટર)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-accounts-center-hub`,
+                          icon: E,
+                          label: `Accounts Center`,
+                          labelGu: `અકાઉન્ટ્સ સેન્ટર`,
+                          hint: `Connected profiles, cross-posting & identity sync`,
+                          hintGu: `Opexnal, Facebook એકાઉન્ટ્સ લિંક કરવા અને સિંક`,
+                          onClick: () => C(`accounts_center`),
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/settings/security`,
+                          id: `link-password-security`,
+                          icon: x,
+                          label: `Password and security`,
+                          labelGu: `પાસવર્ડ અને સુરક્ષા`,
+                          hint: `Password change, TOTP two-factor & audit logs`,
+                          hintGu: `પાસવર્ડ બદલવો, 2FA સુરક્ષા અને સિક્યોરિટી ચેક`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-ad-preferences`,
+                          icon: g,
+                          label: `Personal details & ad preferences`,
+                          labelGu: `એડ પ્રેફરન્સ`,
+                          hint: `Data usage, creator partner ads & topic preferences`,
+                          hintGu: `જાહેરાત ટોપિક્સ અને ટાર્ગેટેડ એડ્સ કંટ્રોલ`,
+                          onClick: () => C(`ad_preferences`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-how-you-use-opexnal`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `3. How you use Opexnal (તમે એપનો ઉપયોગ કેવી રીતે કરો છો)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/activity`,
+                          id: `link-your-activity`,
+                          icon: U,
+                          label: `Your activity & history`,
+                          labelGu: `તમારી પ્રવૃત્તિ`,
+                          hint: `Follow requests, interactions, tags & mentions`,
+                          hintGu: `લાઇક્સ, કમેન્ટ્સ, સ્ટોરી રિપ્લાય અને સર્ચ હિસ્ટ્રી`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-saved-collections`,
+                          icon: l,
+                          label: `Saved`,
+                          labelGu: `સેવ કરેલું`,
+                          hint: `Private bookmarks, saved posts & audio collections`,
+                          hintGu: `સેવ કરેલા ઓડિયો, રીલ્સ અને પોસ્ટ્સ કલેક્શન`,
+                          onClick: () => C(`saved`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-archive`,
+                          icon: I,
+                          label: `Archive`,
+                          labelGu: `આર્કાઇવ`,
+                          hint: `Stories archive, past reels & temporary post storage`,
+                          hintGu: `Stories Archive (જૂની સ્ટોરીઝ) અને Posts Archive`,
+                          onClick: () => C(`archive`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-time-spent`,
+                          icon: M,
+                          label: `Time spent`,
+                          labelGu: `વિતાવેલો સમય`,
+                          hint: `Daily screen time average, break alerts & usage limits`,
+                          hintGu: `ડેઇલી સ્ક્રીન લિમિટ અને બ્રેક રિમાઇન્ડર્સ`,
+                          onClick: () => C(`time_spent`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-notifications`,
+                          icon: U,
+                          label: `Notifications`,
+                          labelGu: `નોટિફિકેશન્સ`,
+                          hint: `Push notifications, pause all, DMs & live alerts`,
+                          hintGu: `Pause all, Quiet mode (મ્યૂટ સમય) અને એલર્ટ્સ`,
+                          onClick: () => C(`notifications`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-your-insights-and-tools`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `4. Your insights & tools (તમારા ઇનસાઇટ્સ અને ટૂલ્સ)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/ai`,
+                          id: `link-ai-studio`,
+                          icon: E,
+                          label: `Opexnal AI Studio`,
+                          labelGu: `AI સ્ટુડિયો`,
+                          hint: `Captions, viral hooks, hashtags, reels co-pilot`,
+                          hintGu: `વાયરલ કેપ્શન્સ, હુક્સ અને હેશટેગ કો-પાઇલટ`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-creator-insights`,
+                          icon: P,
+                          label: `Creator insights & analytics`,
+                          labelGu: `પ્રોફેશનલ ડેશબોર્ડ`,
+                          hint: `7-day reach, profile visits, engagement & followers`,
+                          hintGu: `રીચ, એન્ગેજમેન્ટ અને ફોલોઅર્સ એનાલિટિક્સ`,
+                          onClick: () => C(`insights`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-branded-content`,
+                          icon: j,
+                          label: `Branded content & partnerships`,
+                          labelGu: `બ્રાન્ડેડ કન્ટેન્ટ`,
+                          hint: `Commercial tags, paid partnership approvals & disclosures`,
+                          hintGu: `પેઇડ પાર્ટનરશિપ લેબલ અને સ્પોન્સર કંટ્રોલ`,
+                          onClick: () => C(`branded_content`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-account-type`,
+                          icon: ve,
+                          label: `Account type & professional tools`,
+                          labelGu: `અકાઉન્ટ ટાઇપ અને ટૂલ્સ`,
+                          hint: `Switch between Creator, Personal, and Business`,
+                          hintGu: `પ્રોફેશનલ/ક્રિએટરમાં સ્વિચ કરો અને બ્લુ ટિક`,
+                          onClick: () => C(`account_type`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-subscriptions`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `5. Subscriptions (સબસ્ક્રિપ્શન્સ)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-creator-subscriptions`,
+                          icon: A,
+                          label: `Creator subscriptions`,
+                          labelGu: `ક્રિએટર સબસ્ક્રિપ્શન્સ`,
+                          hint: `Manage fan pricing, subscriber-only reels & benefits`,
+                          hintGu: `ફેન ટિયર્સ અને એક્સક્લૂસિવ રીલ્સ કમાણી`,
+                          onClick: () => C(`creator_subscriptions`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-active-subscriptions`,
+                          icon: w,
+                          label: `Your active subscriptions`,
+                          labelGu: `સક્રિય સબસ્ક્રિપ્શન્સ`,
+                          hint: `Creators you support, renewal cycles & receipts`,
+                          hintGu: `તમે સપોર્ટ કરેલા ક્રિએટર્સ અને રિન્યુઅલ`,
+                          onClick: () => C(`active_subscriptions`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-subscriber-badges`,
+                          icon: W,
+                          label: `Subscriber badges & perks`,
+                          labelGu: `સબસ્ક્રાઇબર બેજ અને લાભો`,
+                          hint: `Custom chat crown, exclusive ring & DM sorting`,
+                          hintGu: `કસ્ટમ ક્રાઉન, એક્સક્લૂસિવ રિંગ અને લાભો`,
+                          onClick: () => C(`subscriber_badges`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-who-can-see-your-content`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `6. Who can see your content (તમારું કન્ટેન્ટ કોણ જોઈ શકે છે)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/settings/privacy`,
+                          id: `link-account-privacy`,
+                          icon: S,
+                          label: `Account privacy`,
+                          labelGu: `અકાઉન્ટ પ્રાઇવસી`,
+                          hint: `Private account toggle, mentions & tag permissions`,
+                          hintGu: `પ્રાઇવેટ / પબ્લિક અકાઉન્ટ અને પરમિશન`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-close-friends`,
+                          icon: T,
+                          label: `Close Friends`,
+                          labelGu: `ક્લોઝ ફ્રેન્ડ્સ`,
+                          hint: `Curate exclusive green-ring story circle`,
+                          hintGu: `ગ્રીન રિંગ સ્ટોરી શેરિંગ માટે અંગત મિત્રોની યાદી`,
+                          onClick: () => C(`close_friends`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-blocked-accounts`,
+                          icon: ae,
+                          label: `Blocked accounts`,
+                          labelGu: `બ્લોક કરેલા અકાઉન્ટ્સ`,
+                          hint: `View blocked profiles and manage unblocking`,
+                          hintGu: `બ્લોક કરેલા યુઝર્સની યાદી અને અનબ્લોક`,
+                          onClick: () => C(`blocked_accounts`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-hide-story`,
+                          icon: d,
+                          label: `Hide story and live`,
+                          labelGu: `સ્ટોરી અને લાઇવ છુપાવો`,
+                          hint: `Prevent specific users from viewing your stories`,
+                          hintGu: `અમુક યુઝર્સથી સ્ટોરી અને લાઇવ વિડીયો હાઇડ કરવો`,
+                          onClick: () => C(`hide_story`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-how-others-can-interact`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `7. How others can interact with you (બીજા તમારી સાથે કેવી રીતે જોડાઈ શકે)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/messages`,
+                          id: `link-messages-replies`,
+                          icon: re,
+                          label: `Messages and story replies`,
+                          labelGu: `મેસેજીસ અને સ્ટોરી રિપ્લાય`,
+                          hint: `Message requests, read receipts & direct chat permissions`,
+                          hintGu: `મેસેજ રિક્વેસ્ટ અને રીડ રિસિપ્ટ કંટ્રોલ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/settings/privacy`,
+                          id: `link-tags-mentions`,
+                          icon: _e,
+                          label: `Tags and mentions`,
+                          labelGu: `ટેગ્સ અને મેન્શન્સ`,
+                          hint: `Choose who can tag or mention you in posts`,
+                          hintGu: `તમને કોણ ટેગ કે મેન્શન કરી શકે તે નક્કી કરો`,
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-comments-filter`,
+                          icon: g,
+                          label: `Comments & hidden words`,
+                          labelGu: `કમેન્ટ્સ અને હિડન વર્ડ્સ`,
+                          hint: `Profanity filter, custom offensive keyword blocklist`,
+                          hintGu: `અપશબ્દો ફિલ્ટર અને કસ્ટમ શબ્દો છુપાવો`,
+                          onClick: () => C(`comment_filter`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-sharing-remixes`,
+                          icon: h,
+                          label: `Sharing and remixes`,
+                          labelGu: `શેરિંગ અને રીમિક્સ`,
+                          hint: `Allow reels remixing and story resharing`,
+                          hintGu: `રીલ્સ રીમિક્સ અને પોસ્ટ રીશેરિંગ મંજૂરી`,
+                          onClick: () => C(`sharing_remixes`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-restricted-accounts`,
+                          icon: x,
+                          label: `Restricted accounts`,
+                          labelGu: `રેસ્ટ્રિક્ટેડ અકાઉન્ટ્સ`,
+                          hint: `Quietly limit interactions without blocking users`,
+                          hintGu: `બ્લોક કર્યા વગર ઇન્ટરેક્શન મર્યાદિત કરો`,
+                          onClick: () => C(`restricted_accounts`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-what-you-see`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `8. What you see (તમે શું જુઓ છો)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-favorites`,
+                          icon: w,
+                          label: `Favorites`,
+                          labelGu: `ફેવરિટ્સ`,
+                          hint: `Prioritize posts from starred creators in feed`,
+                          hintGu: `પસંદીદા ક્રિએટર્સની પોસ્ટ્સ પહેલાં જુઓ`,
+                          onClick: () => C(`favorites`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-muted-accounts`,
+                          icon: oe,
+                          label: `Muted accounts`,
+                          labelGu: `મ્યૂટ કરેલા અકાઉન્ટ્સ`,
+                          hint: `Manage muted posts, stories and author notes`,
+                          hintGu: `મ્યૂટ કરેલી સ્ટોરીઝ અને પોસ્ટ્સ મેનેજ કરો`,
+                          onClick: () => C(`muted_accounts`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-content-preferences`,
+                          icon: g,
+                          label: `Content preferences`,
+                          labelGu: `કન્ટેન્ટ પ્રેફરન્સ`,
+                          hint: `Sensitive content control & explore recommendation tuning`,
+                          hintGu: `સેન્સિટિવ કન્ટેન્ટ અને એક્સપ્લોર ભલામણો`,
+                          onClick: () => C(`content_preferences`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-like-counts`,
+                          icon: w,
+                          label: `Like and view counts`,
+                          labelGu: `લાઇક અને વ્યુ કાઉન્ટ્સ છુપાવો`,
+                          hint: `Hide total like and view counts across posts`,
+                          hintGu: `બીજાની પોસ્ટ્સ પર લાઇક્સની સંખ્યા છુપાવો`,
+                          onClick: () => C(`like_counts`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-your-app-and-media`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `9. Your app & media (તમારી એપ અને મીડિયા)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-device-permissions`,
+                          icon: _,
+                          label: `Device permissions`,
+                          labelGu: `ડિવાઇસ પરમિશન્સ`,
+                          hint: `Camera, microphone, photo library & push notification access`,
+                          hintGu: `કેમેરા, માઇક્રોફોન, ફોટો ગેલેરી અને લોકેશન પરમિશન્સ`,
+                          onClick: () => C(`device_permissions`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-archiving-downloading`,
+                          icon: u,
+                          label: `Archiving and downloading`,
+                          labelGu: `આર્કાઇવિંગ અને ડાઉનલોડિંગ`,
+                          hint: `Auto-save to archive and original camera roll download`,
+                          hintGu: `સ્ટોરીઝ સેવ કરવી અને ઓરિજિનલ ફોટા ડાઉનલોડ`,
+                          onClick: () => C(`archiving_downloading`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-accessibility-captions`,
+                          icon: g,
+                          label: `Accessibility & captions`,
+                          labelGu: `એક્સેસિબિલિટી અને કેપ્શન્સ`,
+                          hint: `Auto-generated captions & high-contrast visibility`,
+                          hintGu: `ઓટોમેટિક કેપ્શન્સ અને વિઝ્યુઅલ સેટિંગ્સ`,
+                          onClick: () => C(`accessibility_captions`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-language-region`,
+                          icon: Y,
+                          label: `Language & region`,
+                          labelGu: `ભાષા (Language)`,
+                          hint: `Display language, Hindi, Hinglish & auto-translations`,
+                          hintGu: `ગુજરાતી, હિન્દી, અંગ્રેજી અને પ્રાદેશિક ભાષા`,
+                          onClick: () => C(`language_region`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-data-usage`,
+                          icon: ye,
+                          label: `Data usage and media quality`,
+                          labelGu: `ડેટા વપરાશ અને મીડિયા ક્વોલિટી`,
+                          hint: `Cellular data saver & upload at highest quality`,
+                          hintGu: `ડેટા સેવર મોડ અને હાઇ-ક્વોલિટી અપલોડ્સ`,
+                          onClick: () => C(`data_usage`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-family-center`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `10. Family Center (પરિવારો માટે / સુપરવિઝન)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-supervision`,
+                          icon: x,
+                          label: `Supervision`,
+                          labelGu: `સુપરવિઝન (Supervision)`,
+                          hint: `Parental controls, invite guardian & screen time limits`,
+                          hintGu: `માતા-પિતા માટે સુરક્ષા ટૂલ્સ અને એકાઉન્ટ લિંકિંગ`,
+                          onClick: () => C(`supervision`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-safety-hub`,
+                          icon: v,
+                          label: `Education & safety hub`,
+                          labelGu: `સેફ્ટી હબ`,
+                          hint: `Teen privacy defaults, guardian safety guides & resources`,
+                          hintGu: `કિશોરો માટે પ્રાઇવસી ગાઇડ અને સેફ્ટી રિસોર્સિસ`,
+                          onClick: () => C(`safety_hub`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-orders-and-payments`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `11. Orders & payments (ઓર્ડર્સ અને પેમેન્ટ્સ)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-payment-methods`,
+                          icon: J,
+                          label: `Payment methods`,
+                          labelGu: `પેમેન્ટ પદ્ધતિઓ`,
+                          hint: `Saved cards, UPI, digital wallet & billing address`,
+                          hintGu: `કાર્ડ્સ, UPI અને પેમેન્ટ હિસ્ટ્રી મેનેજ કરો`,
+                          onClick: () => C(`payment_methods`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-order-history`,
+                          icon: f,
+                          label: `Order history & receipts`,
+                          labelGu: `ઓર્ડર હિસ્ટ્રી`,
+                          hint: `Subscription invoices, creator tips & purchase history`,
+                          hintGu: `સબસ્ક્રિપ્શન રસીદો અને ખરીદીની વિગતો`,
+                          onClick: () => C(`order_history`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-payouts`,
+                          icon: j,
+                          label: `Monetization payouts`,
+                          labelGu: `પેઆઉટ સેટિંગ્સ`,
+                          hint: `Creator balance, direct deposit details & payout schedule`,
+                          hintGu: `બેંક એકાઉન્ટ વિગતો અને કમાણી ઉપાડવી`,
+                          onClick: () => C(`payouts`),
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-more-info-and-support`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `12. More info & support (વધુ માહિતી અને મદદ)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-help-center`,
+                          icon: v,
+                          label: `Help Center & FAQs`,
+                          labelGu: `હેલ્પ સેન્ટર`,
+                          hint: `Troubleshooting guides & report a problem`,
+                          hintGu: `વારંવાર પૂછાતા પ્રશ્નો અને સમસ્યા રિપોર્ટ કરો`,
+                          onClick: () => C(`help_center`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-support-requests`,
+                          icon: x,
+                          label: `Support requests & appeals`,
+                          labelGu: `સપોર્ટ રિક્વેસ્ટ`,
+                          hint: `Track submitted reports, violations & appeals`,
+                          hintGu: `તમારી સબમિટ કરેલી ફરિયાદો અને અપીલ્સ`,
+                          onClick: () => C(`support_requests`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-about-opexnal`,
+                          icon: k,
+                          label: `About Opexnal`,
+                          labelGu: `અમારા વિશે (About)`,
+                          hint: `Platform release v2.5, AI foundation & credits`,
+                          hintGu: `એપ વર્ઝન, અપડેટ્સ અને લાઇસન્સ`,
+                          onClick: () => C(`about`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-terms-of-service`,
+                          icon: f,
+                          label: `Terms of Service`,
+                          labelGu: `નિયમો અને શરતો (Terms)`,
+                          hint: `Creator rights, platform guidelines & code of conduct`,
+                          hintGu: `પ્લેટફોર્મ નીતિઓ અને યુઝર ગાઇડલાઇન્સ`,
+                          onClick: () => C(`terms`),
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/settings/privacy`,
+                          id: `link-privacy-policy`,
+                          icon: S,
+                          label: `Privacy Policy`,
+                          labelGu: `પ્રાઇવસી પોલિસી`,
+                          hint: `Data handling, encryption & cookie preferences`,
+                          hintGu: `ડેટા સુરક્ષા અને કૂકી પોલિસી`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-1.5`,
+                  id: `section-also-from-opexnal`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `13. Also from Opexnal (Opexnal તરફથી અન્ય)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)(Q, {
+                          to: `/ai`,
+                          id: `link-opexnal-ai-suite`,
+                          icon: E,
+                          label: `Opexnal AI Suite`,
+                          labelGu: `AI ટૂલ્સ`,
+                          hint: `Multimodal generative AI creator engine`,
+                          hintGu: `મલ્ટીમોડલ આર્ટિફિશિયલ ઇન્ટેલિજન્સ એન્જિન`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/messages`,
+                          id: `link-opexnal-messenger`,
+                          icon: ne,
+                          label: `Opexnal Messenger`,
+                          labelGu: `મેસેન્જર`,
+                          hint: `Fast, direct and encrypted social messaging`,
+                          hintGu: `સુરક્ષિત અને ઝડપી મેસેજિંગ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/creator`,
+                          id: `link-creator-dashboard`,
+                          icon: P,
+                          label: `Professional Dashboard & Monetization`,
+                          labelGu: `પ્રોફેશનલ ડેશબોર્ડ`,
+                          hint: `Reach, subscriptions, earnings and creator tools`,
+                          hintGu: `કમાણી અને પ્રોફેશનલ ટૂલ્સ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/live`,
+                          id: `link-live-studio`,
+                          icon: ce,
+                          label: `Live Broadcast Studio`,
+                          labelGu: `લાઇવ સ્ટ્રીમિંગ`,
+                          hint: `Go live, Q&A, and interactive audience broadcasts`,
+                          hintGu: `લાઇવ બ્રોડકાસ્ટ અને દર્શકો સાથે ચર્ચા`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/archive`,
+                          id: `link-archive-deleted`,
+                          icon: I,
+                          label: `Archive & Recently Deleted`,
+                          labelGu: `આર્કાઇવ અને ડિલીટ`,
+                          hint: `30-day restore, posts archive & story history`,
+                          hintGu: `આર્કાઇવ અને પુનઃસ્થાપિત ટૂલ્સ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/close-friends`,
+                          id: `link-close-friends`,
+                          icon: T,
+                          label: `Close Friends & Favorites`,
+                          labelGu: `ક્લોઝ ફ્રેન્ડ્સ અને ફેવરિટ્સ`,
+                          hint: `Private story audience & home feed prioritization`,
+                          hintGu: `ખાસ મિત્રો અને પ્રાથમિક ફીડ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/help`,
+                          id: `link-help-center`,
+                          icon: v,
+                          label: `Help Center & Support Reports`,
+                          labelGu: `હેલ્પ સેન્ટર અને સપોર્ટ`,
+                          hint: `Report a problem, case tracker & account status`,
+                          hintGu: `સમસ્યા રિપોર્ટ કરો અને કેસ ટ્રેકિંગ`,
+                        }),
+                        (0, Z.jsx)(Q, {
+                          to: `/admin`,
+                          id: `link-super-admin`,
+                          icon: x,
+                          label: `Super Admin & System Operations`,
+                          labelGu: `સુપર એડમિન કંટ્રોલ`,
+                          hint: `21-Engine matrix, moderation queue & boundaries`,
+                          hintGu: `પ્લેટફોર્મ હેલ્થ અને મોડરેશન કતાર`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, Z.jsxs)(`section`, {
+                  className: `space-y-2 pt-2`,
+                  id: `section-login`,
+                  children: [
+                    (0, Z.jsx)(`p`, {
+                      className: `px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground`,
+                      children: `14. Login & Account Management (લોગિન અને એકાઉન્ટ વ્યવસ્થાપન)`,
+                    }),
+                    (0, Z.jsxs)(`div`, {
+                      className: `space-y-1.5`,
+                      children: [
+                        (0, Z.jsx)($, {
+                          id: `action-download-data`,
+                          icon: u,
+                          label: `Download your data`,
+                          labelGu: `તમારી માહિતી ડાઉનલોડ કરો`,
+                          hint: `Request a machine-readable JSON or HTML export of your data`,
+                          hintGu: `તમારા ફોટા, વિડીયો અને એકાઉન્ટ ડેટાની નકલ મેળવો`,
+                          onClick: () => C(`download_data`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-recently-deleted`,
+                          icon: p,
+                          label: `Recently deleted`,
+                          labelGu: `તાજેતરમાં ડિલીટ કરેલું`,
+                          hint: `Review, restore, or permanently remove items deleted within 30 days`,
+                          hintGu: `30 દિવસમાં ડિલીટ કરેલું કન્ટેન્ટ પાછું મેળવો`,
+                          onClick: () => C(`recently_deleted`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-active-sessions`,
+                          icon: ee,
+                          label: `Active login sessions`,
+                          labelGu: `કયા ડિવાઇસમાં લોગિન છે તે જોવું`,
+                          hint: `Review active devices, web browsers, and locations signed into your account`,
+                          hintGu: `સક્રિય ડિવાઇસ, લોકેશન્સ અને લોગિન એલર્ટ્સ`,
+                          onClick: () => C(`active_sessions`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-deactivate-account`,
+                          icon: y,
+                          label: `Deactivate or delete account`,
+                          labelGu: `અકાઉન્ટ ડિલીટ કે ડીએક્ટિવેટ કરવું`,
+                          hint: `Temporarily pause your presence or permanently delete your profile`,
+                          hintGu: `ઓનરશિપ કંટ્રોલ: અસ્થાયી ડીએક્ટિવેટ અથવા કાયમી ડિલીટ`,
+                          onClick: () => C(`deactivate_account`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-add-account`,
+                          icon: ie,
+                          label: `Add account`,
+                          labelGu: `નવું એકાઉન્ટ ઉમેરો`,
+                          hint: `Log into an existing secondary creator account`,
+                          hintGu: `બીજું એકાઉન્ટ લોગિન કરો અથવા લિંક કરો`,
+                          onClick: () => C(`add_account`),
+                        }),
+                        (0, Z.jsx)($, {
+                          id: `action-switch-account`,
+                          icon: m,
+                          label: `Switch accounts`,
+                          labelGu: `એકાઉન્ટ સ્વિચ કરો`,
+                          hint: `Seamlessly switch active profile session`,
+                          hintGu: `સરળતાથી પ્રોફાઇલ્સ વચ્ચે બદલો`,
+                          onClick: () => C(`switch_account`),
+                        }),
+                        (0, Z.jsxs)(G, {
+                          id: `btn-sign-out-current`,
+                          variant: `surface`,
+                          size: `xl`,
+                          className: `w-full rounded-2xl text-destructive hover:bg-destructive/10 border-destructive/20 mt-1`,
+                          onClick: () => C(`logout_confirm`),
+                          children: [
+                            (0, Z.jsx)(te, { className: `h-4 w-4 mr-2`, "aria-hidden": `true` }),
+                            `Log out of @`,
+                            V,
+                          ],
+                        }),
+                        (0, Z.jsx)(G, {
+                          id: `btn-sign-out-all`,
+                          variant: `ghost`,
+                          size: `sm`,
+                          className: `w-full text-muted-foreground hover:text-foreground text-xs`,
+                          onClick: () => C(`logout_all_confirm`),
+                          children: `Log out of all accounts`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            })
+          : (0, Z.jsxs)(`div`, {
+              className: `space-y-3`,
+              id: `settings-search-results`,
+              children: [
+                (0, Z.jsxs)(`div`, {
+                  className: `flex items-center justify-between px-1`,
+                  children: [
+                    (0, Z.jsxs)(`p`, {
+                      className: `text-xs font-semibold text-foreground`,
+                      children: [`Search Results (`, L.length, `)`],
+                    }),
+                    (0, Z.jsx)(`button`, {
+                      type: `button`,
+                      onClick: () => F(``),
+                      className: `text-[11px] text-primary hover:underline`,
+                      children: `Clear`,
+                    }),
+                  ],
+                }),
+                L.length === 0
+                  ? (0, Z.jsxs)(`div`, {
+                      className: `py-8 text-center space-y-2 rounded-2xl border border-border bg-surface p-4`,
+                      children: [
+                        (0, Z.jsx)(D, { className: `h-8 w-8 text-muted-foreground/40 mx-auto` }),
+                        (0, Z.jsxs)(`p`, {
+                          className: `text-xs font-semibold text-foreground`,
+                          children: [`No matching settings found for “`, N, `”`],
+                        }),
+                        (0, Z.jsx)(`p`, {
+                          className: `text-[11px] text-muted-foreground max-w-xs mx-auto`,
+                          children: `Try searching for keywords like password (પાસવર્ડ), notifications (નોટિફિકેશન), blocked (બ્લોક), payments (પેમેન્ટ), or subscription (સબસ્ક્રિપ્શન).`,
+                        }),
+                        (0, Z.jsx)(`div`, {
+                          className: `flex flex-wrap justify-center gap-1.5 pt-2`,
+                          children: [
+                            `password`,
+                            `પાસવર્ડ`,
+                            `notifications`,
+                            `નોટિફિકેશન`,
+                            `blocked`,
+                            `બ્લોક`,
+                            `payments`,
+                            `પેમેન્ટ`,
+                            `archive`,
+                            `આર્કાઇવ`,
+                          ].map((e) =>
+                            (0, Z.jsx)(
+                              O,
+                              {
+                                variant: `outline`,
+                                className: `cursor-pointer text-[10px] hover:bg-secondary`,
+                                onClick: () => F(e),
+                                children: e,
+                              },
+                              e,
+                            ),
+                          ),
+                        }),
+                      ],
+                    })
+                  : (0, Z.jsx)(`div`, {
+                      className: `space-y-1.5`,
+                      children: L.map((e) => {
+                        let t = e.descriptionGu
+                          ? `${e.description} — ${e.descriptionGu}`
+                          : e.description;
+                        return e.route
+                          ? (0, Z.jsxs)(
+                              r,
+                              {
+                                to: e.route,
+                                className: `flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer`,
+                                children: [
+                                  (0, Z.jsxs)(`div`, {
+                                    className: `min-w-0 flex-1`,
+                                    children: [
+                                      (0, Z.jsxs)(`div`, {
+                                        className: `flex items-center gap-2 flex-wrap`,
+                                        children: [
+                                          (0, Z.jsx)(`p`, {
+                                            className: `text-xs font-semibold text-foreground`,
+                                            children: e.title,
+                                          }),
+                                          e.titleGu &&
+                                            e.titleGu !== e.title &&
+                                            (0, Z.jsxs)(`span`, {
+                                              className: `text-[11px] text-muted-foreground font-normal`,
+                                              children: [`• `, e.titleGu],
+                                            }),
+                                          (0, Z.jsx)(O, {
+                                            variant: `secondary`,
+                                            className: `text-[9px] py-0 px-1.5 ml-auto sm:ml-0`,
+                                            children: e.categoryTitle,
+                                          }),
+                                        ],
+                                      }),
+                                      (0, Z.jsx)(`p`, {
+                                        className: `truncate text-[11px] text-muted-foreground mt-0.5`,
+                                        children: t,
+                                      }),
+                                    ],
+                                  }),
+                                  (0, Z.jsx)(H, {
+                                    className: `h-4 w-4 text-muted-foreground shrink-0`,
+                                  }),
+                                ],
+                              },
+                              e.id,
+                            )
+                          : (0, Z.jsxs)(
+                              `button`,
+                              {
+                                type: `button`,
+                                onClick: () => {
+                                  e.dialog && C(e.dialog);
+                                },
+                                className: `w-full flex items-center text-left gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer`,
+                                children: [
+                                  (0, Z.jsxs)(`div`, {
+                                    className: `min-w-0 flex-1`,
+                                    children: [
+                                      (0, Z.jsxs)(`div`, {
+                                        className: `flex items-center gap-2 flex-wrap`,
+                                        children: [
+                                          (0, Z.jsx)(`p`, {
+                                            className: `text-xs font-semibold text-foreground`,
+                                            children: e.title,
+                                          }),
+                                          e.titleGu &&
+                                            e.titleGu !== e.title &&
+                                            (0, Z.jsxs)(`span`, {
+                                              className: `text-[11px] text-muted-foreground font-normal`,
+                                              children: [`• `, e.titleGu],
+                                            }),
+                                          (0, Z.jsx)(O, {
+                                            variant: `secondary`,
+                                            className: `text-[9px] py-0 px-1.5 ml-auto sm:ml-0`,
+                                            children: e.categoryTitle,
+                                          }),
+                                        ],
+                                      }),
+                                      (0, Z.jsx)(`p`, {
+                                        className: `truncate text-[11px] text-muted-foreground mt-0.5`,
+                                        children: t,
+                                      }),
+                                    ],
+                                  }),
+                                  (0, Z.jsx)(H, {
+                                    className: `h-4 w-4 text-muted-foreground shrink-0`,
+                                  }),
+                                ],
+                              },
+                              e.id,
+                            );
+                      }),
+                    }),
+              ],
+            }),
+        (0, Z.jsx)(be, {
+          dialog: i,
+          onClose: () => C(null),
+          username: V,
+          onSignOut: z,
+          onSignOutAll: B,
+        }),
+      ],
+    }),
+  });
+}
+function Q({ to: e, id: t, icon: n, label: i, labelGu: a, hint: o, hintGu: s }) {
+  return (0, Z.jsxs)(r, {
+    to: e,
+    id: t,
+    className: `flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 transition-colors hover:bg-secondary cursor-pointer`,
+    children: [
+      (0, Z.jsx)(n, { className: `h-5 w-5 text-primary shrink-0`, "aria-hidden": `true` }),
+      (0, Z.jsxs)(`div`, {
+        className: `min-w-0 flex-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center gap-1.5 flex-wrap`,
+            children: [
+              (0, Z.jsx)(`p`, { className: `text-sm font-semibold`, children: i }),
+              a &&
+                (0, Z.jsxs)(`span`, {
+                  className: `text-xs text-muted-foreground font-normal`,
+                  children: [`(`, a, `)`],
+                }),
+            ],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `truncate text-xs text-muted-foreground`,
+            children: s ? `${o} • ${s}` : o,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(H, {
+        className: `ml-auto h-4 w-4 text-muted-foreground shrink-0`,
+        "aria-hidden": `true`,
+      }),
+    ],
+  });
+}
+function $({ id: e, icon: t, label: n, labelGu: r, hint: i, hintGu: a, onClick: o }) {
+  return (0, Z.jsxs)(`button`, {
+    type: `button`,
+    id: e,
+    onClick: o,
+    className: `w-full flex items-center text-left gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 transition-colors hover:bg-secondary cursor-pointer`,
+    children: [
+      (0, Z.jsx)(t, { className: `h-5 w-5 text-primary shrink-0`, "aria-hidden": `true` }),
+      (0, Z.jsxs)(`div`, {
+        className: `min-w-0 flex-1`,
+        children: [
+          (0, Z.jsxs)(`div`, {
+            className: `flex items-center gap-1.5 flex-wrap`,
+            children: [
+              (0, Z.jsx)(`p`, { className: `text-sm font-semibold text-foreground`, children: n }),
+              r &&
+                (0, Z.jsxs)(`span`, {
+                  className: `text-xs text-muted-foreground font-normal`,
+                  children: [`(`, r, `)`],
+                }),
+            ],
+          }),
+          (0, Z.jsx)(`p`, {
+            className: `truncate text-xs text-muted-foreground`,
+            children: a ? `${i} • ${a}` : i,
+          }),
+        ],
+      }),
+      (0, Z.jsx)(H, {
+        className: `ml-auto h-4 w-4 text-muted-foreground shrink-0`,
+        "aria-hidden": `true`,
+      }),
+    ],
+  });
+}
+export { mt as component };

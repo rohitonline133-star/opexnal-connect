@@ -1,1 +1,195 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{n as r}from"./createLucideIcon-DgzBSI1Z.js";import{t as i}from"./useNavigate-BJOrhi-q.js";import{j as a}from"./removable-Bti6oWPM.js";import{t as o}from"./useMutation-DAlJQPHF.js";import{t as s}from"./image-plus-nb0zzst9.js";import{t as c}from"./loader-circle-CbE-4Efj.js";import{t as l}from"./x-CeqC2pJc.js";import{t as u}from"./utils-DojpP95n.js";import{C as d,E as f,T as p,lt as m,rt as h,u as g,w as _}from"./index-BPJbQuiK.js";import{n as v}from"./stories-By5PKbsW.js";var y=t(e()),b=n(),x=15728640,S=209715200,C=[{value:`public`,label:`Everyone`,hint:`Anyone who can see your account`},{value:`followers`,label:`Followers`,hint:`Only people who follow you`},{value:`close_friends`,label:`Close friends`,hint:`Only followers, hidden from others`}];function w(){let{user:e}=g(),t=i(),n=a(),w=(0,y.useRef)(null),[T,E]=(0,y.useState)(null),[D,O]=(0,y.useState)(null),[k,A]=(0,y.useState)(``),[j,M]=(0,y.useState)(`followers`),N=T?.type.startsWith(`video/`)??!1;function P(e){if(!e)return;let t=e.type.startsWith(`video/`);if(!t&&!e.type.startsWith(`image/`)){m.error(`Choose a photo or video`);return}if(e.size>(t?S:x)){m.error(t?`Videos must be under 200MB`:`Photos must be under 15MB`);return}D&&URL.revokeObjectURL(D),E(e),O(URL.createObjectURL(e))}function F(){D&&URL.revokeObjectURL(D),E(null),O(null)}let I=o({mutationFn:async()=>{if(!e||!T)throw Error(`Choose media first`);return v({userId:e.id,file:T,mediaType:N?`video`:`image`,caption:k,audience:j})},onSuccess:async()=>{m.success(`Story shared — it disappears in 24 hours`),await n.invalidateQueries({queryKey:[`story-tray`]}),t({to:`/home`})},onError:e=>m.error(e instanceof Error?e.message:`Could not share your story`)});return(0,b.jsx)(p,{header:(0,b.jsx)(f,{title:`Your story`,left:(0,b.jsx)(r,{to:`/home`,"aria-label":`Back`,className:`text-muted-foreground hover:text-foreground`,children:(0,b.jsx)(h,{className:`h-5 w-5`,"aria-hidden":`true`})})}),children:(0,b.jsxs)(`div`,{className:`space-y-5 px-4 py-4`,children:[T?(0,b.jsxs)(`div`,{className:`relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-secondary`,children:[N?(0,b.jsx)(`video`,{src:D??void 0,className:`h-full w-full object-cover`,controls:!0,playsInline:!0}):(0,b.jsx)(`img`,{src:D??void 0,alt:`Story preview`,className:`h-full w-full object-cover`}),(0,b.jsx)(`button`,{type:`button`,onClick:F,"aria-label":`Remove media`,className:`absolute right-2 top-2 rounded-full bg-background/80 p-1.5 backdrop-blur`,children:(0,b.jsx)(l,{className:`h-4 w-4`,"aria-hidden":`true`})})]}):(0,b.jsxs)(`button`,{type:`button`,onClick:()=>w.current?.click(),className:`flex aspect-[9/16] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-secondary/40 text-muted-foreground`,children:[(0,b.jsx)(s,{className:`h-7 w-7`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{className:`text-sm`,children:`Tap to choose a photo or video`})]}),(0,b.jsx)(`input`,{ref:w,type:`file`,accept:`image/*,video/*`,className:`sr-only`,onChange:e=>P(e.target.files?.[0]??null)}),(0,b.jsxs)(`div`,{className:`space-y-2`,children:[(0,b.jsx)(`label`,{htmlFor:`story-caption`,className:`text-sm font-medium`,children:`Caption`}),(0,b.jsx)(d,{id:`story-caption`,value:k,maxLength:200,placeholder:`Say something…`,onChange:e=>A(e.target.value)})]}),(0,b.jsxs)(`fieldset`,{className:`space-y-2`,children:[(0,b.jsx)(`legend`,{className:`text-sm font-medium`,children:`Who can see this`}),(0,b.jsx)(`div`,{className:`grid gap-2`,children:C.map(e=>(0,b.jsxs)(`button`,{type:`button`,onClick:()=>M(e.value),className:u(`rounded-xl border px-4 py-3 text-left transition-colors`,j===e.value?`border-primary bg-primary/10`:`border-border hover:bg-secondary/60`),children:[(0,b.jsx)(`span`,{className:`block text-sm font-medium`,children:e.label}),(0,b.jsx)(`span`,{className:`block text-xs text-muted-foreground`,children:e.hint})]},e.value))})]}),(0,b.jsx)(_,{variant:`brand`,size:`xl`,disabled:!T||I.isPending,onClick:()=>I.mutate(),children:I.isPending?(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(c,{className:`mr-2 h-4 w-4 animate-spin`,"aria-hidden":`true`}),` Sharing…`]}):`Share to story`})]})})}export{w as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { n as r } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as i } from "./useNavigate-BJOrhi-q.js";
+import { j as a } from "./removable-Bti6oWPM.js";
+import { t as o } from "./useMutation-DAlJQPHF.js";
+import { t as s } from "./image-plus-nb0zzst9.js";
+import { t as c } from "./loader-circle-CbE-4Efj.js";
+import { t as l } from "./x-CeqC2pJc.js";
+import { t as u } from "./utils-DojpP95n.js";
+import { C as d, E as f, T as p, lt as m, rt as h, u as g, w as _ } from "./index-BPJbQuiK.js";
+import { n as v } from "./stories-By5PKbsW.js";
+var y = t(e()),
+  b = n(),
+  x = 15728640,
+  S = 209715200,
+  C = [
+    { value: `public`, label: `Everyone`, hint: `Anyone who can see your account` },
+    { value: `followers`, label: `Followers`, hint: `Only people who follow you` },
+    { value: `close_friends`, label: `Close friends`, hint: `Only followers, hidden from others` },
+  ];
+function w() {
+  let { user: e } = g(),
+    t = i(),
+    n = a(),
+    w = (0, y.useRef)(null),
+    [T, E] = (0, y.useState)(null),
+    [D, O] = (0, y.useState)(null),
+    [k, A] = (0, y.useState)(``),
+    [j, M] = (0, y.useState)(`followers`),
+    N = T?.type.startsWith(`video/`) ?? !1;
+  function P(e) {
+    if (!e) return;
+    let t = e.type.startsWith(`video/`);
+    if (!t && !e.type.startsWith(`image/`)) {
+      m.error(`Choose a photo or video`);
+      return;
+    }
+    if (e.size > (t ? S : x)) {
+      m.error(t ? `Videos must be under 200MB` : `Photos must be under 15MB`);
+      return;
+    }
+    (D && URL.revokeObjectURL(D), E(e), O(URL.createObjectURL(e)));
+  }
+  function F() {
+    (D && URL.revokeObjectURL(D), E(null), O(null));
+  }
+  let I = o({
+    mutationFn: async () => {
+      if (!e || !T) throw Error(`Choose media first`);
+      return v({
+        userId: e.id,
+        file: T,
+        mediaType: N ? `video` : `image`,
+        caption: k,
+        audience: j,
+      });
+    },
+    onSuccess: async () => {
+      (m.success(`Story shared — it disappears in 24 hours`),
+        await n.invalidateQueries({ queryKey: [`story-tray`] }),
+        t({ to: `/home` }));
+    },
+    onError: (e) => m.error(e instanceof Error ? e.message : `Could not share your story`),
+  });
+  return (0, b.jsx)(p, {
+    header: (0, b.jsx)(f, {
+      title: `Your story`,
+      left: (0, b.jsx)(r, {
+        to: `/home`,
+        "aria-label": `Back`,
+        className: `text-muted-foreground hover:text-foreground`,
+        children: (0, b.jsx)(h, { className: `h-5 w-5`, "aria-hidden": `true` }),
+      }),
+    }),
+    children: (0, b.jsxs)(`div`, {
+      className: `space-y-5 px-4 py-4`,
+      children: [
+        T
+          ? (0, b.jsxs)(`div`, {
+              className: `relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-secondary`,
+              children: [
+                N
+                  ? (0, b.jsx)(`video`, {
+                      src: D ?? void 0,
+                      className: `h-full w-full object-cover`,
+                      controls: !0,
+                      playsInline: !0,
+                    })
+                  : (0, b.jsx)(`img`, {
+                      src: D ?? void 0,
+                      alt: `Story preview`,
+                      className: `h-full w-full object-cover`,
+                    }),
+                (0, b.jsx)(`button`, {
+                  type: `button`,
+                  onClick: F,
+                  "aria-label": `Remove media`,
+                  className: `absolute right-2 top-2 rounded-full bg-background/80 p-1.5 backdrop-blur`,
+                  children: (0, b.jsx)(l, { className: `h-4 w-4`, "aria-hidden": `true` }),
+                }),
+              ],
+            })
+          : (0, b.jsxs)(`button`, {
+              type: `button`,
+              onClick: () => w.current?.click(),
+              className: `flex aspect-[9/16] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-secondary/40 text-muted-foreground`,
+              children: [
+                (0, b.jsx)(s, { className: `h-7 w-7`, "aria-hidden": `true` }),
+                (0, b.jsx)(`span`, {
+                  className: `text-sm`,
+                  children: `Tap to choose a photo or video`,
+                }),
+              ],
+            }),
+        (0, b.jsx)(`input`, {
+          ref: w,
+          type: `file`,
+          accept: `image/*,video/*`,
+          className: `sr-only`,
+          onChange: (e) => P(e.target.files?.[0] ?? null),
+        }),
+        (0, b.jsxs)(`div`, {
+          className: `space-y-2`,
+          children: [
+            (0, b.jsx)(`label`, {
+              htmlFor: `story-caption`,
+              className: `text-sm font-medium`,
+              children: `Caption`,
+            }),
+            (0, b.jsx)(d, {
+              id: `story-caption`,
+              value: k,
+              maxLength: 200,
+              placeholder: `Say something…`,
+              onChange: (e) => A(e.target.value),
+            }),
+          ],
+        }),
+        (0, b.jsxs)(`fieldset`, {
+          className: `space-y-2`,
+          children: [
+            (0, b.jsx)(`legend`, {
+              className: `text-sm font-medium`,
+              children: `Who can see this`,
+            }),
+            (0, b.jsx)(`div`, {
+              className: `grid gap-2`,
+              children: C.map((e) =>
+                (0, b.jsxs)(
+                  `button`,
+                  {
+                    type: `button`,
+                    onClick: () => M(e.value),
+                    className: u(
+                      `rounded-xl border px-4 py-3 text-left transition-colors`,
+                      j === e.value
+                        ? `border-primary bg-primary/10`
+                        : `border-border hover:bg-secondary/60`,
+                    ),
+                    children: [
+                      (0, b.jsx)(`span`, {
+                        className: `block text-sm font-medium`,
+                        children: e.label,
+                      }),
+                      (0, b.jsx)(`span`, {
+                        className: `block text-xs text-muted-foreground`,
+                        children: e.hint,
+                      }),
+                    ],
+                  },
+                  e.value,
+                ),
+              ),
+            }),
+          ],
+        }),
+        (0, b.jsx)(_, {
+          variant: `brand`,
+          size: `xl`,
+          disabled: !T || I.isPending,
+          onClick: () => I.mutate(),
+          children: I.isPending
+            ? (0, b.jsxs)(b.Fragment, {
+                children: [
+                  (0, b.jsx)(c, { className: `mr-2 h-4 w-4 animate-spin`, "aria-hidden": `true` }),
+                  ` Sharing…`,
+                ],
+              })
+            : `Share to story`,
+        }),
+      ],
+    }),
+  });
+}
+export { w as component };

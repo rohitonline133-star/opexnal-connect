@@ -1,1 +1,69 @@
-import{t as e}from"./jsx-runtime-B5yqYJvp.js";import{n as t,t as n}from"./createLucideIcon-DgzBSI1Z.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{E as i,T as a,V as o}from"./index-BPJbQuiK.js";var s=n(`megaphone`,[[`path`,{d:`M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z`,key:`q8bfy3`}],[`path`,{d:`M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14`,key:`1853fq`}],[`path`,{d:`M8 6v8`,key:`15ugcq`}]]),c=e();function l(){let e=r();return(0,c.jsx)(a,{activeTab:`profile`,children:(0,c.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,c.jsx)(i,{title:`Ad Tools & Campaigns`,showBack:!0,onBack:()=>e({to:`/creator`})}),(0,c.jsxs)(`div`,{className:`p-4 space-y-5`,children:[(0,c.jsxs)(t,{to:`/ads/create`,className:`w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2`,children:[(0,c.jsx)(o,{className:`w-4 h-4`}),(0,c.jsx)(`span`,{children:`Create New Ad / Boost Post`})]}),(0,c.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-2`,children:[(0,c.jsx)(`h4`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Campaign Status`}),(0,c.jsxs)(`div`,{className:`text-center py-8 text-gray-500 text-xs space-y-1`,children:[(0,c.jsx)(s,{className:`w-8 h-8 mx-auto text-gray-600 mb-1`}),(0,c.jsx)(`p`,{className:`font-semibold text-gray-400`,children:`No active promotions`}),(0,c.jsx)(`p`,{className:`text-[11px]`,children:`Boost your high-performing reels or posts to reach new audiences.`})]})]})]})]})})}export{l as component};
+import { t as e } from "./jsx-runtime-B5yqYJvp.js";
+import { n as t, t as n } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { E as i, T as a, V as o } from "./index-BPJbQuiK.js";
+var s = n(`megaphone`, [
+    [
+      `path`,
+      {
+        d: `M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z`,
+        key: `q8bfy3`,
+      },
+    ],
+    [`path`, { d: `M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14`, key: `1853fq` }],
+    [`path`, { d: `M8 6v8`, key: `15ugcq` }],
+  ]),
+  c = e();
+function l() {
+  let e = r();
+  return (0, c.jsx)(a, {
+    activeTab: `profile`,
+    children: (0, c.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, c.jsx)(i, {
+          title: `Ad Tools & Campaigns`,
+          showBack: !0,
+          onBack: () => e({ to: `/creator` }),
+        }),
+        (0, c.jsxs)(`div`, {
+          className: `p-4 space-y-5`,
+          children: [
+            (0, c.jsxs)(t, {
+              to: `/ads/create`,
+              className: `w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2`,
+              children: [
+                (0, c.jsx)(o, { className: `w-4 h-4` }),
+                (0, c.jsx)(`span`, { children: `Create New Ad / Boost Post` }),
+              ],
+            }),
+            (0, c.jsxs)(`div`, {
+              className: `p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-2`,
+              children: [
+                (0, c.jsx)(`h4`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Campaign Status`,
+                }),
+                (0, c.jsxs)(`div`, {
+                  className: `text-center py-8 text-gray-500 text-xs space-y-1`,
+                  children: [
+                    (0, c.jsx)(s, { className: `w-8 h-8 mx-auto text-gray-600 mb-1` }),
+                    (0, c.jsx)(`p`, {
+                      className: `font-semibold text-gray-400`,
+                      children: `No active promotions`,
+                    }),
+                    (0, c.jsx)(`p`, {
+                      className: `text-[11px]`,
+                      children: `Boost your high-performing reels or posts to reach new audiences.`,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { l as component };

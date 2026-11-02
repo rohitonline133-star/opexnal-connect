@@ -1,1 +1,73 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{E as i,T as a,it as o,lt as s}from"./index-BPJbQuiK.js";var c=t(e()),l=n();function u(){let e=r(),[t,n]=(0,c.useState)(`en`),u=[{code:`en`,name:`English (US)`,native:`English`},{code:`gu`,name:`Gujarati`,native:`ગુજરાતી`},{code:`hi`,name:`Hindi`,native:`हिन्दी`},{code:`es`,name:`Spanish`,native:`Español`},{code:`fr`,name:`French`,native:`Français`},{code:`de`,name:`German`,native:`Deutsch`},{code:`ja`,name:`Japanese`,native:`日本語`}],d=(e,t)=>{n(e),s.success(`Language updated to ${t}`)};return(0,l.jsx)(a,{activeTab:`profile`,children:(0,l.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,l.jsx)(i,{title:`App Language`,showBack:!0,onBack:()=>e({to:`/settings`})}),(0,l.jsxs)(`div`,{className:`p-4 space-y-3`,children:[(0,l.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Choose the language used for buttons, titles, and system messages across Opexnal.`}),(0,l.jsx)(`div`,{className:`space-y-1.5`,children:u.map(e=>(0,l.jsxs)(`button`,{type:`button`,onClick:()=>d(e.code,e.name),className:`w-full p-3.5 rounded-xl border flex items-center justify-between transition text-xs ${t===e.code?`bg-purple-950/30 border-purple-800/80 text-white`:`bg-[#121212] border-[#262626] text-gray-300 hover:bg-[#1a1a1a]`}`,children:[(0,l.jsxs)(`div`,{children:[(0,l.jsx)(`span`,{className:`font-semibold text-white block`,children:e.name}),(0,l.jsx)(`span`,{className:`text-[11px] text-gray-400`,children:e.native})]}),t===e.code&&(0,l.jsx)(o,{className:`w-4 h-4 text-purple-400`})]},e.code))})]})]})})}export{u as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { E as i, T as a, it as o, lt as s } from "./index-BPJbQuiK.js";
+var c = t(e()),
+  l = n();
+function u() {
+  let e = r(),
+    [t, n] = (0, c.useState)(`en`),
+    u = [
+      { code: `en`, name: `English (US)`, native: `English` },
+      { code: `gu`, name: `Gujarati`, native: `ગુજરાતી` },
+      { code: `hi`, name: `Hindi`, native: `हिन्दी` },
+      { code: `es`, name: `Spanish`, native: `Español` },
+      { code: `fr`, name: `French`, native: `Français` },
+      { code: `de`, name: `German`, native: `Deutsch` },
+      { code: `ja`, name: `Japanese`, native: `日本語` },
+    ],
+    d = (e, t) => {
+      (n(e), s.success(`Language updated to ${t}`));
+    };
+  return (0, l.jsx)(a, {
+    activeTab: `profile`,
+    children: (0, l.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, l.jsx)(i, {
+          title: `App Language`,
+          showBack: !0,
+          onBack: () => e({ to: `/settings` }),
+        }),
+        (0, l.jsxs)(`div`, {
+          className: `p-4 space-y-3`,
+          children: [
+            (0, l.jsx)(`p`, {
+              className: `text-xs text-gray-400`,
+              children: `Choose the language used for buttons, titles, and system messages across Opexnal.`,
+            }),
+            (0, l.jsx)(`div`, {
+              className: `space-y-1.5`,
+              children: u.map((e) =>
+                (0, l.jsxs)(
+                  `button`,
+                  {
+                    type: `button`,
+                    onClick: () => d(e.code, e.name),
+                    className: `w-full p-3.5 rounded-xl border flex items-center justify-between transition text-xs ${t === e.code ? `bg-purple-950/30 border-purple-800/80 text-white` : `bg-[#121212] border-[#262626] text-gray-300 hover:bg-[#1a1a1a]`}`,
+                    children: [
+                      (0, l.jsxs)(`div`, {
+                        children: [
+                          (0, l.jsx)(`span`, {
+                            className: `font-semibold text-white block`,
+                            children: e.name,
+                          }),
+                          (0, l.jsx)(`span`, {
+                            className: `text-[11px] text-gray-400`,
+                            children: e.native,
+                          }),
+                        ],
+                      }),
+                      t === e.code && (0, l.jsx)(o, { className: `w-4 h-4 text-purple-400` }),
+                    ],
+                  },
+                  e.code,
+                ),
+              ),
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { u as component };

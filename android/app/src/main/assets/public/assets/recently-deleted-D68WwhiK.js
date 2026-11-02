@@ -1,1 +1,124 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{E as i,T as a,Z as o,j as s,lt as c,z as l}from"./index-BPJbQuiK.js";var u=t(e()),d=n();function f(){let e=r(),[t,n]=(0,u.useState)([{id:`del_1`,type:`post`,caption:`Early UI prototype draft`,daysLeft:28,thumb:`https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80`},{id:`del_2`,type:`reel`,caption:`Quick coding workflow timelapse`,daysLeft:19,thumb:`https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80`}]),f=e=>{n(t=>t.filter(t=>t.id!==e)),c.success(`Post restored to your profile.`)},p=e=>{window.confirm(`Permanently delete this item? This action cannot be undone.`)&&(n(t=>t.filter(t=>t.id!==e)),c.success(`Item permanently deleted.`))};return(0,d.jsx)(a,{activeTab:`profile`,children:(0,d.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,d.jsx)(i,{title:`Recently Deleted`,showBack:!0,onBack:()=>e({to:`/settings`})}),(0,d.jsxs)(`div`,{className:`p-4 space-y-4`,children:[(0,d.jsxs)(`div`,{className:`p-3 bg-[#121212] border border-[#262626] rounded-xl flex items-start gap-2.5 text-xs text-gray-400`,children:[(0,d.jsx)(o,{className:`w-4 h-4 text-[#8B5CF6] shrink-0 mt-0.5`}),(0,d.jsx)(`p`,{children:`Posts, reels, and stories in this folder will be permanently deleted after 30 days. Only you can see recently deleted items.`})]}),t.length===0?(0,d.jsxs)(`div`,{className:`text-center py-16 text-gray-500 text-xs`,children:[(0,d.jsx)(s,{className:`w-8 h-8 mx-auto mb-2 text-gray-600`}),`No recently deleted items.`]}):(0,d.jsx)(`div`,{className:`grid grid-cols-2 gap-3`,children:t.map(e=>(0,d.jsxs)(`div`,{className:`bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden flex flex-col`,children:[(0,d.jsxs)(`div`,{className:`aspect-square bg-gray-900 relative`,children:[(0,d.jsx)(`img`,{src:e.thumb,alt:e.caption,className:`w-full h-full object-cover`}),(0,d.jsxs)(`span`,{className:`absolute top-2 left-2 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-[10px] text-amber-300 font-semibold`,children:[e.daysLeft,`d left`]})]}),(0,d.jsxs)(`div`,{className:`p-3 space-y-2 flex-1 flex flex-col justify-between`,children:[(0,d.jsx)(`p`,{className:`text-xs text-gray-300 line-clamp-2`,children:e.caption}),(0,d.jsxs)(`div`,{className:`flex gap-2 pt-1`,children:[(0,d.jsxs)(`button`,{type:`button`,onClick:()=>f(e.id),className:`flex-1 py-1.5 bg-[#262626] hover:bg-[#333333] text-white text-[11px] font-semibold rounded-lg transition flex items-center justify-center gap-1`,children:[(0,d.jsx)(l,{className:`w-3 h-3`}),(0,d.jsx)(`span`,{children:`Restore`})]}),(0,d.jsx)(`button`,{type:`button`,onClick:()=>p(e.id),className:`p-1.5 text-rose-400 hover:bg-rose-950/40 rounded-lg transition`,children:(0,d.jsx)(s,{className:`w-3.5 h-3.5`})})]})]})]},e.id))})]})]})})}export{f as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { E as i, T as a, Z as o, j as s, lt as c, z as l } from "./index-BPJbQuiK.js";
+var u = t(e()),
+  d = n();
+function f() {
+  let e = r(),
+    [t, n] = (0, u.useState)([
+      {
+        id: `del_1`,
+        type: `post`,
+        caption: `Early UI prototype draft`,
+        daysLeft: 28,
+        thumb: `https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80`,
+      },
+      {
+        id: `del_2`,
+        type: `reel`,
+        caption: `Quick coding workflow timelapse`,
+        daysLeft: 19,
+        thumb: `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80`,
+      },
+    ]),
+    f = (e) => {
+      (n((t) => t.filter((t) => t.id !== e)), c.success(`Post restored to your profile.`));
+    },
+    p = (e) => {
+      window.confirm(`Permanently delete this item? This action cannot be undone.`) &&
+        (n((t) => t.filter((t) => t.id !== e)), c.success(`Item permanently deleted.`));
+    };
+  return (0, d.jsx)(a, {
+    activeTab: `profile`,
+    children: (0, d.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, d.jsx)(i, {
+          title: `Recently Deleted`,
+          showBack: !0,
+          onBack: () => e({ to: `/settings` }),
+        }),
+        (0, d.jsxs)(`div`, {
+          className: `p-4 space-y-4`,
+          children: [
+            (0, d.jsxs)(`div`, {
+              className: `p-3 bg-[#121212] border border-[#262626] rounded-xl flex items-start gap-2.5 text-xs text-gray-400`,
+              children: [
+                (0, d.jsx)(o, { className: `w-4 h-4 text-[#8B5CF6] shrink-0 mt-0.5` }),
+                (0, d.jsx)(`p`, {
+                  children: `Posts, reels, and stories in this folder will be permanently deleted after 30 days. Only you can see recently deleted items.`,
+                }),
+              ],
+            }),
+            t.length === 0
+              ? (0, d.jsxs)(`div`, {
+                  className: `text-center py-16 text-gray-500 text-xs`,
+                  children: [
+                    (0, d.jsx)(s, { className: `w-8 h-8 mx-auto mb-2 text-gray-600` }),
+                    `No recently deleted items.`,
+                  ],
+                })
+              : (0, d.jsx)(`div`, {
+                  className: `grid grid-cols-2 gap-3`,
+                  children: t.map((e) =>
+                    (0, d.jsxs)(
+                      `div`,
+                      {
+                        className: `bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden flex flex-col`,
+                        children: [
+                          (0, d.jsxs)(`div`, {
+                            className: `aspect-square bg-gray-900 relative`,
+                            children: [
+                              (0, d.jsx)(`img`, {
+                                src: e.thumb,
+                                alt: e.caption,
+                                className: `w-full h-full object-cover`,
+                              }),
+                              (0, d.jsxs)(`span`, {
+                                className: `absolute top-2 left-2 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-[10px] text-amber-300 font-semibold`,
+                                children: [e.daysLeft, `d left`],
+                              }),
+                            ],
+                          }),
+                          (0, d.jsxs)(`div`, {
+                            className: `p-3 space-y-2 flex-1 flex flex-col justify-between`,
+                            children: [
+                              (0, d.jsx)(`p`, {
+                                className: `text-xs text-gray-300 line-clamp-2`,
+                                children: e.caption,
+                              }),
+                              (0, d.jsxs)(`div`, {
+                                className: `flex gap-2 pt-1`,
+                                children: [
+                                  (0, d.jsxs)(`button`, {
+                                    type: `button`,
+                                    onClick: () => f(e.id),
+                                    className: `flex-1 py-1.5 bg-[#262626] hover:bg-[#333333] text-white text-[11px] font-semibold rounded-lg transition flex items-center justify-center gap-1`,
+                                    children: [
+                                      (0, d.jsx)(l, { className: `w-3 h-3` }),
+                                      (0, d.jsx)(`span`, { children: `Restore` }),
+                                    ],
+                                  }),
+                                  (0, d.jsx)(`button`, {
+                                    type: `button`,
+                                    onClick: () => p(e.id),
+                                    className: `p-1.5 text-rose-400 hover:bg-rose-950/40 rounded-lg transition`,
+                                    children: (0, d.jsx)(s, { className: `w-3.5 h-3.5` }),
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                        ],
+                      },
+                      e.id,
+                    ),
+                  ),
+                }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { f as component };

@@ -1,1 +1,148 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{E as i,T as a,f as o,lt as s}from"./index-BPJbQuiK.js";var c=t(e()),l=n();function u(){let e=r(),[t,n]=(0,c.useState)(!0),[u,d]=(0,c.useState)(!0),[f,p]=(0,c.useState)(`strict`),[m,h]=(0,c.useState)(`inspirational`);return(0,l.jsx)(a,{activeTab:`ai`,children:(0,l.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,l.jsx)(i,{title:`AI Settings & Rules`,showBack:!0,onBack:()=>e({to:`/ai`})}),(0,l.jsxs)(`div`,{className:`p-4 space-y-6`,children:[(0,l.jsxs)(`div`,{className:`space-y-3`,children:[(0,l.jsx)(`h3`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Creator Persona`}),(0,l.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,l.jsx)(`label`,{className:`text-xs font-semibold text-gray-300`,children:`Default Tone of Voice`}),(0,l.jsxs)(`select`,{value:m,onChange:e=>h(e.target.value),className:`w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,children:[(0,l.jsx)(`option`,{value:`inspirational`,children:`Inspirational & Poetic`}),(0,l.jsx)(`option`,{value:`humorous`,children:`Humorous & Casual`}),(0,l.jsx)(`option`,{value:`educational`,children:`Informative & Technical`}),(0,l.jsx)(`option`,{value:`minimalist`,children:`Minimalist & Punchy`})]})]}),(0,l.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,l.jsx)(`label`,{className:`text-xs font-semibold text-gray-300`,children:`Automated Content Moderation`}),(0,l.jsxs)(`select`,{value:f,onChange:e=>p(e.target.value),className:`w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,children:[(0,l.jsx)(`option`,{value:`strict`,children:`Strict (Blocks all profanity, slurs and high-risk terms)`}),(0,l.jsx)(`option`,{value:`standard`,children:`Standard (Flags hate speech, scams, and dangerous claims)`})]})]})]}),(0,l.jsxs)(`div`,{className:`space-y-3`,children:[(0,l.jsx)(`h3`,{className:`text-xs font-bold uppercase tracking-wider text-gray-400`,children:`Autonomous Assistance`}),(0,l.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,l.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,l.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Smart Caption Suggestions`}),(0,l.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Suggest captions automatically when uploading media`})]}),(0,l.jsx)(o,{checked:t,onCheckedChange:n})]}),(0,l.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,children:[(0,l.jsxs)(`div`,{className:`space-y-0.5`,children:[(0,l.jsx)(`span`,{className:`text-sm font-semibold text-white`,children:`Hashtag Trend Analysis`}),(0,l.jsx)(`p`,{className:`text-xs text-gray-400`,children:`Recommend hashtags based on real-time community engagement`})]}),(0,l.jsx)(o,{checked:u,onCheckedChange:d})]})]}),(0,l.jsx)(`button`,{type:`button`,onClick:()=>{s.success(`AI preferences saved.`)},className:`w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg`,children:`Save AI Preferences`})]})]})})}export{u as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { E as i, T as a, f as o, lt as s } from "./index-BPJbQuiK.js";
+var c = t(e()),
+  l = n();
+function u() {
+  let e = r(),
+    [t, n] = (0, c.useState)(!0),
+    [u, d] = (0, c.useState)(!0),
+    [f, p] = (0, c.useState)(`strict`),
+    [m, h] = (0, c.useState)(`inspirational`);
+  return (0, l.jsx)(a, {
+    activeTab: `ai`,
+    children: (0, l.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, l.jsx)(i, {
+          title: `AI Settings & Rules`,
+          showBack: !0,
+          onBack: () => e({ to: `/ai` }),
+        }),
+        (0, l.jsxs)(`div`, {
+          className: `p-4 space-y-6`,
+          children: [
+            (0, l.jsxs)(`div`, {
+              className: `space-y-3`,
+              children: [
+                (0, l.jsx)(`h3`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Creator Persona`,
+                }),
+                (0, l.jsxs)(`div`, {
+                  className: `space-y-1.5`,
+                  children: [
+                    (0, l.jsx)(`label`, {
+                      className: `text-xs font-semibold text-gray-300`,
+                      children: `Default Tone of Voice`,
+                    }),
+                    (0, l.jsxs)(`select`, {
+                      value: m,
+                      onChange: (e) => h(e.target.value),
+                      className: `w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,
+                      children: [
+                        (0, l.jsx)(`option`, {
+                          value: `inspirational`,
+                          children: `Inspirational & Poetic`,
+                        }),
+                        (0, l.jsx)(`option`, { value: `humorous`, children: `Humorous & Casual` }),
+                        (0, l.jsx)(`option`, {
+                          value: `educational`,
+                          children: `Informative & Technical`,
+                        }),
+                        (0, l.jsx)(`option`, {
+                          value: `minimalist`,
+                          children: `Minimalist & Punchy`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                (0, l.jsxs)(`div`, {
+                  className: `space-y-1.5`,
+                  children: [
+                    (0, l.jsx)(`label`, {
+                      className: `text-xs font-semibold text-gray-300`,
+                      children: `Automated Content Moderation`,
+                    }),
+                    (0, l.jsxs)(`select`, {
+                      value: f,
+                      onChange: (e) => p(e.target.value),
+                      className: `w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,
+                      children: [
+                        (0, l.jsx)(`option`, {
+                          value: `strict`,
+                          children: `Strict (Blocks all profanity, slurs and high-risk terms)`,
+                        }),
+                        (0, l.jsx)(`option`, {
+                          value: `standard`,
+                          children: `Standard (Flags hate speech, scams, and dangerous claims)`,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            (0, l.jsxs)(`div`, {
+              className: `space-y-3`,
+              children: [
+                (0, l.jsx)(`h3`, {
+                  className: `text-xs font-bold uppercase tracking-wider text-gray-400`,
+                  children: `Autonomous Assistance`,
+                }),
+                (0, l.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, l.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, l.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Smart Caption Suggestions`,
+                        }),
+                        (0, l.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Suggest captions automatically when uploading media`,
+                        }),
+                      ],
+                    }),
+                    (0, l.jsx)(o, { checked: t, onCheckedChange: n }),
+                  ],
+                }),
+                (0, l.jsxs)(`div`, {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between`,
+                  children: [
+                    (0, l.jsxs)(`div`, {
+                      className: `space-y-0.5`,
+                      children: [
+                        (0, l.jsx)(`span`, {
+                          className: `text-sm font-semibold text-white`,
+                          children: `Hashtag Trend Analysis`,
+                        }),
+                        (0, l.jsx)(`p`, {
+                          className: `text-xs text-gray-400`,
+                          children: `Recommend hashtags based on real-time community engagement`,
+                        }),
+                      ],
+                    }),
+                    (0, l.jsx)(o, { checked: u, onCheckedChange: d }),
+                  ],
+                }),
+              ],
+            }),
+            (0, l.jsx)(`button`, {
+              type: `button`,
+              onClick: () => {
+                s.success(`AI preferences saved.`);
+              },
+              className: `w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg`,
+              children: `Save AI Preferences`,
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { u as component };

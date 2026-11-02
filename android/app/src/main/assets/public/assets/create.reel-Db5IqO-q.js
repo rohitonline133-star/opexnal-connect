@@ -1,1 +1,32 @@
-import{t as e}from"./jsx-runtime-B5yqYJvp.js";import{t}from"./useNavigate-BJOrhi-q.js";import{E as n,T as r}from"./index-BPJbQuiK.js";var i=e();function a(){let e=t();return(0,i.jsx)(r,{activeTab:`create`,children:(0,i.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,i.jsx)(n,{title:`New Reel`,showBack:!0,onBack:()=>e({to:`/create`})}),(0,i.jsxs)(`div`,{className:`p-4`,children:[(0,i.jsx)(`p`,{className:`text-xs text-gray-400 mb-4`,children:`Upload short-form 9:16 videos, select licensed audio tracks, and add interactive stickers.`}),(0,i.jsx)(`button`,{type:`button`,onClick:()=>e({to:`/create`}),className:`w-full py-3 bg-[#1e1e1e] hover:bg-[#252525] text-white text-xs font-semibold rounded-xl transition`,children:`Open Reel Editor`})]})]})})}export{a as component};
+import { t as e } from "./jsx-runtime-B5yqYJvp.js";
+import { t } from "./useNavigate-BJOrhi-q.js";
+import { E as n, T as r } from "./index-BPJbQuiK.js";
+var i = e();
+function a() {
+  let e = t();
+  return (0, i.jsx)(r, {
+    activeTab: `create`,
+    children: (0, i.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, i.jsx)(n, { title: `New Reel`, showBack: !0, onBack: () => e({ to: `/create` }) }),
+        (0, i.jsxs)(`div`, {
+          className: `p-4`,
+          children: [
+            (0, i.jsx)(`p`, {
+              className: `text-xs text-gray-400 mb-4`,
+              children: `Upload short-form 9:16 videos, select licensed audio tracks, and add interactive stickers.`,
+            }),
+            (0, i.jsx)(`button`, {
+              type: `button`,
+              onClick: () => e({ to: `/create` }),
+              className: `w-full py-3 bg-[#1e1e1e] hover:bg-[#252525] text-white text-xs font-semibold rounded-xl transition`,
+              children: `Open Reel Editor`,
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+export { a as component };

@@ -1,1 +1,156 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./useNavigate-BJOrhi-q.js";import{t as i}from"./loader-circle-CbE-4Efj.js";import{E as a,L as o,T as s,et as c,lt as l}from"./index-BPJbQuiK.js";var u=t(e()),d=n();function f(){let e=r(),[t,n]=(0,u.useState)(`camera_media`),[f,p]=(0,u.useState)(``),[m,h]=(0,u.useState)(!0),[g,_]=(0,u.useState)(!1),[v,y]=(0,u.useState)(!1);return(0,d.jsx)(s,{activeTab:`profile`,children:(0,d.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,d.jsx)(a,{title:`Report a Problem`,showBack:!0,onBack:()=>e({to:`/help`})}),(0,d.jsx)(`div`,{className:`p-4 space-y-6`,children:v?(0,d.jsxs)(`div`,{className:`text-center py-12 space-y-4`,children:[(0,d.jsx)(c,{className:`w-14 h-14 text-emerald-400 mx-auto`}),(0,d.jsxs)(`div`,{children:[(0,d.jsx)(`h3`,{className:`text-lg font-bold text-white`,children:`Report Submitted!`}),(0,d.jsx)(`p`,{className:`text-xs text-gray-400 mt-1 max-w-sm mx-auto`,children:`Our engineering team has received your diagnostics report. Your feedback helps make Opexnal better for everyone.`})]}),(0,d.jsx)(`button`,{type:`button`,onClick:()=>e({to:`/help`}),className:`px-6 py-2.5 bg-[#262626] hover:bg-[#333] text-white text-xs font-semibold rounded-xl transition`,children:`Back to Help Center`})]}):(0,d.jsxs)(`form`,{onSubmit:e=>{if(e.preventDefault(),!f.trim()){l.error(`Please describe what went wrong.`);return}_(!0),setTimeout(()=>{_(!1),y(!0),l.success(`Bug report received. Thank you!`)},600)},className:`space-y-4`,children:[(0,d.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,d.jsx)(`label`,{className:`text-xs font-semibold text-gray-300`,children:`Feature or Area`}),(0,d.jsxs)(`select`,{value:t,onChange:e=>n(e.target.value),className:`w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,children:[(0,d.jsx)(`option`,{value:`camera_media`,children:`Camera, Uploads & Media`}),(0,d.jsx)(`option`,{value:`messaging`,children:`Direct Messaging & Voice`}),(0,d.jsx)(`option`,{value:`reels`,children:`Reels & Video Playback`}),(0,d.jsx)(`option`,{value:`notifications`,children:`Push Notifications`}),(0,d.jsx)(`option`,{value:`account_login`,children:`Account, Login & 2FA`}),(0,d.jsx)(`option`,{value:`other`,children:`Other Technical Issue`})]})]}),(0,d.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,d.jsx)(`label`,{className:`text-xs font-semibold text-gray-300`,children:`Briefly Explain What Happened`}),(0,d.jsx)(`textarea`,{rows:4,value:f,onChange:e=>p(e.target.value),placeholder:`What were you doing when the issue occurred? What did you expect to happen?`,required:!0,className:`w-full p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition resize-none`})]}),(0,d.jsxs)(`div`,{className:`flex items-center gap-2 pt-1`,children:[(0,d.jsx)(`input`,{type:`checkbox`,id:`include-logs`,checked:m,onChange:e=>h(e.target.checked),className:`w-4 h-4 rounded border-[#333] text-[#8B5CF6] focus:ring-[#8B5CF6] accent-[#8B5CF6]`}),(0,d.jsx)(`label`,{htmlFor:`include-logs`,className:`text-xs text-gray-400`,children:`Include device diagnostic logs and client version metadata`})]}),(0,d.jsxs)(`button`,{type:`submit`,disabled:g,className:`w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`,children:[g?(0,d.jsx)(i,{className:`w-4 h-4 animate-spin`}):(0,d.jsx)(o,{className:`w-4 h-4`}),(0,d.jsx)(`span`,{children:`Send Bug Report`})]})]})})]})})}export{f as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./useNavigate-BJOrhi-q.js";
+import { t as i } from "./loader-circle-CbE-4Efj.js";
+import { E as a, L as o, T as s, et as c, lt as l } from "./index-BPJbQuiK.js";
+var u = t(e()),
+  d = n();
+function f() {
+  let e = r(),
+    [t, n] = (0, u.useState)(`camera_media`),
+    [f, p] = (0, u.useState)(``),
+    [m, h] = (0, u.useState)(!0),
+    [g, _] = (0, u.useState)(!1),
+    [v, y] = (0, u.useState)(!1);
+  return (0, d.jsx)(s, {
+    activeTab: `profile`,
+    children: (0, d.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, d.jsx)(a, {
+          title: `Report a Problem`,
+          showBack: !0,
+          onBack: () => e({ to: `/help` }),
+        }),
+        (0, d.jsx)(`div`, {
+          className: `p-4 space-y-6`,
+          children: v
+            ? (0, d.jsxs)(`div`, {
+                className: `text-center py-12 space-y-4`,
+                children: [
+                  (0, d.jsx)(c, { className: `w-14 h-14 text-emerald-400 mx-auto` }),
+                  (0, d.jsxs)(`div`, {
+                    children: [
+                      (0, d.jsx)(`h3`, {
+                        className: `text-lg font-bold text-white`,
+                        children: `Report Submitted!`,
+                      }),
+                      (0, d.jsx)(`p`, {
+                        className: `text-xs text-gray-400 mt-1 max-w-sm mx-auto`,
+                        children: `Our engineering team has received your diagnostics report. Your feedback helps make Opexnal better for everyone.`,
+                      }),
+                    ],
+                  }),
+                  (0, d.jsx)(`button`, {
+                    type: `button`,
+                    onClick: () => e({ to: `/help` }),
+                    className: `px-6 py-2.5 bg-[#262626] hover:bg-[#333] text-white text-xs font-semibold rounded-xl transition`,
+                    children: `Back to Help Center`,
+                  }),
+                ],
+              })
+            : (0, d.jsxs)(`form`, {
+                onSubmit: (e) => {
+                  if ((e.preventDefault(), !f.trim())) {
+                    l.error(`Please describe what went wrong.`);
+                    return;
+                  }
+                  (_(!0),
+                    setTimeout(() => {
+                      (_(!1), y(!0), l.success(`Bug report received. Thank you!`));
+                    }, 600));
+                },
+                className: `space-y-4`,
+                children: [
+                  (0, d.jsxs)(`div`, {
+                    className: `space-y-1.5`,
+                    children: [
+                      (0, d.jsx)(`label`, {
+                        className: `text-xs font-semibold text-gray-300`,
+                        children: `Feature or Area`,
+                      }),
+                      (0, d.jsxs)(`select`, {
+                        value: t,
+                        onChange: (e) => n(e.target.value),
+                        className: `w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-[#8B5CF6]`,
+                        children: [
+                          (0, d.jsx)(`option`, {
+                            value: `camera_media`,
+                            children: `Camera, Uploads & Media`,
+                          }),
+                          (0, d.jsx)(`option`, {
+                            value: `messaging`,
+                            children: `Direct Messaging & Voice`,
+                          }),
+                          (0, d.jsx)(`option`, {
+                            value: `reels`,
+                            children: `Reels & Video Playback`,
+                          }),
+                          (0, d.jsx)(`option`, {
+                            value: `notifications`,
+                            children: `Push Notifications`,
+                          }),
+                          (0, d.jsx)(`option`, {
+                            value: `account_login`,
+                            children: `Account, Login & 2FA`,
+                          }),
+                          (0, d.jsx)(`option`, {
+                            value: `other`,
+                            children: `Other Technical Issue`,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  (0, d.jsxs)(`div`, {
+                    className: `space-y-1.5`,
+                    children: [
+                      (0, d.jsx)(`label`, {
+                        className: `text-xs font-semibold text-gray-300`,
+                        children: `Briefly Explain What Happened`,
+                      }),
+                      (0, d.jsx)(`textarea`, {
+                        rows: 4,
+                        value: f,
+                        onChange: (e) => p(e.target.value),
+                        placeholder: `What were you doing when the issue occurred? What did you expect to happen?`,
+                        required: !0,
+                        className: `w-full p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition resize-none`,
+                      }),
+                    ],
+                  }),
+                  (0, d.jsxs)(`div`, {
+                    className: `flex items-center gap-2 pt-1`,
+                    children: [
+                      (0, d.jsx)(`input`, {
+                        type: `checkbox`,
+                        id: `include-logs`,
+                        checked: m,
+                        onChange: (e) => h(e.target.checked),
+                        className: `w-4 h-4 rounded border-[#333] text-[#8B5CF6] focus:ring-[#8B5CF6] accent-[#8B5CF6]`,
+                      }),
+                      (0, d.jsx)(`label`, {
+                        htmlFor: `include-logs`,
+                        className: `text-xs text-gray-400`,
+                        children: `Include device diagnostic logs and client version metadata`,
+                      }),
+                    ],
+                  }),
+                  (0, d.jsxs)(`button`, {
+                    type: `submit`,
+                    disabled: g,
+                    className: `w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`,
+                    children: [
+                      g
+                        ? (0, d.jsx)(i, { className: `w-4 h-4 animate-spin` })
+                        : (0, d.jsx)(o, { className: `w-4 h-4` }),
+                      (0, d.jsx)(`span`, { children: `Send Bug Report` }),
+                    ],
+                  }),
+                ],
+              }),
+        }),
+      ],
+    }),
+  });
+}
+export { f as component };

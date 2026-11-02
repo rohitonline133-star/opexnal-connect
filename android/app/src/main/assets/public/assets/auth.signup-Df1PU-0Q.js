@@ -1,1 +1,495 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{n as r,t as i}from"./createLucideIcon-DgzBSI1Z.js";import{t as a}from"./useNavigate-BJOrhi-q.js";import{t as o}from"./auth-client-sF2KzMXy.js";import{t as s}from"./arrow-left-CPTA-aqL.js";import{t as c}from"./calendar-Clxci-S9.js";import{t as l}from"./eye-off-BTNjnLZQ.js";import{t as u}from"./key-round-Bo-BHNma.js";import{t as d}from"./loader-circle-CbE-4Efj.js";import{t as f}from"./mail-Bfwhevaf.js";import{H as p,J as m,c as h,et as g,k as _,lt as v,tt as y}from"./index-BPJbQuiK.js";import{t as b}from"./account-security-j8xmFq3N.js";var x=i(`circle-x`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}],[`path`,{d:`m15 9-6 6`,key:`1uzhvr`}],[`path`,{d:`m9 9 6 6`,key:`z0biqf`}]]),S=t(e()),C=n();function w(){let e=h.useSearch(),t=a(),[n,i]=(0,S.useState)(``),[w,T]=(0,S.useState)(``),[E,D]=(0,S.useState)(``),[O,k]=(0,S.useState)(``),[A,j]=(0,S.useState)(``),[M,N]=(0,S.useState)(!1),[P,F]=(0,S.useState)(!1),[I,L]=(0,S.useState)(`details`),[R,z]=(0,S.useState)(``),[B,V]=(0,S.useState)(!1),[H,U]=(0,S.useState)(`idle`),[W,G]=(0,S.useState)(!1),[K,q]=(0,S.useState)(null),J=b(A,E),Y=e=>{let t=e.toLowerCase().replace(/[^a-z0-9_.]/g,``);if(D(t),t.length<3){U(`idle`);return}U(`checking`),setTimeout(()=>{[`admin`,`system`,`root`,`instagram`,`meta`].includes(t)?U(`taken`):U(`available`)},250)};return(0,C.jsxs)(`div`,{className:`w-full`,children:[(0,C.jsx)(`div`,{className:`mb-4`,children:(0,C.jsxs)(r,{to:`/auth/login`,className:`inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition`,children:[(0,C.jsx)(s,{className:`w-3.5 h-3.5`}),(0,C.jsx)(`span`,{children:`Back to Login`})]})}),(0,C.jsxs)(`div`,{className:`text-center mb-6`,children:[(0,C.jsx)(`h2`,{className:`text-2xl font-bold text-white mb-1`,children:I===`welcome`?`Welcome to Opexnal! 🎉`:I===`verify_otp`?`Verify Contact`:`Create Your Account`}),(0,C.jsx)(`p`,{className:`text-xs text-gray-400 font-medium`,children:I===`welcome`?`Your account is active. Start sharing and connecting.`:I===`verify_otp`?`We sent a 6-digit confirmation code to ${n}`:`Join millions sharing stories, reels and creative ideas`})]}),K&&(0,C.jsxs)(`div`,{role:`alert`,className:`w-full mb-4 p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-red-200 text-xs flex items-start gap-2 animate-in fade-in duration-200`,children:[(0,C.jsx)(y,{className:`w-4 h-4 shrink-0 text-red-400 mt-0.5`}),(0,C.jsx)(`span`,{className:`flex-1 leading-relaxed`,children:K})]}),I===`details`&&(0,C.jsxs)(`form`,{onSubmit:async e=>{e.preventDefault(),q(null);let t=n.trim();if(!t){q(`Please enter an email address or mobile phone.`);return}if(!w.trim()){q(`Please enter your full name.`);return}if(!E.trim()||E.length<3){q(`Username must be at least 3 characters.`);return}if(H===`taken`){q(`This username is already taken. Please choose another.`);return}if(!O){q(`Please enter your birthday for age verification (13+).`);return}let r=new Date(O),i=Date.now()-r.getTime(),a=new Date(i);if(Math.abs(a.getUTCFullYear()-1970)<13){q(`You must be at least 13 years old to create an Opexnal account.`);return}if(!J.isValid){q(J.errors[0]||`Password does not meet security requirements.`);return}if(!P){q(`You must agree to Opexnal's Terms of Service and Privacy Policy.`);return}G(!0);try{let e=await(await fetch(`/api/auth/phone/otp/request`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({email:t})})).json();V(!0),L(`verify_otp`),v.success(e.message||`Verification code sent!`)}catch{V(!0),L(`verify_otp`),v.info(`Verification code sent!`)}finally{G(!1)}},className:`w-full space-y-3`,children:[(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400`,children:(0,C.jsx)(f,{size:18})}),(0,C.jsx)(`input`,{type:`text`,placeholder:`Email or Mobile Phone`,value:n,onChange:e=>i(e.target.value),disabled:W,required:!0,className:`w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`})]}),(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400`,children:(0,C.jsx)(_,{size:18})}),(0,C.jsx)(`input`,{type:`text`,placeholder:`Full Name`,value:w,onChange:e=>T(e.target.value),disabled:W,required:!0,className:`w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`})]}),(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400 text-sm font-semibold`,children:`@`}),(0,C.jsx)(`input`,{type:`text`,placeholder:`Username`,value:E,onChange:e=>Y(e.target.value),disabled:W,required:!0,className:`w-full h-11 pl-9 pr-10 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`}),(0,C.jsxs)(`div`,{className:`absolute right-3`,children:[H===`checking`&&(0,C.jsx)(d,{className:`w-4 h-4 animate-spin text-gray-400`}),H===`available`&&(0,C.jsx)(g,{className:`w-4 h-4 text-emerald-400`}),H===`taken`&&(0,C.jsx)(x,{className:`w-4 h-4 text-rose-400`})]})]}),H===`available`&&(0,C.jsxs)(`p`,{className:`text-[11px] text-emerald-400 pl-1 font-medium`,children:[`@`,E,` is available!`]}),H===`taken`&&(0,C.jsxs)(`p`,{className:`text-[11px] text-rose-400 pl-1 font-medium`,children:[`@`,E,` is already taken.`]}),(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400`,children:(0,C.jsx)(c,{size:18})}),(0,C.jsx)(`input`,{type:`date`,placeholder:`Birthday`,value:O,onChange:e=>k(e.target.value),disabled:W,required:!0,className:`w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`})]}),(0,C.jsx)(`p`,{className:`text-[10px] text-gray-400 pl-1`,children:`Birthday is required for age compliance (13+) and will not be shown publicly without your permission.`}),(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400`,children:(0,C.jsx)(p,{size:18})}),(0,C.jsx)(`input`,{type:M?`text`:`password`,placeholder:`Create a strong password`,value:A,onChange:e=>j(e.target.value),disabled:W,required:!0,className:`w-full h-11 pl-11 pr-11 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`}),(0,C.jsx)(`button`,{type:`button`,onClick:()=>N(!M),className:`absolute right-4 text-gray-400 hover:text-white transition`,"aria-label":M?`Hide password`:`Show password`,children:M?(0,C.jsx)(l,{size:18}):(0,C.jsx)(m,{size:18})})]}),A.length>0&&(0,C.jsxs)(`div`,{className:`space-y-1.5 p-2.5 bg-[#121212] border border-[#222222] rounded-xl`,children:[(0,C.jsxs)(`div`,{className:`flex justify-between items-center text-[11px]`,children:[(0,C.jsx)(`span`,{className:`text-gray-400`,children:`Password Strength:`}),(0,C.jsxs)(`span`,{className:`font-semibold ${J.score>=80?`text-emerald-400`:J.score>=50?`text-amber-400`:`text-rose-400`}`,children:[J.label,` (`,J.score,`%)`]})]}),(0,C.jsx)(`div`,{className:`w-full h-1.5 bg-[#262626] rounded-full overflow-hidden`,children:(0,C.jsx)(`div`,{className:`h-full transition-all duration-300 ${J.score>=80?`bg-emerald-500`:J.score>=50?`bg-amber-500`:`bg-rose-500`}`,style:{width:`${J.score}%`}})}),J.errors.length>0&&(0,C.jsx)(`p`,{className:`text-[10px] text-rose-400`,children:J.errors[0]})]}),(0,C.jsxs)(`div`,{className:`flex items-start gap-2.5 pt-1`,children:[(0,C.jsx)(`input`,{type:`checkbox`,id:`agree-terms`,checked:P,onChange:e=>F(e.target.checked),className:`mt-0.5 w-4 h-4 rounded border-[#333] text-[#8B5CF6] focus:ring-[#8B5CF6] accent-[#8B5CF6]`}),(0,C.jsxs)(`label`,{htmlFor:`agree-terms`,className:`text-[11px] text-gray-400 leading-tight`,children:[`I agree to Opexnal's`,` `,(0,C.jsx)(r,{to:`/help`,className:`text-[#8B5CF6] hover:underline`,children:`Terms of Service`}),`,`,` `,(0,C.jsx)(r,{to:`/help`,className:`text-[#8B5CF6] hover:underline`,children:`Privacy Policy`}),` `,`and confirm I am 13 years of age or older.`]})]}),(0,C.jsxs)(`button`,{type:`submit`,disabled:W,className:`w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50`,children:[W&&(0,C.jsx)(d,{className:`w-4 h-4 animate-spin`}),(0,C.jsx)(`span`,{children:`Continue to Verification`})]})]}),I===`verify_otp`&&(0,C.jsxs)(`form`,{onSubmit:async e=>{if(e.preventDefault(),q(null),!R.trim()){q(`Please enter the verification code.`);return}G(!0);try{let e=await fetch(`/api/auth/phone/otp/verify`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({email:n.trim(),code:R.trim()})}),t=await e.json();if(!e.ok){q(t.error||`Invalid verification code`),G(!1);return}let r=n.includes(`@`)?n.trim():`${E}@opexnal.local`,{data:i,error:a}=await o.signUp({email:r,password:A,options:{data:{username:E.trim(),full_name:w.trim()}}});if(a){q(a.message),v.error(a.message);return}L(`welcome`),v.success(`Account created successfully!`)}catch(e){let t=e instanceof Error?e.message:`Registration failed`;q(t),v.error(t)}finally{G(!1)}},className:`w-full space-y-4`,children:[(0,C.jsxs)(`div`,{className:`p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs space-y-1`,children:[(0,C.jsxs)(`span`,{className:`text-[#8B5CF6] font-semibold flex items-center gap-1.5`,children:[(0,C.jsx)(u,{className:`h-4 w-4`}),` Code Sent`]}),(0,C.jsxs)(`p`,{className:`text-gray-400 text-[11px]`,children:[`Enter the 6-digit verification code sent to`,` `,(0,C.jsx)(`strong`,{className:`text-white`,children:n}),`.`]})]}),(0,C.jsxs)(`div`,{className:`relative flex items-center`,children:[(0,C.jsx)(`span`,{className:`absolute left-4 text-gray-400`,children:(0,C.jsx)(u,{size:18})}),(0,C.jsx)(`input`,{type:`text`,placeholder:`6-digit code`,value:R,onChange:e=>z(e.target.value),disabled:W,autoFocus:!0,required:!0,className:`w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-widest text-center`})]}),(0,C.jsxs)(`button`,{type:`submit`,disabled:W,className:`w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`,children:[W&&(0,C.jsx)(d,{className:`w-4 h-4 animate-spin`}),(0,C.jsx)(`span`,{children:`Complete Registration`})]}),(0,C.jsx)(`button`,{type:`button`,onClick:()=>L(`details`),className:`w-full text-center text-xs text-gray-400 hover:text-white`,children:`Change email / phone number`})]}),I===`welcome`&&(0,C.jsxs)(`div`,{className:`w-full space-y-5 text-center py-4`,children:[(0,C.jsx)(`div`,{className:`w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400`,children:(0,C.jsx)(g,{className:`w-8 h-8`})}),(0,C.jsxs)(`div`,{children:[(0,C.jsxs)(`h3`,{className:`text-lg font-bold text-white`,children:[`Welcome, `,w,`!`]}),(0,C.jsxs)(`p`,{className:`text-xs text-gray-400 mt-1`,children:[`Your profile @`,E,` is all set up. Get ready to explore creator communities and share moments.`]})]}),(0,C.jsx)(`button`,{type:`button`,onClick:()=>t({to:e.redirect||`/home`,replace:!0}),className:`w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg`,children:`Go to Your Feed`})]}),I===`details`&&(0,C.jsx)(`div`,{className:`mt-6 text-center`,children:(0,C.jsxs)(`p`,{className:`text-xs text-gray-400 font-medium`,children:[`Already have an account?`,` `,(0,C.jsx)(r,{to:`/auth/login`,search:{redirect:e.redirect},className:`text-[#8B5CF6] font-semibold hover:underline ml-1`,children:`Log In`})]})})]})}export{w as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { n as r, t as i } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as a } from "./useNavigate-BJOrhi-q.js";
+import { t as o } from "./auth-client-sF2KzMXy.js";
+import { t as s } from "./arrow-left-CPTA-aqL.js";
+import { t as c } from "./calendar-Clxci-S9.js";
+import { t as l } from "./eye-off-BTNjnLZQ.js";
+import { t as u } from "./key-round-Bo-BHNma.js";
+import { t as d } from "./loader-circle-CbE-4Efj.js";
+import { t as f } from "./mail-Bfwhevaf.js";
+import { H as p, J as m, c as h, et as g, k as _, lt as v, tt as y } from "./index-BPJbQuiK.js";
+import { t as b } from "./account-security-j8xmFq3N.js";
+var x = i(`circle-x`, [
+    [`circle`, { cx: `12`, cy: `12`, r: `10`, key: `1mglay` }],
+    [`path`, { d: `m15 9-6 6`, key: `1uzhvr` }],
+    [`path`, { d: `m9 9 6 6`, key: `z0biqf` }],
+  ]),
+  S = t(e()),
+  C = n();
+function w() {
+  let e = h.useSearch(),
+    t = a(),
+    [n, i] = (0, S.useState)(``),
+    [w, T] = (0, S.useState)(``),
+    [E, D] = (0, S.useState)(``),
+    [O, k] = (0, S.useState)(``),
+    [A, j] = (0, S.useState)(``),
+    [M, N] = (0, S.useState)(!1),
+    [P, F] = (0, S.useState)(!1),
+    [I, L] = (0, S.useState)(`details`),
+    [R, z] = (0, S.useState)(``),
+    [B, V] = (0, S.useState)(!1),
+    [H, U] = (0, S.useState)(`idle`),
+    [W, G] = (0, S.useState)(!1),
+    [K, q] = (0, S.useState)(null),
+    J = b(A, E),
+    Y = (e) => {
+      let t = e.toLowerCase().replace(/[^a-z0-9_.]/g, ``);
+      if ((D(t), t.length < 3)) {
+        U(`idle`);
+        return;
+      }
+      (U(`checking`),
+        setTimeout(() => {
+          [`admin`, `system`, `root`, `instagram`, `meta`].includes(t)
+            ? U(`taken`)
+            : U(`available`);
+        }, 250));
+    };
+  return (0, C.jsxs)(`div`, {
+    className: `w-full`,
+    children: [
+      (0, C.jsx)(`div`, {
+        className: `mb-4`,
+        children: (0, C.jsxs)(r, {
+          to: `/auth/login`,
+          className: `inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition`,
+          children: [
+            (0, C.jsx)(s, { className: `w-3.5 h-3.5` }),
+            (0, C.jsx)(`span`, { children: `Back to Login` }),
+          ],
+        }),
+      }),
+      (0, C.jsxs)(`div`, {
+        className: `text-center mb-6`,
+        children: [
+          (0, C.jsx)(`h2`, {
+            className: `text-2xl font-bold text-white mb-1`,
+            children:
+              I === `welcome`
+                ? `Welcome to Opexnal! 🎉`
+                : I === `verify_otp`
+                  ? `Verify Contact`
+                  : `Create Your Account`,
+          }),
+          (0, C.jsx)(`p`, {
+            className: `text-xs text-gray-400 font-medium`,
+            children:
+              I === `welcome`
+                ? `Your account is active. Start sharing and connecting.`
+                : I === `verify_otp`
+                  ? `We sent a 6-digit confirmation code to ${n}`
+                  : `Join millions sharing stories, reels and creative ideas`,
+          }),
+        ],
+      }),
+      K &&
+        (0, C.jsxs)(`div`, {
+          role: `alert`,
+          className: `w-full mb-4 p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-red-200 text-xs flex items-start gap-2 animate-in fade-in duration-200`,
+          children: [
+            (0, C.jsx)(y, { className: `w-4 h-4 shrink-0 text-red-400 mt-0.5` }),
+            (0, C.jsx)(`span`, { className: `flex-1 leading-relaxed`, children: K }),
+          ],
+        }),
+      I === `details` &&
+        (0, C.jsxs)(`form`, {
+          onSubmit: async (e) => {
+            (e.preventDefault(), q(null));
+            let t = n.trim();
+            if (!t) {
+              q(`Please enter an email address or mobile phone.`);
+              return;
+            }
+            if (!w.trim()) {
+              q(`Please enter your full name.`);
+              return;
+            }
+            if (!E.trim() || E.length < 3) {
+              q(`Username must be at least 3 characters.`);
+              return;
+            }
+            if (H === `taken`) {
+              q(`This username is already taken. Please choose another.`);
+              return;
+            }
+            if (!O) {
+              q(`Please enter your birthday for age verification (13+).`);
+              return;
+            }
+            let r = new Date(O),
+              i = Date.now() - r.getTime(),
+              a = new Date(i);
+            if (Math.abs(a.getUTCFullYear() - 1970) < 13) {
+              q(`You must be at least 13 years old to create an Opexnal account.`);
+              return;
+            }
+            if (!J.isValid) {
+              q(J.errors[0] || `Password does not meet security requirements.`);
+              return;
+            }
+            if (!P) {
+              q(`You must agree to Opexnal's Terms of Service and Privacy Policy.`);
+              return;
+            }
+            G(!0);
+            try {
+              let e = await (
+                await fetch(`/api/auth/phone/otp/request`, {
+                  method: `POST`,
+                  headers: { "Content-Type": `application/json` },
+                  body: JSON.stringify({ email: t }),
+                })
+              ).json();
+              (V(!0), L(`verify_otp`), v.success(e.message || `Verification code sent!`));
+            } catch {
+              (V(!0), L(`verify_otp`), v.info(`Verification code sent!`));
+            } finally {
+              G(!1);
+            }
+          },
+          className: `w-full space-y-3`,
+          children: [
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400`,
+                  children: (0, C.jsx)(f, { size: 18 }),
+                }),
+                (0, C.jsx)(`input`, {
+                  type: `text`,
+                  placeholder: `Email or Mobile Phone`,
+                  value: n,
+                  onChange: (e) => i(e.target.value),
+                  disabled: W,
+                  required: !0,
+                  className: `w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`,
+                }),
+              ],
+            }),
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400`,
+                  children: (0, C.jsx)(_, { size: 18 }),
+                }),
+                (0, C.jsx)(`input`, {
+                  type: `text`,
+                  placeholder: `Full Name`,
+                  value: w,
+                  onChange: (e) => T(e.target.value),
+                  disabled: W,
+                  required: !0,
+                  className: `w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`,
+                }),
+              ],
+            }),
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400 text-sm font-semibold`,
+                  children: `@`,
+                }),
+                (0, C.jsx)(`input`, {
+                  type: `text`,
+                  placeholder: `Username`,
+                  value: E,
+                  onChange: (e) => Y(e.target.value),
+                  disabled: W,
+                  required: !0,
+                  className: `w-full h-11 pl-9 pr-10 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`,
+                }),
+                (0, C.jsxs)(`div`, {
+                  className: `absolute right-3`,
+                  children: [
+                    H === `checking` &&
+                      (0, C.jsx)(d, { className: `w-4 h-4 animate-spin text-gray-400` }),
+                    H === `available` && (0, C.jsx)(g, { className: `w-4 h-4 text-emerald-400` }),
+                    H === `taken` && (0, C.jsx)(x, { className: `w-4 h-4 text-rose-400` }),
+                  ],
+                }),
+              ],
+            }),
+            H === `available` &&
+              (0, C.jsxs)(`p`, {
+                className: `text-[11px] text-emerald-400 pl-1 font-medium`,
+                children: [`@`, E, ` is available!`],
+              }),
+            H === `taken` &&
+              (0, C.jsxs)(`p`, {
+                className: `text-[11px] text-rose-400 pl-1 font-medium`,
+                children: [`@`, E, ` is already taken.`],
+              }),
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400`,
+                  children: (0, C.jsx)(c, { size: 18 }),
+                }),
+                (0, C.jsx)(`input`, {
+                  type: `date`,
+                  placeholder: `Birthday`,
+                  value: O,
+                  onChange: (e) => k(e.target.value),
+                  disabled: W,
+                  required: !0,
+                  className: `w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`,
+                }),
+              ],
+            }),
+            (0, C.jsx)(`p`, {
+              className: `text-[10px] text-gray-400 pl-1`,
+              children: `Birthday is required for age compliance (13+) and will not be shown publicly without your permission.`,
+            }),
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400`,
+                  children: (0, C.jsx)(p, { size: 18 }),
+                }),
+                (0, C.jsx)(`input`, {
+                  type: M ? `text` : `password`,
+                  placeholder: `Create a strong password`,
+                  value: A,
+                  onChange: (e) => j(e.target.value),
+                  disabled: W,
+                  required: !0,
+                  className: `w-full h-11 pl-11 pr-11 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50`,
+                }),
+                (0, C.jsx)(`button`, {
+                  type: `button`,
+                  onClick: () => N(!M),
+                  className: `absolute right-4 text-gray-400 hover:text-white transition`,
+                  "aria-label": M ? `Hide password` : `Show password`,
+                  children: M ? (0, C.jsx)(l, { size: 18 }) : (0, C.jsx)(m, { size: 18 }),
+                }),
+              ],
+            }),
+            A.length > 0 &&
+              (0, C.jsxs)(`div`, {
+                className: `space-y-1.5 p-2.5 bg-[#121212] border border-[#222222] rounded-xl`,
+                children: [
+                  (0, C.jsxs)(`div`, {
+                    className: `flex justify-between items-center text-[11px]`,
+                    children: [
+                      (0, C.jsx)(`span`, {
+                        className: `text-gray-400`,
+                        children: `Password Strength:`,
+                      }),
+                      (0, C.jsxs)(`span`, {
+                        className: `font-semibold ${J.score >= 80 ? `text-emerald-400` : J.score >= 50 ? `text-amber-400` : `text-rose-400`}`,
+                        children: [J.label, ` (`, J.score, `%)`],
+                      }),
+                    ],
+                  }),
+                  (0, C.jsx)(`div`, {
+                    className: `w-full h-1.5 bg-[#262626] rounded-full overflow-hidden`,
+                    children: (0, C.jsx)(`div`, {
+                      className: `h-full transition-all duration-300 ${J.score >= 80 ? `bg-emerald-500` : J.score >= 50 ? `bg-amber-500` : `bg-rose-500`}`,
+                      style: { width: `${J.score}%` },
+                    }),
+                  }),
+                  J.errors.length > 0 &&
+                    (0, C.jsx)(`p`, {
+                      className: `text-[10px] text-rose-400`,
+                      children: J.errors[0],
+                    }),
+                ],
+              }),
+            (0, C.jsxs)(`div`, {
+              className: `flex items-start gap-2.5 pt-1`,
+              children: [
+                (0, C.jsx)(`input`, {
+                  type: `checkbox`,
+                  id: `agree-terms`,
+                  checked: P,
+                  onChange: (e) => F(e.target.checked),
+                  className: `mt-0.5 w-4 h-4 rounded border-[#333] text-[#8B5CF6] focus:ring-[#8B5CF6] accent-[#8B5CF6]`,
+                }),
+                (0, C.jsxs)(`label`, {
+                  htmlFor: `agree-terms`,
+                  className: `text-[11px] text-gray-400 leading-tight`,
+                  children: [
+                    `I agree to Opexnal's`,
+                    ` `,
+                    (0, C.jsx)(r, {
+                      to: `/help`,
+                      className: `text-[#8B5CF6] hover:underline`,
+                      children: `Terms of Service`,
+                    }),
+                    `,`,
+                    ` `,
+                    (0, C.jsx)(r, {
+                      to: `/help`,
+                      className: `text-[#8B5CF6] hover:underline`,
+                      children: `Privacy Policy`,
+                    }),
+                    ` `,
+                    `and confirm I am 13 years of age or older.`,
+                  ],
+                }),
+              ],
+            }),
+            (0, C.jsxs)(`button`, {
+              type: `submit`,
+              disabled: W,
+              className: `w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50`,
+              children: [
+                W && (0, C.jsx)(d, { className: `w-4 h-4 animate-spin` }),
+                (0, C.jsx)(`span`, { children: `Continue to Verification` }),
+              ],
+            }),
+          ],
+        }),
+      I === `verify_otp` &&
+        (0, C.jsxs)(`form`, {
+          onSubmit: async (e) => {
+            if ((e.preventDefault(), q(null), !R.trim())) {
+              q(`Please enter the verification code.`);
+              return;
+            }
+            G(!0);
+            try {
+              let e = await fetch(`/api/auth/phone/otp/verify`, {
+                  method: `POST`,
+                  headers: { "Content-Type": `application/json` },
+                  body: JSON.stringify({ email: n.trim(), code: R.trim() }),
+                }),
+                t = await e.json();
+              if (!e.ok) {
+                (q(t.error || `Invalid verification code`), G(!1));
+                return;
+              }
+              let r = n.includes(`@`) ? n.trim() : `${E}@opexnal.local`,
+                { data: i, error: a } = await o.signUp({
+                  email: r,
+                  password: A,
+                  options: { data: { username: E.trim(), full_name: w.trim() } },
+                });
+              if (a) {
+                (q(a.message), v.error(a.message));
+                return;
+              }
+              (L(`welcome`), v.success(`Account created successfully!`));
+            } catch (e) {
+              let t = e instanceof Error ? e.message : `Registration failed`;
+              (q(t), v.error(t));
+            } finally {
+              G(!1);
+            }
+          },
+          className: `w-full space-y-4`,
+          children: [
+            (0, C.jsxs)(`div`, {
+              className: `p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs space-y-1`,
+              children: [
+                (0, C.jsxs)(`span`, {
+                  className: `text-[#8B5CF6] font-semibold flex items-center gap-1.5`,
+                  children: [(0, C.jsx)(u, { className: `h-4 w-4` }), ` Code Sent`],
+                }),
+                (0, C.jsxs)(`p`, {
+                  className: `text-gray-400 text-[11px]`,
+                  children: [
+                    `Enter the 6-digit verification code sent to`,
+                    ` `,
+                    (0, C.jsx)(`strong`, { className: `text-white`, children: n }),
+                    `.`,
+                  ],
+                }),
+              ],
+            }),
+            (0, C.jsxs)(`div`, {
+              className: `relative flex items-center`,
+              children: [
+                (0, C.jsx)(`span`, {
+                  className: `absolute left-4 text-gray-400`,
+                  children: (0, C.jsx)(u, { size: 18 }),
+                }),
+                (0, C.jsx)(`input`, {
+                  type: `text`,
+                  placeholder: `6-digit code`,
+                  value: R,
+                  onChange: (e) => z(e.target.value),
+                  disabled: W,
+                  autoFocus: !0,
+                  required: !0,
+                  className: `w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-widest text-center`,
+                }),
+              ],
+            }),
+            (0, C.jsxs)(`button`, {
+              type: `submit`,
+              disabled: W,
+              className: `w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`,
+              children: [
+                W && (0, C.jsx)(d, { className: `w-4 h-4 animate-spin` }),
+                (0, C.jsx)(`span`, { children: `Complete Registration` }),
+              ],
+            }),
+            (0, C.jsx)(`button`, {
+              type: `button`,
+              onClick: () => L(`details`),
+              className: `w-full text-center text-xs text-gray-400 hover:text-white`,
+              children: `Change email / phone number`,
+            }),
+          ],
+        }),
+      I === `welcome` &&
+        (0, C.jsxs)(`div`, {
+          className: `w-full space-y-5 text-center py-4`,
+          children: [
+            (0, C.jsx)(`div`, {
+              className: `w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400`,
+              children: (0, C.jsx)(g, { className: `w-8 h-8` }),
+            }),
+            (0, C.jsxs)(`div`, {
+              children: [
+                (0, C.jsxs)(`h3`, {
+                  className: `text-lg font-bold text-white`,
+                  children: [`Welcome, `, w, `!`],
+                }),
+                (0, C.jsxs)(`p`, {
+                  className: `text-xs text-gray-400 mt-1`,
+                  children: [
+                    `Your profile @`,
+                    E,
+                    ` is all set up. Get ready to explore creator communities and share moments.`,
+                  ],
+                }),
+              ],
+            }),
+            (0, C.jsx)(`button`, {
+              type: `button`,
+              onClick: () => t({ to: e.redirect || `/home`, replace: !0 }),
+              className: `w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg`,
+              children: `Go to Your Feed`,
+            }),
+          ],
+        }),
+      I === `details` &&
+        (0, C.jsx)(`div`, {
+          className: `mt-6 text-center`,
+          children: (0, C.jsxs)(`p`, {
+            className: `text-xs text-gray-400 font-medium`,
+            children: [
+              `Already have an account?`,
+              ` `,
+              (0, C.jsx)(r, {
+                to: `/auth/login`,
+                search: { redirect: e.redirect },
+                className: `text-[#8B5CF6] font-semibold hover:underline ml-1`,
+                children: `Log In`,
+              }),
+            ],
+          }),
+        }),
+    ],
+  });
+}
+export { w as component };

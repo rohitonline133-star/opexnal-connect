@@ -1,1 +1,811 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{n as r,t as i}from"./createLucideIcon-DgzBSI1Z.js";import{t as a}from"./client-CNuAEkjg.js";import{j as o}from"./removable-Bti6oWPM.js";import{t as s}from"./useQuery-Sthak1vL.js";import{t as c}from"./useMutation-DAlJQPHF.js";import{t as l}from"./bookmark-ClGYgWxW.js";import{t as u}from"./ellipsis-BEtnLQCg.js";import{t as ee}from"./eye-off-BTNjnLZQ.js";import{t as d}from"./loader-circle-CbE-4Efj.js";import{t as f}from"./message-circle-KQTsD60l.js";import{t as p}from"./play-BxKOOuxW.js";import{t as m}from"./volume-x-HR6YYz3M.js";import{t as h}from"./x-CeqC2pJc.js";import{t as g}from"./utils-DojpP95n.js";import{C as _,F as v,K as y,L as te,_ as b,b as x,d as S,lt as C,q as w,rt as T,st as E,u as D,v as O,w as k,x as A,y as j}from"./index-BPJbQuiK.js";import{i as M}from"./profile-qFNPerqP.js";import{t as N}from"./avatar-ECPYu-KR.js";import{_ as ne,a as P,f as re,g as ie,i as F,m as I,t as L,u as R}from"./posts-CfzQybWe.js";import{t as z}from"./label-Oe9ke0jm.js";import{t as ae}from"./use-signed-media-url-D4B_BLP0.js";var oe=i(`link`,[[`path`,{d:`M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71`,key:`1cjeqo`}],[`path`,{d:`M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71`,key:`19qd67`}]]),B=i(`music-2`,[[`circle`,{cx:`8`,cy:`18`,r:`4`,key:`1fc0mg`}],[`path`,{d:`M12 18V2l7 4`,key:`g04rme`}]]),V=i(`volume-2`,[[`path`,{d:`M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z`,key:`uqj9uw`}],[`path`,{d:`M16 9a5 5 0 0 1 0 6`,key:`1q6k2b`}],[`path`,{d:`M19.364 18.364a9 9 0 0 0 0-12.728`,key:`ijwkga`}]]),H=t(e(),1);new Date(Date.now()-2592e5).toISOString();async function U({reporterId:e,targetId:t,targetType:n,reason:r,details:i=``}){try{let o=crypto.randomUUID(),{error:s}=await a.from(`content_reports`).insert({id:o,reporter_id:e,target_id:t,target_type:n,reason:r,details:i,status:`pending`});if(s)throw s;return{success:!0,id:o}}catch(e){return console.warn(`Could not insert report to DB, saving locally fallback`,e),{success:!0,id:`report_${Date.now()}_${Math.random().toString(36).slice(2,10)}`}}}var W=n();function G({open:e,onOpenChange:t,targetId:n,targetType:r,viewerId:i}){let[a,o]=(0,H.useState)(`spam`),[s,c]=(0,H.useState)(``),[l,u]=(0,H.useState)(!1);return(0,W.jsx)(b,{open:e,onOpenChange:t,children:(0,W.jsxs)(O,{className:`max-w-md bg-card border border-border`,children:[(0,W.jsxs)(x,{children:[(0,W.jsxs)(A,{className:`flex items-center gap-2 text-base font-bold text-destructive`,children:[(0,W.jsx)(w,{className:`h-5 w-5`}),`Report `,r.charAt(0).toUpperCase()+r.slice(1)]}),(0,W.jsxs)(j,{className:`text-xs text-muted-foreground`,children:[`Why are you reporting this `,r,`? Your report is anonymous, except if you are reporting an intellectual property infringement.`]})]}),(0,W.jsxs)(`div`,{className:`space-y-4 py-2`,children:[(0,W.jsxs)(`div`,{className:`space-y-2`,children:[(0,W.jsx)(z,{className:`text-xs font-semibold`,children:`Select reason`}),(0,W.jsx)(`div`,{className:`space-y-1.5 max-h-48 overflow-y-auto pr-1`,children:[{id:`spam`,label:`It's spam, misleading or scam`},{id:`hate_speech`,label:`Hate speech, discrimination or symbols`},{id:`harassment`,label:`Harassment, bullying or threats`},{id:`copyright`,label:`Intellectual property / Copyright violation`},{id:`nudity`,label:`Nudity or sexual activity`},{id:`violence`,label:`Violence, dangerous organizations or self-harm`},{id:`misinformation`,label:`False information or impersonation`}].map(e=>(0,W.jsxs)(`label`,{className:`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${a===e.id?`border-primary bg-primary/10 text-foreground font-medium`:`border-border bg-secondary/30 text-muted-foreground hover:bg-secondary`}`,children:[(0,W.jsx)(`span`,{children:e.label}),(0,W.jsx)(`input`,{type:`radio`,name:`report_reason`,value:e.id,checked:a===e.id,onChange:e=>o(e.target.value),className:`sr-only`})]},e.id))})]}),(0,W.jsxs)(`div`,{className:`space-y-1.5`,children:[(0,W.jsx)(z,{className:`text-xs font-semibold`,children:`Additional context (optional)`}),(0,W.jsx)(S,{value:s,onChange:e=>c(e.target.value),placeholder:`Provide any details that will help our review team...`,className:`h-20 text-xs bg-background`})]}),(0,W.jsxs)(`div`,{className:`flex gap-2 pt-2`,children:[(0,W.jsx)(k,{variant:`outline`,className:`flex-1 rounded-xl text-xs`,onClick:()=>t(!1),children:`Cancel`}),(0,W.jsx)(k,{variant:`destructive`,className:`flex-1 rounded-xl text-xs font-semibold`,disabled:l,onClick:async()=>{u(!0);try{await U({reporterId:i,targetId:n,targetType:r,reason:a,details:s}),C.success(`Thank you for reporting. Our Trust & Safety team will review this promptly.`),t(!1),c(``)}catch{C.error(`Failed to submit report. Please try again.`)}finally{u(!1)}},children:l?`Submitting...`:`Submit Report`})]})]})]})})}function K(){let{user:e}=D(),[t,n]=(0,H.useState)(!0),{data:i,isLoading:a}=s({queryKey:[`reels`,e?.id],queryFn:()=>R(e?.id||``),enabled:!!e?.id}),o=i??[];return a?(0,W.jsx)(`div`,{className:`flex min-h-screen items-center justify-center bg-black`,children:(0,W.jsx)(d,{className:`h-6 w-6 animate-spin text-white/70`,"aria-hidden":`true`})}):o.length===0?(0,W.jsxs)(`div`,{className:`flex min-h-screen flex-col items-center justify-center gap-4 bg-black px-6 text-center text-white`,children:[(0,W.jsx)(`div`,{className:`flex h-14 w-14 items-center justify-center rounded-2xl brand-gradient-bg shadow-lg`,children:(0,W.jsx)(p,{className:`h-7 w-7 fill-white text-white`})}),(0,W.jsx)(`h1`,{className:`text-lg font-bold`,children:`No Reels in Feed Yet`}),(0,W.jsx)(`p`,{className:`max-w-xs text-xs text-white/70`,children:`Be the first creator to share a vertical video or reel on Opexnal!`}),(0,W.jsx)(k,{asChild:!0,className:`brand-gradient-bg text-primary-foreground text-xs font-semibold rounded-xl`,children:(0,W.jsx)(r,{to:`/create`,children:`Upload First Video Reel`})})]}):(0,W.jsxs)(`div`,{className:`relative mx-auto h-screen w-full max-w-md snap-y snap-mandatory overflow-y-scroll bg-black scrollbar-none`,children:[(0,W.jsxs)(`header`,{className:`fixed top-0 inset-x-0 z-30 mx-auto flex max-w-md items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent`,children:[(0,W.jsx)(r,{to:`/home`,"aria-label":`Back to home`,className:`flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur hover:bg-black/60`,children:(0,W.jsx)(T,{className:`h-5 w-5`})}),(0,W.jsx)(`span`,{className:`font-bold text-sm text-white tracking-wide`,children:`Reels`}),(0,W.jsx)(`button`,{type:`button`,onClick:()=>n(!t),"aria-label":t?`Unmute audio`:`Mute audio`,className:`flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur hover:bg-black/60`,children:t?(0,W.jsx)(m,{className:`h-4 w-4`}):(0,W.jsx)(V,{className:`h-4 w-4`})})]}),o.map(r=>(0,W.jsx)(q,{post:r,viewerId:e?.id??null,muted:t,onToggleMute:()=>n(!t)},r.id))]})}function q({post:e,viewerId:t,muted:n,onToggleMute:i}){let o=e.media.find(e=>e.media_type===`video`),s=ae(o?.storage_path),c=(0,H.useRef)(null),[p,m]=(0,H.useState)(e.liked),[h,_]=(0,H.useState)(e.likes_count),[S,T]=(0,H.useState)(e.saved),[D,P]=(0,H.useState)(!1),[I,L]=(0,H.useState)(!1),[R,z]=(0,H.useState)(!1),[V,U]=(0,H.useState)(!1),[K,q]=(0,H.useState)(!1),[ce,J]=(0,H.useState)(!1),[Y,X]=(0,H.useState)(!1),[Z,le]=(0,H.useState)(!1);async function ue(){if(!(!t||!e.user_id))try{let{data:t,error:n}=await a.rpc(`request_follow`,{_target_id:e.user_id});n||(X(!Y),C.success(t===`requested`?`Follow request sent`:`Following @${e.author?.username}`))}catch{X(!Y)}}let Q=(0,H.useRef)(0),de=()=>{let e=Date.now();e-Q.current<300?(p||$(),P(!0),setTimeout(()=>P(!1),900)):i(),Q.current=e};async function $(){if(!t)return;let n=!p;m(n),_(e=>Math.max(0,e+(n?1:-1)));try{await ie(e.id,t,p)}catch{m(!n),_(e=>Math.max(0,e+(n?-1:1))),C.error(`Could not update like`)}}async function fe(){if(!t)return;let n=!S;T(n);try{await ne(e.id,t,S),C.success(n?`Reel saved to collection`:`Reel removed from saves`)}catch{T(!n),C.error(`Could not update save`)}}async function pe(){let n=`${window.location.origin}/p/${e.id}`;try{let r=navigator;typeof r.share==`function`?await r.share({url:n,title:`Opexnal Reel`}):(await r.clipboard.writeText(n),C.success(`Reel link copied`)),t&&await re(e.id,t)}catch{}}return Z?null:(0,W.jsxs)(`section`,{className:`relative h-screen w-full snap-start bg-black overflow-hidden flex items-center justify-center`,children:[s?(0,W.jsx)(`video`,{ref:c,src:s,className:`h-full w-full object-cover cursor-pointer`,autoPlay:!0,loop:!0,muted:n,playsInline:!0,onClick:de}):(0,W.jsx)(`div`,{className:`flex h-full w-full items-center justify-center`,children:(0,W.jsx)(d,{className:`h-6 w-6 animate-spin text-white/70`,"aria-hidden":`true`})}),D&&(0,W.jsx)(`div`,{className:`pointer-events-none absolute inset-0 flex items-center justify-center z-20`,children:(0,W.jsx)(y,{className:`h-24 w-24 fill-rose-500 text-rose-500 animate-ping opacity-90`})}),(0,W.jsxs)(`div`,{className:`absolute bottom-20 right-3 flex flex-col items-center gap-5 z-20`,children:[(0,W.jsxs)(`button`,{type:`button`,"aria-label":p?`Unlike reel`:`Like reel`,onClick:$,className:`flex flex-col items-center text-white drop-shadow-md group`,children:[(0,W.jsx)(`div`,{className:`flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,children:(0,W.jsx)(y,{className:g(`h-6 w-6 transition-colors`,p?`fill-rose-500 text-rose-500`:`text-white`)})}),(0,W.jsx)(`span`,{className:`text-[11px] font-semibold mt-1`,children:F(h)})]}),(0,W.jsxs)(`button`,{type:`button`,"aria-label":`Comments`,onClick:()=>L(!0),className:`flex flex-col items-center text-white drop-shadow-md group`,children:[(0,W.jsx)(`div`,{className:`flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,children:(0,W.jsx)(f,{className:`h-6 w-6 text-white`})}),(0,W.jsx)(`span`,{className:`text-[11px] font-semibold mt-1`,children:F(e.comments_count)})]}),(0,W.jsxs)(`button`,{type:`button`,"aria-label":`Share reel`,onClick:pe,className:`flex flex-col items-center text-white drop-shadow-md group`,children:[(0,W.jsx)(`div`,{className:`flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,children:(0,W.jsx)(te,{className:`h-5 w-5 text-white`})}),(0,W.jsx)(`span`,{className:`text-[11px] font-semibold mt-1`,children:`Share`})]}),(0,W.jsxs)(`button`,{type:`button`,"aria-label":`Save reel`,onClick:fe,className:`flex flex-col items-center text-white drop-shadow-md group`,children:[(0,W.jsx)(`div`,{className:`flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,children:(0,W.jsx)(l,{className:g(`h-5 w-5`,S?`fill-white text-white`:`text-white`)})}),(0,W.jsx)(`span`,{className:`text-[11px] font-semibold mt-1`,children:S?`Saved`:`Save`})]}),(0,W.jsxs)(`button`,{type:`button`,"aria-label":`Reel options`,onClick:()=>U(!0),className:`flex flex-col items-center text-white drop-shadow-md group`,children:[(0,W.jsx)(`div`,{className:`flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,children:(0,W.jsx)(u,{className:`h-5 w-5 text-white`})}),(0,W.jsx)(`span`,{className:`text-[11px] font-semibold mt-1`,children:`More`})]})]}),(0,W.jsxs)(`div`,{className:`absolute inset-x-0 bottom-0 p-4 pr-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 flex flex-col justify-end space-y-2`,children:[e.author&&(0,W.jsxs)(`div`,{className:`flex items-center gap-2.5`,children:[(0,W.jsxs)(r,{to:`/u/$username`,params:{username:e.author.username},className:`flex items-center gap-2 text-white`,children:[(0,W.jsx)(N,{path:e.author.avatar_url,fallback:M(e.author),className:`h-9 w-9 ring-2 ring-white/30`}),(0,W.jsxs)(`div`,{className:`flex items-center gap-1`,children:[(0,W.jsx)(`span`,{className:`text-sm font-semibold hover:underline`,children:e.author.username}),e.author.is_verified&&(0,W.jsx)(E,{className:`h-4 w-4 text-primary fill-primary`})]})]}),t&&t!==e.user_id&&(0,W.jsx)(`button`,{type:`button`,onClick:ue,className:`ml-2 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${Y?`border-white/30 bg-white/20 text-white`:`border-primary bg-primary text-primary-foreground hover:brightness-110`}`,children:Y?`Following`:`Follow`})]}),e.caption&&(0,W.jsxs)(`div`,{className:`text-xs text-white/90`,children:[(0,W.jsx)(`p`,{className:g(!R&&`line-clamp-2`),children:e.caption}),e.caption.length>80&&(0,W.jsx)(`button`,{type:`button`,onClick:()=>z(!R),className:`text-[11px] font-semibold text-white/60 hover:text-white mt-0.5`,children:R?`show less`:`more`})]}),(0,W.jsxs)(`button`,{type:`button`,onClick:()=>J(!0),className:`flex items-center gap-1.5 text-[11px] text-white/80 hover:text-white transition-colors text-left`,children:[(0,W.jsx)(B,{className:`h-3 w-3 animate-spin text-primary shrink-0`}),(0,W.jsxs)(`span`,{className:`truncate`,children:[`Original audio — @`,e.author?.username||`opexnal`]})]})]}),(0,W.jsx)(b,{open:V,onOpenChange:U,children:(0,W.jsx)(O,{className:`max-w-xs p-0 overflow-hidden rounded-2xl bg-card border border-border`,children:(0,W.jsxs)(`div`,{className:`divide-y divide-border text-center text-sm font-medium`,children:[(0,W.jsxs)(`button`,{type:`button`,onClick:()=>{U(!1),q(!0)},className:`w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2`,children:[(0,W.jsx)(w,{className:`h-4 w-4`}),`Report Reel`]}),(0,W.jsxs)(`button`,{type:`button`,onClick:()=>{le(!0),C.success(`Reel hidden from your feed`),U(!1)},className:`w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,children:[(0,W.jsx)(ee,{className:`h-4 w-4 text-muted-foreground`}),`Not Interested`]}),(0,W.jsxs)(`button`,{type:`button`,onClick:()=>{navigator.clipboard.writeText(`${window.location.origin}/p/${e.id}`),C.success(`Reel link copied`),U(!1)},className:`w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,children:[(0,W.jsx)(oe,{className:`h-4 w-4 text-muted-foreground`}),`Copy Link`]}),(0,W.jsxs)(`button`,{type:`button`,onClick:()=>{U(!1),J(!0)},className:`w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,children:[(0,W.jsx)(B,{className:`h-4 w-4 text-primary`}),`Audio & Licensing Details`]}),(0,W.jsx)(`button`,{type:`button`,onClick:()=>U(!1),className:`w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal`,children:`Cancel`})]})})}),(0,W.jsx)(b,{open:ce,onOpenChange:J,children:(0,W.jsxs)(O,{className:`max-w-sm bg-card border border-border`,children:[(0,W.jsxs)(x,{children:[(0,W.jsxs)(A,{className:`flex items-center gap-2 text-base font-bold`,children:[(0,W.jsx)(B,{className:`h-5 w-5 text-primary`}),`Audio Track & Licensing`]}),(0,W.jsx)(j,{className:`text-xs text-muted-foreground`,children:`Track information and audio attribution.`})]}),(0,W.jsxs)(`div`,{className:`space-y-4 py-2 text-xs`,children:[(0,W.jsxs)(`div`,{className:`rounded-xl border border-border bg-secondary/40 p-3 space-y-2`,children:[(0,W.jsxs)(`div`,{className:`flex items-center justify-between`,children:[(0,W.jsx)(`span`,{className:`font-semibold text-foreground`,children:`Track Title`}),(0,W.jsx)(`span`,{className:`text-muted-foreground`,children:`Original Audio`})]}),(0,W.jsxs)(`div`,{className:`flex items-center justify-between`,children:[(0,W.jsx)(`span`,{className:`font-semibold text-foreground`,children:`Creator`}),(0,W.jsxs)(`span`,{className:`text-primary font-medium`,children:[`@`,e.author?.username||`creator`]})]}),(0,W.jsxs)(`div`,{className:`flex items-center justify-between`,children:[(0,W.jsx)(`span`,{className:`font-semibold text-foreground`,children:`Rights Management`}),(0,W.jsxs)(`span`,{className:`text-emerald-400 font-semibold flex items-center gap-1`,children:[(0,W.jsx)(v,{className:`h-3 w-3`}),` Cleared for Reels`]})]})]}),(0,W.jsx)(k,{className:`w-full rounded-xl brand-gradient-bg text-primary-foreground font-semibold`,onClick:()=>{C.success(`Audio selected! Redirecting to creator camera...`),J(!1)},children:`Use This Audio in New Reel`})]})]})}),(0,W.jsx)(G,{open:K,onOpenChange:q,targetId:e.id,targetType:`reel`,viewerId:t||`anonymous`}),I&&(0,W.jsx)(se,{postId:e.id,viewerId:t,onClose:()=>L(!1)})]})}function se({postId:e,viewerId:t,onClose:n}){let[r,i]=(0,H.useState)(``),a=o(),l=s({queryKey:[`comments`,e,t],queryFn:()=>P(e,t)}),u=c({mutationFn:()=>L({postId:e,userId:t,body:r.trim()}),onSuccess:()=>{i(``),a.invalidateQueries({queryKey:[`comments`,e]}),a.invalidateQueries({queryKey:[`reels`]})},onError:()=>C.error(`Could not post comment`)});return(0,W.jsx)(`div`,{className:`absolute inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-in fade-in-50`,children:(0,W.jsxs)(`div`,{className:`flex h-[60%] flex-col rounded-t-3xl border-t border-border bg-background p-4 shadow-2xl animate-in slide-in-from-bottom`,children:[(0,W.jsxs)(`div`,{className:`flex items-center justify-between border-b border-border pb-3`,children:[(0,W.jsx)(`h3`,{className:`text-sm font-semibold text-foreground`,children:`Comments`}),(0,W.jsx)(`button`,{type:`button`,onClick:n,className:`rounded-full p-1 text-muted-foreground hover:text-foreground`,children:(0,W.jsx)(h,{className:`h-4 w-4`})})]}),(0,W.jsx)(`div`,{className:`flex-1 overflow-y-auto space-y-3 py-3`,children:l.isLoading?(0,W.jsx)(`div`,{className:`flex justify-center py-8`,children:(0,W.jsx)(d,{className:`h-5 w-5 animate-spin text-primary`})}):(l.data?.length??0)===0?(0,W.jsx)(`p`,{className:`py-8 text-center text-xs text-muted-foreground`,children:`No comments yet. Start the conversation!`}):l.data?.map(e=>(0,W.jsxs)(`div`,{className:`flex gap-2.5 text-xs`,children:[(0,W.jsx)(N,{path:e.author?.avatar_url??null,fallback:e.author?M(e.author):`?`,className:`h-7 w-7 shrink-0`}),(0,W.jsxs)(`div`,{className:`min-w-0 flex-1`,children:[(0,W.jsxs)(`p`,{children:[(0,W.jsxs)(`span`,{className:`font-semibold mr-1`,children:[`@`,e.author?.username||`user`]}),(0,W.jsx)(`span`,{children:e.body})]}),(0,W.jsx)(`p`,{className:`text-[10px] text-muted-foreground mt-0.5`,children:I(e.created_at)})]})]},e.id))}),t&&(0,W.jsxs)(`form`,{onSubmit:e=>{e.preventDefault(),r.trim()&&u.mutate()},className:`flex items-center gap-2 pt-2 border-t border-border`,children:[(0,W.jsx)(_,{value:r,onChange:e=>i(e.target.value),placeholder:`Add a comment...`,className:`h-9 text-xs rounded-xl bg-surface`}),(0,W.jsx)(k,{type:`submit`,size:`sm`,disabled:!r.trim()||u.isPending,className:`h-9 rounded-xl brand-gradient-bg text-primary-foreground text-xs font-semibold px-3`,children:`Post`})]})]})})}export{K as component};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { n as r, t as i } from "./createLucideIcon-DgzBSI1Z.js";
+import { t as a } from "./client-CNuAEkjg.js";
+import { j as o } from "./removable-Bti6oWPM.js";
+import { t as s } from "./useQuery-Sthak1vL.js";
+import { t as c } from "./useMutation-DAlJQPHF.js";
+import { t as l } from "./bookmark-ClGYgWxW.js";
+import { t as u } from "./ellipsis-BEtnLQCg.js";
+import { t as ee } from "./eye-off-BTNjnLZQ.js";
+import { t as d } from "./loader-circle-CbE-4Efj.js";
+import { t as f } from "./message-circle-KQTsD60l.js";
+import { t as p } from "./play-BxKOOuxW.js";
+import { t as m } from "./volume-x-HR6YYz3M.js";
+import { t as h } from "./x-CeqC2pJc.js";
+import { t as g } from "./utils-DojpP95n.js";
+import {
+  C as _,
+  F as v,
+  K as y,
+  L as te,
+  _ as b,
+  b as x,
+  d as S,
+  lt as C,
+  q as w,
+  rt as T,
+  st as E,
+  u as D,
+  v as O,
+  w as k,
+  x as A,
+  y as j,
+} from "./index-BPJbQuiK.js";
+import { i as M } from "./profile-qFNPerqP.js";
+import { t as N } from "./avatar-ECPYu-KR.js";
+import {
+  _ as ne,
+  a as P,
+  f as re,
+  g as ie,
+  i as F,
+  m as I,
+  t as L,
+  u as R,
+} from "./posts-CfzQybWe.js";
+import { t as z } from "./label-Oe9ke0jm.js";
+import { t as ae } from "./use-signed-media-url-D4B_BLP0.js";
+var oe = i(`link`, [
+    [`path`, { d: `M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71`, key: `1cjeqo` }],
+    [`path`, { d: `M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71`, key: `19qd67` }],
+  ]),
+  B = i(`music-2`, [
+    [`circle`, { cx: `8`, cy: `18`, r: `4`, key: `1fc0mg` }],
+    [`path`, { d: `M12 18V2l7 4`, key: `g04rme` }],
+  ]),
+  V = i(`volume-2`, [
+    [
+      `path`,
+      {
+        d: `M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z`,
+        key: `uqj9uw`,
+      },
+    ],
+    [`path`, { d: `M16 9a5 5 0 0 1 0 6`, key: `1q6k2b` }],
+    [`path`, { d: `M19.364 18.364a9 9 0 0 0 0-12.728`, key: `ijwkga` }],
+  ]),
+  H = t(e(), 1);
+new Date(Date.now() - 2592e5).toISOString();
+async function U({ reporterId: e, targetId: t, targetType: n, reason: r, details: i = `` }) {
+  try {
+    let o = crypto.randomUUID(),
+      { error: s } = await a
+        .from(`content_reports`)
+        .insert({
+          id: o,
+          reporter_id: e,
+          target_id: t,
+          target_type: n,
+          reason: r,
+          details: i,
+          status: `pending`,
+        });
+    if (s) throw s;
+    return { success: !0, id: o };
+  } catch (e) {
+    return (
+      console.warn(`Could not insert report to DB, saving locally fallback`, e),
+      { success: !0, id: `report_${Date.now()}_${Math.random().toString(36).slice(2, 10)}` }
+    );
+  }
+}
+var W = n();
+function G({ open: e, onOpenChange: t, targetId: n, targetType: r, viewerId: i }) {
+  let [a, o] = (0, H.useState)(`spam`),
+    [s, c] = (0, H.useState)(``),
+    [l, u] = (0, H.useState)(!1);
+  return (0, W.jsx)(b, {
+    open: e,
+    onOpenChange: t,
+    children: (0, W.jsxs)(O, {
+      className: `max-w-md bg-card border border-border`,
+      children: [
+        (0, W.jsxs)(x, {
+          children: [
+            (0, W.jsxs)(A, {
+              className: `flex items-center gap-2 text-base font-bold text-destructive`,
+              children: [
+                (0, W.jsx)(w, { className: `h-5 w-5` }),
+                `Report `,
+                r.charAt(0).toUpperCase() + r.slice(1),
+              ],
+            }),
+            (0, W.jsxs)(j, {
+              className: `text-xs text-muted-foreground`,
+              children: [
+                `Why are you reporting this `,
+                r,
+                `? Your report is anonymous, except if you are reporting an intellectual property infringement.`,
+              ],
+            }),
+          ],
+        }),
+        (0, W.jsxs)(`div`, {
+          className: `space-y-4 py-2`,
+          children: [
+            (0, W.jsxs)(`div`, {
+              className: `space-y-2`,
+              children: [
+                (0, W.jsx)(z, { className: `text-xs font-semibold`, children: `Select reason` }),
+                (0, W.jsx)(`div`, {
+                  className: `space-y-1.5 max-h-48 overflow-y-auto pr-1`,
+                  children: [
+                    { id: `spam`, label: `It's spam, misleading or scam` },
+                    { id: `hate_speech`, label: `Hate speech, discrimination or symbols` },
+                    { id: `harassment`, label: `Harassment, bullying or threats` },
+                    { id: `copyright`, label: `Intellectual property / Copyright violation` },
+                    { id: `nudity`, label: `Nudity or sexual activity` },
+                    { id: `violence`, label: `Violence, dangerous organizations or self-harm` },
+                    { id: `misinformation`, label: `False information or impersonation` },
+                  ].map((e) =>
+                    (0, W.jsxs)(
+                      `label`,
+                      {
+                        className: `flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${a === e.id ? `border-primary bg-primary/10 text-foreground font-medium` : `border-border bg-secondary/30 text-muted-foreground hover:bg-secondary`}`,
+                        children: [
+                          (0, W.jsx)(`span`, { children: e.label }),
+                          (0, W.jsx)(`input`, {
+                            type: `radio`,
+                            name: `report_reason`,
+                            value: e.id,
+                            checked: a === e.id,
+                            onChange: (e) => o(e.target.value),
+                            className: `sr-only`,
+                          }),
+                        ],
+                      },
+                      e.id,
+                    ),
+                  ),
+                }),
+              ],
+            }),
+            (0, W.jsxs)(`div`, {
+              className: `space-y-1.5`,
+              children: [
+                (0, W.jsx)(z, {
+                  className: `text-xs font-semibold`,
+                  children: `Additional context (optional)`,
+                }),
+                (0, W.jsx)(S, {
+                  value: s,
+                  onChange: (e) => c(e.target.value),
+                  placeholder: `Provide any details that will help our review team...`,
+                  className: `h-20 text-xs bg-background`,
+                }),
+              ],
+            }),
+            (0, W.jsxs)(`div`, {
+              className: `flex gap-2 pt-2`,
+              children: [
+                (0, W.jsx)(k, {
+                  variant: `outline`,
+                  className: `flex-1 rounded-xl text-xs`,
+                  onClick: () => t(!1),
+                  children: `Cancel`,
+                }),
+                (0, W.jsx)(k, {
+                  variant: `destructive`,
+                  className: `flex-1 rounded-xl text-xs font-semibold`,
+                  disabled: l,
+                  onClick: async () => {
+                    u(!0);
+                    try {
+                      (await U({
+                        reporterId: i,
+                        targetId: n,
+                        targetType: r,
+                        reason: a,
+                        details: s,
+                      }),
+                        C.success(
+                          `Thank you for reporting. Our Trust & Safety team will review this promptly.`,
+                        ),
+                        t(!1),
+                        c(``));
+                    } catch {
+                      C.error(`Failed to submit report. Please try again.`);
+                    } finally {
+                      u(!1);
+                    }
+                  },
+                  children: l ? `Submitting...` : `Submit Report`,
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+}
+function K() {
+  let { user: e } = D(),
+    [t, n] = (0, H.useState)(!0),
+    { data: i, isLoading: a } = s({
+      queryKey: [`reels`, e?.id],
+      queryFn: () => R(e?.id || ``),
+      enabled: !!e?.id,
+    }),
+    o = i ?? [];
+  return a
+    ? (0, W.jsx)(`div`, {
+        className: `flex min-h-screen items-center justify-center bg-black`,
+        children: (0, W.jsx)(d, {
+          className: `h-6 w-6 animate-spin text-white/70`,
+          "aria-hidden": `true`,
+        }),
+      })
+    : o.length === 0
+      ? (0, W.jsxs)(`div`, {
+          className: `flex min-h-screen flex-col items-center justify-center gap-4 bg-black px-6 text-center text-white`,
+          children: [
+            (0, W.jsx)(`div`, {
+              className: `flex h-14 w-14 items-center justify-center rounded-2xl brand-gradient-bg shadow-lg`,
+              children: (0, W.jsx)(p, { className: `h-7 w-7 fill-white text-white` }),
+            }),
+            (0, W.jsx)(`h1`, { className: `text-lg font-bold`, children: `No Reels in Feed Yet` }),
+            (0, W.jsx)(`p`, {
+              className: `max-w-xs text-xs text-white/70`,
+              children: `Be the first creator to share a vertical video or reel on Opexnal!`,
+            }),
+            (0, W.jsx)(k, {
+              asChild: !0,
+              className: `brand-gradient-bg text-primary-foreground text-xs font-semibold rounded-xl`,
+              children: (0, W.jsx)(r, { to: `/create`, children: `Upload First Video Reel` }),
+            }),
+          ],
+        })
+      : (0, W.jsxs)(`div`, {
+          className: `relative mx-auto h-screen w-full max-w-md snap-y snap-mandatory overflow-y-scroll bg-black scrollbar-none`,
+          children: [
+            (0, W.jsxs)(`header`, {
+              className: `fixed top-0 inset-x-0 z-30 mx-auto flex max-w-md items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent`,
+              children: [
+                (0, W.jsx)(r, {
+                  to: `/home`,
+                  "aria-label": `Back to home`,
+                  className: `flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur hover:bg-black/60`,
+                  children: (0, W.jsx)(T, { className: `h-5 w-5` }),
+                }),
+                (0, W.jsx)(`span`, {
+                  className: `font-bold text-sm text-white tracking-wide`,
+                  children: `Reels`,
+                }),
+                (0, W.jsx)(`button`, {
+                  type: `button`,
+                  onClick: () => n(!t),
+                  "aria-label": t ? `Unmute audio` : `Mute audio`,
+                  className: `flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur hover:bg-black/60`,
+                  children: t
+                    ? (0, W.jsx)(m, { className: `h-4 w-4` })
+                    : (0, W.jsx)(V, { className: `h-4 w-4` }),
+                }),
+              ],
+            }),
+            o.map((r) =>
+              (0, W.jsx)(
+                q,
+                { post: r, viewerId: e?.id ?? null, muted: t, onToggleMute: () => n(!t) },
+                r.id,
+              ),
+            ),
+          ],
+        });
+}
+function q({ post: e, viewerId: t, muted: n, onToggleMute: i }) {
+  let o = e.media.find((e) => e.media_type === `video`),
+    s = ae(o?.storage_path),
+    c = (0, H.useRef)(null),
+    [p, m] = (0, H.useState)(e.liked),
+    [h, _] = (0, H.useState)(e.likes_count),
+    [S, T] = (0, H.useState)(e.saved),
+    [D, P] = (0, H.useState)(!1),
+    [I, L] = (0, H.useState)(!1),
+    [R, z] = (0, H.useState)(!1),
+    [V, U] = (0, H.useState)(!1),
+    [K, q] = (0, H.useState)(!1),
+    [ce, J] = (0, H.useState)(!1),
+    [Y, X] = (0, H.useState)(!1),
+    [Z, le] = (0, H.useState)(!1);
+  async function ue() {
+    if (!(!t || !e.user_id))
+      try {
+        let { data: t, error: n } = await a.rpc(`request_follow`, { _target_id: e.user_id });
+        n ||
+          (X(!Y),
+          C.success(
+            t === `requested` ? `Follow request sent` : `Following @${e.author?.username}`,
+          ));
+      } catch {
+        X(!Y);
+      }
+  }
+  let Q = (0, H.useRef)(0),
+    de = () => {
+      let e = Date.now();
+      (e - Q.current < 300 ? (p || $(), P(!0), setTimeout(() => P(!1), 900)) : i(),
+        (Q.current = e));
+    };
+  async function $() {
+    if (!t) return;
+    let n = !p;
+    (m(n), _((e) => Math.max(0, e + (n ? 1 : -1))));
+    try {
+      await ie(e.id, t, p);
+    } catch {
+      (m(!n), _((e) => Math.max(0, e + (n ? -1 : 1))), C.error(`Could not update like`));
+    }
+  }
+  async function fe() {
+    if (!t) return;
+    let n = !S;
+    T(n);
+    try {
+      (await ne(e.id, t, S), C.success(n ? `Reel saved to collection` : `Reel removed from saves`));
+    } catch {
+      (T(!n), C.error(`Could not update save`));
+    }
+  }
+  async function pe() {
+    let n = `${window.location.origin}/p/${e.id}`;
+    try {
+      let r = navigator;
+      (typeof r.share == `function`
+        ? await r.share({ url: n, title: `Opexnal Reel` })
+        : (await r.clipboard.writeText(n), C.success(`Reel link copied`)),
+        t && (await re(e.id, t)));
+    } catch {}
+  }
+  return Z
+    ? null
+    : (0, W.jsxs)(`section`, {
+        className: `relative h-screen w-full snap-start bg-black overflow-hidden flex items-center justify-center`,
+        children: [
+          s
+            ? (0, W.jsx)(`video`, {
+                ref: c,
+                src: s,
+                className: `h-full w-full object-cover cursor-pointer`,
+                autoPlay: !0,
+                loop: !0,
+                muted: n,
+                playsInline: !0,
+                onClick: de,
+              })
+            : (0, W.jsx)(`div`, {
+                className: `flex h-full w-full items-center justify-center`,
+                children: (0, W.jsx)(d, {
+                  className: `h-6 w-6 animate-spin text-white/70`,
+                  "aria-hidden": `true`,
+                }),
+              }),
+          D &&
+            (0, W.jsx)(`div`, {
+              className: `pointer-events-none absolute inset-0 flex items-center justify-center z-20`,
+              children: (0, W.jsx)(y, {
+                className: `h-24 w-24 fill-rose-500 text-rose-500 animate-ping opacity-90`,
+              }),
+            }),
+          (0, W.jsxs)(`div`, {
+            className: `absolute bottom-20 right-3 flex flex-col items-center gap-5 z-20`,
+            children: [
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                "aria-label": p ? `Unlike reel` : `Like reel`,
+                onClick: $,
+                className: `flex flex-col items-center text-white drop-shadow-md group`,
+                children: [
+                  (0, W.jsx)(`div`, {
+                    className: `flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,
+                    children: (0, W.jsx)(y, {
+                      className: g(
+                        `h-6 w-6 transition-colors`,
+                        p ? `fill-rose-500 text-rose-500` : `text-white`,
+                      ),
+                    }),
+                  }),
+                  (0, W.jsx)(`span`, {
+                    className: `text-[11px] font-semibold mt-1`,
+                    children: F(h),
+                  }),
+                ],
+              }),
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                "aria-label": `Comments`,
+                onClick: () => L(!0),
+                className: `flex flex-col items-center text-white drop-shadow-md group`,
+                children: [
+                  (0, W.jsx)(`div`, {
+                    className: `flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,
+                    children: (0, W.jsx)(f, { className: `h-6 w-6 text-white` }),
+                  }),
+                  (0, W.jsx)(`span`, {
+                    className: `text-[11px] font-semibold mt-1`,
+                    children: F(e.comments_count),
+                  }),
+                ],
+              }),
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                "aria-label": `Share reel`,
+                onClick: pe,
+                className: `flex flex-col items-center text-white drop-shadow-md group`,
+                children: [
+                  (0, W.jsx)(`div`, {
+                    className: `flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,
+                    children: (0, W.jsx)(te, { className: `h-5 w-5 text-white` }),
+                  }),
+                  (0, W.jsx)(`span`, {
+                    className: `text-[11px] font-semibold mt-1`,
+                    children: `Share`,
+                  }),
+                ],
+              }),
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                "aria-label": `Save reel`,
+                onClick: fe,
+                className: `flex flex-col items-center text-white drop-shadow-md group`,
+                children: [
+                  (0, W.jsx)(`div`, {
+                    className: `flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,
+                    children: (0, W.jsx)(l, {
+                      className: g(`h-5 w-5`, S ? `fill-white text-white` : `text-white`),
+                    }),
+                  }),
+                  (0, W.jsx)(`span`, {
+                    className: `text-[11px] font-semibold mt-1`,
+                    children: S ? `Saved` : `Save`,
+                  }),
+                ],
+              }),
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                "aria-label": `Reel options`,
+                onClick: () => U(!0),
+                className: `flex flex-col items-center text-white drop-shadow-md group`,
+                children: [
+                  (0, W.jsx)(`div`, {
+                    className: `flex h-11 w-11 items-center justify-center rounded-full bg-black/40 backdrop-blur group-hover:scale-110 transition-transform`,
+                    children: (0, W.jsx)(u, { className: `h-5 w-5 text-white` }),
+                  }),
+                  (0, W.jsx)(`span`, {
+                    className: `text-[11px] font-semibold mt-1`,
+                    children: `More`,
+                  }),
+                ],
+              }),
+            ],
+          }),
+          (0, W.jsxs)(`div`, {
+            className: `absolute inset-x-0 bottom-0 p-4 pr-16 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 flex flex-col justify-end space-y-2`,
+            children: [
+              e.author &&
+                (0, W.jsxs)(`div`, {
+                  className: `flex items-center gap-2.5`,
+                  children: [
+                    (0, W.jsxs)(r, {
+                      to: `/u/$username`,
+                      params: { username: e.author.username },
+                      className: `flex items-center gap-2 text-white`,
+                      children: [
+                        (0, W.jsx)(N, {
+                          path: e.author.avatar_url,
+                          fallback: M(e.author),
+                          className: `h-9 w-9 ring-2 ring-white/30`,
+                        }),
+                        (0, W.jsxs)(`div`, {
+                          className: `flex items-center gap-1`,
+                          children: [
+                            (0, W.jsx)(`span`, {
+                              className: `text-sm font-semibold hover:underline`,
+                              children: e.author.username,
+                            }),
+                            e.author.is_verified &&
+                              (0, W.jsx)(E, { className: `h-4 w-4 text-primary fill-primary` }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    t &&
+                      t !== e.user_id &&
+                      (0, W.jsx)(`button`, {
+                        type: `button`,
+                        onClick: ue,
+                        className: `ml-2 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${Y ? `border-white/30 bg-white/20 text-white` : `border-primary bg-primary text-primary-foreground hover:brightness-110`}`,
+                        children: Y ? `Following` : `Follow`,
+                      }),
+                  ],
+                }),
+              e.caption &&
+                (0, W.jsxs)(`div`, {
+                  className: `text-xs text-white/90`,
+                  children: [
+                    (0, W.jsx)(`p`, { className: g(!R && `line-clamp-2`), children: e.caption }),
+                    e.caption.length > 80 &&
+                      (0, W.jsx)(`button`, {
+                        type: `button`,
+                        onClick: () => z(!R),
+                        className: `text-[11px] font-semibold text-white/60 hover:text-white mt-0.5`,
+                        children: R ? `show less` : `more`,
+                      }),
+                  ],
+                }),
+              (0, W.jsxs)(`button`, {
+                type: `button`,
+                onClick: () => J(!0),
+                className: `flex items-center gap-1.5 text-[11px] text-white/80 hover:text-white transition-colors text-left`,
+                children: [
+                  (0, W.jsx)(B, { className: `h-3 w-3 animate-spin text-primary shrink-0` }),
+                  (0, W.jsxs)(`span`, {
+                    className: `truncate`,
+                    children: [`Original audio — @`, e.author?.username || `opexnal`],
+                  }),
+                ],
+              }),
+            ],
+          }),
+          (0, W.jsx)(b, {
+            open: V,
+            onOpenChange: U,
+            children: (0, W.jsx)(O, {
+              className: `max-w-xs p-0 overflow-hidden rounded-2xl bg-card border border-border`,
+              children: (0, W.jsxs)(`div`, {
+                className: `divide-y divide-border text-center text-sm font-medium`,
+                children: [
+                  (0, W.jsxs)(`button`, {
+                    type: `button`,
+                    onClick: () => {
+                      (U(!1), q(!0));
+                    },
+                    className: `w-full py-3.5 text-destructive font-semibold hover:bg-secondary/50 flex items-center justify-center gap-2`,
+                    children: [(0, W.jsx)(w, { className: `h-4 w-4` }), `Report Reel`],
+                  }),
+                  (0, W.jsxs)(`button`, {
+                    type: `button`,
+                    onClick: () => {
+                      (le(!0), C.success(`Reel hidden from your feed`), U(!1));
+                    },
+                    className: `w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,
+                    children: [
+                      (0, W.jsx)(ee, { className: `h-4 w-4 text-muted-foreground` }),
+                      `Not Interested`,
+                    ],
+                  }),
+                  (0, W.jsxs)(`button`, {
+                    type: `button`,
+                    onClick: () => {
+                      (navigator.clipboard.writeText(`${window.location.origin}/p/${e.id}`),
+                        C.success(`Reel link copied`),
+                        U(!1));
+                    },
+                    className: `w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,
+                    children: [
+                      (0, W.jsx)(oe, { className: `h-4 w-4 text-muted-foreground` }),
+                      `Copy Link`,
+                    ],
+                  }),
+                  (0, W.jsxs)(`button`, {
+                    type: `button`,
+                    onClick: () => {
+                      (U(!1), J(!0));
+                    },
+                    className: `w-full py-3.5 text-foreground hover:bg-secondary/50 flex items-center justify-center gap-2`,
+                    children: [
+                      (0, W.jsx)(B, { className: `h-4 w-4 text-primary` }),
+                      `Audio & Licensing Details`,
+                    ],
+                  }),
+                  (0, W.jsx)(`button`, {
+                    type: `button`,
+                    onClick: () => U(!1),
+                    className: `w-full py-3 text-muted-foreground hover:bg-secondary/50 font-normal`,
+                    children: `Cancel`,
+                  }),
+                ],
+              }),
+            }),
+          }),
+          (0, W.jsx)(b, {
+            open: ce,
+            onOpenChange: J,
+            children: (0, W.jsxs)(O, {
+              className: `max-w-sm bg-card border border-border`,
+              children: [
+                (0, W.jsxs)(x, {
+                  children: [
+                    (0, W.jsxs)(A, {
+                      className: `flex items-center gap-2 text-base font-bold`,
+                      children: [
+                        (0, W.jsx)(B, { className: `h-5 w-5 text-primary` }),
+                        `Audio Track & Licensing`,
+                      ],
+                    }),
+                    (0, W.jsx)(j, {
+                      className: `text-xs text-muted-foreground`,
+                      children: `Track information and audio attribution.`,
+                    }),
+                  ],
+                }),
+                (0, W.jsxs)(`div`, {
+                  className: `space-y-4 py-2 text-xs`,
+                  children: [
+                    (0, W.jsxs)(`div`, {
+                      className: `rounded-xl border border-border bg-secondary/40 p-3 space-y-2`,
+                      children: [
+                        (0, W.jsxs)(`div`, {
+                          className: `flex items-center justify-between`,
+                          children: [
+                            (0, W.jsx)(`span`, {
+                              className: `font-semibold text-foreground`,
+                              children: `Track Title`,
+                            }),
+                            (0, W.jsx)(`span`, {
+                              className: `text-muted-foreground`,
+                              children: `Original Audio`,
+                            }),
+                          ],
+                        }),
+                        (0, W.jsxs)(`div`, {
+                          className: `flex items-center justify-between`,
+                          children: [
+                            (0, W.jsx)(`span`, {
+                              className: `font-semibold text-foreground`,
+                              children: `Creator`,
+                            }),
+                            (0, W.jsxs)(`span`, {
+                              className: `text-primary font-medium`,
+                              children: [`@`, e.author?.username || `creator`],
+                            }),
+                          ],
+                        }),
+                        (0, W.jsxs)(`div`, {
+                          className: `flex items-center justify-between`,
+                          children: [
+                            (0, W.jsx)(`span`, {
+                              className: `font-semibold text-foreground`,
+                              children: `Rights Management`,
+                            }),
+                            (0, W.jsxs)(`span`, {
+                              className: `text-emerald-400 font-semibold flex items-center gap-1`,
+                              children: [
+                                (0, W.jsx)(v, { className: `h-3 w-3` }),
+                                ` Cleared for Reels`,
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                    (0, W.jsx)(k, {
+                      className: `w-full rounded-xl brand-gradient-bg text-primary-foreground font-semibold`,
+                      onClick: () => {
+                        (C.success(`Audio selected! Redirecting to creator camera...`), J(!1));
+                      },
+                      children: `Use This Audio in New Reel`,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          }),
+          (0, W.jsx)(G, {
+            open: K,
+            onOpenChange: q,
+            targetId: e.id,
+            targetType: `reel`,
+            viewerId: t || `anonymous`,
+          }),
+          I && (0, W.jsx)(se, { postId: e.id, viewerId: t, onClose: () => L(!1) }),
+        ],
+      });
+}
+function se({ postId: e, viewerId: t, onClose: n }) {
+  let [r, i] = (0, H.useState)(``),
+    a = o(),
+    l = s({ queryKey: [`comments`, e, t], queryFn: () => P(e, t) }),
+    u = c({
+      mutationFn: () => L({ postId: e, userId: t, body: r.trim() }),
+      onSuccess: () => {
+        (i(``),
+          a.invalidateQueries({ queryKey: [`comments`, e] }),
+          a.invalidateQueries({ queryKey: [`reels`] }));
+      },
+      onError: () => C.error(`Could not post comment`),
+    });
+  return (0, W.jsx)(`div`, {
+    className: `absolute inset-0 z-50 flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-in fade-in-50`,
+    children: (0, W.jsxs)(`div`, {
+      className: `flex h-[60%] flex-col rounded-t-3xl border-t border-border bg-background p-4 shadow-2xl animate-in slide-in-from-bottom`,
+      children: [
+        (0, W.jsxs)(`div`, {
+          className: `flex items-center justify-between border-b border-border pb-3`,
+          children: [
+            (0, W.jsx)(`h3`, {
+              className: `text-sm font-semibold text-foreground`,
+              children: `Comments`,
+            }),
+            (0, W.jsx)(`button`, {
+              type: `button`,
+              onClick: n,
+              className: `rounded-full p-1 text-muted-foreground hover:text-foreground`,
+              children: (0, W.jsx)(h, { className: `h-4 w-4` }),
+            }),
+          ],
+        }),
+        (0, W.jsx)(`div`, {
+          className: `flex-1 overflow-y-auto space-y-3 py-3`,
+          children: l.isLoading
+            ? (0, W.jsx)(`div`, {
+                className: `flex justify-center py-8`,
+                children: (0, W.jsx)(d, { className: `h-5 w-5 animate-spin text-primary` }),
+              })
+            : (l.data?.length ?? 0) === 0
+              ? (0, W.jsx)(`p`, {
+                  className: `py-8 text-center text-xs text-muted-foreground`,
+                  children: `No comments yet. Start the conversation!`,
+                })
+              : l.data?.map((e) =>
+                  (0, W.jsxs)(
+                    `div`,
+                    {
+                      className: `flex gap-2.5 text-xs`,
+                      children: [
+                        (0, W.jsx)(N, {
+                          path: e.author?.avatar_url ?? null,
+                          fallback: e.author ? M(e.author) : `?`,
+                          className: `h-7 w-7 shrink-0`,
+                        }),
+                        (0, W.jsxs)(`div`, {
+                          className: `min-w-0 flex-1`,
+                          children: [
+                            (0, W.jsxs)(`p`, {
+                              children: [
+                                (0, W.jsxs)(`span`, {
+                                  className: `font-semibold mr-1`,
+                                  children: [`@`, e.author?.username || `user`],
+                                }),
+                                (0, W.jsx)(`span`, { children: e.body }),
+                              ],
+                            }),
+                            (0, W.jsx)(`p`, {
+                              className: `text-[10px] text-muted-foreground mt-0.5`,
+                              children: I(e.created_at),
+                            }),
+                          ],
+                        }),
+                      ],
+                    },
+                    e.id,
+                  ),
+                ),
+        }),
+        t &&
+          (0, W.jsxs)(`form`, {
+            onSubmit: (e) => {
+              (e.preventDefault(), r.trim() && u.mutate());
+            },
+            className: `flex items-center gap-2 pt-2 border-t border-border`,
+            children: [
+              (0, W.jsx)(_, {
+                value: r,
+                onChange: (e) => i(e.target.value),
+                placeholder: `Add a comment...`,
+                className: `h-9 text-xs rounded-xl bg-surface`,
+              }),
+              (0, W.jsx)(k, {
+                type: `submit`,
+                size: `sm`,
+                disabled: !r.trim() || u.isPending,
+                className: `h-9 rounded-xl brand-gradient-bg text-primary-foreground text-xs font-semibold px-3`,
+                children: `Post`,
+              }),
+            ],
+          }),
+      ],
+    }),
+  });
+}
+export { K as component };

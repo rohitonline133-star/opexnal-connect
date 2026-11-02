@@ -1,1 +1,81 @@
-import{t as e}from"./jsx-runtime-B5yqYJvp.js";import{t}from"./useNavigate-BJOrhi-q.js";import{E as n,T as r}from"./index-BPJbQuiK.js";var i=e();function a(){let e=t();return(0,i.jsx)(r,{activeTab:`profile`,children:(0,i.jsxs)(`div`,{className:`min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,children:[(0,i.jsx)(n,{title:`Transactions`,showBack:!0,onBack:()=>e({to:`/payouts`})}),(0,i.jsx)(`div`,{className:`p-4 space-y-4`,children:(0,i.jsx)(`div`,{className:`space-y-2`,children:[{id:`tx_01`,title:`Creator Subscriptions (August)`,date:`Sep 21, 2026`,amount:`+$94.00`,status:`paid`},{id:`tx_02`,title:`Reels Star Gifts`,date:`Sep 15, 2026`,amount:`+$48.50`,status:`paid`},{id:`tx_03`,title:`Bank Remittance Direct Deposit`,date:`Aug 21, 2026`,amount:`-$125.00`,status:`completed`}].map(e=>(0,i.jsxs)(`div`,{className:`p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between`,children:[(0,i.jsxs)(`div`,{children:[(0,i.jsx)(`h4`,{className:`text-xs font-semibold text-white`,children:e.title}),(0,i.jsx)(`p`,{className:`text-[11px] text-gray-400`,children:e.date})]}),(0,i.jsxs)(`div`,{className:`text-right`,children:[(0,i.jsx)(`span`,{className:`font-mono font-bold text-sm ${e.amount.startsWith(`+`)?`text-emerald-400`:`text-gray-300`}`,children:e.amount}),(0,i.jsx)(`p`,{className:`text-[10px] text-gray-500 uppercase font-semibold`,children:e.status})]})]},e.id))})})]})})}export{a as component};
+import { t as e } from "./jsx-runtime-B5yqYJvp.js";
+import { t } from "./useNavigate-BJOrhi-q.js";
+import { E as n, T as r } from "./index-BPJbQuiK.js";
+var i = e();
+function a() {
+  let e = t();
+  return (0, i.jsx)(r, {
+    activeTab: `profile`,
+    children: (0, i.jsxs)(`div`, {
+      className: `min-h-screen bg-black text-white pb-20 max-w-xl mx-auto`,
+      children: [
+        (0, i.jsx)(n, { title: `Transactions`, showBack: !0, onBack: () => e({ to: `/payouts` }) }),
+        (0, i.jsx)(`div`, {
+          className: `p-4 space-y-4`,
+          children: (0, i.jsx)(`div`, {
+            className: `space-y-2`,
+            children: [
+              {
+                id: `tx_01`,
+                title: `Creator Subscriptions (August)`,
+                date: `Sep 21, 2026`,
+                amount: `+$94.00`,
+                status: `paid`,
+              },
+              {
+                id: `tx_02`,
+                title: `Reels Star Gifts`,
+                date: `Sep 15, 2026`,
+                amount: `+$48.50`,
+                status: `paid`,
+              },
+              {
+                id: `tx_03`,
+                title: `Bank Remittance Direct Deposit`,
+                date: `Aug 21, 2026`,
+                amount: `-$125.00`,
+                status: `completed`,
+              },
+            ].map((e) =>
+              (0, i.jsxs)(
+                `div`,
+                {
+                  className: `p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between`,
+                  children: [
+                    (0, i.jsxs)(`div`, {
+                      children: [
+                        (0, i.jsx)(`h4`, {
+                          className: `text-xs font-semibold text-white`,
+                          children: e.title,
+                        }),
+                        (0, i.jsx)(`p`, {
+                          className: `text-[11px] text-gray-400`,
+                          children: e.date,
+                        }),
+                      ],
+                    }),
+                    (0, i.jsxs)(`div`, {
+                      className: `text-right`,
+                      children: [
+                        (0, i.jsx)(`span`, {
+                          className: `font-mono font-bold text-sm ${e.amount.startsWith(`+`) ? `text-emerald-400` : `text-gray-300`}`,
+                          children: e.amount,
+                        }),
+                        (0, i.jsx)(`p`, {
+                          className: `text-[10px] text-gray-500 uppercase font-semibold`,
+                          children: e.status,
+                        }),
+                      ],
+                    }),
+                  ],
+                },
+                e.id,
+              ),
+            ),
+          }),
+        }),
+      ],
+    }),
+  });
+}
+export { a as component };

@@ -1,1 +1,64 @@
-import{n as e,s as t,t as n}from"./jsx-runtime-B5yqYJvp.js";import{t as r}from"./utils-DojpP95n.js";import{t as i}from"./use-signed-media-url-D4B_BLP0.js";var a=t(e(),1),o=n();function s({media:e,className:t,alt:n}){let a=i(e?.storage_path);return e?a?e.media_type===`video`?(0,o.jsx)(`video`,{src:a,className:r(`object-cover`,t),muted:!0,playsInline:!0,preload:`metadata`}):(0,o.jsx)(`img`,{src:a,alt:n,loading:`lazy`,className:r(`object-cover`,t)}):(0,o.jsx)(`div`,{className:r(`animate-pulse bg-secondary`,t)}):(0,o.jsx)(`div`,{className:r(`bg-secondary`,t)})}function c({media:e,alt:t}){let[n,s]=(0,a.useState)(0),c=e[Math.min(n,e.length-1)],l=i(c?.storage_path);return e.length===0?null:(0,o.jsxs)(`div`,{className:`relative aspect-square w-full overflow-hidden bg-secondary`,children:[l?c?.media_type===`video`?(0,o.jsx)(`video`,{src:l,className:`h-full w-full object-cover`,controls:!0,playsInline:!0,preload:`metadata`}):(0,o.jsx)(`img`,{src:l,alt:t,className:`h-full w-full object-cover`}):(0,o.jsx)(`div`,{className:`h-full w-full animate-pulse bg-secondary`}),e.length>1&&(0,o.jsx)(`div`,{className:`absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5`,children:e.map((e,t)=>(0,o.jsx)(`button`,{type:`button`,"aria-label":`Show media ${t+1}`,onClick:()=>s(t),className:r(`h-1.5 rounded-full transition-all`,t===n?`w-4 bg-primary`:`w-1.5 bg-muted-foreground/60`)},e.id))})]})}export{s as n,c as t};
+import { n as e, s as t, t as n } from "./jsx-runtime-B5yqYJvp.js";
+import { t as r } from "./utils-DojpP95n.js";
+import { t as i } from "./use-signed-media-url-D4B_BLP0.js";
+var a = t(e(), 1),
+  o = n();
+function s({ media: e, className: t, alt: n }) {
+  let a = i(e?.storage_path);
+  return e
+    ? a
+      ? e.media_type === `video`
+        ? (0, o.jsx)(`video`, {
+            src: a,
+            className: r(`object-cover`, t),
+            muted: !0,
+            playsInline: !0,
+            preload: `metadata`,
+          })
+        : (0, o.jsx)(`img`, { src: a, alt: n, loading: `lazy`, className: r(`object-cover`, t) })
+      : (0, o.jsx)(`div`, { className: r(`animate-pulse bg-secondary`, t) })
+    : (0, o.jsx)(`div`, { className: r(`bg-secondary`, t) });
+}
+function c({ media: e, alt: t }) {
+  let [n, s] = (0, a.useState)(0),
+    c = e[Math.min(n, e.length - 1)],
+    l = i(c?.storage_path);
+  return e.length === 0
+    ? null
+    : (0, o.jsxs)(`div`, {
+        className: `relative aspect-square w-full overflow-hidden bg-secondary`,
+        children: [
+          l
+            ? c?.media_type === `video`
+              ? (0, o.jsx)(`video`, {
+                  src: l,
+                  className: `h-full w-full object-cover`,
+                  controls: !0,
+                  playsInline: !0,
+                  preload: `metadata`,
+                })
+              : (0, o.jsx)(`img`, { src: l, alt: t, className: `h-full w-full object-cover` })
+            : (0, o.jsx)(`div`, { className: `h-full w-full animate-pulse bg-secondary` }),
+          e.length > 1 &&
+            (0, o.jsx)(`div`, {
+              className: `absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5`,
+              children: e.map((e, t) =>
+                (0, o.jsx)(
+                  `button`,
+                  {
+                    type: `button`,
+                    "aria-label": `Show media ${t + 1}`,
+                    onClick: () => s(t),
+                    className: r(
+                      `h-1.5 rounded-full transition-all`,
+                      t === n ? `w-4 bg-primary` : `w-1.5 bg-muted-foreground/60`,
+                    ),
+                  },
+                  e.id,
+                ),
+              ),
+            }),
+        ],
+      });
+}
+export { s as n, c as t };
