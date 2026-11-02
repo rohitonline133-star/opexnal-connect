@@ -526,7 +526,13 @@ function SignupPage() {
 
           <button
             type="button"
-            onClick={() => navigate({ to: search.redirect || "/home", replace: true })}
+            onClick={() =>
+              navigate({
+                to: "/auth/login",
+                search: { redirect: search.redirect },
+                replace: true,
+              })
+            }
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg"
           >
             Go to Your Feed

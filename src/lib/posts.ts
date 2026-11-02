@@ -4,6 +4,10 @@ import { getProfileById } from "@/lib/profile";
 import type { Database } from "@/integrations/supabase/types";
 import { apiUrl } from "@/lib/api-client";
 
+const IS_DEV_ENVIRONMENT =
+  import.meta.env?.DEV ??
+  (typeof process !== "undefined" && process.env["NODE_ENV"] !== "production");
+
 export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
 export type PostMediaRow = Database["public"]["Tables"]["post_media"]["Row"];
 export type PostVisibility = Database["public"]["Enums"]["post_visibility"];
@@ -535,7 +539,7 @@ export async function getHomeFeed(
       nextCursor: visible.length > limit && last ? last.created_at : null,
     };
   } catch {
-    if (!import.meta.env.DEV) return { items: [], nextCursor: null };
+    if (!IS_DEV_ENVIRONMENT) return { items: [], nextCursor: null };
     const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
     const sliced = cursor ? all.filter((post) => post.created_at < cursor) : all;
     const items = sliced.slice(0, limit);
@@ -550,7 +554,7 @@ export async function getExploreFeed(viewerId?: string | null) {
     const posts = await fetchApiFeed(100);
     return posts.filter((post) => post.visibility === "public");
   } catch {
-    if (import.meta.env.DEV) {
+    if (IS_DEV_ENVIRONMENT) {
       return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId);
     }
     return [];
@@ -564,7 +568,7 @@ export async function getReelsFeed(viewerId: string, limit = 30) {
       .filter((post) => post.media.some((item) => item.media_type === "video"))
       .slice(0, limit);
   } catch {
-    if (!import.meta.env.DEV) return [];
+    if (!IS_DEV_ENVIRONMENT) return [];
     return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId)
       .filter((post) => post.media.some((item) => item.media_type === "video"))
       .slice(0, limit);
@@ -575,7 +579,7 @@ export async function getPostsByUser(userId: string, viewerId?: string | null) {
   try {
     return await fetchApiUserPosts(userId, 100);
   } catch {
-    if (!import.meta.env.DEV) return [];
+    if (!IS_DEV_ENVIRONMENT) return [];
     return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
       (post) => post.user_id === userId,
     );
@@ -596,7 +600,7 @@ export async function getUserPostsPage(
     const last = items[items.length - 1];
     return { items, nextCursor: all.length > limit && last ? last.created_at : null };
   } catch {
-    if (!import.meta.env.DEV) return { items: [], nextCursor: null };
+    if (!IS_DEV_ENVIRONMENT) return { items: [], nextCursor: null };
     const all = decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter(
       (post) => post.user_id === userId,
     );
@@ -611,7 +615,7 @@ export async function getSavedPosts(_viewerId: string) {
   try {
     return (await fetchApiFeed(100)).filter((post) => post.saved);
   } catch {
-    return import.meta.env.DEV
+    return IS_DEV_ENVIRONMENT
       ? decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], _viewerId).filter((post) =>
           getLocalSaves().has(post.id),
         )
@@ -626,7 +630,7 @@ export async function getPost(postId: string, viewerId?: string | null) {
     );
     return payload.post ? mapApiPost(payload.post) : null;
   } catch {
-    if (!import.meta.env.DEV) return null;
+    if (!IS_DEV_ENVIRONMENT) return null;
     return (
       decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).find(
         (post) => post.id === postId,
@@ -642,7 +646,7 @@ export async function getPostsByHashtag(tag: string, viewerId?: string | null) {
       (post) => post.visibility === "public" && extractHashtags(post.caption).includes(targetTag),
     );
   } catch {
-    if (!import.meta.env.DEV) return [];
+    if (!IS_DEV_ENVIRONMENT) return [];
     const targetTag = tag.toLowerCase().replace(/^#/, "");
     return decorateWithLocalState([...getLocalPosts(), ...SEED_POSTS], viewerId).filter((post) =>
       extractHashtags(post.caption).includes(targetTag),

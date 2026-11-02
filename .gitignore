@@ -34,3 +34,6 @@ dist-ssr
 .env
 
 .vercel/
+
+# Local credentials and private key material
+.secrets/
