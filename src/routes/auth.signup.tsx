@@ -129,12 +129,23 @@ function SignupPage() {
     }
 
     // Age verification: compare calendar dates to avoid millisecond/year-boundary errors.
-    const [birthYear, birthMonth, birthDay] = birthday.split("-").map(Number);
+    const birthParts = birthday.split("-");
+    if (birthParts.length !== 3) {
+      setErrorMessage("Please enter a valid date of birth.");
+      return;
+    }
+
+    const birthYear = Number(birthParts[0]);
+    const birthMonth = Number(birthParts[1]);
+    const birthDay = Number(birthParts[2]);
     const birthDate = new Date(Date.UTC(birthYear, birthMonth - 1, birthDay));
     const isValidBirthDate =
       Number.isInteger(birthYear) &&
       Number.isInteger(birthMonth) &&
       Number.isInteger(birthDay) &&
+      birthMonth >= 1 &&
+      birthMonth <= 12 &&
+      birthDay >= 1 &&
       birthDate.getUTCFullYear() === birthYear &&
       birthDate.getUTCMonth() === birthMonth - 1 &&
       birthDate.getUTCDate() === birthDay;
