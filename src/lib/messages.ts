@@ -156,7 +156,7 @@ const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
 const memoryMessageReactions: Record<string, string> = {};
 
 export function getMessageReactions(): Record<string, string> {
-  if (!import.meta.env.DEV || typeof window === "undefined") return {};
+  if (!(import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env.NODE_ENV !== "production")) || typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGE_REACTIONS_KEY);
     return raw ? JSON.parse(raw) : memoryMessageReactions;
@@ -166,7 +166,7 @@ export function getMessageReactions(): Record<string, string> {
 }
 
 export function setMessageReaction(messageId: string, emoji: string) {
-  if (!import.meta.env.DEV) return;
+  if (!(import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env.NODE_ENV !== "production"))) return;
   memoryMessageReactions[messageId] = emoji;
   if (typeof window === "undefined") return;
   try {
