@@ -535,7 +535,7 @@ function SignupPage() {
             }
             className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg"
           >
-            Go to Your Feed
+            Continue to Log In
           </button>
         </div>
       )}

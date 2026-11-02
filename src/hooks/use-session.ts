@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AuthSession, AuthUser } from "@/lib/auth-client";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export type Session =
   | AuthSession
@@ -17,18 +17,24 @@ export function useSession() {
   useEffect(() => {
     let active = true;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: sub } = authClient.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
-
       setSession(nextSession);
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    authClient.getUser().then(({ data, error }) => {
       if (!active) return;
-
-      setSession(data.session);
-      setLoading(false);
+      if (error || !data.user) {
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+      void authClient.getSession().then(({ data: sessionData }) => {
+        if (!active) return;
+        setSession(sessionData.session);
+        setLoading(false);
+      });
     });
 
     return () => {
