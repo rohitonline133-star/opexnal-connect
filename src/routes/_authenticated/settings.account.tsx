@@ -98,7 +98,9 @@ function SettingsAccountPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-300">Primary Email</label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-gray-400"><Mail size={16} /></span>
+                  <span className="absolute left-3.5 text-gray-400">
+                    <Mail size={16} />
+                  </span>
                   <input
                     type="email"
                     value={email}
@@ -112,7 +114,9 @@ function SettingsAccountPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-300">Mobile Phone</label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-gray-400"><Phone size={16} /></span>
+                  <span className="absolute left-3.5 text-gray-400">
+                    <Phone size={16} />
+                  </span>
                   <input
                     type="tel"
                     value={phone}
@@ -125,7 +129,9 @@ function SettingsAccountPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-300">Date of Birth</label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-gray-400"><Calendar size={16} /></span>
+                  <span className="absolute left-3.5 text-gray-400">
+                    <Calendar size={16} />
+                  </span>
                   <input
                     type="date"
                     value={dob}
@@ -134,7 +140,8 @@ function SettingsAccountPage() {
                   />
                 </div>
                 <p className="text-[11px] text-gray-500">
-                  Enter a birth date only if you want to store it locally; server-side age verification is not connected here.
+                  Enter a birth date only if you want to store it locally; server-side age verification is not
+                  connected here.
                 </p>
               </div>
 
@@ -157,7 +164,11 @@ function SettingsAccountPage() {
                 disabled={saveMutation.isPending || !userId}
                 className="w-full h-11 mt-4 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 <span>Save Details on This Device</span>
               </button>
             </form>
