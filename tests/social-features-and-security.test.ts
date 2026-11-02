@@ -38,10 +38,22 @@ describe("Live Social Workflows & Data Integrity", () => {
   });
 
   test("Like, save, comments, and messaging require a verified backend session", async () => {
-    await assert.rejects(() => toggleLike("post_test", "user_test", false), /Failed to parse URL|fetch failed|Authentication/i);
-    await assert.rejects(() => toggleSave("post_test", "user_test", false), /Failed to parse URL|fetch failed|Authentication/i);
-    await assert.rejects(() => addComment({ postId: "post_test", userId: "user_test", body: "Test" }), /Failed to parse URL|fetch failed|Authentication/i);
-    await assert.rejects(() => sendMessage({ conversationId: "conv_test", sender: { id: "user_test" }, text: "Test" }), /Verified authentication is required/);
+    await assert.rejects(
+      () => toggleLike("post_test", "user_test", false),
+      /Failed to parse URL|fetch failed|Authentication/i,
+    );
+    await assert.rejects(
+      () => toggleSave("post_test", "user_test", false),
+      /Failed to parse URL|fetch failed|Authentication/i,
+    );
+    await assert.rejects(
+      () => addComment({ postId: "post_test", userId: "user_test", body: "Test" }),
+      /Failed to parse URL|fetch failed|Authentication/i,
+    );
+    await assert.rejects(
+      () => sendMessage({ conversationId: "conv_test", sender: { id: "user_test" }, text: "Test" }),
+      /Verified authentication is required/,
+    );
   });
 
   test("Story system: tray stories and user highlight management", async () => {
