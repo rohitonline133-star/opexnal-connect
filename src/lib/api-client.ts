@@ -10,12 +10,12 @@ export function apiUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const configuredOrigin = (
     import.meta.env as ImportMetaEnv & { VITE_OPEXNAL_API_URL?: string }
-  ).VITE_OPEXNAL_API_URL?.trim();
+  )?.VITE_OPEXNAL_API_URL?.trim();
 
   if (!configuredOrigin) return normalizedPath;
   const origin = configuredOrigin.replace(/\/+$/, "");
   if (
-    !import.meta.env.DEV &&
+    !import.meta.env?.DEV &&
     !origin.startsWith("https://") &&
     !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
   ) {
