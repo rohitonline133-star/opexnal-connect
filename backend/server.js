@@ -356,12 +356,10 @@ app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next)
   const username =
     typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
   if (!validUsername(username)) {
-    return res
-      .status(400)
-      .json({
-        available: false,
-        error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
-      });
+    return res.status(400).json({
+      available: false,
+      error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
+    });
   }
   if (!rateLimit("username-check:" + String(req.ip || "unknown"), 30)) {
     return res
@@ -1347,11 +1345,9 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
 
   if (body.username !== undefined) {
     if (!validUsername(body.username)) {
-      return res
-        .status(400)
-        .json({
-          error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
-        });
+      return res.status(400).json({
+        error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
+      });
     }
     const existing = await pool.query(
       "SELECT 1 FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2 LIMIT 1",
