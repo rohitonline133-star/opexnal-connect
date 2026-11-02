@@ -263,7 +263,7 @@ export async function getStoryTray(viewerId: string) {
       return Number(b.hasUnseen) - Number(a.hasUnseen);
     });
   } catch {
-    return import.meta.env.DEV ? SEED_STORY_GROUPS : [];
+    return (import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env.NODE_ENV !== "production")) ? SEED_STORY_GROUPS : [];
   }
 }
 
@@ -274,7 +274,7 @@ export async function getUserStories(userId: string, _viewerId: string) {
     );
     return (payload.stories || []).map(mapApiStory);
   } catch {
-    if (import.meta.env.DEV) {
+    if ((import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env.NODE_ENV !== "production"))) {
       return SEED_STORY_GROUPS.flatMap((group) => group.stories).filter(
         (story) => story.user_id === userId,
       );
