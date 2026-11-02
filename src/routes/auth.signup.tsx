@@ -128,11 +128,29 @@ function SignupPage() {
       return;
     }
 
-    // Age verification: calculate 13+ years
-    const birthDate = new Date(birthday);
-    const ageDiffMs = Date.now() - birthDate.getTime();
-    const ageDate = new Date(ageDiffMs);
-    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    // Age verification: compare calendar dates to avoid millisecond/year-boundary errors.
+    const [birthYear, birthMonth, birthDay] = birthday.split("-").map(Number);
+    const birthDate = new Date(Date.UTC(birthYear, birthMonth - 1, birthDay));
+    const isValidBirthDate =
+      Number.isInteger(birthYear) &&
+      Number.isInteger(birthMonth) &&
+      Number.isInteger(birthDay) &&
+      birthDate.getUTCFullYear() === birthYear &&
+      birthDate.getUTCMonth() === birthMonth - 1 &&
+      birthDate.getUTCDate() === birthDay;
+
+    if (!isValidBirthDate) {
+      setErrorMessage("Please enter a valid date of birth.");
+      return;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birthYear;
+    const birthdayHasNotOccurred =
+      today.getMonth() + 1 < birthMonth ||
+      (today.getMonth() + 1 === birthMonth && today.getDate() < birthDay);
+    if (birthdayHasNotOccurred) age -= 1;
+
     if (age < 13) {
       setErrorMessage("You must be at least 13 years old to create an Opexnal account.");
       return;
