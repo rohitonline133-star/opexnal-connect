@@ -4,6 +4,10 @@ import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
 import { apiUrl } from "@/lib/api-client";
 
+const IS_DEV_ENVIRONMENT =
+  import.meta.env?.DEV ??
+  (typeof process !== "undefined" && process.env["NODE_ENV"] !== "production");
+
 export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 export type Message = MessageRow;
 
@@ -156,7 +160,7 @@ const LOCAL_MESSAGE_REACTIONS_KEY = "opexnal_message_reactions";
 const memoryMessageReactions: Record<string, string> = {};
 
 export function getMessageReactions(): Record<string, string> {
-  if (!(import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env["NODE_ENV"] !== "production")) || typeof window === "undefined") return {};
+  if (!IS_DEV_ENVIRONMENT || typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(LOCAL_MESSAGE_REACTIONS_KEY);
     return raw ? JSON.parse(raw) : memoryMessageReactions;
@@ -166,7 +170,7 @@ export function getMessageReactions(): Record<string, string> {
 }
 
 export function setMessageReaction(messageId: string, emoji: string) {
-  if (!(import.meta.env?.DEV ?? (typeof process !== "undefined" && process.env["NODE_ENV"] !== "production"))) return;
+  if (!IS_DEV_ENVIRONMENT) return;
   memoryMessageReactions[messageId] = emoji;
   if (typeof window === "undefined") return;
   try {
