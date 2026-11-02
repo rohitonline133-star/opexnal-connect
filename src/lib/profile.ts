@@ -26,7 +26,6 @@ export async function getProfileById(id: string): Promise<Profile | null> {
   try {
     return await fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
   } catch {
-    if (import.meta.env.DEV) return SEED_PROFILES[id] || null;
     return null;
   }
 }
@@ -37,11 +36,7 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
   try {
     return await fetchApiProfile(`/api/v1/users/${encodeURIComponent(clean)}`);
   } catch {
-    if (!import.meta.env.DEV) return null;
-    return (
-      Object.values(SEED_PROFILES).find((profile) => profile.username.toLowerCase() === clean) ||
-      null
-    );
+    return null;
   }
 }
 
