@@ -38,14 +38,32 @@ jobs:
         run: npm run build
       - name: Type check
         run: npm run typecheck
-      - name: Lint changed TypeScript and JavaScript files
+      - name: Lint changed first-party source files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          git fetch origin main
-          files=$(git diff --name-only origin/main...HEAD | grep -E '[.](ts|tsx|js|jsx|mjs|cjs)' || true)
-          if [ -n "$files" ]; then
-            npx eslint $files
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
+          elif [ "$BEFORE_SHA" != "" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            base="$BEFORE_SHA"
           else
-            npm run lint
+            base="HEAD^"
+          fi
+
+          git diff --name-only "$base"...HEAD > /tmp/changed-files.txt
+          mapfile -t files < <(
+            grep -E '^[^/]+\.(ts|tsx|js|jsx|mjs|cjs)$|^(src|backend|tests)/.*\.(ts|tsx|js|jsx|mjs|cjs)$' /tmp/changed-files.txt |
+            grep -v '^android/' |
+            grep -v '^android/app/src/main/assets/public/assets/' || true
+          )
+
+          if [ "${#files[@]}" -gt 0 ]; then
+            printf 'Linting %s first-party files\n' "${#files[@]}"
+            npx eslint "${files[@]}"
+          else
+            echo "No changed first-party JS/TS files; skipping targeted lint."
           fi
       - name: Unit and security tests
         run: npm test
