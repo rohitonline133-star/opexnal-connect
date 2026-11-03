@@ -37,7 +37,7 @@ export class ModelRouter {
    * Selects the most appropriate provider based on configuration and availability.
    */
   public resolveProvider(): AIProvider {
-    const configTarget = (process.env["OPEX_AI_PROVIDER"] || "gemini").toLowerCase();
+    const configTarget = (process.env["OPEX_AI_PROVIDER"] || "self_hosted").toLowerCase();
 
     // 1. If explicit self-hosted target
     if (configTarget === "self_hosted" || configTarget === "selfhosted") {
@@ -48,7 +48,7 @@ export class ModelRouter {
       }
     }
 
-    // 2. If Gemini target (current transitional default)
+    // 2. Gemini is available only when explicitly selected by configuration
     if (configTarget === "gemini") {
       const gemini = this.providers.get("gemini") as GeminiProviderAdapter | undefined;
       const cb = this.circuitBreakers.get("gemini");
