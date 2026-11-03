@@ -245,9 +245,10 @@ Mumbai 📍 • Tokyo aesthetic
 
   async healthCheck(): Promise<HealthCheckResult> {
     return {
-      status: "healthy",
+      status: "degraded",
       provider: this.id,
       latencyMs: 1,
+      error: "Keyword heuristics only; no model-based moderation is configured",
       timestamp: new Date().toISOString(),
     };
   }
