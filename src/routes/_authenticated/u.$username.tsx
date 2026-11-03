@@ -31,7 +31,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 import { getProfileByUsername, initialsFor, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
@@ -84,7 +83,7 @@ function PublicProfile() {
     queryFn: async () => {
       const response = await fetch(
         apiUrl(`/api/v1/users/${encodeURIComponent(profile!.id)}/follow-status`),
-        { headers: authClient.getAuthHeader(), cache: "no-store" },
+        { credentials: "same-origin", cache: "no-store" },
       );
       const payload = (await response.json().catch(() => ({}))) as {
         isFollowing?: boolean;
@@ -106,20 +105,20 @@ function PublicProfile() {
       if (relationship?.following) {
         response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`), {
           method: "DELETE",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         });
       } else if (relationship?.requested) {
         response = await fetch(
           apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow-request`),
           {
             method: "DELETE",
-            headers: authClient.getAuthHeader(),
+            credentials: "same-origin",
           },
         );
       } else {
         response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/follow`), {
           method: "POST",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         });
       }
       const payload = (await response.json().catch(() => ({}))) as {
@@ -153,7 +152,7 @@ function PublicProfile() {
         apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/block`),
         {
           method: "POST",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         },
       );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -174,7 +173,7 @@ function PublicProfile() {
         apiUrl(`/api/v1/users/${encodeURIComponent(profile.id)}/restrict`),
         {
           method: "POST",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         },
       );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -204,10 +203,8 @@ function PublicProfile() {
     try {
       const response = await fetch(apiUrl("/api/v1/reports"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authClient.getAuthHeader(),
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           targetType: "user",
           targetId: profile.id,
