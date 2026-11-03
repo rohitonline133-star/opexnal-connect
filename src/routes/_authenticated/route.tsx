@@ -45,8 +45,8 @@ export const Route = createFileRoute("/_authenticated")({
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
       <h1 className="text-xl font-semibold">Opexnal account service unavailable</h1>
       <p role="alert" className="max-w-md text-sm text-muted-foreground">
-        Your saved sign-in session has not been treated as a logout. Opexnal could not verify
-        your account right now. Check the connection and try again.
+        Your saved sign-in session has not been treated as a logout. Opexnal could
+        not verify your account right now. Check your connection and try again.
       </p>
       <button
         type="button"
