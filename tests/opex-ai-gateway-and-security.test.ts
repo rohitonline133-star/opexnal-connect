@@ -64,6 +64,9 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     const caps = runtime.capabilities();
     assert.strictEqual(caps.supportsChat, true);
     assert.strictEqual(caps.supportsModeration, true);
+    assert.strictEqual(caps.supportsVision, false);
+    assert.strictEqual(caps.supportsEmbeddings, false);
+    assert.strictEqual(caps.supportsFunctionCalling, false);
     assert.ok(caps.maxContextTokens > 1000);
   });
 
