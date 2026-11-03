@@ -122,7 +122,8 @@ Mumbai 📍 • Tokyo aesthetic
     } else if (/\b(thanks|thank you|shukriya|धन्यवाद)\b/i.test(lower)) {
       text = "Aapka swagat hai! 😊";
     } else {
-      text = "Aapka message mil gaya. Abhi Opex AI ka local fallback mode active hai, jo har tarah ke sawalon ka full generative jawab nahi de sakta. Is waqt configured AI model available nahi hai; isliye main banaawati ya repeat hone wala jawab dene ke bajay yeh limitation bata raha hoon.";
+      text =
+        "Aapka message mil gaya. Abhi Opex AI ka local fallback mode active hai, jo har tarah ke sawalon ka full generative jawab nahi de sakta. Is waqt configured AI model available nahi hai; isliye main banaawati ya repeat hone wala jawab dene ke bajay yeh limitation bata raha hoon.";
     }
 
     return {
