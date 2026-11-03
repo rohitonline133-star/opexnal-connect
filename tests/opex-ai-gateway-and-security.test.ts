@@ -265,12 +265,13 @@ describe("OPEX AI Gateway & Model Router Orchestration", () => {
       await gateway.moderate({ content: "A normal community comment" }, options);
     }
 
-    await assert.rejects(
-      () => gateway.moderate({ content: "One more comment" }, options),
-      { message: /Too many requests/ },
-    );
+    await assert.rejects(() => gateway.moderate({ content: "One more comment" }, options), {
+      message: /Too many requests/,
+    });
     assert.ok(
-      AuditLogger.getRecentLogs(5).some((entry) => entry.action === "moderate" && entry.status === "rate_limited"),
+      AuditLogger.getRecentLogs(5).some(
+        (entry) => entry.action === "moderate" && entry.status === "rate_limited",
+      ),
     );
   });
 
