@@ -106,6 +106,12 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
           headers: { "Content-Type": "application/json" },
         });
       }
+      if (url.endsWith("/api/tags")) {
+        return new Response(JSON.stringify({ models: [{ name: "nomic-embed-text" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       return new Response("unexpected endpoint", { status: 404 });
     }) as typeof fetch;
 
@@ -132,6 +138,11 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
       assert.strictEqual(
         new Headers(calls[1]?.init?.headers).get("Authorization"),
         "Bearer test-secret",
+      );
+      assert.strictEqual(calls[2]?.url, "http://embeddings:11434/api/tags");
+      assert.strictEqual(
+        new Headers(calls[2]?.init?.headers).has("Authorization"),
+        false,
       );
     } finally {
       globalThis.fetch = originalFetch;
