@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/account-status")({
       { title: "Account Status — Opexnal" },
       {
         name: "description",
-        content:\n          "Check the availability of account standing and policy compliance information.",
+        content: "Check the availability of account standing and policy compliance information.",
       },
     ],
   }),
@@ -20,8 +20,12 @@ function AccountStatusPage() {
 
   return (
     <AppShell activeTab="profile">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader title="Account Status" showBack onBack={() => navigate({ to: "/safety" })} />
+      <div className="min-h-screen max-w-xl mx-auto bg-black pb-20 text-white">
+        <ScreenHeader
+          title="Account Status"
+          showBack
+          onBack={() => navigate({ to: "/safety" })}
+        />
 
         <div className="p-4">
           <section
@@ -38,7 +42,7 @@ function AccountStatusPage() {
                 <p className="text-xs leading-relaxed text-gray-300">
                   Opexnal is not currently connected to a verified account-enforcement and
                   moderation status service. We cannot confirm whether this account has policy
-                  violations, copyright claims, strikes, or\n                  monetization eligibility.
+                  violations, copyright claims, strikes, or monetization eligibility.
                 </p>
                 <p className="text-xs leading-relaxed text-gray-400">
                   No compliance result is being assumed or displayed until the authoritative
