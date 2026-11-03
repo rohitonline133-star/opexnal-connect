@@ -21,10 +21,14 @@ async function fetchApiProfile(path: string): Promise<Profile | null> {
   return payload.profile || null;
 }
 
-export async function getProfileById(id: string): Promise<Profile | null> {
+export async function getProfileByIdStrict(id: string): Promise<Profile | null> {
   if (!id) return null;
+  return fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
+}
+
+export async function getProfileById(id: string): Promise<Profile | null> {
   try {
-    return await fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
+    return await getProfileByIdStrict(id);
   } catch {
     return null;
   }
