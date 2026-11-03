@@ -50,7 +50,7 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // OTP Verification Step
+  // Signup and email-verification status
   const [step, setStep] = useState<"details" | "welcome">("details");
 
   // Evaluation & Validation states
@@ -431,8 +431,8 @@ function SignupPage() {
           <div>
             <h3 className="text-lg font-bold text-white">Welcome, {fullName}!</h3>
             <p className="text-xs text-gray-400 mt-1">
-              Your profile @{username} is all set up. Get ready to explore creator communities and
-              share moments.
+              Your account is pending email verification. Open the verification link sent to your
+              email before signing in.
             </p>
           </div>
 
