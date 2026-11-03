@@ -25,11 +25,13 @@ export class SelfHostedProviderAdapter implements AIProvider {
   private readonly endpoint: string;
   private readonly apiKey: string;
   private readonly model: string;
+  private readonly embeddingEndpoint: string;
 
   constructor(endpoint?: string, apiKey?: string, model?: string) {
     this.endpoint = endpoint ?? (process.env["OPEX_AI_MODEL_ENDPOINT"] || "");
     this.apiKey = apiKey ?? (process.env["OPEX_AI_API_KEY"] || "");
     this.model = model ?? (process.env["OPEX_AI_MODEL_NAME"] || "opexnal-llama-3-8b");
+    this.embeddingEndpoint = process.env["OPEX_AI_EMBEDDING_ENDPOINT"] || this.endpoint;
   }
 
   public isConfigured(): boolean {
@@ -89,7 +91,12 @@ export class SelfHostedProviderAdapter implements AIProvider {
         usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
       };
 
-      const reply = data.choices?.[0]?.message?.content || "";
+      const reply = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!reply) {
+        throw new Error(
+          "OPEX_AI_MODEL_UNAVAILABLE: inference server returned an empty model response.",
+        );
+      }
       const result: GenerateResponse = {
         text: reply,
         provider: this.id,
@@ -111,51 +118,147 @@ export class SelfHostedProviderAdapter implements AIProvider {
   }
 
   async *stream(request: GenerateRequest): AsyncIterable<StreamChunk> {
-    const full = await this.generate(request);
-    const words = full.text.split(" ");
-    for (let i = 0; i < words.length; i++) {
-      yield {
-        text: words[i] + (i === words.length - 1 ? "" : " "),
-        done: i === words.length - 1,
-      };
+    if (!this.isConfigured()) {
+      throw new Error("[SelfHostedAdapter] OPEX_AI_MODEL_ENDPOINT is not configured");
     }
+
+    const messages = [];
+    if (request.systemInstruction) {
+      messages.push({ role: "system", content: request.systemInstruction });
+    }
+    for (const msg of request.messages) {
+      const textParts = msg.parts.map((part) => part.text || "").join(" ");
+      messages.push({ role: msg.role === "model" ? "assistant" : "user", content: textParts });
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000);
+    let response: Response;
+    try {
+      response = await fetch(`${this.endpoint.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        headers: { ...this.getHeaders(), Accept: "text/event-stream" },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.maxTokens ?? 1024,
+          stream: true,
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      throw error;
+    }
+
+    if (!response.ok) {
+      clearTimeout(timeout);
+      const errorText = await response.text().catch(() => "");
+      throw new Error(
+        `Inference stream server responded with ${response.status}: ${errorText.slice(0, 100)}`,
+      );
+    }
+    if (!response.body) {
+      controller.abort();
+      clearTimeout(timeout);
+      throw new Error("Inference server returned no streaming response body.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let emitted = false;
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        // Process a final SSE data line even when the server closes without a trailing newline.
+        if (done && buffer.length > 0) buffer += "\n";
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") {
+            yield { text: "", done: true };
+            return;
+          }
+          let event: { choices?: Array<{ delta?: { content?: string } }> };
+          try {
+            event = JSON.parse(payload) as typeof event;
+          } catch {
+            throw new Error("Inference server returned malformed streaming data.");
+          }
+          const chunk = event.choices?.[0]?.delta?.content;
+          if (typeof chunk === "string" && chunk.length > 0) {
+            emitted = true;
+            yield { text: chunk, done: false };
+          }
+        }
+        if (done) break;
+      }
+    } finally {
+      await reader.cancel().catch(() => undefined);
+      reader.releaseLock();
+      controller.abort();
+      clearTimeout(timeout);
+    }
+    if (!emitted) {
+      throw new Error("Inference server ended the stream without generating any content.");
+    }
+    yield { text: "", done: true };
   }
 
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     const texts = Array.isArray(request.text) ? request.text : [request.text];
-    if (this.isConfigured()) {
-      try {
-        const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/embeddings`, {
-          method: "POST",
-          headers: this.getHeaders(),
-          body: JSON.stringify({
-            model: "opexnal-embed-v1",
-            input: texts,
-          }),
-        });
-        if (res.ok) {
-          const data = (await res.json()) as {
-            data?: Array<{ embedding: number[] }>;
-          };
-          if (data.data) {
-            return {
-              embeddings: data.data.map((d) => d.embedding),
-              dimensions: data.data[0]?.embedding?.length || 384,
-              provider: this.id,
-            };
-          }
-        }
-      } catch {
-        // fall through to pseudo embeddings
-      }
+    if (!this.isConfigured()) {
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.");
     }
 
-    const dims = 128;
-    return {
-      embeddings: texts.map(() => new Array(dims).fill(0.01)),
-      dimensions: dims,
-      provider: this.id,
+    const embeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"] || "nomic-embed-text";
+    const ollamaEmbedding = this.embeddingEndpoint.includes(":11434");
+    const embeddingUrl = ollamaEmbedding
+      ? `${this.embeddingEndpoint.replace(/\/$/, "").replace(/\/v1$/, "")}/api/embed`
+      : `${this.embeddingEndpoint.replace(/\/$/, "")}/embeddings`;
+    const embeddingHeaders = ollamaEmbedding
+      ? { "Content-Type": "application/json", "User-Agent": "Opexnal-AI-Gateway/1.0" }
+      : this.getHeaders();
+    const res = await fetch(embeddingUrl, {
+      method: "POST",
+      headers: embeddingHeaders,
+      body: JSON.stringify({ model: embeddingModel, input: texts }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!res.ok) {
+      throw new Error(
+        `OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned HTTP ${res.status}.`,
+      );
+    }
+
+    const data = (await res.json()) as {
+      data?: Array<{ embedding: number[] }>;
+      embeddings?: number[][];
     };
+    const vectors = ollamaEmbedding ? data.embeddings : data.data?.map((item) => item.embedding);
+    if (
+      !vectors ||
+      vectors.length !== texts.length ||
+      vectors.some((vector) => !Array.isArray(vector) || vector.length === 0)
+    ) {
+      throw new Error(
+        "OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned an invalid response.",
+      );
+    }
+
+    const dimensions = vectors[0]?.length ?? 0;
+    if (vectors.some((vector) => vector.length !== dimensions)) {
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding dimensions do not match.");
+    }
+
+    return { embeddings: vectors, dimensions, provider: this.id };
   }
 
   async moderate(request: ModerationRequest): Promise<ModerationResponse> {
@@ -197,20 +300,41 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     try {
-      const res = await fetch(`${this.endpoint.replace(/\/$/, "")}/health`, {
+      const chatBase = this.endpoint.replace(/\/$/, "");
+      const chatResponse = await fetch(`${chatBase}/models`, {
         method: "GET",
         headers: this.getHeaders(),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(5000),
       });
 
+      const embeddingBase = this.embeddingEndpoint.replace(/\/$/, "");
+      const hasSeparateEmbeddingEndpoint = embeddingBase !== chatBase;
+      let embeddingResponse: Response | undefined;
+      if (hasSeparateEmbeddingEndpoint) {
+        const ollamaEmbedding = embeddingBase.includes(":11434");
+        const embeddingHealthUrl = ollamaEmbedding
+          ? `${embeddingBase.replace(/\/v1$/, "")}/api/tags`
+          : `${embeddingBase}/models`;
+        embeddingResponse = await fetch(embeddingHealthUrl, {
+          method: "GET",
+          headers: ollamaEmbedding
+            ? { "Content-Type": "application/json", "User-Agent": "Opexnal-AI-Gateway/1.0" }
+            : this.getHeaders(),
+          signal: AbortSignal.timeout(5000),
+        });
+      }
+
+      const healthy = chatResponse.ok && (!embeddingResponse || embeddingResponse.ok);
       const healthRes: HealthCheckResult = {
-        status: res.ok ? "healthy" : "degraded",
+        status: healthy ? "healthy" : "degraded",
         provider: this.id,
         latencyMs: Date.now() - start,
         timestamp: new Date().toISOString(),
       };
-      if (!res.ok) {
-        healthRes.error = `HTTP status ${res.status}`;
+      if (!chatResponse.ok) {
+        healthRes.error = `Chat endpoint HTTP status ${chatResponse.status}`;
+      } else if (embeddingResponse && !embeddingResponse.ok) {
+        healthRes.error = `Embedding endpoint HTTP status ${embeddingResponse.status}`;
       }
       return healthRes;
     } catch (err) {
@@ -227,10 +351,12 @@ export class SelfHostedProviderAdapter implements AIProvider {
   capabilities(): ProviderCapabilities {
     return {
       supportsChat: true,
+      // stream() forwards incremental server-sent events from the inference server.
       supportsStreaming: true,
       supportsVision: false,
       supportsEmbeddings: true,
-      supportsModeration: true,
+      // moderate() is a basic heuristic, not a production moderation model.
+      supportsModeration: false,
       supportsFunctionCalling: false,
       maxContextTokens: 32768,
       name: this.name,
