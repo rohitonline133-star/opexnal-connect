@@ -2,6 +2,8 @@ name: Opexnal quality checks
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
   pull_request:
     branches: [main]
   push:
@@ -20,7 +22,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,20 +32,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
       - name: Check first-party API syntax
         run: npm run backend:check
       - name: Production build (generates TanStack route types)
         run: npm run build
       - name: Type check
         run: npm run typecheck
-      - name: Lint changed first-party source files
+      - name: Lint
         env:
           EVENT_NAME: ${{ github.event_name }}
           BEFORE_SHA: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            npm run lint
+            exit $?
+          fi
+
           if [ "$EVENT_NAME" = "pull_request" ]; then
             base="$PR_BASE_SHA"
           elif [ "$BEFORE_SHA" != "" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
