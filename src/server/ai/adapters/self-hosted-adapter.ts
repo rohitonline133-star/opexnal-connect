@@ -153,12 +153,15 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     if (!response.ok) {
+      clearTimeout(timeout);
       const errorText = await response.text().catch(() => "");
       throw new Error(
         `Inference stream server responded with ${response.status}: ${errorText.slice(0, 100)}`,
       );
     }
     if (!response.body) {
+      controller.abort();
+      clearTimeout(timeout);
       throw new Error("Inference server returned no streaming response body.");
     }
 
