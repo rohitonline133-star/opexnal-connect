@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Bot,
@@ -78,6 +78,59 @@ const TONES = [
 
 const LANGUAGES = ["English", "Hinglish (Hindi + English)", "Hindi (हिन्दी)", "Spanish", "French"];
 
+function renderInlineMarkdown(line: string) {
+  const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={index} className="rounded bg-background/70 px-1 py-0.5 text-[0.95em]">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
+function renderAiMarkdown(content: string) {
+  return content.split(/\r?\n/).map((line, index) => {
+    if (!line.trim()) return <div key={index} className="h-2" />;
+    const heading = line.match(/^#{1,3}\s+(.+)$/);
+    if (heading) {
+      return (
+        <div key={index} className="font-semibold text-foreground">
+          {renderInlineMarkdown(heading[1] || "")}
+        </div>
+      );
+    }
+    const bullet = line.match(/^\s*[-•]\s+(.+)$/);
+    if (bullet) {
+      return (
+        <div key={index} className="flex gap-2 pl-1">
+          <span aria-hidden="true">•</span>
+          <span className="min-w-0">{renderInlineMarkdown(bullet[1] || "")}</span>
+        </div>
+      );
+    }
+    const numbered = line.match(/^\s*(\d+)[.)]\s+(.+)$/);
+    if (numbered) {
+      return (
+        <div key={index} className="flex gap-2 pl-1">
+          <span className="shrink-0 tabular-nums">{numbered[1]}.</span>
+          <span className="min-w-0">{renderInlineMarkdown(numbered[2] || "")}</span>
+        </div>
+      );
+    }
+    return <div key={index}>{renderInlineMarkdown(line)}</div>;
+  });
+}
+
 function AIPage() {
   const { user } = useSession();
   const navigate = useNavigate();
@@ -89,6 +142,7 @@ function AIPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [attachedImage, setAttachedImage] = useState<{ base64: string; mime: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const usernameDisplay =
     (user?.user_metadata?.["username"] as string | undefined) || user?.email?.split("@")[0] || "";
@@ -101,6 +155,10 @@ function AIPage() {
       timestamp: "Just now",
     },
   ]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading]);
 
   // Creator Studio State
   const [studioTool, setStudioTool] = useState<AiCreatorOptions["tool"]>("caption");
@@ -265,7 +323,7 @@ function AIPage() {
         />
       }
     >
-      <div className="mx-auto flex flex-col h-[calc(100vh-8.5rem)] max-w-2xl px-3 sm:px-4 py-3">
+      <div className="mx-auto flex flex-col h-[calc(100dvh-13rem)] min-h-0 max-w-2xl px-3 sm:px-4 py-3">
         {/* Navigation Tabs */}
         <div className="flex rounded-xl bg-secondary/80 p-1 mb-3 border border-border/60">
           <button
@@ -313,7 +371,7 @@ function AIPage() {
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 pb-2">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-3.5 pr-1 pb-4">
               {messages.map((m) => (
                 <div
                   key={m.id}
@@ -343,7 +401,7 @@ function AIPage() {
                           : "bg-surface border border-border/80 text-foreground rounded-bl-sm shadow-xs",
                       )}
                     >
-                      {m.text}
+                      {m.sender === "ai" ? renderAiMarkdown(m.text) : m.text}
                     </div>
 
                     {m.sender === "ai" && (
@@ -388,6 +446,7 @@ function AIPage() {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} aria-hidden="true" />
             </div>
 
             {/* Attached Image Preview */}
@@ -411,7 +470,7 @@ function AIPage() {
                 e.preventDefault();
                 handleSend();
               }}
-              className="mt-auto flex items-center gap-2 pt-2 border-t border-border"
+              className="mt-auto flex shrink-0 items-center gap-2 pt-2 border-t border-border"
             >
               <input
                 type="file"
