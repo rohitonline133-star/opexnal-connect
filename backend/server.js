@@ -668,7 +668,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     ) {
       res.setHeader(
         "Set-Cookie",
-        createSessionCookie(accessToken, { secure: process.env.NODE_ENV === "production" }),
+        createSessionCookie(accessToken, { secure: process.env.NODE_ENV !== "development" }),
       );
     }
     // Keep the JSON bearer token during the compatibility phase; remove only after
@@ -704,7 +704,7 @@ app.post("/api/v1/auth/logout", dbRequired, authRequired, async (req, res, next)
     );
     res.setHeader(
       "Set-Cookie",
-      createClearedSessionCookie({ secure: process.env.NODE_ENV === "production" }),
+      createClearedSessionCookie({ secure: process.env.NODE_ENV !== "development" }),
     );
     return res.json({ success: true });
   } catch (error) {
