@@ -248,10 +248,12 @@ Mumbai 📍 • Tokyo aesthetic
     return {
       supportsChat: true,
       supportsStreaming: true,
-      supportsVision: true,
-      supportsEmbeddings: true,
+      // This runtime uses text heuristics and deterministic hash vectors; it does not
+      // perform model-based image understanding, semantic embeddings, or tool calling.
+      supportsVision: false,
+      supportsEmbeddings: false,
       supportsModeration: true,
-      supportsFunctionCalling: true,
+      supportsFunctionCalling: false,
       maxContextTokens: 65536,
       name: this.name,
       version: "1.0.0",
