@@ -73,3 +73,5 @@ jobs:
           else
             echo "No changed first-party JS/TS files; skipping targeted lint."
           fi
+      - name: Unit and security tests
+        run: npm test
