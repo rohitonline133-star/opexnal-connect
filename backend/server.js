@@ -657,10 +657,20 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
       return res.status(403).json({ error: "Please verify your email before signing in." });
     }
     const accessToken = await issueToken(user, req);
-    res.setHeader(
-      "Set-Cookie",
-      createSessionCookie(accessToken, { secure: process.env.NODE_ENV === "production" }),
-    );
+    // Do not establish a browser session from an untrusted or missing Origin.
+    // Legacy API clients can continue using the JSON bearer token during migration.
+    if (
+      isAllowedCookieRequest(
+        req.headers.origin,
+        req.headers["sec-fetch-site"],
+        allowedOrigins,
+      )
+    ) {
+      res.setHeader(
+        "Set-Cookie",
+        createSessionCookie(accessToken, { secure: process.env.NODE_ENV === "production" }),
+      );
+    }
     // Keep the JSON bearer token during the compatibility phase; remove only after
     // every client request has migrated to same-origin cookie credentials.
     return res.json({
