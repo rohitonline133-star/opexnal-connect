@@ -61,7 +61,7 @@ function SessionsPage() {
       }
       try {
         const res = await fetch("/api/v1/auth/sessions", {
-                    credentials: "same-origin",
+          credentials: "same-origin",
           cache: "no-store",
         });
         const data = (await res.json().catch(() => ({}))) as {
@@ -112,8 +112,12 @@ function SessionsPage() {
   };
 
   const handleRevokeAll = async () => {
-    if (!isSignedIn || !window.confirm("Log out all other devices? This device will stay signed in."))
+    if (
+      !isSignedIn ||
+      !window.confirm("Log out all other devices? This device will stay signed in.")
+    ) {
       return;
+    }
     setActionLoading("all");
     setErrorMessage(null);
     try {
