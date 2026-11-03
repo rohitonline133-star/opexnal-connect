@@ -175,9 +175,7 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
             encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'),
           );
           // Deliberately omit the final newline to cover a truncated-but-valid final SSE line.
-          controller.enqueue(
-            encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}'),
-          );
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}'));
           controller.close();
         },
       });
