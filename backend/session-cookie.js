@@ -15,7 +15,10 @@ export function parseSessionCookie(cookieHeader) {
 }
 
 export function createSessionCookie(token, { secure = true } = {}) {
-  if (typeof token !== "string" || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
+  if (
+    typeof token !== "string" ||
+    !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)
+  ) {
     throw new TypeError("A valid compact session token is required.");
   }
   return [
