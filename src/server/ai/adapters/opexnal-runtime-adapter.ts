@@ -114,15 +114,19 @@ Mumbai 📍 • Tokyo aesthetic
 3. 🔥 **Hinglish Trendsetter**:
 "Consistency aur patience — yeh do cheezein kabhi waste nahi jaati. Keep building, results will follow! 🚀"`;
     } else if (/\b(hi|hello|hey|namaste|नमस्ते)\b/i.test(lower.trim())) {
-      text = "Namaste! 👋 Main Opexnal AI ka local assistant hoon. Aaj aap kis cheez mein madad chahte hain?";
+      text =
+        "Namaste! 👋 Main Opexnal AI ka local assistant hoon. Aaj aap kis cheez mein madad chahte hain?";
     } else if (/\b(kaise ho|kaisi ho|how are you)\b/i.test(lower)) {
-      text = "Main theek se kaam karne ke liye ready hoon! 😊 Aap bataiye, aaj kis cheez mein madad karun?";
+      text =
+        "Main theek se kaam karne ke liye ready hoon! 😊 Aap bataiye, aaj kis cheez mein madad karun?";
     } else if (/\b(kya kar rahe ho|what are you doing)\b/i.test(lower)) {
-      text = "Main aapka message samajhkar jawab dene ki koshish kar raha hoon. Aap Opexnal par kis feature par kaam kar rahe hain?";
+      text =
+        "Main aapka message samajhkar jawab dene ki koshish kar raha hoon. Aap Opexnal par kis feature par kaam kar rahe hain?";
     } else if (/\b(thanks|thank you|shukriya|धन्यवाद)\b/i.test(lower)) {
       text = "Aapka swagat hai! 😊";
     } else {
-      text = "Aapka message mil gaya. Abhi Opex AI ka local fallback mode active hai, jo har tarah ke sawalon ka full generative jawab nahi de sakta. Is waqt configured AI model available nahi hai; isliye main banaawati ya repeat hone wala jawab dene ke bajay yeh limitation bata raha hoon.";
+      text =
+        "Aapka message mil gaya. Abhi Opex AI ka local fallback mode active hai, jo har tarah ke sawalon ka full generative jawab nahi de sakta. Is waqt configured AI model available nahi hai; isliye main banaawati ya repeat hone wala jawab dene ke bajay yeh limitation bata raha hoon.";
     }
 
     return {
