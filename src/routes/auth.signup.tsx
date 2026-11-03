@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   ArrowLeft,
-  KeyRound,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -51,10 +50,8 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // OTP Verification Step
-  const [step, setStep] = useState<"details" | "verify_otp" | "welcome">("details");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  // Signup and email-verification status
+  const [step, setStep] = useState<"details" | "welcome">("details");
 
   // Evaluation & Validation states
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">(
@@ -177,13 +174,6 @@ function SignupPage() {
       return;
     }
 
-    if (!contact.includes("@")) {
-      setErrorMessage(
-        "Phone signup is unavailable until a real SMS verification provider is configured. Please use an email address.",
-      );
-      return;
-    }
-
     setLoading(true);
     try {
       const { data, error } = await authClient.signUp({
@@ -217,60 +207,6 @@ function SignupPage() {
     }
   };
 
-  const handleVerifyAndCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!otpCode.trim()) {
-      setErrorMessage("Please enter the verification code.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // 1. Verify OTP code
-      const verifyRes = await fetch("/api/auth/phone/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailOrPhone.trim(), code: otpCode.trim() }),
-      });
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok) {
-        setErrorMessage(verifyData.error || "Invalid verification code");
-        setLoading(false);
-        return;
-      }
-
-      // 2. Create user in authClient
-      const email = emailOrPhone.includes("@") ? emailOrPhone.trim() : `${username}@opexnal.local`;
-      const { data, error } = await authClient.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username.trim(),
-            full_name: fullName.trim(),
-          },
-        },
-      });
-
-      if (error) {
-        setErrorMessage(error.message);
-        toast.error(error.message);
-        return;
-      }
-
-      setStep("welcome");
-      toast.success("Account created successfully!");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Registration failed";
-      setErrorMessage(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="w-full">
       {/* Back button */}
@@ -286,18 +222,12 @@ function SignupPage() {
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">
-          {step === "welcome"
-            ? "Check your email"
-            : step === "verify_otp"
-              ? "Verify Contact"
-              : "Create Your Account"}
+          {step === "welcome" ? "Check your email" : "Create Your Account"}
         </h2>
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
             ? "Your account was created. Open the verification link sent to your email before signing in."
-            : step === "verify_otp"
-              ? `We sent a 6-digit confirmation code to ${emailOrPhone}`
-              : "Join millions sharing stories, reels and creative ideas"}
+            : "Join Opexnal to connect with creators and share your ideas"}
         </p>
       </div>
 
@@ -314,14 +244,15 @@ function SignupPage() {
       {/* STEP 1: ACCOUNT DETAILS */}
       {step === "details" && (
         <form onSubmit={handleInitialSubmit} className="w-full space-y-3">
-          {/* Email or Phone */}
+          {/* Email address */}
           <div className="relative flex items-center">
             <span className="absolute left-4 text-gray-400">
               <Mail size={18} />
             </span>
             <input
-              type="text"
-              placeholder="Email or Mobile Phone"
+              type="email"
+              placeholder="Email address"
+              autoComplete="email"
               value={emailOrPhone}
               onChange={(e) => setEmailOrPhone(e.target.value)}
               disabled={loading}
@@ -486,55 +417,7 @@ function SignupPage() {
             className="w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Continue to Verification</span>
-          </button>
-        </form>
-      )}
-
-      {/* STEP 2: OTP VERIFICATION */}
-      {step === "verify_otp" && (
-        <form onSubmit={handleVerifyAndCreate} className="w-full space-y-4">
-          <div className="p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs space-y-1">
-            <span className="text-[#8B5CF6] font-semibold flex items-center gap-1.5">
-              <KeyRound className="h-4 w-4" /> Code Sent
-            </span>
-            <p className="text-gray-400 text-[11px]">
-              Enter the 6-digit verification code sent to{" "}
-              <strong className="text-white">{emailOrPhone}</strong>.
-            </p>
-          </div>
-
-          <div className="relative flex items-center">
-            <span className="absolute left-4 text-gray-400">
-              <KeyRound size={18} />
-            </span>
-            <input
-              type="text"
-              placeholder="Enter 6-digit code"
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value)}
-              disabled={loading}
-              autoFocus
-              required
-              className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-widest text-center"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Complete Registration</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStep("details")}
-            className="w-full text-center text-xs text-gray-400 hover:text-white"
-          >
-            Change email / phone number
+            <span>Create Account</span>
           </button>
         </form>
       )}
@@ -548,8 +431,8 @@ function SignupPage() {
           <div>
             <h3 className="text-lg font-bold text-white">Welcome, {fullName}!</h3>
             <p className="text-xs text-gray-400 mt-1">
-              Your profile @{username} is all set up. Get ready to explore creator communities and
-              share moments.
+              Your account is pending email verification. Open the verification link sent to your
+              email before signing in.
             </p>
           </div>
 
