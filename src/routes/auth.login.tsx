@@ -294,8 +294,6 @@ function LoginPage() {
               </Link>
             </p>
           </div>
-        </>
-      )}
     </div>
   );
 }
