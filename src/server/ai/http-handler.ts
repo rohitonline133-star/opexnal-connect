@@ -1,4 +1,5 @@
 import { opexAiGateway } from "./gateway";
+import { createFirstPartyAuthHeaders } from "./auth-headers";
 import { RateLimiter } from "./rate-limiter";
 import type { GenerateRequest, AiMessage } from "./types";
 
@@ -60,14 +61,14 @@ function extractClientIp(request: Request): string {
 }
 
 async function verifyUserWithFirstPartyApi(request: Request): Promise<string | null> {
-  const authorization = request.headers.get("authorization") || "";
-  if (!authorization.startsWith("Bearer ")) return null;
+  const authHeaders = createFirstPartyAuthHeaders(request);
+  if (!authHeaders) return null;
   const apiOrigin = process.env["OPEXNAL_API_URL"];
   if (!apiOrigin) throw new Error("OPEXNAL_API_URL is not configured on the AI server.");
 
   const target = new URL("/api/v1/auth/me", apiOrigin);
   const response = await fetch(target, {
-    headers: { Authorization: authorization },
+    headers: authHeaders,
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
   });
@@ -137,7 +138,7 @@ export async function handleAiRequest(request: Request): Promise<Response> {
   );
   let verifiedUserId: string | undefined;
   if (protectedAiRoute) {
-    if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
+    if (!createFirstPartyAuthHeaders(request)) {
       return new Response(JSON.stringify({ error: "Authentication required." }), {
         status: 401,
         headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
