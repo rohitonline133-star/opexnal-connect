@@ -116,14 +116,79 @@ export class SelfHostedProviderAdapter implements AIProvider {
   }
 
   async *stream(request: GenerateRequest): AsyncIterable<StreamChunk> {
-    const full = await this.generate(request);
-    const words = full.text.split(" ");
-    for (let i = 0; i < words.length; i++) {
-      yield {
-        text: words[i] + (i === words.length - 1 ? "" : " "),
-        done: i === words.length - 1,
-      };
+    if (!this.isConfigured()) {
+      throw new Error("[SelfHostedAdapter] OPEX_AI_MODEL_ENDPOINT is not configured");
     }
+
+    const messages = [];
+    if (request.systemInstruction) {
+      messages.push({ role: "system", content: request.systemInstruction });
+    }
+    for (const msg of request.messages) {
+      const textParts = msg.parts.map((part) => part.text || "").join(" ");
+      messages.push({ role: msg.role === "model" ? "assistant" : "user", content: textParts });
+    }
+
+    const response = await fetch(`${this.endpoint.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: { ...this.getHeaders(), Accept: "text/event-stream" },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        temperature: request.temperature ?? 0.7,
+        max_tokens: request.maxTokens ?? 1024,
+        stream: true,
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`Inference stream server responded with ${response.status}: ${errorText.slice(0, 100)}`);
+    }
+    if (!response.body) {
+      throw new Error("Inference server returned no streaming response body.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let emitted = false;
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === "[DONE]") {
+            yield { text: "", done: true };
+            return;
+          }
+          let event: { choices?: Array<{ delta?: { content?: string } }> };
+          try {
+            event = JSON.parse(payload) as typeof event;
+          } catch {
+            throw new Error("Inference server returned malformed streaming data.");
+          }
+          const chunk = event.choices?.[0]?.delta?.content;
+          if (typeof chunk === "string" && chunk.length > 0) {
+            emitted = true;
+            yield { text: chunk, done: false };
+          }
+        }
+        if (done) break;
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    if (!emitted) {
+      throw new Error("Inference server ended the stream without generating any content.");
+    }
+    yield { text: "", done: true };
   }
 
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
