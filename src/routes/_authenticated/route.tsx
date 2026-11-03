@@ -11,8 +11,26 @@ export const Route = createFileRoute("/_authenticated")({
       if (!error && data.user) {
         return { user: data.user };
       }
-    } catch {
-      // Treat authentication errors as unauthenticated.
+
+      // getUser() clears the session only when the API confirms that it is
+      // invalid/expired. If a session remains, this was an API/network failure,
+      // not proof that the user is signed out.
+      const {
+        data: { session },
+      } = await authClient.getSession();
+      if (error && session) {
+        throw error;
+      }
+    } catch (error) {
+      const {
+        data: { session },
+      } = await authClient.getSession();
+
+      // Keep the authenticated route in an error state during outages instead
+      // of converting a temporary API failure into a false logout.
+      if (session) {
+        throw error;
+      }
     }
 
     throw redirect({
@@ -22,6 +40,26 @@ export const Route = createFileRoute("/_authenticated")({
       },
     });
   },
+
+  errorComponent: ({ error, reset }) => (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="text-xl font-semibold">Opexnal account service unavailable</h1>
+      <p role="alert" className="max-w-md text-sm text-muted-foreground">
+        Your saved sign-in session has not been treated as a logout. Opexnal could not verify
+        your account right now. Check the connection and try again.
+      </p>
+      <button
+        type="button"
+        onClick={reset}
+        className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
+      >
+        Retry
+      </button>
+      <p className="max-w-md text-xs text-muted-foreground">
+        {error instanceof Error ? error.message : "The account service could not be reached."}
+      </p>
+    </main>
+  ),
 
   component: () => <Outlet />,
 });
