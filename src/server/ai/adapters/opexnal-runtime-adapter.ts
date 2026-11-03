@@ -210,12 +210,19 @@ Mumbai 📍 • Tokyo aesthetic
 
     const flagged = isHate || isScam || isHarassment || isSelfHarm || isSpam;
 
-    let reason = "Heuristic keyword check: no configured terms matched; this is not a safety guarantee";
-    if (isHate) reason = "Heuristic keyword match: possible hate speech or abusive terminology";
-    else if (isScam) reason = "Heuristic keyword match: possible financial scam or unauthorized solicitation";
-    else if (isHarassment) reason = "Heuristic keyword match: possible targeted harassment or threatening statement";
-    else if (isSelfHarm) reason = "Heuristic keyword match: sensitive crisis-related terminology";
-    else if (isSpam) reason = "Heuristic keyword match: possible commercial spam or follow-farming";
+    let reason =
+      "Heuristic keyword check: no configured terms matched; this is not a safety guarantee";
+    if (isHate) {
+      reason = "Heuristic keyword match: possible hate speech or abusive terminology";
+    } else if (isScam) {
+      reason = "Heuristic keyword match: possible financial scam or unauthorized solicitation";
+    } else if (isHarassment) {
+      reason = "Heuristic keyword match: possible targeted harassment or threatening statement";
+    } else if (isSelfHarm) {
+      reason = "Heuristic keyword match: sensitive crisis-related terminology";
+    } else if (isSpam) {
+      reason = "Heuristic keyword match: possible commercial spam or follow-farming";
+    }
 
     return {
       result: {
