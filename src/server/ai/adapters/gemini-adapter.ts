@@ -94,17 +94,10 @@ export class GeminiProviderAdapter implements AIProvider {
     }
   }
 
-  async *stream(request: GenerateRequest): AsyncIterable<StreamChunk> {
-    const full = await this.generate(request);
-    // Simulated stream chunking for stable adapter compatibility
-    const words = full.text.split(" ");
-    for (let i = 0; i < words.length; i++) {
-      const isLast = i === words.length - 1;
-      yield {
-        text: words[i] + (isLast ? "" : " "),
-        done: isLast,
-      };
-    }
+  async *stream(_request: GenerateRequest): AsyncIterable<StreamChunk> {
+    throw new Error(
+      "Gemini streaming is not implemented by this adapter; use generate() or select a provider with native streaming.",
+    );
   }
 
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
@@ -243,7 +236,7 @@ Respond ONLY with a JSON object in this exact schema:
   capabilities(): ProviderCapabilities {
     return {
       supportsChat: true,
-      supportsStreaming: true,
+      supportsStreaming: false,
       supportsVision: true,
       supportsEmbeddings: false,
       supportsModeration: true,
