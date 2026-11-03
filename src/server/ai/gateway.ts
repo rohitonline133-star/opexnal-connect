@@ -170,6 +170,32 @@ export class OpexAiGateway {
   ): Promise<ModerationResponse> {
     const correlationId = `mod_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const start = Date.now();
+    const identifier = options.userId || options.clientIp || "anonymous";
+
+    // Moderation must share the same per-user/IP budget as generation endpoints.
+    const rateCheck = RateLimiter.check(identifier, Boolean(options.userId));
+    if (!rateCheck.allowed) {
+      logAudit(
+        {
+          id: `aud_${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          correlationId,
+          endpoint: options.endpoint,
+          provider: "gateway",
+          model: "rate_limiter",
+          action: "moderate",
+          status: "rate_limited",
+          latencyMs: Date.now() - start,
+          promptLength: request.content.length,
+          errorMessage: "Rate limit exceeded",
+        },
+        options,
+      );
+      throw new Error(
+        `Too many requests. Please retry in ${Math.ceil(rateCheck.resetMs / 1000)}s.`,
+      );
+    }
+
     const provider = this.router.resolveProvider();
 
     try {

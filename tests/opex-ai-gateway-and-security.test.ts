@@ -256,6 +256,25 @@ describe("OPEX AI Gateway & Model Router Orchestration", () => {
     assert.strictEqual(logs[logs.length - 1]?.status, "success");
   });
 
+  test("Gateway applies rate limits to moderation requests", async () => {
+    RateLimiter.clear();
+    const gateway = new OpexAiGateway();
+    const options = { endpoint: "/api/ai/moderate", userId: "usr_moderation_rate_limit" };
+
+    for (let i = 0; i < 60; i++) {
+      await gateway.moderate({ content: "A normal community comment" }, options);
+    }
+
+    await assert.rejects(() => gateway.moderate({ content: "One more comment" }, options), {
+      message: /Too many requests/,
+    });
+    assert.ok(
+      AuditLogger.getRecentLogs(5).some(
+        (entry) => entry.action === "moderate" && entry.status === "rate_limited",
+      ),
+    );
+  });
+
   test("Gateway blocks prompt injection and records security audit log", async () => {
     const gateway = new OpexAiGateway();
 
