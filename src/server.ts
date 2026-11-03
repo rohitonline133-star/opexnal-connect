@@ -52,7 +52,7 @@ async function proxyFirstPartyApi(request: Request): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const target = new URL(incomingUrl.pathname + incomingUrl.search, apiOrigin);
   const headers = new Headers(request.headers);
-  for (const header of ["host", "connection", "content-length", "cookie", "origin"]) {
+  for (const header of ["host", "connection", "content-length"]) {
     headers.delete(header);
   }
 
