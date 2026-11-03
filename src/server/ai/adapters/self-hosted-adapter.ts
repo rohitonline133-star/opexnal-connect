@@ -211,27 +211,41 @@ export class SelfHostedProviderAdapter implements AIProvider {
     }
 
     try {
-      // When a separate embedding endpoint is configured, chat runs on vLLM;
-      // otherwise retain the Ollama-compatible /api/tags health probe.
-      const separateEmbeddingEndpoint = Boolean(process.env["OPEX_AI_EMBEDDING_ENDPOINT"]);
-      const base = this.endpoint.replace(/\/$/, "");
-      const healthUrl = separateEmbeddingEndpoint
-        ? `${base}/models`
-        : `${base.replace(/\/v1$/, "")}/api/tags`;
-      const res = await fetch(healthUrl, {
+      const chatBase = this.endpoint.replace(/\/$/, "");
+      const chatResponse = await fetch(`${chatBase}/models`, {
         method: "GET",
         headers: this.getHeaders(),
         signal: AbortSignal.timeout(5000),
       });
 
+      const embeddingBase = this.embeddingEndpoint.replace(/\/$/, "");
+      const hasSeparateEmbeddingEndpoint = embeddingBase !== chatBase;
+      let embeddingResponse: Response | undefined;
+      if (hasSeparateEmbeddingEndpoint) {
+        const ollamaEmbedding = embeddingBase.includes(":11434");
+        const embeddingHealthUrl = ollamaEmbedding
+          ? `${embeddingBase.replace(/\/v1$/, "")}/api/tags`
+          : `${embeddingBase}/models`;
+        embeddingResponse = await fetch(embeddingHealthUrl, {
+          method: "GET",
+          headers: ollamaEmbedding
+            ? { "Content-Type": "application/json", "User-Agent": "Opexnal-AI-Gateway/1.0" }
+            : this.getHeaders(),
+          signal: AbortSignal.timeout(5000),
+        });
+      }
+
+      const healthy = chatResponse.ok && (!embeddingResponse || embeddingResponse.ok);
       const healthRes: HealthCheckResult = {
-        status: res.ok ? "healthy" : "degraded",
+        status: healthy ? "healthy" : "degraded",
         provider: this.id,
         latencyMs: Date.now() - start,
         timestamp: new Date().toISOString(),
       };
-      if (!res.ok) {
-        healthRes.error = `HTTP status ${res.status}`;
+      if (!chatResponse.ok) {
+        healthRes.error = `Chat endpoint HTTP status ${chatResponse.status}`;
+      } else if (embeddingResponse && !embeddingResponse.ok) {
+        healthRes.error = `Embedding endpoint HTTP status ${embeddingResponse.status}`;
       }
       return healthRes;
     } catch (err) {
