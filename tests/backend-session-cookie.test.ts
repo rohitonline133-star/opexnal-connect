@@ -5,6 +5,7 @@ import {
   createSessionCookie,
   createClearedSessionCookie,
   isAllowedCookieRequest,
+  isAllowedCookieAuthRequest,
 } from "../backend/session-cookie.js";
 
 const token = "header.payload.signature";
@@ -43,4 +44,19 @@ test("cookie-authenticated unsafe requests require an exact trusted Origin", () 
   assert.equal(isAllowedCookieRequest("https://attacker.example", "same-site", origins), false);
   assert.equal(isAllowedCookieRequest(undefined, "same-origin", origins), false);
   assert.equal(isAllowedCookieRequest(origins[0], "cross-site", origins), false);
+});
+
+test("cookie auth rejects cross-site and untrusted Origins on safe requests", () => {
+  const origins = ["https://opexnal-connect.vercel.app"];
+  assert.equal(isAllowedCookieAuthRequest(undefined, "same-origin", "GET", origins), true);
+  assert.equal(isAllowedCookieAuthRequest(origins[0], "same-origin", "GET", origins), true);
+  assert.equal(isAllowedCookieAuthRequest("https://evil.example", "same-site", "GET", origins), false);
+  assert.equal(isAllowedCookieAuthRequest(origins[0], "cross-site", "GET", origins), false);
+});
+
+test("cookie auth requires an exact trusted Origin for state-changing requests", () => {
+  const origins = ["https://opexnal-connect.vercel.app"];
+  assert.equal(isAllowedCookieAuthRequest(origins[0], "same-origin", "POST", origins), true);
+  assert.equal(isAllowedCookieAuthRequest(undefined, "same-origin", "POST", origins), false);
+  assert.equal(isAllowedCookieAuthRequest("https://evil.example", "same-site", "DELETE", origins), false);
 });
