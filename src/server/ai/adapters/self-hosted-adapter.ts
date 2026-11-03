@@ -173,6 +173,8 @@ export class SelfHostedProviderAdapter implements AIProvider {
       while (true) {
         const { value, done } = await reader.read();
         buffer += decoder.decode(value, { stream: !done });
+        // Process a final SSE data line even when the server closes without a trailing newline.
+        if (done && buffer.length > 0) buffer += "\n";
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) {
