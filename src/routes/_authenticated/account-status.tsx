@@ -38,7 +38,7 @@ function AccountStatusPage() {
                 <p className="text-xs leading-relaxed text-gray-300">
                   Opexnal is not currently connected to a verified account-enforcement and
                   moderation status service. We cannot confirm whether this account has policy
-                  violations, copyright claims, strikes, or monetization eligibility.
+                  violations, copyright claims, strikes, or\n                  monetization eligibility.
                 </p>
                 <p className="text-xs leading-relaxed text-gray-400">
                   No compliance result is being assumed or displayed until the authoritative
