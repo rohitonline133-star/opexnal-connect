@@ -28,7 +28,14 @@ function CurrentUserProfileRedirect() {
   const { user, loading } = useSession();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading, isError, error, refetch, isFetching } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["current-user-profile", user?.id],
     enabled: Boolean(user?.id),
     queryFn: () => getProfileById(user!.id),
@@ -53,7 +60,9 @@ function CurrentUserProfileRedirect() {
       <AppShell activeTab="profile">
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6">
           <p role="alert" className="max-w-md text-center text-sm text-muted-foreground">
-            {error instanceof Error ? error.message : "Your profile could not be loaded. Please try again."}
+            {error instanceof Error
+              ? error.message
+              : "Your profile could not be loaded. Please try again."}
           </p>
           <button
             type="button"
