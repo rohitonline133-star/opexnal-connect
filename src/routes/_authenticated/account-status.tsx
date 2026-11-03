@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/account-status")({
       { title: "Account Status — Opexnal" },
       {
         name: "description",
-        content: "Check the availability of account standing and policy compliance information.",
+        content:\n          "Check the availability of account standing and policy compliance information.",
       },
     ],
   }),
