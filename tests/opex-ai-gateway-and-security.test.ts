@@ -75,6 +75,19 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     assert.ok(health.error?.includes("missing") || health.error?.includes("not configured"));
   });
 
+  test("GeminiProviderAdapter does not advertise simulated streaming", async () => {
+    const gemini = new GeminiProviderAdapter("test-key");
+    assert.strictEqual(gemini.capabilities().supportsStreaming, false);
+    await assert.rejects(
+      async () => {
+        for await (const _chunk of gemini.stream({} as never)) {
+          // The adapter must fail explicitly rather than emit simulated chunks.
+        }
+      },
+      /Gemini streaming is not implemented/,
+    );
+  });
+
   test("SelfHostedProviderAdapter correctly detects configured endpoints", async () => {
     const unconfigured = new SelfHostedProviderAdapter("");
     assert.strictEqual(unconfigured.isConfigured(), false);
