@@ -131,18 +131,26 @@ export class SelfHostedProviderAdapter implements AIProvider {
       messages.push({ role: msg.role === "model" ? "assistant" : "user", content: textParts });
     }
 
-    const response = await fetch(`${this.endpoint.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST",
-      headers: { ...this.getHeaders(), Accept: "text/event-stream" },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        temperature: request.temperature ?? 0.7,
-        max_tokens: request.maxTokens ?? 1024,
-        stream: true,
-      }),
-      signal: AbortSignal.timeout(120000),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000);
+    let response: Response;
+    try {
+      response = await fetch(`${this.endpoint.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        headers: { ...this.getHeaders(), Accept: "text/event-stream" },
+        body: JSON.stringify({
+          model: this.model,
+          messages,
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.maxTokens ?? 1024,
+          stream: true,
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      throw error;
+    }
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
@@ -187,7 +195,10 @@ export class SelfHostedProviderAdapter implements AIProvider {
         if (done) break;
       }
     } finally {
+      await reader.cancel().catch(() => undefined);
       reader.releaseLock();
+      controller.abort();
+      clearTimeout(timeout);
     }
     if (!emitted) {
       throw new Error("Inference server ended the stream without generating any content.");
