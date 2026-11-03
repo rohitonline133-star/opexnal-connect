@@ -46,18 +46,21 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     // 4. moderate()
     const modClean = await runtime.moderate({ content: "Sharing my sunset photo from Goa!" });
     assert.strictEqual(modClean.result.flagged, false);
+    assert.strictEqual(modClean.result.score, 0);
     assert.strictEqual(modClean.result.categories.hateSpeech, false);
 
     const modToxic = await runtime.moderate({
       content: "Send free crypto or I will kill your family hate",
     });
     assert.strictEqual(modToxic.result.flagged, true);
+    assert.strictEqual(modToxic.result.score, 1);
     assert.strictEqual(modToxic.result.categories.hateSpeech, true);
     assert.strictEqual(modToxic.result.categories.scamOrFraud, true);
 
     // 5. healthCheck()
     const health = await runtime.healthCheck();
-    assert.strictEqual(health.status, "healthy");
+    assert.strictEqual(health.status, "degraded");
+    assert.ok(health.error?.includes("Keyword heuristics only"));
     assert.strictEqual(health.provider, "opex_runtime");
 
     // 6. capabilities()
