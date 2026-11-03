@@ -7,9 +7,6 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  Phone,
-  ShieldCheck,
-  KeyRound,
   ArrowLeft,
 } from "lucide-react";
 import { z } from "zod";
@@ -35,7 +32,7 @@ export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
 });
 
-type AuthMethod = "email_username" | "phone";
+type AuthMethod = "email_username";
 
 function LoginPage() {
   const search = Route.useSearch();
@@ -43,18 +40,8 @@ function LoginPage() {
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email_username");
   const [emailOrUsername, setEmailOrUsername] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  // Phone OTP Flow State
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [phoneOtp, setPhoneOtp] = useState("");
-
-  // 2FA Challenge State
-  const [requires2fa, setRequires2fa] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
@@ -64,68 +51,7 @@ function LoginPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    // 1. Phone login flow
-    if (authMethod === "phone") {
-      if (!phoneNumber.trim()) {
-        setErrorMessage("Please enter your mobile phone number.");
-        return;
-      }
-
-      if (!phoneOtpSent) {
-        setLoading(true);
-        try {
-          const res = await fetch("/api/auth/phone/otp/request", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: phoneNumber.trim() }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            setErrorMessage(data.error || "Failed to send verification SMS");
-            return;
-          }
-          setPhoneOtpSent(true);
-          toast.success(data.message || "Verification code sent to your phone");
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Failed to send verification SMS";
-          setErrorMessage(msg);
-          toast.error(msg);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      if (!phoneOtp.trim()) {
-        setErrorMessage("Please enter the 6-digit verification code");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const res = await fetch("/api/auth/phone/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber.trim(), code: phoneOtp.trim() }),
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          toast.success("Phone verified! Welcome back.");
-          navigate({ to: search.redirect || "/home", replace: true });
-        } else {
-          setErrorMessage(data.error || "Invalid verification code");
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Failed to verify code. Please try again.";
-        setErrorMessage(msg);
-        toast.error(msg);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // 2. Email / Username Login Flow
+    // Email / Username Login Flow
     const identity = emailOrUsername.trim();
     if (!identity) {
       setErrorMessage("Please enter your email or username");
@@ -149,49 +75,12 @@ function LoginPage() {
         return;
       }
 
-      if (data?.requires2fa) {
-        setRequires2fa(true);
-        setPendingUserId(data.user?.id || null);
-        toast.info("Two-factor authentication required for this account");
-        return;
-      }
-
       if (data?.session) {
         toast.success("Signed in successfully! Welcome to Opexnal.");
         navigate({ to: search.redirect || "/home", replace: true });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Authentication error";
-      setErrorMessage(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify2fa = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!twoFactorCode.trim()) {
-      setErrorMessage("Please enter your 6-digit TOTP code or backup code");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/2fa/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: pendingUserId, token: twoFactorCode.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success("Two-Factor Verified! Welcome back.");
-        navigate({ to: search.redirect || "/home", replace: true });
-      } else {
-        setErrorMessage(data.error || "Invalid authentication code");
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Invalid two-factor authentication code";
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -245,12 +134,10 @@ function LoginPage() {
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">
-          {requires2fa ? "Two-Factor Verification" : "Welcome Back"}
+          Welcome Back
         </h2>
         <p className="text-xs text-gray-400 font-medium">
-          {requires2fa
-            ? "Enter code from your Authenticator app or a single-use backup code"
-            : "Log in with your email, username or registered phone"}
+          Log in with your email or username
         </p>
       </div>
 
@@ -264,120 +151,8 @@ function LoginPage() {
         </div>
       )}
 
-      {requires2fa ? (
-        <form onSubmit={handleVerify2fa} className="w-full space-y-3.5">
-          <div className="p-3 bg-[#121212] border border-[#262626] rounded-xl text-xs space-y-1">
-            <span className="text-[#8B5CF6] font-semibold flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4" /> 2FA Security Challenge
-            </span>
-            <p className="text-gray-400 text-[11px]">
-              This account requires a one-time verification token.
-            </p>
-          </div>
-
-          <div className="relative flex items-center">
-            <span className="absolute left-4 text-gray-400">
-              <KeyRound size={18} />
-            </span>
-            <input
-              type="text"
-              placeholder="6-digit code or ABCD-1234 backup code"
-              value={twoFactorCode}
-              onChange={(e) => setTwoFactorCode(e.target.value)}
-              disabled={loading}
-              autoFocus
-              required
-              className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono tracking-wider"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 mt-2 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Continue"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setRequires2fa(false)}
-            className="w-full text-center text-xs text-gray-400 hover:text-white pt-1"
-          >
-            Cancel and return to password login
-          </button>
-        </form>
-      ) : (
-        <>
-          {/* Method selector */}
-          <div className="flex w-full bg-[#121212] border border-[#262626] p-1 rounded-xl mb-4 gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod("email_username");
-                setErrorMessage(null);
-              }}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
-                authMethod === "email_username"
-                  ? "bg-[#262626] text-white shadow-xs"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Email / Username
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod("phone");
-                setErrorMessage(null);
-              }}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
-                authMethod === "phone"
-                  ? "bg-[#262626] text-white shadow-xs"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Phone Number
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="w-full space-y-3.5">
-            {authMethod === "phone" ? (
-              <>
-                <div className="relative flex items-center">
-                  <span className="absolute left-4 text-gray-400">
-                    <Phone size={18} />
-                  </span>
-                  <input
-                    type="tel"
-                    placeholder="Phone number (+91 98765 43210)"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={loading || phoneOtpSent}
-                    required
-                    className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-60"
-                  />
-                </div>
 
-                {phoneOtpSent && (
-                  <div className="relative flex items-center animate-in fade-in duration-200">
-                    <span className="absolute left-4 text-gray-400">
-                      <KeyRound size={18} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="Enter 6-digit SMS code"
-                      value={phoneOtp}
-                      onChange={(e) => setPhoneOtp(e.target.value)}
-                      disabled={loading}
-                      autoFocus
-                      required
-                      className="w-full h-12 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition font-mono"
-                    />
-                  </div>
-                )}
-              </>
-            ) : (
               <>
                 <div className="relative flex items-center">
                   <span className="absolute left-4 text-gray-400">
@@ -419,7 +194,7 @@ function LoginPage() {
                   </button>
                 </div>
               </>
-            )}
+
 
             {/* Forgot password link */}
             {authMethod === "email_username" && (
@@ -446,15 +221,7 @@ function LoginPage() {
               className="w-full h-12 mt-2 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>
-                {loading
-                  ? "Authenticating..."
-                  : authMethod === "phone"
-                    ? phoneOtpSent
-                      ? "Verify Code & Log In"
-                      : "Send Login Code"
-                    : "Log In"}
-              </span>
+              <span>{loading ? "Authenticating..." : "Log In"}</span>
             </button>
           </form>
 
