@@ -134,7 +134,6 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
         [0.1, 0.2],
         [0.3, 0.4],
       ]);
-      assert.strictEqual(new Headers(calls[2]?.init?.headers).has("Authorization"), false);
       assert.strictEqual(calls[0]?.url, "http://embeddings:11434/api/embed");
       assert.strictEqual(
         calls[0]?.init?.headers && new Headers(calls[0].init.headers).has("Authorization"),
@@ -156,10 +155,7 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
         "Bearer test-secret",
       );
       assert.strictEqual(calls[2]?.url, "http://embeddings:11434/api/tags");
-      assert.strictEqual(
-        new Headers(calls[2]?.init?.headers).has("Authorization"),
-        false,
-      );
+      assert.strictEqual(new Headers(calls[2]?.init?.headers).has("Authorization"), false);
     } finally {
       globalThis.fetch = originalFetch;
       if (previousEmbeddingEndpoint === undefined) delete process.env["OPEX_AI_EMBEDDING_ENDPOINT"];
