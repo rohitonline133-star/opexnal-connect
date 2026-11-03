@@ -49,3 +49,11 @@ export function isAllowedCookieRequest(origin, fetchSite, allowedOrigins) {
   if (fetchSite === "cross-site") return false;
   return true;
 }
+
+export function isAllowedCookieAuthRequest(origin, fetchSite, method, allowedOrigins) {
+  if (!Array.isArray(allowedOrigins) || fetchSite === "cross-site") return false;
+  const safeMethod = ["GET", "HEAD", "OPTIONS"].includes(String(method).toUpperCase());
+  if (origin && !allowedOrigins.includes(origin)) return false;
+  if (!safeMethod && (!origin || !allowedOrigins.includes(origin))) return false;
+  return true;
+}
