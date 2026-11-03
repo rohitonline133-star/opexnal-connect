@@ -28,14 +28,21 @@ function CurrentUserProfileRedirect() {
   const { user, loading } = useSession();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["current-user-profile", user?.id],
     enabled: Boolean(user?.id),
     queryFn: () => getProfileById(user!.id),
   });
 
   useEffect(() => {
-    if (loading || isLoading) return;
+    if (loading || isLoading || isError) return;
 
     if (profile?.username) {
       navigate({ to: "/u/$username", params: { username: profile.username }, replace: true });
@@ -46,7 +53,29 @@ function CurrentUserProfileRedirect() {
     } else {
       navigate({ to: "/auth", search: { mode: "login" }, replace: true });
     }
-  }, [loading, isLoading, profile, user, navigate]);
+  }, [loading, isLoading, isError, profile, user, navigate]);
+
+  if (!loading && !isLoading && user?.id && isError) {
+    return (
+      <AppShell activeTab="profile">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6">
+          <p role="alert" className="max-w-md text-center text-sm text-muted-foreground">
+            {error instanceof Error
+              ? error.message
+              : "Your profile could not be loaded. Please try again."}
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50"
+          >
+            {isFetching ? "Retrying…" : "Retry"}
+          </button>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!loading && !isLoading && user?.id && !profile?.username) {
     return (
