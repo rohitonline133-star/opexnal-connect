@@ -1,14 +1,6 @@
 import React, { useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import {
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader2,
-  AlertCircle,
-  ArrowLeft,
-} from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
@@ -133,12 +125,8 @@ function LoginPage() {
       </div>
 
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-1">
-          Welcome Back
-        </h2>
-        <p className="text-xs text-gray-400 font-medium">
-          Log in with your email or username
-        </p>
+        <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
+        <p className="text-xs text-gray-400 font-medium">Log in with your email or username</p>
       </div>
 
       {errorMessage && (
@@ -152,7 +140,6 @@ function LoginPage() {
       )}
 
       <form onSubmit={handleSubmit} className="w-full space-y-3.5">
-
         <>
           <div className="relative flex items-center">
             <span className="absolute left-4 text-gray-400">
@@ -194,7 +181,6 @@ function LoginPage() {
             </button>
           </div>
         </>
-
 
         {/* Forgot password link */}
         {authMethod === "email_username" && (
