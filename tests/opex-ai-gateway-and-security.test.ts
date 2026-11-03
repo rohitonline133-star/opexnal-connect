@@ -82,6 +82,76 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     const configured = new SelfHostedProviderAdapter("http://localhost:8000/v1", "secret-token");
     assert.strictEqual(configured.isConfigured(), true);
   });
+
+  test("SelfHostedProviderAdapter uses separate Ollama embeddings and vLLM chat health", async () => {
+    const previousEmbeddingEndpoint = process.env["OPEX_AI_EMBEDDING_ENDPOINT"];
+    const previousEmbeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"];
+    const originalFetch = globalThis.fetch;
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+
+    process.env["OPEX_AI_EMBEDDING_ENDPOINT"] = "http://embeddings:11434";
+    process.env["OPEX_AI_EMBEDDING_MODEL"] = "nomic-embed-text";
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, init });
+      if (url.endsWith("/api/embed")) {
+        return new Response(JSON.stringify({ embeddings: [[0.1, 0.2], [0.3, 0.4]] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (url.endsWith("/v1/models")) {
+        return new Response(JSON.stringify({ data: [{ id: "opexnal-qwen-7b" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (url.endsWith("/api/tags")) {
+        return new Response(JSON.stringify({ models: [{ name: "nomic-embed-text" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response("unexpected endpoint", { status: 404 });
+    }) as typeof fetch;
+
+    try {
+      const adapter = new SelfHostedProviderAdapter(
+        "http://vllm:8000/v1",
+        "test-secret",
+        "opexnal-qwen-7b",
+      );
+      const result = await adapter.embeddings({ text: ["first", "second"] });
+
+      assert.deepStrictEqual(result.embeddings, [[0.1, 0.2], [0.3, 0.4]]);
+      assert.strictEqual(result.dimensions, 2);
+      assert.strictEqual(calls[0]?.url, "http://embeddings:11434/api/embed");
+      assert.strictEqual(calls[0]?.init?.headers && new Headers(calls[0].init.headers).has("Authorization"), false);
+      assert.deepStrictEqual(
+        JSON.parse(String(calls[0]?.init?.body)),
+        { model: "nomic-embed-text", input: ["first", "second"] },
+      );
+
+      const health = await adapter.healthCheck();
+      assert.strictEqual(health.status, "healthy");
+      assert.strictEqual(calls[1]?.url, "http://vllm:8000/v1/models");
+      assert.strictEqual(
+        new Headers(calls[1]?.init?.headers).get("Authorization"),
+        "Bearer test-secret",
+      );
+      assert.strictEqual(calls[2]?.url, "http://embeddings:11434/api/tags");
+      assert.strictEqual(
+        new Headers(calls[2]?.init?.headers).has("Authorization"),
+        false,
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (previousEmbeddingEndpoint === undefined) delete process.env["OPEX_AI_EMBEDDING_ENDPOINT"];
+      else process.env["OPEX_AI_EMBEDDING_ENDPOINT"] = previousEmbeddingEndpoint;
+      if (previousEmbeddingModel === undefined) delete process.env["OPEX_AI_EMBEDDING_MODEL"];
+      else process.env["OPEX_AI_EMBEDDING_MODEL"] = previousEmbeddingModel;
+    }
+  });
 });
 
 describe("OPEX AI Safety Engine: Defense-in-Depth & Injection Guard", () => {
@@ -225,6 +295,46 @@ describe("OPEX AI Tool Permissions & Authorization Boundaries", () => {
       confirmedByUser: true,
     });
     assert.strictEqual(confirmed.allowed, true);
+  });
+});
+
+describe("Self-hosted provider adapter", () => {
+  test("streams real SSE deltas instead of replaying a buffered response", async () => {
+    const originalFetch = globalThis.fetch;
+    let capturedBody: Record<string, unknown> | undefined;
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'));
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}\n\n'));
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      });
+    }) as typeof fetch;
+
+    try {
+      const adapter = new SelfHostedProviderAdapter("http://vllm:8000/v1", "test-secret", "test-model");
+      const chunks: Array<{ text: string; done: boolean }> = [];
+      for await (const chunk of adapter.stream({
+        messages: [{ role: "user", parts: [{ text: "Say hello" }] }],
+      })) chunks.push(chunk);
+
+      assert.deepStrictEqual(chunks, [
+        { text: "Hello", done: false },
+        { text: " world", done: false },
+        { text: "", done: true },
+      ]);
+      assert.strictEqual(capturedBody?.["stream"], true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 
