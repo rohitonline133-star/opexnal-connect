@@ -210,12 +210,12 @@ Mumbai 📍 • Tokyo aesthetic
 
     const flagged = isHate || isScam || isHarassment || isSelfHarm || isSpam;
 
-    let reason = "Passed Opexnal Trust & Safety checks";
-    if (isHate) reason = "Hate speech or abusive terminology detected";
-    else if (isScam) reason = "Financial scam or unauthorized solicitation pattern";
-    else if (isHarassment) reason = "Targeted harassment or threatening statement";
-    else if (isSelfHarm) reason = "Self-harm or crisis terminology flagged";
-    else if (isSpam) reason = "Commercial spam or follow-farming detected";
+    let reason = "Heuristic keyword check: no configured terms matched; this is not a safety guarantee";
+    if (isHate) reason = "Heuristic keyword match: possible hate speech or abusive terminology";
+    else if (isScam) reason = "Heuristic keyword match: possible financial scam or unauthorized solicitation";
+    else if (isHarassment) reason = "Heuristic keyword match: possible targeted harassment or threatening statement";
+    else if (isSelfHarm) reason = "Heuristic keyword match: sensitive crisis-related terminology";
+    else if (isSpam) reason = "Heuristic keyword match: possible commercial spam or follow-farming";
 
     return {
       result: {
@@ -228,7 +228,7 @@ Mumbai 📍 • Tokyo aesthetic
           selfHarm: isSelfHarm,
           spam: isSpam,
         },
-        score: flagged ? 0.95 : 0.02,
+        // Binary rule-match indicator, not a calibrated model confidence score.\n        score: flagged ? 1 : 0,
         reason,
       },
       provider: this.id,
