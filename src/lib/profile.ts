@@ -23,11 +23,7 @@ async function fetchApiProfile(path: string): Promise<Profile | null> {
 
 export async function getProfileById(id: string): Promise<Profile | null> {
   if (!id) return null;
-  try {
-    return await fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
-  } catch {
-    return null;
-  }
+  return fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
