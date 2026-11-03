@@ -158,7 +158,7 @@ async function authRequired(req, res, next) {
   if (!token) return res.status(401).json({ error: "Authentication required." });
   // Cookie authentication is browser ambient authority: require an exact allowlisted
   // Origin on every state-changing request and reject cross-site Fetch Metadata.
-  if (!bearerToken && cookieToken && !["GET", "HEAD", "OPTIONS"].includes(req.method.toUpperCase())) {
+  if (cookieToken && !["GET", "HEAD", "OPTIONS"].includes(req.method.toUpperCase())) {
     if (!isAllowedCookieRequest(req.headers.origin, req.headers["sec-fetch-site"], allowedOrigins)) {
       return res.status(403).json({ error: "Cross-site request rejected." });
     }
