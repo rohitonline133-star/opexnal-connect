@@ -145,10 +145,6 @@ function AIPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading]);
-
   const usernameDisplay =
     (user?.user_metadata?.["username"] as string | undefined) || user?.email?.split("@")[0] || "";
 
@@ -160,6 +156,10 @@ function AIPage() {
       timestamp: "Just now",
     },
   ]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading]);
 
   // Creator Studio State
   const [studioTool, setStudioTool] = useState<AiCreatorOptions["tool"]>("caption");
