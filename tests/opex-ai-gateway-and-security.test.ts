@@ -298,6 +298,46 @@ describe("OPEX AI Tool Permissions & Authorization Boundaries", () => {
   });
 });
 
+describe("Self-hosted provider adapter", () => {
+  test("streams real SSE deltas instead of replaying a buffered response", async () => {
+    const originalFetch = globalThis.fetch;
+    let capturedBody: Record<string, unknown> | undefined;
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'));
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}\n\n'));
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      });
+    }) as typeof fetch;
+
+    try {
+      const adapter = new SelfHostedProviderAdapter("http://vllm:8000/v1", "test-secret", "test-model");
+      const chunks: Array<{ text: string; done: boolean }> = [];
+      for await (const chunk of adapter.stream({
+        messages: [{ role: "user", parts: [{ text: "Say hello" }] }],
+      })) chunks.push(chunk);
+
+      assert.deepStrictEqual(chunks, [
+        { text: "Hello", done: false },
+        { text: " world", done: false },
+        { text: "", done: true },
+      ]);
+      assert.strictEqual(capturedBody?.["stream"], true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 describe("OPEX AI Gateway & Model Router Orchestration", () => {
   test("Router automatically selects autonomous fallback when external keys are absent", () => {
     const router = new ModelRouter();
