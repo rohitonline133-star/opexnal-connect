@@ -198,9 +198,7 @@ export class SelfHostedProviderAdapter implements AIProvider {
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     const texts = Array.isArray(request.text) ? request.text : [request.text];
     if (!this.isConfigured()) {
-      throw new Error(
-        "OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.",
-      );
+      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.");
     }
 
     const embeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"] || "nomic-embed-text";
