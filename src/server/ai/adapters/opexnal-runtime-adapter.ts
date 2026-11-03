@@ -228,7 +228,8 @@ Mumbai 📍 • Tokyo aesthetic
           selfHarm: isSelfHarm,
           spam: isSpam,
         },
-        // Binary rule-match indicator, not a calibrated model confidence score.\n        score: flagged ? 1 : 0,
+        // Binary rule-match indicator, not a calibrated model confidence score.
+        score: flagged ? 1 : 0,
         reason,
       },
       provider: this.id,
