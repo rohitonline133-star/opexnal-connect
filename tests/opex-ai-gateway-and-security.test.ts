@@ -103,9 +103,10 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
             ],
           }),
           {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
       if (url.endsWith("/v1/models")) {
         return new Response(JSON.stringify({ data: [{ id: "opexnal-qwen-7b" }] }), {
@@ -139,13 +140,10 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
         calls[0]?.init?.headers && new Headers(calls[0].init.headers).has("Authorization"),
         false,
       );
-      assert.deepStrictEqual(
-        JSON.parse(String(calls[0]?.init?.body)),
-        {
-          model: "nomic-embed-text",
-          input: ["first", "second"],
-        },
-      );
+      assert.deepStrictEqual(JSON.parse(String(calls[0]?.init?.body)), {
+        model: "nomic-embed-text",
+        input: ["first", "second"],
+      });
 
       const health = await adapter.healthCheck();
       assert.strictEqual(health.status, "healthy");
@@ -198,7 +196,9 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
       const chunks: Array<{ text: string; done: boolean }> = [];
       for await (const chunk of adapter.stream({
         messages: [{ role: "user", parts: [{ text: "Say hello" }] }],
-      })) chunks.push(chunk);
+      })) {
+        chunks.push(chunk);
+      }
 
       assert.deepStrictEqual(chunks, [
         { text: "Hello", done: false },
