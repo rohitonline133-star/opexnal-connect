@@ -14,23 +14,20 @@ export function OpexnalMark({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex items-center justify-center rounded-2xl brand-gradient-bg text-primary-foreground shadow-[var(--shadow-brand)]",
+        "inline-flex items-center justify-center overflow-hidden rounded-2xl bg-black shadow-[var(--shadow-brand)]",
         className,
       )}
     >
-      <svg viewBox="0 0 24 24" className="h-1/2 w-1/2" fill="none" stroke="currentColor">
-        <circle cx="12" cy="12" r="8" strokeWidth="2.4" />
-        <circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none" />
-      </svg>
+      <img
+        src="/branding/opexnal-logo.webp"
+        alt=""
+        className="h-full w-full object-contain"
+        loading="eager"
+      />
     </span>
   );
 }
 
-/**
- * Official Opex AI Eagle Logo
- * Displays the complete majestic eagle with both wings symmetrically spread,
- * preserving natural aspect ratio without distortion or cropping.
- */
 export function OpexAiLogo({
   className,
   size = 32,
@@ -49,7 +46,7 @@ export function OpexAiLogo({
       style={{ width: size, height: size }}
     >
       <img
-        src="/assets/opex-ai-eagle.svg"
+        src="/branding/opex-ai-eagle.webp"
         alt={alt}
         width={size}
         height={size}

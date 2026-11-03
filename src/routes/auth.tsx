@@ -25,10 +25,13 @@ export function AuthLayout() {
     <div className="min-h-screen bg-black text-white flex flex-col justify-between items-center px-4 py-8 font-sans selection:bg-[#8B5CF6]/30">
       {/* Top Header / Branding */}
       <header className="w-full max-w-md flex flex-col items-center">
-        <Link to="/" className="group flex items-center gap-2 mb-2 focus:outline-none">
-          <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-[#8B5CF6] via-[#A855F7] to-[#D946EF] bg-clip-text text-transparent group-hover:opacity-90 transition">
-            Opexnal
-          </span>
+        <Link to="/" className="group mb-2 flex items-center justify-center focus:outline-none">
+          <img
+            src="/branding/opexnal-logo.webp"
+            alt="Opexnal — Connect, Create, Grow"
+            className="h-36 w-auto max-w-full object-contain group-hover:opacity-90 transition"
+            fetchPriority="high"
+          />
         </Link>
         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
