@@ -56,7 +56,6 @@ export async function sendAiChatMessage(params: {
       "Content-Type": "application/json",
       "X-Opex-Correlation-Id": correlationId,
       ...authClient.getAuthHeader(),
-      ...authClient.getAuthHeader(),
     },
     body: JSON.stringify(params),
   });
@@ -77,6 +76,7 @@ export async function runAiCreatorTool(options: AiCreatorOptions): Promise<strin
     headers: {
       "Content-Type": "application/json",
       "X-Opex-Correlation-Id": correlationId,
+      ...authClient.getAuthHeader(),
     },
     body: JSON.stringify(options),
   });
