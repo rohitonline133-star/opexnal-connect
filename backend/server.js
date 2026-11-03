@@ -18,7 +18,12 @@ import { WebSocketServer } from "ws";
 import nodemailer from "nodemailer";
 import multer from "multer";
 import { fileTypeFromFile } from "file-type";
-import { parseSessionCookie, createSessionCookie, createClearedSessionCookie, isAllowedCookieRequest } from "./session-cookie.js";
+import {
+  parseSessionCookie,
+  createSessionCookie,
+  createClearedSessionCookie,
+  isAllowedCookieRequest,
+} from "./session-cookie.js";
 
 const { Pool } = pg;
 const app = express();
@@ -159,7 +164,9 @@ async function authRequired(req, res, next) {
   // Cookie authentication is browser ambient authority: require an exact allowlisted
   // Origin on every state-changing request and reject cross-site Fetch Metadata.
   if (cookieToken && !["GET", "HEAD", "OPTIONS"].includes(req.method.toUpperCase())) {
-    if (!isAllowedCookieRequest(req.headers.origin, req.headers["sec-fetch-site"], allowedOrigins)) {
+    if (
+      !isAllowedCookieRequest(req.headers.origin, req.headers["sec-fetch-site"], allowedOrigins)
+    ) {
       return res.status(403).json({ error: "Cross-site request rejected." });
     }
   }
@@ -650,7 +657,10 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
       return res.status(403).json({ error: "Please verify your email before signing in." });
     }
     const accessToken = await issueToken(user, req);
-    res.setHeader("Set-Cookie", createSessionCookie(accessToken, { secure: process.env.NODE_ENV === "production" }));
+    res.setHeader(
+      "Set-Cookie",
+      createSessionCookie(accessToken, { secure: process.env.NODE_ENV === "production" }),
+    );
     // Keep the JSON bearer token during the compatibility phase; remove only after
     // every client request has migrated to same-origin cookie credentials.
     return res.json({
@@ -682,7 +692,10 @@ app.post("/api/v1/auth/logout", dbRequired, authRequired, async (req, res, next)
       "UPDATE auth_sessions SET revoked_at=NOW() WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL",
       [req.authSessionId, req.user.id],
     );
-    res.setHeader("Set-Cookie", createClearedSessionCookie({ secure: process.env.NODE_ENV === "production" }));
+    res.setHeader(
+      "Set-Cookie",
+      createClearedSessionCookie({ secure: process.env.NODE_ENV === "production" }),
+    );
     return res.json({ success: true });
   } catch (error) {
     return next(error);
