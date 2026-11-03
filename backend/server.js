@@ -660,11 +660,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     // Do not establish a browser session from an untrusted or missing Origin.
     // Legacy API clients can continue using the JSON bearer token during migration.
     if (
-      isAllowedCookieRequest(
-        req.headers.origin,
-        req.headers["sec-fetch-site"],
-        allowedOrigins,
-      )
+      isAllowedCookieRequest(req.headers.origin, req.headers["sec-fetch-site"], allowedOrigins)
     ) {
       res.setHeader(
         "Set-Cookie",
