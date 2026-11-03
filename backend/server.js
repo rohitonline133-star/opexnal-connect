@@ -23,6 +23,7 @@ import {
   createSessionCookie,
   createClearedSessionCookie,
   isAllowedCookieRequest,
+  isAllowedCookieAuthRequest,
 } from "./session-cookie.js";
 
 const { Pool } = pg;
@@ -165,13 +166,13 @@ async function authRequired(req, res, next) {
   // untrusted Origin or cross-site Fetch Metadata even on safe requests: the
   // AI server verifies browser cookies through this endpoint using GET /auth/me.
   if (cookieToken) {
-    const origin = req.headers.origin;
-    const fetchSite = req.headers["sec-fetch-site"];
     if (
-      fetchSite === "cross-site" ||
-      (origin && !allowedOrigins.includes(origin)) ||
-      (!["GET", "HEAD", "OPTIONS"].includes(req.method.toUpperCase()) &&
-        !isAllowedCookieRequest(origin, fetchSite, allowedOrigins))
+      !isAllowedCookieAuthRequest(
+        req.headers.origin,
+        req.headers["sec-fetch-site"],
+        req.method,
+        allowedOrigins,
+      )
     ) {
       return res.status(403).json({ error: "Cross-site request rejected." });
     }
