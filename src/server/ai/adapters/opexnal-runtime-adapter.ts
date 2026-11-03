@@ -113,17 +113,16 @@ Mumbai 📍 • Tokyo aesthetic
 
 3. 🔥 **Hinglish Trendsetter**:
 "Consistency aur patience — yeh do cheezein kabhi waste nahi jaati. Keep building, results will follow! 🚀"`;
+    } else if (/\b(hi|hello|hey|namaste|नमस्ते)\b/i.test(lower.trim())) {
+      text = "Namaste! 👋 Main Opexnal AI ka local assistant hoon. Aaj aap kis cheez mein madad chahte hain?";
+    } else if (/\b(kaise ho|kaisi ho|how are you)\b/i.test(lower)) {
+      text = "Main theek se kaam karne ke liye ready hoon! 😊 Aap bataiye, aaj kis cheez mein madad karun?";
+    } else if (/\b(kya kar rahe ho|what are you doing)\b/i.test(lower)) {
+      text = "Main aapka message samajhkar jawab dene ki koshish kar raha hoon. Aap Opexnal par kis feature par kaam kar rahe hain?";
+    } else if (/\b(thanks|thank you|shukriya|धन्यवाद)\b/i.test(lower)) {
+      text = "Aapka swagat hai! 😊";
     } else {
-      text = `Namaste! I am **OPEX AI**, your independent creative co-pilot on Opexnal. 🚀
-
-Here is how I can supercharge your creator journey:
-- ✍️ **Viral Captions & Hooks**: Get personalized caption variants with tailored CTAs.
-- 🎬 **Reel & Video Storyboards**: Structure 15s-60s videos with high-retention 3-second hooks.
-- 🏷️ **Hashtag Matrix**: Intelligent volume and niche targeting.
-- 🛡️ **Safety & Moderation**: Instant comment filtering and brand safety protection.
-- 🌐 **Multilingual Mastery**: Native support for English, Hindi, and natural Hinglish.
-
-Tell me what you're working on, and let's create something extraordinary!`;
+      text = "Aapka message mil gaya. Abhi Opex AI ka local fallback mode active hai, jo har tarah ke sawalon ka full generative jawab nahi de sakta. Is waqt configured AI model available nahi hai; isliye main banaawati ya repeat hone wala jawab dene ke bajay yeh limitation bata raha hoon.";
     }
 
     return {
