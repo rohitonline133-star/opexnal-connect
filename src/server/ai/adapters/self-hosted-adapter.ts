@@ -93,7 +93,9 @@ export class SelfHostedProviderAdapter implements AIProvider {
 
       const reply = data.choices?.[0]?.message?.content?.trim() || "";
       if (!reply) {
-        throw new Error("OPEX_AI_MODEL_UNAVAILABLE: inference server returned an empty model response.");
+        throw new Error(
+          "OPEX_AI_MODEL_UNAVAILABLE: inference server returned an empty model response.",
+        );
       }
       const result: GenerateResponse = {
         text: reply,
@@ -144,7 +146,9 @@ export class SelfHostedProviderAdapter implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      throw new Error(`Inference stream server responded with ${response.status}: ${errorText.slice(0, 100)}`);
+      throw new Error(
+        `Inference stream server responded with ${response.status}: ${errorText.slice(0, 100)}`,
+      );
     }
     if (!response.body) {
       throw new Error("Inference server returned no streaming response body.");
@@ -194,7 +198,9 @@ export class SelfHostedProviderAdapter implements AIProvider {
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     const texts = Array.isArray(request.text) ? request.text : [request.text];
     if (!this.isConfigured()) {
-      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.");
+      throw new Error(
+        "OPEX_AI_EMBEDDINGS_UNAVAILABLE: OPEX_AI_MODEL_ENDPOINT is not configured.",
+      );
     }
 
     const embeddingModel = process.env["OPEX_AI_EMBEDDING_MODEL"] || "nomic-embed-text";
@@ -208,25 +214,29 @@ export class SelfHostedProviderAdapter implements AIProvider {
     const res = await fetch(embeddingUrl, {
       method: "POST",
       headers: embeddingHeaders,
-      body: JSON.stringify(ollamaEmbedding
-        ? { model: embeddingModel, input: texts }
-        : { model: embeddingModel, input: texts }),
+      body: JSON.stringify({ model: embeddingModel, input: texts }),
       signal: AbortSignal.timeout(30000),
     });
 
     if (!res.ok) {
-      throw new Error(`OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned HTTP ${res.status}.`);
+      throw new Error(
+        `OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned HTTP ${res.status}.`,
+      );
     }
 
     const data = (await res.json()) as {
       data?: Array<{ embedding: number[] }>;
       embeddings?: number[][];
     };
-    const vectors = ollamaEmbedding
-      ? data.embeddings
-      : data.data?.map((item) => item.embedding);
-    if (!vectors || vectors.length !== texts.length || vectors.some((vector) => !Array.isArray(vector) || vector.length === 0)) {
-      throw new Error("OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned an invalid response.");
+    const vectors = ollamaEmbedding ? data.embeddings : data.data?.map((item) => item.embedding);
+    if (
+      !vectors ||
+      vectors.length !== texts.length ||
+      vectors.some((vector) => !Array.isArray(vector) || vector.length === 0)
+    ) {
+      throw new Error(
+        "OPEX_AI_EMBEDDINGS_UNAVAILABLE: embedding server returned an invalid response.",
+      );
     }
 
     const dimensions = vectors[0]?.length ?? 0;
