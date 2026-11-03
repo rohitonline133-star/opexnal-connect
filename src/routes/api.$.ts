@@ -42,7 +42,15 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
   const incoming = new URL(request.url);
   const target = new URL(incoming.pathname.replace(/^\/api\//, "/api/") + incoming.search, origin);
   const headers = new Headers();
-  for (const name of ["authorization", "content-type", "accept", "x-request-id", "cookie", "origin", "sec-fetch-site"]) {
+  for (const name of [
+    "authorization",
+    "content-type",
+    "accept",
+    "x-request-id",
+    "cookie",
+    "origin",
+    "sec-fetch-site",
+  ]) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
