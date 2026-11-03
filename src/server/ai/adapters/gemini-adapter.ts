@@ -94,10 +94,19 @@ export class GeminiProviderAdapter implements AIProvider {
     }
   }
 
-  async *stream(_request: GenerateRequest): AsyncIterable<StreamChunk> {
-    throw new Error(
+  stream(_request: GenerateRequest): AsyncIterable<StreamChunk> {
+    const error = new Error(
       "Gemini streaming is not implemented by this adapter; use generate() or select a provider with native streaming.",
     );
+    return {
+      [Symbol.asyncIterator](): AsyncIterator<StreamChunk> {
+        return {
+          next: async (): Promise<IteratorResult<StreamChunk>> => {
+            throw error;
+          },
+        };
+      },
+    };
   }
 
   async embeddings(request: EmbeddingRequest): Promise<EmbeddingResponse> {
