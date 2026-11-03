@@ -78,7 +78,6 @@ const TONES = [
 
 const LANGUAGES = ["English", "Hinglish (Hindi + English)", "Hindi (हिन्दी)", "Spanish", "French"];
 
-
 function renderInlineMarkdown(line: string) {
   const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((part, index) => {
