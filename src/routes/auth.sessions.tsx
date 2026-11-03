@@ -23,14 +23,6 @@ interface ApiDeviceSession {
   ipAddress: string | null;
 }
 
-function getAccessToken(session: ReturnType<typeof useSession>["session"]): string {
-  if (!session) return "";
-  if ("token" in session && typeof session.token === "string") return session.token;
-  if ("access_token" in session && typeof session.access_token === "string")
-    return session.access_token;
-  return "";
-}
-
 function formatDate(value: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleString();
@@ -51,7 +43,7 @@ export const Route = createFileRoute("/auth/sessions")({
 
 function SessionsPage() {
   const { session } = useSession();
-  const token = getAccessToken(session);
+  const isSignedIn = Boolean(session);
   const [sessions, setSessions] = useState<ApiDeviceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -60,7 +52,7 @@ function SessionsPage() {
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
-      if (!token) {
+      if (!isSignedIn) {
         if (isMounted) {
           setErrorMessage("Please sign in to view active sessions.");
           setLoading(false);
@@ -69,7 +61,7 @@ function SessionsPage() {
       }
       try {
         const res = await fetch("/api/v1/auth/sessions", {
-          headers: { Authorization: `Bearer ${token}` },
+                    credentials: "same-origin",
           cache: "no-store",
         });
         const data = (await res.json().catch(() => ({}))) as {
@@ -95,17 +87,17 @@ function SessionsPage() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [isSignedIn]);
 
   const handleRevokeSingle = async (sessionId: string) => {
-    if (!token) return;
+    if (!isSignedIn) return;
     setActionLoading(sessionId);
     setErrorMessage(null);
     try {
       const res = await fetch(`/api/v1/auth/sessions/${encodeURIComponent(sessionId)}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+              credentials: "same-origin",
+              });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Failed to revoke session.");
       setSessions((prev) => prev.filter((item) => item.id !== sessionId));
@@ -120,15 +112,15 @@ function SessionsPage() {
   };
 
   const handleRevokeAll = async () => {
-    if (!token || !window.confirm("Log out all other devices? This device will stay signed in."))
+    if (!isSignedIn || !window.confirm("Log out all other devices? This device will stay signed in."))
       return;
     setActionLoading("all");
     setErrorMessage(null);
     try {
       const res = await fetch("/api/v1/auth/logout-all", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+              credentials: "same-origin",
+              });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Failed to revoke other sessions.");
       setSessions((prev) => prev.filter((item) => item.current));
