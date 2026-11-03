@@ -262,10 +262,12 @@ export class SelfHostedProviderAdapter implements AIProvider {
   capabilities(): ProviderCapabilities {
     return {
       supportsChat: true,
-      supportsStreaming: true,
+      // stream() currently buffers a complete response; do not advertise token streaming.
+      supportsStreaming: false,
       supportsVision: false,
       supportsEmbeddings: true,
-      supportsModeration: true,
+      // moderate() is a basic heuristic, not a production moderation model.
+      supportsModeration: false,
       supportsFunctionCalling: false,
       maxContextTokens: 32768,
       name: this.name,
