@@ -15,7 +15,7 @@ export function createFirstPartyAuthHeaders(request: Request): Headers | null {
     const separator = part.indexOf("=");
     if (separator < 0 || part.slice(0, separator).trim() !== "opexnal_session") continue;
     const value = part.slice(separator + 1).trim();
-    if (!/^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$/.test(value)) return null;
+    if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value)) return null;
     headers.set("Cookie", `opexnal_session=${value}`);
     const origin = request.headers.get("origin");
     if (origin) headers.set("Origin", origin);
