@@ -96,8 +96,8 @@ function SessionsPage() {
     try {
       const res = await fetch(`/api/v1/auth/sessions/${encodeURIComponent(sessionId)}`, {
         method: "DELETE",
-              credentials: "same-origin",
-              });
+        credentials: "same-origin",
+      });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Failed to revoke session.");
       setSessions((prev) => prev.filter((item) => item.id !== sessionId));
@@ -119,8 +119,8 @@ function SessionsPage() {
     try {
       const res = await fetch("/api/v1/auth/logout-all", {
         method: "POST",
-              credentials: "same-origin",
-              });
+        credentials: "same-origin",
+      });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Failed to revoke other sessions.");
       setSessions((prev) => prev.filter((item) => item.current));
