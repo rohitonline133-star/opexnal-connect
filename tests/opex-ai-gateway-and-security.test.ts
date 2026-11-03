@@ -355,11 +355,21 @@ describe("OPEX AI Tool Permissions & Authorization Boundaries", () => {
 });
 
 describe("OPEX AI Gateway & Model Router Orchestration", () => {
-  test("Router automatically selects autonomous fallback when external keys are absent", () => {
-    const router = new ModelRouter();
-    // In our test environment, OPEX_AI_PROVIDER defaults or points to autonomous fallback when keys missing
-    const provider = router.resolveProvider();
-    assert.ok(provider.id === "opex_runtime" || provider.id === "gemini");
+  test("Router defaults to self-hosted and never selects Gemini implicitly", () => {
+    const previousProvider = process.env["OPEX_AI_PROVIDER"];
+    delete process.env["OPEX_AI_PROVIDER"];
+    try {
+      const router = new ModelRouter();
+      const provider = router.resolveProvider();
+      assert.notStrictEqual(provider.id, "gemini");
+      assert.ok(provider.id === "self_hosted" || provider.id === "opex_runtime");
+    } finally {
+      if (previousProvider === undefined) {
+        delete process.env["OPEX_AI_PROVIDER"];
+      } else {
+        process.env["OPEX_AI_PROVIDER"] = previousProvider;
+      }
+    }
   });
 
   test("Gateway successfully executes generation with correlation ID and audit logging", async () => {
