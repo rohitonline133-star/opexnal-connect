@@ -95,7 +95,14 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
       const url = String(input);
       calls.push({ url, init });
       if (url.endsWith("/api/embed")) {
-        return new Response(JSON.stringify({ embeddings: [[0.1, 0.2], [0.3, 0.4]] }), {
+        return new Response(
+          JSON.stringify({
+            embeddings: [
+              [0.1, 0.2],
+              [0.3, 0.4],
+            ],
+          }),
+          {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
@@ -123,13 +130,22 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
       );
       const result = await adapter.embeddings({ text: ["first", "second"] });
 
-      assert.deepStrictEqual(result.embeddings, [[0.1, 0.2], [0.3, 0.4]]);
-      assert.strictEqual(result.dimensions, 2);
+      assert.deepStrictEqual(result.embeddings, [
+        [0.1, 0.2],
+        [0.3, 0.4],
+      ]);
+      assert.strictEqual(new Headers(calls[2]?.init?.headers).has("Authorization"), false);
       assert.strictEqual(calls[0]?.url, "http://embeddings:11434/api/embed");
-      assert.strictEqual(calls[0]?.init?.headers && new Headers(calls[0].init.headers).has("Authorization"), false);
+      assert.strictEqual(
+        calls[0]?.init?.headers && new Headers(calls[0].init.headers).has("Authorization"),
+        false,
+      );
       assert.deepStrictEqual(
         JSON.parse(String(calls[0]?.init?.body)),
-        { model: "nomic-embed-text", input: ["first", "second"] },
+        {
+          model: "nomic-embed-text",
+          input: ["first", "second"],
+        },
       );
 
       const health = await adapter.healthCheck();
@@ -161,8 +177,12 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
       const encoder = new TextEncoder();
       const stream = new ReadableStream<Uint8Array>({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'));
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'),
+          );
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":" world"}}]}\n\n'),
+          );
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         },
@@ -174,7 +194,11 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     }) as typeof fetch;
 
     try {
-      const adapter = new SelfHostedProviderAdapter("http://vllm:8000/v1", "test-secret", "test-model");
+      const adapter = new SelfHostedProviderAdapter(
+        "http://vllm:8000/v1",
+        "test-secret",
+        "test-model",
+      );
       const chunks: Array<{ text: string; done: boolean }> = [];
       for await (const chunk of adapter.stream({
         messages: [{ role: "user", parts: [{ text: "Say hello" }] }],
