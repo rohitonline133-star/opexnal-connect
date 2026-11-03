@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ShieldCheck, CheckCircle2, AlertCircle, FileText, ChevronRight } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 
 export const Route = createFileRoute("/_authenticated/account-status")({
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/account-status")({
       { title: "Account Status — Opexnal" },
       {
         name: "description",
-        content: "Review your account standing, strikes, and policy compliance.",
+        content: "Check the availability of account standing and policy compliance information.",
       },
     ],
   }),
@@ -20,58 +20,37 @@ function AccountStatusPage() {
 
   return (
     <AppShell activeTab="profile">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader title="Account Status" showBack onBack={() => navigate({ to: "/safety" })} />
+      <div className="min-h-screen max-w-xl mx-auto bg-black pb-20 text-white">
+        <ScreenHeader
+          title="Account Status"
+          showBack
+          onBack={() => navigate({ to: "/safety" })}
+        />
 
-        <div className="p-4 space-y-6">
-          <div className="text-center py-6 space-y-3">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Your Account is in Good Standing</h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                Thank you for respecting the Opexnal community. You have no policy violations or
-                active strikes.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Compliance Checklist
-            </h3>
-
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-xs font-semibold text-white">Community Guidelines</span>
-                <p className="text-[11px] text-emerald-400">0 violations</p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            </div>
-
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-xs font-semibold text-white">
-                  Copyright & Intellectual Property
-                </span>
-                <p className="text-[11px] text-emerald-400">No active claims or disputes</p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            </div>
-
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-xs font-semibold text-white">
-                  Monetization & Partner Eligibility
-                </span>
-                <p className="text-[11px] text-emerald-400">
-                  Eligible for payouts and creator subscriptions
+        <div className="p-4">
+          <section
+            role="status"
+            aria-live="polite"
+            className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+              <div className="space-y-2">
+                <h2 className="text-sm font-semibold text-white">
+                  Account status is currently unavailable
+                </h2>
+                <p className="text-xs leading-relaxed text-gray-300">
+                  Opexnal is not currently connected to a verified account-enforcement and
+                  moderation status service. We cannot confirm whether this account has policy
+                  violations, copyright claims, strikes, or monetization eligibility.
+                </p>
+                <p className="text-xs leading-relaxed text-gray-400">
+                  No compliance result is being assumed or displayed until the authoritative
+                  service is available.
                 </p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </AppShell>
