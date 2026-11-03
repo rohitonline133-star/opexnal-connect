@@ -19,7 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_authenticated/close-friends")({
@@ -66,7 +65,7 @@ export function CloseFriendsPage() {
     let active = true;
     setLoading(true);
     fetch(apiUrl("/api/v1/users/me/close-friends"), {
-      headers: authClient.getAuthHeader(),
+      credentials: "same-origin",
       cache: "no-store",
     })
       .then(async (response) => {
@@ -112,7 +111,7 @@ export function CloseFriendsPage() {
     const params = new URLSearchParams({ limit: "30" });
     if (search.trim()) params.set("q", search.trim());
     fetch(apiUrl(`/api/v1/users/me/followers?${params.toString()}`), {
-      headers: authClient.getAuthHeader(),
+      credentials: "same-origin",
       cache: "no-store",
     })
       .then(async (response) => {
@@ -163,7 +162,7 @@ export function CloseFriendsPage() {
         apiUrl(`/api/v1/users/me/close-friends/${encodeURIComponent(creator.id)}`),
         {
           method: exists ? "DELETE" : "POST",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         },
       );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -205,7 +204,7 @@ export function CloseFriendsPage() {
           closeFriends.map(async (friend) => {
             const response = await fetch(
               apiUrl(`/api/v1/users/me/close-friends/${encodeURIComponent(friend.id)}`),
-              { method: "DELETE", headers: authClient.getAuthHeader() },
+              { method: "DELETE", credentials: "same-origin" },
             );
             if (!response.ok) throw new Error("One or more Close Friends could not be removed.");
           }),
