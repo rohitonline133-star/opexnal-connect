@@ -39,7 +39,7 @@ function AccountRecoveryPage() {
   const [trackedTicket, setTrackedTicket] = useState<{
     id: string;
     reason: string;
-    status: string;
+    status: "received" | "manual_review" | "resolved" | "closed";
     createdAt: number;
   } | null>(null);
 
@@ -327,12 +327,12 @@ function AccountRecoveryPage() {
                 </div>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                    trackedTicket.status === "approved" || trackedTicket.status === "resolved"
+                    trackedTicket.status === "resolved"
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                       : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   }`}
                 >
-                  {trackedTicket.status.replace("_", " ")}
+                  {trackedTicket.status.replace(/_/g, " ")}
                 </span>
               </div>
 
@@ -348,7 +348,7 @@ function AccountRecoveryPage() {
               </div>
 
               <div className="pt-2 border-t border-[#222] text-[11px] text-gray-400">
-                {trackedTicket.status === "manual_review" || trackedTicket.status === "pending" ? (
+                {trackedTicket.status === "manual_review" ? (
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span> Your request has been received. It is not yet an approval or account-access change.</span>
@@ -358,13 +358,15 @@ function AccountRecoveryPage() {
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span>Your request has been received. It has not been reviewed or approved yet.</span>
                   </p>
-                ) : trackedTicket.status === "approved" || trackedTicket.status === "resolved" ? (
+                ) : trackedTicket.status === "resolved" ? (
                   <p className="flex items-center gap-1.5 text-emerald-300/90">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>The case status is marked resolved. If you still cannot access your account, use the support contact shown on Opexnal.</span>
                   </p>
+                ) : trackedTicket.status === "closed" ? (
+                  <p className="text-gray-400">This support request is closed. If you still need help, submit a new request through Opexnal Support.</p>
                 ) : (
-                  <p className="text-gray-400">Current status: {trackedTicket.status.replace(/_/g, " ")}. Contact Opexnal Support if you need help.</p>
+                  <p className="text-gray-400">Current status: {trackedTicket.status.replace(/_/g, " ")}.</p>
                 )}
               </div>
             </div>
