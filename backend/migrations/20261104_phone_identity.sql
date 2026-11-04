@@ -37,3 +37,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_phone_e164_unique
 CREATE INDEX IF NOT EXISTS users_phone_verified_idx
   ON users (phone_e164, phone_verified)
   WHERE phone_e164 IS NOT NULL;
+
+-- One-time phone verification challenges. Only a keyed hash of the OTP is stored.
+CREATE TABLE IF NOT EXISTS phone_verification_challenges (
+  id UUID PRIMARY KEY,
+  phone_e164 VARCHAR(16) NOT NULL,
+  otp_hash TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts SMALLINT NOT NULL DEFAULT 0 CHECK (attempts BETWEEN 0 AND 5),
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS phone_verification_lookup_idx
+  ON phone_verification_challenges (phone_e164, created_at DESC)
+  WHERE consumed_at IS NULL;
+CREATE INDEX IF NOT EXISTS phone_verification_expiry_idx
+  ON phone_verification_challenges (expires_at);
