@@ -34,7 +34,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
       - name: Check first-party API syntax
         run: npm run backend:check
       - name: Production build (generates TanStack route types)
