@@ -42,7 +42,7 @@ function SignupPage() {
   const navigate = useNavigate();
 
   // Form Fields
-  const [email, setEmailOrPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [birthday, setBirthday] = useState("");
@@ -262,7 +262,7 @@ function SignupPage() {
               aria-label="Email address"
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmailOrPhone(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               required
               className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
