@@ -24,13 +24,13 @@ export const Route = createFileRoute("/_authenticated/settings/story")({
 function SettingsStoryPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || session?.user?.id || "";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
-    queryFn: () => getStoredSettings(userId),
     enabled: Boolean(userId),
+    queryFn: () => getStoredSettings(userId),
   });
 
   const [saveToArchive, setSaveToArchive] = useState(settings?.storiesArchiveAutoSave ?? true);

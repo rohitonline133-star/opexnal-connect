@@ -24,27 +24,27 @@ export const Route = createFileRoute("/_authenticated/settings/media")({
 function SettingsMediaPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || session?.user?.id || "";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
-    queryFn: () => getStoredSettings(userId),
     enabled: Boolean(userId),
+    queryFn: () => getStoredSettings(userId),
   });
 
   const [dataSaver, setDataSaver] = useState(settings?.cellularDataSaver ?? false);
   const [highQualityUploads, setHighQualityUploads] = useState(
-    settings?.uploadHighestQuality ?? true,
+    settings?.highQualityUploads ?? true,
   );
-  const [autoPlayVideos, setAutoPlayVideos] = useState(settings?.autoplayVideos !== "never");
+  const [autoPlayVideos, setAutoPlayVideos] = useState(settings?.autoPlayVideosOnCellular ?? true);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return updateSettings(userId, {
         cellularDataSaver: dataSaver,
-        uploadHighestQuality: highQualityUploads,
-        autoplayVideos: autoPlayVideos ? "always" : "never",
+        highQualityUploads: highQualityUploads,
+        autoPlayVideosOnCellular: autoPlayVideos,
       });
     },
     onSuccess: () => {

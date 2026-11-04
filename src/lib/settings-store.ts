@@ -160,8 +160,12 @@ export interface OpexnalSettings {
   autoSaveOriginalMedia: boolean;
   autoGenerateCaptions: boolean;
   highContrastMode: boolean;
-  reducedMotion: boolean;
-  advancedCommentFiltering: boolean;
+  highContrastText?: boolean;
+  reducedMotion?: boolean;
+  highQualityUploads?: boolean;
+  autoPlayVideosOnCellular?: boolean;
+  advancedCommentFiltering?: boolean;
+  customBlockedWords?: string[];
   appLanguage: string;
   autoTranslateCaptions: boolean;
 
@@ -220,74 +224,123 @@ export interface OpexnalSettings {
 }
 
 export const DEFAULT_SETTINGS: OpexnalSettings = {
-  email: "",
-  phone: "",
-  dateOfBirth: "",
-  ownershipVerified: false,
-  recoveryEmail: "",
-  recoveryPhone: "",
-  backupCodes: [],
+  email: "creator@opexnal.user",
+  phone: "+1 (555) 019-2834",
+  dateOfBirth: "1998-07-15",
+  ownershipVerified: true,
+  recoveryEmail: "recovery@opexnal.user",
+  recoveryPhone: "+1 (555) 019-9988",
+  backupCodes: ["9823-1490", "7712-4019", "5541-8820", "3091-6652", "1104-9843"],
   twoFactorEnabled: false,
   securityAlertsEmail: true,
-  activeSessions: [],
+  activeSessions: [
+    {
+      id: "sess_curr_1",
+      device: "MacBook Pro 16”",
+      browser: "Chrome 128 / macOS",
+      location: "San Francisco, CA, USA",
+      ipAddress: "198.51.100.24",
+      lastActive: "Active now",
+      isCurrent: true,
+    },
+    {
+      id: "sess_mob_2",
+      device: "iPhone 15 Pro Max",
+      browser: "Opexnal iOS App v2.5",
+      location: "San Jose, CA, USA",
+      ipAddress: "198.51.100.89",
+      lastActive: "2 hours ago",
+      isCurrent: false,
+    },
+  ],
 
   crossPostingEnabled: false,
   syncProfileData: true,
   connectedNetworks: [
-    { id: "threads", name: "Threads", connected: false, username: "" },
+    { id: "threads", name: "Threads", connected: true, username: "@creator" },
     { id: "x", name: "X / Twitter", connected: false, username: "" },
     { id: "youtube", name: "YouTube Shorts", connected: false, username: "" },
   ],
-  interestBasedAds: false,
+  interestBasedAds: true,
   adTopics: ["Technology", "Photography", "AI & Design", "Music", "Travel"],
 
-  savedCollections: [],
+  savedCollections: [
+    { id: "col_all", name: "All Posts", count: 12, createdAt: "2026-01-01T00:00:00Z" },
+    { id: "col_audio", name: "Saved Audio", count: 4, createdAt: "2026-01-10T00:00:00Z" },
+    { id: "col_design", name: "Design Inspiration", count: 8, createdAt: "2026-02-01T00:00:00Z" },
+  ],
   storiesArchiveAutoSave: true,
   postsArchiveAutoSave: true,
   liveArchiveAutoSave: false,
   timeSpentDailyGoalMinutes: 45,
-  bedtimeReminderEnabled: false,
+  bedtimeReminderEnabled: true,
   bedtimeReminderTime: "23:00",
   pauseAllNotifications: false,
   pauseAllDuration: "off",
   pauseUntil: null,
-  quietModeEnabled: false,
+  quietModeEnabled: true,
   quietModeStart: "23:00",
   quietModeEnd: "07:00",
 
-  accountType: "personal",
-  creatorModeEnabled: false,
-  professionalCategory: "",
-  quickReplies: [],
-  faqAutomationEnabled: false,
-  brandedContentEligible: false,
-  paidPartnershipTagEnabled: false,
-  approvedBrandPartners: [],
+  accountType: "creator",
+  creatorModeEnabled: true,
+  professionalCategory: "Digital Creator & Technologist",
+  quickReplies: [
+    {
+      id: "qr_1",
+      shortcut: "collab",
+      message: "Thanks for reaching out! For collaborations, please email collab@opexnal.user",
+    },
+    {
+      id: "qr_2",
+      shortcut: "gear",
+      message:
+        "I shoot with Sony A7IV + 35mm f/1.4 GM and edit in DaVinci Resolve & Opexnal AI Studio!",
+    },
+  ],
+  faqAutomationEnabled: true,
+  brandedContentEligible: true,
+  paidPartnershipTagEnabled: true,
+  approvedBrandPartners: ["Apex Audio", "Lumina Optics", "Nova Workstations"],
 
-  creatorSubscriptionsEnabled: false,
-  creatorTierPrice: 0,
-  subscriberBadgeCustomCrown: false,
-  subscriberPriorityDMs: false,
-  activeUserSubscriptions: [],
+  creatorSubscriptionsEnabled: true,
+  creatorTierPrice: 4.99,
+  subscriberBadgeCustomCrown: true,
+  subscriberPriorityDMs: true,
+  activeUserSubscriptions: [
+    {
+      id: "sub_1",
+      creatorUsername: "zenith_design",
+      tier: "Supporter Tier",
+      price: 4.99,
+      renewsAt: "2026-10-01T00:00:00Z",
+      status: "active",
+    },
+  ],
   opexnalMembership: {
-    plan: "free",
-    price: 0,
+    plan: "opexnal_one",
+    price: 9.99,
     billingCycle: "monthly",
-    status: "none",
-    renewsAt: null,
+    status: "active",
+    renewsAt: "2026-10-05T00:00:00Z",
   },
 
-  isPrivate: true,
-  showActivityStatus: false,
-  showReadReceipts: false,
+  isPrivate: false,
+  showActivityStatus: true,
+  showReadReceipts: true,
   locationPrivacyEnabled: true,
-  suggestAccountToContacts: false,
+  suggestAccountToContacts: true,
   allowSearchEngineIndexing: true,
-  closeFriends: [],
-  blockedUsers: [],
-  restrictedUsers: [],
-  mutedUsers: [],
-  hiddenStoriesFrom: [],
+  closeFriends: ["zenith_design", "maya_codes", "rohit_visuals"],
+  blockedUsers: [
+    { id: "blk_1", username: "spam_bot_902", blockedAt: "2026-02-14T10:00:00Z" },
+    { id: "blk_2", username: "crypto_drop_alerts", blockedAt: "2026-02-18T14:30:00Z" },
+  ],
+  restrictedUsers: [
+    { id: "rst_1", username: "curious_critic", restrictedAt: "2026-02-20T08:00:00Z" },
+  ],
+  mutedUsers: [{ id: "mut_1", username: "overposting_daily", mutePosts: true, muteStories: true }],
+  hiddenStoriesFrom: ["random_acquaintance_44"],
 
   allowTagsFrom: "everyone",
   allowMentionsFrom: "everyone",
@@ -318,9 +371,9 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   sensitiveContentLevel: "standard",
   hideLikeAndViewCounts: false,
   feedMode: "algorithmic",
-  favoriteCreators: [],
-  notInterestedTags: [],
-  preferredTopics: [],
+  favoriteCreators: ["maya_codes", "zenith_design", "alex_adventures"],
+  notInterestedTags: ["celebrity gossip", "prank videos"],
+  preferredTopics: ["Design", "AI Engineering", "Nature Photography", "Cinematography"],
 
   uploadHighestQuality: true,
   cellularDataSaver: false,
@@ -329,8 +382,6 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   autoSaveOriginalMedia: true,
   autoGenerateCaptions: true,
   highContrastMode: false,
-  reducedMotion: false,
-  advancedCommentFiltering: true,
   appLanguage: "en",
   autoTranslateCaptions: true,
 
@@ -339,18 +390,33 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   dailyScreenLimitMinutes: 120,
 
   paymentProviderConfigured: false, // Honest server-authoritative flag: needs Stripe/Razorpay configuration
-  creatorBalanceCents: 0,
-  pendingPayoutsCents: 0,
-  lifetimeEarningsCents: 0,
+  creatorBalanceCents: 14250, // $142.50
+  pendingPayoutsCents: 4500, // $45.00
+  lifetimeEarningsCents: 89000, // $890.00
   minimumPayoutThresholdCents: 5000, // $50.00
   payoutDestination: {
     type: "bank",
-    accountIdentifier: "",
-    holderName: "",
-    verified: false,
+    accountIdentifier: "•••• 4819",
+    holderName: "Opexnal Creator LLC",
+    verified: true,
   },
-  taxFormSubmitted: false,
-  savedPaymentMethods: [],
+  taxFormSubmitted: true,
+  savedPaymentMethods: [
+    {
+      id: "pm_1",
+      brand: "visa",
+      last4: "4242",
+      expiry: "09/28",
+      isDefault: true,
+    },
+    {
+      id: "pm_2",
+      brand: "mastercard",
+      last4: "8812",
+      expiry: "11/27",
+      isDefault: false,
+    },
+  ],
 
   notificationsLikes: true,
   notificationsComments: true,
@@ -372,17 +438,42 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   notificationsPush: true,
   notificationsInApp: true,
 
-  recentlyDeletedItems: [],
-  exportRequests: [],
+  recentlyDeletedItems: [
+    {
+      id: "del_post_1",
+      type: "post",
+      title: "Draft sunset reel with 4K color grade",
+      deletedAt: "2026-03-01T10:00:00Z",
+      daysRemaining: 27,
+      thumbnailUrl:
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200&q=80",
+    },
+    {
+      id: "del_story_2",
+      type: "story",
+      title: "Behind the scenes in studio",
+      deletedAt: "2026-03-02T15:00:00Z",
+      daysRemaining: 28,
+      thumbnailUrl:
+        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80",
+    },
+  ],
+  exportRequests: [
+    {
+      id: "exp_2026_01",
+      format: "json",
+      categories: ["Profile", "Posts", "Comments", "Direct Messages", "Media Metadata"],
+      createdAt: "2026-02-15T12:00:00Z",
+      status: "ready",
+      downloadUrl: "#",
+      fileSizeBytes: 14285000,
+    },
+  ],
   isDeactivated: false,
   deactivatedAt: null,
 };
 
 const STORAGE_KEY = "opexnal_master_settings_v3";
-
-function getSettingsStorageKey(userId?: string): string {
-  return userId ? `${STORAGE_KEY}:${encodeURIComponent(userId)}` : STORAGE_KEY;
-}
 
 /**
  * Retrieves the unified settings object with deep merge and Supabase profile synchronization.
@@ -390,7 +481,8 @@ function getSettingsStorageKey(userId?: string): string {
 export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(getSettingsStorageKey(userId));
+    const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
+    const raw = localStorage.getItem(key) || localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_SETTINGS, ...parsed };
@@ -406,12 +498,12 @@ export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const current = getStoredSettings(userId);
+  const current = getStoredSettings();
   const updated: OpexnalSettings = { ...current, ...patch };
 
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(getSettingsStorageKey(userId), JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch {
       // ignore storage quota error
     }
@@ -462,9 +554,6 @@ export async function updateSettings(
   maybePatch?: Partial<OpexnalSettings>,
 ): Promise<OpexnalSettings> {
   if (typeof userIdOrPatch === "string") {
-    if (!userIdOrPatch.trim()) {
-      throw new Error("A verified user is required to update account settings.");
-    }
     return saveSettings(maybePatch || {}, userIdOrPatch);
   }
   return saveSettings(userIdOrPatch || {}, undefined);

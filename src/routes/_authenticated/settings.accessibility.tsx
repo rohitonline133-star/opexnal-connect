@@ -24,24 +24,24 @@ export const Route = createFileRoute("/_authenticated/settings/accessibility")({
 function SettingsAccessibilityPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || session?.user?.id || "";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
-    queryFn: () => getStoredSettings(userId),
     enabled: Boolean(userId),
+    queryFn: () => getStoredSettings(userId),
   });
 
   const [autoCaptions, setAutoCaptions] = useState(settings?.autoGenerateCaptions ?? true);
-  const [highContrast, setHighContrast] = useState(settings?.highContrastMode ?? false);
+  const [highContrast, setHighContrast] = useState(settings?.highContrastText ?? false);
   const [reducedMotion, setReducedMotion] = useState(settings?.reducedMotion ?? false);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return updateSettings(userId, {
         autoGenerateCaptions: autoCaptions,
-        highContrastMode: highContrast,
+        highContrastText: highContrast,
         reducedMotion: reducedMotion,
       });
     },

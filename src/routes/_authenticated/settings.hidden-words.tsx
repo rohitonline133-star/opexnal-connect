@@ -24,19 +24,19 @@ export const Route = createFileRoute("/_authenticated/settings/hidden-words")({
 function SettingsHiddenWordsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { session } = useSession();
-  const userId = session?.userId || session?.user?.id || "";
+  const { session, user } = useSession();
+  const userId = user?.id || session?.user?.id || "";
 
   const { data: settings } = useQuery({
     queryKey: ["settings", userId],
-    queryFn: () => getStoredSettings(userId),
     enabled: Boolean(userId),
+    queryFn: () => getStoredSettings(userId),
   });
 
   const [hideOffensive, setHideOffensive] = useState(settings?.hideOffensiveComments ?? true);
   const [advancedFilter, setAdvancedFilter] = useState(settings?.advancedCommentFiltering ?? true);
   const [customWords, setCustomWords] = useState<string[]>(
-    settings?.customKeywordFilter ?? ["scam", "dm me for promo", "free crypto"],
+    settings?.customBlockedWords ?? ["scam", "dm me for promo", "free crypto"],
   );
   const [wordInput, setWordInput] = useState("");
 
@@ -58,7 +58,7 @@ function SettingsHiddenWordsPage() {
       return updateSettings(userId, {
         hideOffensiveComments: hideOffensive,
         advancedCommentFiltering: advancedFilter,
-        customKeywordFilter: customWords,
+        customBlockedWords: customWords,
       });
     },
     onSuccess: () => {

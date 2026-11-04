@@ -1,56 +1,318 @@
 import { supabase } from "@/integrations/supabase/client";
-import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
-import { apiUrl } from "@/lib/api-client";
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-
-// Demo identities are intentionally disabled. Profiles must come from the authenticated API.
-
-async function fetchApiProfile(path: string): Promise<Profile | null> {
-  const response = await fetch(apiUrl(path), {
-    headers: authClient.getAuthHeader(),
-    cache: "no-store",
-  });
-  if (response.status === 404) return null;
-  const payload = (await response.json().catch(() => ({}))) as {
-    profile?: Profile;
-    error?: string;
-  };
-  if (!response.ok) throw new Error(payload.error || "Profile request failed.");
-  return payload.profile || null;
+export interface ProfileLink {
+  title: string;
+  url: string;
 }
 
-export async function getProfileByIdStrict(id: string): Promise<Profile | null> {
-  if (!id) return null;
-  return fetchApiProfile(`/api/v1/users/id/${encodeURIComponent(id)}`);
-}
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  pronouns?: string | null;
+  gender?: string | null;
+  links?: ProfileLink[] | null;
+  banner_url?: string | null;
+};
+
+export const SEED_PROFILES: Record<string, Profile> = {
+  user_zenith: {
+    id: "user_zenith",
+    username: "zenith_design",
+    display_name: "Zenith Creative",
+    bio: "3D Design Studio & Motion graphics laboratory. Exploring fluid forms and spatial UI.",
+    avatar_url:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+    posts_count: 18,
+    followers_count: 28500,
+    following_count: 194,
+    is_verified: true,
+    is_private: false,
+    is_deactivated: false,
+    website: "https://zenithcreative.xyz",
+    location: "Tokyo, Japan",
+    locale: "en",
+    timezone: "Asia/Tokyo",
+    account_type: "business",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: "JP",
+    last_active_at: "2026-01-01T00:00:00Z",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+  user_alex: {
+    id: "user_alex",
+    username: "alex_adventures",
+    display_name: "Alex Rivers",
+    bio: "Outdoor explorer, documentary photographer, capturing untouched wilderness.",
+    avatar_url:
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80",
+    posts_count: 45,
+    followers_count: 9800,
+    following_count: 420,
+    is_verified: true,
+    is_private: false,
+    is_deactivated: false,
+    website: null,
+    location: "Reykjavik, Iceland",
+    locale: "en",
+    timezone: "Atlantic/Reykjavik",
+    account_type: "personal",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: "IS",
+    last_active_at: "2026-01-01T00:00:00Z",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+  user_rohit: {
+    id: "user_rohit",
+    username: "rohit_visuals",
+    display_name: "Rohit Sharma",
+    bio: "Cinematographer & Colorist based in Mumbai. High-octane visual storytelling.",
+    avatar_url:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+    posts_count: 31,
+    followers_count: 18300,
+    following_count: 512,
+    is_verified: true,
+    is_private: false,
+    is_deactivated: false,
+    website: "https://rohitvisuals.com",
+    location: "Mumbai, India",
+    locale: "en",
+    timezone: "Asia/Kolkata",
+    account_type: "creator",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: "IN",
+    last_active_at: "2026-01-01T00:00:00Z",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+  },
+};
 
 export async function getProfileById(id: string): Promise<Profile | null> {
+  if (!id) return null;
+
   try {
-    return await getProfileByIdStrict(id);
+    const { data, error } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data;
   } catch {
-    return null;
+    // ignore query error
   }
+
+  if (SEED_PROFILES[id]) {
+    return SEED_PROFILES[id];
+  }
+
+  // Create and persist authentic initial profile for this user ID
+  const rawUsername = id.replace(/^user_/, "");
+  const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  const displayName = username
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  const newProfile: Profile = {
+    id,
+    username,
+    display_name: displayName,
+    bio: "",
+    avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    is_verified: false,
+    is_private: false,
+    is_deactivated: false,
+    website: null,
+    location: null,
+    locale: "en",
+    timezone: "UTC",
+    account_type: "personal",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: null,
+    last_active_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    await supabase.from("profiles").upsert(newProfile);
+  } catch {
+    // ignore
+  }
+
+  return newProfile;
+}
+
+export async function ensureUserProfile(user: {
+  id: string;
+  email?: string;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+}): Promise<Profile> {
+  try {
+    const { data: existing } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (existing) {
+      return existing;
+    }
+  } catch {
+    // ignore
+  }
+
+  const rawUsername =
+    user.username ||
+    (user.email ? user.email.split("@")[0] : null) ||
+    user.id.replace(/^user_/, "");
+  const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  const displayName =
+    user.displayName ||
+    username
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+  const newProfile: Profile = {
+    id: user.id,
+    username,
+    display_name: displayName,
+    bio: "",
+    avatar_url:
+      user.avatarUrl ||
+      `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(displayName)}`,
+    posts_count: 0,
+    followers_count: 0,
+    following_count: 0,
+    is_verified: false,
+    is_private: false,
+    is_deactivated: false,
+    website: null,
+    location: null,
+    locale: "en",
+    timezone: "UTC",
+    account_type: "personal",
+    allow_mentions_from: "everyone",
+    allow_tags_from: "everyone",
+    show_activity_status: true,
+    country_code: null,
+    last_active_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    await supabase.from("profiles").upsert(newProfile);
+  } catch {
+    // ignore
+  }
+
+  return newProfile;
+}
+
+export function hydrateProfileExtension(profile: Profile): Profile {
+  if (typeof window === "undefined" || !profile?.id) return profile;
+  try {
+    const raw = localStorage.getItem(`opexnal_profile_ext_${profile.id}`);
+    if (raw) {
+      const ext = JSON.parse(raw);
+      return {
+        ...profile,
+        ...(ext.pronouns ? { pronouns: ext.pronouns } : {}),
+        ...(ext.gender ? { gender: ext.gender } : {}),
+        ...(ext.banner_url ? { banner_url: ext.banner_url } : {}),
+        ...(ext.links ? { links: ext.links } : {}),
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return profile;
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
-  const clean = username.trim().toLowerCase();
-  if (!clean) return null;
+  const clean = username.toLowerCase();
   try {
-    return await fetchApiProfile(`/api/v1/users/${encodeURIComponent(clean)}`);
+    const { data, error } = await supabase
+      .from<Profile>("profiles")
+      .select("*")
+      .eq("username", clean)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return hydrateProfileExtension(data);
   } catch {
-    return null;
+    // ignore
   }
+
+  for (const profile of Object.values(SEED_PROFILES)) {
+    if (profile.username.toLowerCase() === clean) {
+      return hydrateProfileExtension(profile);
+    }
+  }
+
+  // Check if this username matches the currently authenticated user
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    const currentUser = userRes?.user;
+    if (
+      currentUser &&
+      ((currentUser as { username?: string }).username?.toLowerCase() === clean ||
+        currentUser.user_metadata?.username?.toLowerCase() === clean ||
+        currentUser.id.replace(/^user_/, "").toLowerCase() === clean ||
+        (currentUser.email && currentUser.email.split("@")[0]?.toLowerCase() === clean))
+    ) {
+      const userArgs: {
+        id: string;
+        email?: string;
+        username?: string;
+        displayName?: string;
+        avatarUrl?: string;
+      } = {
+        id: currentUser.id,
+        username: clean,
+      };
+      if (currentUser.email) userArgs.email = currentUser.email;
+      const meta = currentUser.user_metadata as
+        | { display_name?: string; full_name?: string; avatar_url?: string }
+        | undefined;
+      const dName =
+        (currentUser as { displayName?: string }).displayName ||
+        meta?.full_name ||
+        meta?.display_name;
+      if (dName) userArgs.displayName = dName;
+      if (meta?.avatar_url) {
+        userArgs.avatarUrl = meta.avatar_url;
+      }
+      const created = await ensureUserProfile(userArgs);
+      return hydrateProfileExtension(created);
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
 }
 
-/** Resolve first-party avatar paths to a short-lived URL. */
+/** Avatars live in a private bucket; resolve a short-lived signed URL. */
 export async function resolveAvatarUrl(path: string | null | undefined) {
   if (!path) return null;
-  if (path.startsWith("https://") || path.startsWith("http://")) return path;
-  if (path.startsWith("/api/v1/storage/public/")) return path;
-  const { data, error } = await supabase.storage.from("avatars").createSignedUrl(path, 300);
-  if (error) return null;
+  if (path.startsWith("http")) return path;
+  const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
 }
 
