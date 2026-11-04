@@ -427,7 +427,9 @@ export function getStoredSettings(userId?: string): OpexnalSettings {
   try {
     // Never fall back to the shared key for an authenticated account: doing so
     // can expose another account's locally cached preferences.
-    const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
+    // Unscoped reads are intentionally not allowed in authenticated UI.
+    if (!userId) return DEFAULT_SETTINGS;
+    const key = `${STORAGE_KEY}_${userId}`;
     const raw = localStorage.getItem(key);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
