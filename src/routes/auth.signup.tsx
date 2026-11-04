@@ -105,7 +105,7 @@ function SignupPage() {
 
     const contact = emailOrPhone.trim();
     if (!contact) {
-      setErrorMessage("Please enter an email address or mobile phone.");
+      setErrorMessage("Please enter a valid email address. Phone signup will be available after secure SMS verification is configured.");
       return;
     }
     if (!fullName.trim()) {
