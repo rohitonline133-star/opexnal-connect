@@ -112,8 +112,8 @@ function LoginPage() {
       </div>
 
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
-        <p className="text-xs text-gray-400 font-medium">Log in with your email or username</p>
+        <h2 className="text-2xl font-bold text-white mb-1">Welcome back</h2>
+        <p className="text-xs text-gray-400 font-medium">Sign in to continue to your Opexnal account</p>
       </div>
 
       {errorMessage && (
@@ -177,7 +177,7 @@ function LoginPage() {
           >
             Lost Access / Hacked?
           </Link>
-          <Link to="/auth/forgot-password" className="font-semibold text-[#8B5CF6] hover:underline">
+          <Link to="/auth/forgot-password" className="font-semibold text-pink-400 hover:underline">
             Forgot Password?
           </Link>
         </div>
@@ -186,7 +186,7 @@ function LoginPage() {
           id="login-submit-button"
           type="submit"
           disabled={loading}
-          className="w-full h-12 mt-2 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full h-12 mt-2 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-orange-500 hover:from-fuchsia-500 hover:via-pink-500 hover:to-orange-400 text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           <span>{loading ? "Authenticating..." : "Log In"}</span>
@@ -199,7 +199,7 @@ function LoginPage() {
           <Link
             to="/auth/signup"
             search={{ redirect: safeRedirect(search.redirect) }}
-            className="text-[#8B5CF6] font-semibold hover:underline ml-1"
+            className="text-pink-400 font-semibold hover:underline ml-1"
           >
             Sign Up
           </Link>
