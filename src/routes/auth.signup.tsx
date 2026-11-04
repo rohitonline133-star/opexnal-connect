@@ -252,6 +252,7 @@ function SignupPage() {
             <input
               type="email"
               placeholder="Email address"
+              aria-label="Email address"
               autoComplete="email"
               value={emailOrPhone}
               onChange={(e) => setEmailOrPhone(e.target.value)}
@@ -269,6 +270,8 @@ function SignupPage() {
             <input
               type="text"
               placeholder="Full Name"
+              aria-label="Full name"
+              autoComplete="name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={loading}
@@ -283,6 +286,8 @@ function SignupPage() {
             <input
               type="text"
               placeholder="Username"
+              aria-label="Username"
+              autoComplete="username"
               value={username}
               onChange={(e) => checkUsername(e.target.value)}
               disabled={loading}
@@ -338,6 +343,8 @@ function SignupPage() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Create a strong password"
+              aria-label="Create a strong password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -413,7 +420,7 @@ function SignupPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || usernameStatus === "checking"}
             className="w-full h-11 mt-3 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-orange-500 hover:from-fuchsia-500 hover:via-pink-500 hover:to-orange-400 text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
