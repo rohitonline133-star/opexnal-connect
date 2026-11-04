@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "@/hooks/use-session";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Archive,
@@ -93,9 +94,15 @@ export function ArchivePage() {
   ]);
 
   // Recently deleted items from store
-  const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>(() => {
-    return getStoredSettings().recentlyDeletedItems || [];
-  });
+  const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      setRecentlyDeleted(getStoredSettings(user.id).recentlyDeletedItems || []);
+    } else {
+      setRecentlyDeleted([]);
+    }
+  }, [user?.id]);
 
   const [itemToRestore, setItemToRestore] = useState<RecentlyDeletedItem | null>(null);
   const [itemToDeleteForever, setItemToDeleteForever] = useState<RecentlyDeletedItem | null>(null);
@@ -103,7 +110,7 @@ export function ArchivePage() {
   const handleRestore = (item: RecentlyDeletedItem) => {
     const updated = recentlyDeleted.filter((x) => x.id !== item.id);
     setRecentlyDeleted(updated);
-    saveSettings({ recentlyDeletedItems: updated });
+    void saveSettings({ recentlyDeletedItems: updated }, user?.id);
     setItemToRestore(null);
     toast.success(`Restored ${item.type} "${item.title}" to active profile!`);
   };
@@ -111,7 +118,7 @@ export function ArchivePage() {
   const handlePermanentDelete = (item: RecentlyDeletedItem) => {
     const updated = recentlyDeleted.filter((x) => x.id !== item.id);
     setRecentlyDeleted(updated);
-    saveSettings({ recentlyDeletedItems: updated });
+    void saveSettings({ recentlyDeletedItems: updated }, user?.id);
     setItemToDeleteForever(null);
     toast.success(`Permanently deleted ${item.type}. It cannot be recovered.`);
   };

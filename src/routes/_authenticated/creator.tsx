@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSession } from "@/hooks/use-session";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -55,8 +56,9 @@ export function CreatorDashboardPage() {
   const [activeTab, setActiveTab] = useState<CreatorTab>("dashboard");
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
 
+  const { user } = useSession();
   // Settings store integration
-  const [settings, setSettings] = useState(() => getStoredSettings());
+  const [settings, setSettings] = useState(() => getStoredSettings(user?.id));
 
   // Subscription modal state
   const [subModalOpen, setSubModalOpen] = useState(false);
@@ -69,11 +71,11 @@ export function CreatorDashboardPage() {
   const [holderName, setHolderName] = useState("");
 
   const handleSaveSubscriptions = () => {
-    saveSettings({
+    void saveSettings({
       creatorSubscriptionsEnabled: subsEnabled,
       creatorTierPrice: tierPrice,
-    });
-    setSettings(getStoredSettings());
+    }, user?.id);
+    setSettings(getStoredSettings(user?.id));
     setSubModalOpen(false);
     toast.success(
       subsEnabled
@@ -88,15 +90,15 @@ export function CreatorDashboardPage() {
       toast.error("Please complete all required banking fields");
       return;
     }
-    saveSettings({
+    void saveSettings({
       payoutDestination: {
         type: "bank",
         accountIdentifier: `•••• ${accountNumber.slice(-4)}`,
         holderName,
-        verified: true,
+        verified: false,
       },
-    });
-    setSettings(getStoredSettings());
+    }, user?.id);
+    setSettings(getStoredSettings(user?.id));
     setPayoutModalOpen(false);
     toast.success("Bank payout account linked successfully!");
   };
@@ -354,8 +356,8 @@ export function CreatorDashboardPage() {
                 <Switch
                   checked={settings.paidPartnershipTagEnabled}
                   onCheckedChange={(checked) => {
-                    saveSettings({ paidPartnershipTagEnabled: checked });
-                    setSettings(getStoredSettings());
+                    void saveSettings({ paidPartnershipTagEnabled: checked }, user?.id);
+                    setSettings(getStoredSettings(user?.id));
                     toast.success(
                       checked
                         ? "Paid partnership labels enabled"

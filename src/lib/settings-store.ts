@@ -224,51 +224,24 @@ export interface OpexnalSettings {
 }
 
 export const DEFAULT_SETTINGS: OpexnalSettings = {
-  email: "creator@opexnal.user",
-  phone: "+1 (555) 019-2834",
-  dateOfBirth: "1998-07-15",
-  ownershipVerified: true,
-  recoveryEmail: "recovery@opexnal.user",
-  recoveryPhone: "+1 (555) 019-9988",
-  backupCodes: ["9823-1490", "7712-4019", "5541-8820", "3091-6652", "1104-9843"],
+  email: "",
+  phone: "",
+  dateOfBirth: "",
+  ownershipVerified: false,
+  recoveryEmail: "",
+  recoveryPhone: "",
+  backupCodes: [],
   twoFactorEnabled: false,
   securityAlertsEmail: true,
-  activeSessions: [
-    {
-      id: "sess_curr_1",
-      device: "MacBook Pro 16”",
-      browser: "Chrome 128 / macOS",
-      location: "San Francisco, CA, USA",
-      ipAddress: "198.51.100.24",
-      lastActive: "Active now",
-      isCurrent: true,
-    },
-    {
-      id: "sess_mob_2",
-      device: "iPhone 15 Pro Max",
-      browser: "Opexnal iOS App v2.5",
-      location: "San Jose, CA, USA",
-      ipAddress: "198.51.100.89",
-      lastActive: "2 hours ago",
-      isCurrent: false,
-    },
-  ],
+  activeSessions: [],
 
   crossPostingEnabled: false,
   syncProfileData: true,
-  connectedNetworks: [
-    { id: "threads", name: "Threads", connected: true, username: "@creator" },
-    { id: "x", name: "X / Twitter", connected: false, username: "" },
-    { id: "youtube", name: "YouTube Shorts", connected: false, username: "" },
-  ],
+  connectedNetworks: [],
   interestBasedAds: true,
   adTopics: ["Technology", "Photography", "AI & Design", "Music", "Travel"],
 
-  savedCollections: [
-    { id: "col_all", name: "All Posts", count: 12, createdAt: "2026-01-01T00:00:00Z" },
-    { id: "col_audio", name: "Saved Audio", count: 4, createdAt: "2026-01-10T00:00:00Z" },
-    { id: "col_design", name: "Design Inspiration", count: 8, createdAt: "2026-02-01T00:00:00Z" },
-  ],
+  savedCollections: [],
   storiesArchiveAutoSave: true,
   postsArchiveAutoSave: true,
   liveArchiveAutoSave: false,
@@ -331,7 +304,7 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   locationPrivacyEnabled: true,
   suggestAccountToContacts: true,
   allowSearchEngineIndexing: true,
-  closeFriends: ["zenith_design", "maya_codes", "rohit_visuals"],
+  closeFriends: [],
   blockedUsers: [
     { id: "blk_1", username: "spam_bot_902", blockedAt: "2026-02-14T10:00:00Z" },
     { id: "blk_2", username: "crypto_drop_alerts", blockedAt: "2026-02-18T14:30:00Z" },
@@ -371,7 +344,7 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   sensitiveContentLevel: "standard",
   hideLikeAndViewCounts: false,
   feedMode: "algorithmic",
-  favoriteCreators: ["maya_codes", "zenith_design", "alex_adventures"],
+  favoriteCreators: [],
   notInterestedTags: ["celebrity gossip", "prank videos"],
   preferredTopics: ["Design", "AI Engineering", "Nature Photography", "Cinematography"],
 
@@ -390,17 +363,17 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   dailyScreenLimitMinutes: 120,
 
   paymentProviderConfigured: false, // Honest server-authoritative flag: needs Stripe/Razorpay configuration
-  creatorBalanceCents: 14250, // $142.50
-  pendingPayoutsCents: 4500, // $45.00
-  lifetimeEarningsCents: 89000, // $890.00
+  creatorBalanceCents: 0,
+  pendingPayoutsCents: 0,
+  lifetimeEarningsCents: 0,
   minimumPayoutThresholdCents: 5000, // $50.00
   payoutDestination: {
-    type: "bank",
-    accountIdentifier: "•••• 4819",
-    holderName: "Opexnal Creator LLC",
-    verified: true,
+    type: "none",
+    accountIdentifier: "",
+    holderName: "",
+    verified: false,
   },
-  taxFormSubmitted: true,
+  taxFormSubmitted: false,
   savedPaymentMethods: [
     {
       id: "pm_1",
@@ -438,37 +411,8 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
   notificationsPush: true,
   notificationsInApp: true,
 
-  recentlyDeletedItems: [
-    {
-      id: "del_post_1",
-      type: "post",
-      title: "Draft sunset reel with 4K color grade",
-      deletedAt: "2026-03-01T10:00:00Z",
-      daysRemaining: 27,
-      thumbnailUrl:
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "del_story_2",
-      type: "story",
-      title: "Behind the scenes in studio",
-      deletedAt: "2026-03-02T15:00:00Z",
-      daysRemaining: 28,
-      thumbnailUrl:
-        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80",
-    },
-  ],
-  exportRequests: [
-    {
-      id: "exp_2026_01",
-      format: "json",
-      categories: ["Profile", "Posts", "Comments", "Direct Messages", "Media Metadata"],
-      createdAt: "2026-02-15T12:00:00Z",
-      status: "ready",
-      downloadUrl: "#",
-      fileSizeBytes: 14285000,
-    },
-  ],
+  recentlyDeletedItems: [],
+  exportRequests: [],
   isDeactivated: false,
   deactivatedAt: null,
 };
@@ -481,11 +425,18 @@ const STORAGE_KEY = "opexnal_master_settings_v3";
 export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
-    const raw = localStorage.getItem(key) || localStorage.getItem(STORAGE_KEY);
+    // Never fall back to the shared key for an authenticated account: doing so
+    // can expose another account's locally cached preferences.
+    // Unscoped reads are intentionally not allowed in authenticated UI.
+    if (!userId) return DEFAULT_SETTINGS;
+    const key = `${STORAGE_KEY}_${userId}`;
+    const raw = localStorage.getItem(key);
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return DEFAULT_SETTINGS;
+    }
+    return { ...DEFAULT_SETTINGS, ...(parsed as Partial<OpexnalSettings>) };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -498,50 +449,58 @@ export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const current = getStoredSettings();
+  // Supabase identity is authoritative. A caller-supplied ID is only a
+  // consistency check and must never be used to impersonate another account.
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  const authenticatedUserId = authData.user?.id;
+  if (!authenticatedUserId) {
+    throw new Error("Sign in before saving account settings.");
+  }
+  if (userId && userId !== authenticatedUserId) {
+    throw new Error("Settings cannot be saved for a different user.");
+  }
+
+  const current = getStoredSettings(authenticatedUserId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      // ignore storage quota error
+      localStorage.setItem(`${STORAGE_KEY}_${authenticatedUserId}`, JSON.stringify(updated));
+    } catch (error) {
+      // Do not silently report a successful save when browser storage failed.
+      throw new Error("Unable to save settings in this browser.", { cause: error });
     }
   }
 
-  // Synchronize applicable privacy & profile columns with Supabase if userId is authenticated
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData?.user?.id || userId;
+  if (authenticatedUserId) {
+    const profileUpdates: {
+      is_private?: boolean;
+      show_activity_status?: boolean;
+      allow_tags_from?: string;
+      allow_mentions_from?: string;
+      account_type?: "personal" | "creator" | "business";
+    } = {};
+    if ("isPrivate" in patch && patch.isPrivate !== undefined)
+      profileUpdates.is_private = patch.isPrivate;
+    if ("showActivityStatus" in patch && patch.showActivityStatus !== undefined)
+      profileUpdates.show_activity_status = patch.showActivityStatus;
+    if ("allowTagsFrom" in patch && patch.allowTagsFrom !== undefined)
+      profileUpdates.allow_tags_from = patch.allowTagsFrom;
+    if ("allowMentionsFrom" in patch && patch.allowMentionsFrom !== undefined)
+      profileUpdates.allow_mentions_from = patch.allowMentionsFrom;
+    if ("accountType" in patch && patch.accountType !== undefined)
+      profileUpdates.account_type = patch.accountType;
 
-  if (effectiveUserId) {
-    try {
-      const profileUpdates: {
-        is_private?: boolean;
-        show_activity_status?: boolean;
-        allow_tags_from?: string;
-        allow_mentions_from?: string;
-        account_type?: "personal" | "creator" | "business";
-      } = {};
-      if ("isPrivate" in patch && patch.isPrivate !== undefined)
-        profileUpdates.is_private = patch.isPrivate;
-      if ("showActivityStatus" in patch && patch.showActivityStatus !== undefined)
-        profileUpdates.show_activity_status = patch.showActivityStatus;
-      if ("allowTagsFrom" in patch && patch.allowTagsFrom !== undefined)
-        profileUpdates.allow_tags_from = patch.allowTagsFrom;
-      if ("allowMentionsFrom" in patch && patch.allowMentionsFrom !== undefined)
-        profileUpdates.allow_mentions_from = patch.allowMentionsFrom;
-      if ("accountType" in patch && patch.accountType !== undefined)
-        profileUpdates.account_type = patch.accountType;
-
-      if (Object.keys(profileUpdates).length > 0) {
-        await supabase.from("profiles").update(profileUpdates).eq("id", effectiveUserId);
-      }
-    } catch {
-      // non-fatal fallback
+    if (Object.keys(profileUpdates).length > 0) {
+      const { error } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
+        .eq("id", authenticatedUserId);
+      if (error) throw error;
     }
   }
 
-  // Dispatch custom window event for instant reactive component updates
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("opexnal:settings-updated", { detail: updated }));
   }
