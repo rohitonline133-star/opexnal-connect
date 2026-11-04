@@ -371,6 +371,13 @@ function AccountRecoveryPage() {
           )}
         </div>
       )}
+
+      <nav aria-label="Recovery steps" className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 pt-4 text-xs">
+        <Link to="/auth/recovery/find-account" className="rounded-lg border border-white/10 p-3 text-gray-300 hover:border-violet-400/40 hover:text-white">Find my account</Link>
+        <Link to="/auth/recovery/choose-method" className="rounded-lg border border-white/10 p-3 text-gray-300 hover:border-violet-400/40 hover:text-white">Choose recovery method</Link>
+        <Link to="/auth/recovery/support" className="rounded-lg border border-white/10 p-3 text-gray-300 hover:border-violet-400/40 hover:text-white">Request support</Link>
+        <Link to="/auth/recovery/methods" className="rounded-lg border border-white/10 p-3 text-gray-300 hover:border-violet-400/40 hover:text-white">Recovery methods</Link>
+      </nav>
     </div>
   );
 }
