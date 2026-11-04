@@ -1,22 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  KeyRound,
-  ShieldAlert,
-  Mail,
-  Search,
-  LockKeyhole,
-} from "lucide-react";
+import { ArrowLeft, KeyRound, ShieldAlert, Mail, Search, LockKeyhole } from "lucide-react";
 
 export const Route = createFileRoute("/auth/help")({
   head: () => ({
     meta: [
       { title: "Account Help — Opexnal" },
-      {
-        name: "description",
-        content:
-          "Choose the right Opexnal sign-in, password, or account recovery path.",
-      },
+      { name: "description", content: "Choose the right Opexnal sign-in, password, or account recovery path." },
     ],
   }),
   component: AccountHelpPage,
@@ -50,12 +39,9 @@ function AccountHelpPage() {
         >
           <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              I forgot my password
-            </span>
+            <span className="block text-sm font-semibold text-white">I forgot my password</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
-              Request a password reset using the email registered to your
-              account.
+              Request a password reset using the email registered to your account.
             </span>
           </span>
         </Link>
@@ -66,12 +52,9 @@ function AccountHelpPage() {
         >
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              My account may be hacked
-            </span>
+            <span className="block text-sm font-semibold text-white">My account may be hacked</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
-              Submit a support request for unauthorized access or suspicious
-              changes.
+              Submit a support request for unauthorized access or suspicious changes.
             </span>
           </span>
         </Link>
@@ -112,12 +95,9 @@ function AccountHelpPage() {
         >
           <Search className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              Find my account
-            </span>
+            <span className="block text-sm font-semibold text-white">Find my account</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
-              Learn how to identify the account without exposing private
-              account details.
+              Learn how to identify the account without exposing private account details.
             </span>
           </span>
         </Link>
@@ -128,9 +108,7 @@ function AccountHelpPage() {
         >
           <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              Choose a recovery method
-            </span>
+            <span className="block text-sm font-semibold text-white">Choose a recovery method</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
               See which verification methods are currently available.
             </span>
@@ -143,9 +121,7 @@ function AccountHelpPage() {
         >
           <Mail className="mt-0.5 h-5 w-5 shrink-0 text-sky-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              Recovery methods
-            </span>
+            <span className="block text-sm font-semibold text-white">Recovery methods</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
               Review the current email and phone recovery limitations.
             </span>
@@ -158,9 +134,7 @@ function AccountHelpPage() {
         >
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-white">
-              Request account support
-            </span>
+            <span className="block text-sm font-semibold text-white">Request account support</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">
               Read the secure support steps before filing a recovery case.
             </span>
@@ -173,19 +147,14 @@ function AccountHelpPage() {
           <LockKeyhole className="h-4 w-4" />
           Protect your account
         </div>
-        Opexnal support will never ask you to share your password or one-time
-        verification code in this form. Do not upload identity documents or
-        selfies here. A recovery request is not an automatic account approval.
+        Opexnal support will never ask you to share your password or one-time verification code in
+        this form. Do not upload identity documents or selfies here. A recovery request is not an
+        automatic account approval.
       </aside>
 
       <p className="text-center text-xs text-gray-500">
         Still need to sign in?{" "}
-        <Link
-          to="/auth/login"
-          className="font-semibold text-violet-300 hover:underline"
-        >
-          Return to login
-        </Link>
+        <Link to="/auth/login" className="font-semibold text-violet-300 hover:underline">Return to login</Link>
       </p>
     </div>
   );
