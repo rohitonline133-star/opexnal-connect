@@ -383,11 +383,14 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
       error: "Email verification delivery is not configured. No account was created.",
     });
   }
-  const { username, email, password, displayName, dateOfBirth } = req.body || {};
+  const { email, password, displayName, dateOfBirth } = req.body || {};
+  const requestedUsername = typeof req.body?.username === "string" ? req.body.username.trim().toLowerCase() : "";
+  const username = requestedUsername || `user_${randomBytes(12).toString("hex")}`;
+  const usernameIsGenerated = !requestedUsername;
   if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) {
     return res.status(429).json({ error: "Too many signup attempts. Try again later." });
   }
-  if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
+  if ((requestedUsername && !validUsername(username)) || !validEmail(email) || !validPassword(password)) {
     return res.status(400).json({
       error:
         "Use a 3–30 character username, valid email, and password of 12–128 characters with mixed character classes.",
@@ -416,13 +419,14 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     await client.query("BEGIN");
     const passwordHash = await hashPassword(password);
     const result = await client.query(
-      "INSERT INTO users (id, username, email, password_hash, display_name, email_verified) VALUES ($1,$2,$3,$4,$5,FALSE) RETURNING id, username, email, display_name, avatar_url, created_at",
+      "INSERT INTO users (id, username, email, password_hash, display_name, email_verified, username_is_generated) VALUES ($1,$2,$3,$4,$5,FALSE,$6) RETURNING id, username, email, display_name, avatar_url, created_at",
       [
         randomUUID(),
-        username.toLowerCase(),
+        username,
         email.toLowerCase(),
         passwordHash,
         typeof displayName === "string" ? displayName.slice(0, 80) : username,
+        usernameIsGenerated,
       ],
     );
     const user = result.rows[0];
@@ -628,9 +632,13 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
         .status(429)
         .json({ error: "Too many login attempts for this account. Try again later." });
     }
+    const normalizedIdentity = identity.trim().toLowerCase();
+    const phoneIdentity = /^\\+[1-9][0-9]{7,14}$/.test(normalizedIdentity)
+      ? normalizedIdentity
+      : null;
     const result = await pool.query(
-      "SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1",
-      [identity.toLowerCase()],
+      "SELECT id, username, email, phone_e164, password_hash, display_name, avatar_url, created_at, email_verified, phone_verified FROM users WHERE username = $1 OR email = $1 OR ($2::varchar IS NOT NULL AND phone_e164 = $2 AND phone_verified = TRUE) LIMIT 1",
+      [normalizedIdentity, phoneIdentity],
     );
     const user = result.rows[0];
     if (!user || !(await verifyPassword(password, user.password_hash))) {

@@ -113,7 +113,7 @@ function LoginPage() {
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">Welcome Back</h2>
-        <p className="text-xs text-gray-400 font-medium">Log in with your email or username</p>
+        <p className="text-xs text-gray-400 font-medium">Log in with your username, email or verified phone number</p>
       </div>
 
       {errorMessage && (
@@ -135,7 +135,7 @@ function LoginPage() {
             <input
               id="login-identity-input"
               type="text"
-              placeholder="Email or Username"
+              placeholder="Phone number, email or username"
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               disabled={loading}
