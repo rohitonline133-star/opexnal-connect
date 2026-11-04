@@ -89,8 +89,14 @@ function NotificationsPage() {
     setErrorMessage(null);
     try {
       const [notificationResponse, requestResponse] = await Promise.all([
-        fetch(apiUrl("/api/v1/notifications?limit=100"), { credentials: "same-origin", cache: "no-store" }),
-        fetch(apiUrl("/api/v1/follow-requests"), { credentials: "same-origin", cache: "no-store" }),
+        fetch(apiUrl("/api/v1/notifications?limit=100"), {
+          credentials: "same-origin",
+          cache: "no-store",
+        }),
+        fetch(apiUrl("/api/v1/follow-requests"), {
+          credentials: "same-origin",
+          cache: "no-store",
+        }),
       ]);
       const [notificationPayload, requestPayload] = (await Promise.all([
         notificationResponse.json().catch(() => ({})),
