@@ -7,7 +7,7 @@ First-party Node.js/Express API with PostgreSQL persistence, JWT access tokens, 
 Requirements: Node.js 22+, PostgreSQL 15+.
 
 1. Copy .env.example to .env and set DATABASE_URL and a unique JWT_SECRET of at least 32 characters.
-2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_API_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured.
+2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_WEB_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured.
 3. Install dependencies at repository root with npm install.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
    psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
