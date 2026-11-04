@@ -113,7 +113,9 @@ function LoginPage() {
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">Welcome back</h2>
-        <p className="text-xs text-gray-400 font-medium">Sign in to continue to your Opexnal account</p>
+        <p className="text-xs text-gray-400 font-medium">
+          Sign in to continue to your Opexnal account
+        </p>
       </div>
 
       {errorMessage && (
