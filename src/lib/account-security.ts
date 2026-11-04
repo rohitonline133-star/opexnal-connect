@@ -467,7 +467,7 @@ export function revokeAllSessions(userId: string, keepCurrent = true): number {
 // ============================================================================
 
 export type RecoveryReason =
-  "forgot_password" | "lost_email" | "lost_phone" | "account_takeover" | "suspicious_login";
+  "forgot_password" | "lost_email" | "lost_phone" | "account_takeover" | "suspicious_login" | "other";
 
 export interface RecoveryTicket {
   id: string;
