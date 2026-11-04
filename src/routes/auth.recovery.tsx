@@ -229,7 +229,7 @@ function AccountRecoveryPage() {
               </span>
               <input
                 type="text"
-                placeholder="Username or original account email"
+                placeholder="Opexnal username or account email"
                 value={identityInput}
                 onChange={(e) => setIdentityInput(e.target.value)}
                 disabled={loading}
@@ -341,7 +341,7 @@ function AccountRecoveryPage() {
               </span>
               <input
                 type="text"
-                placeholder="Enter Ticket ID (e.g. rec_17...)"
+                placeholder="Enter your private recovery tracking ID"
                 value={lookupTicketId}
                 onChange={(e) => setLookupTicketId(e.target.value)}
                 disabled={loading}
@@ -391,12 +391,12 @@ function AccountRecoveryPage() {
                 {trackedTicket.status === "manual_review" || trackedTicket.status === "pending" ? (
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span> Your request is awaiting review. Opexnal will provide an update through your verified contact method.</span>
+                    <span> Your request has been received. It is not yet an approval or account-access change.</span>
                   </p>
                 ) : trackedTicket.status === "approved" || trackedTicket.status === "resolved" ? (
                   <p className="flex items-center gap-1.5 text-emerald-300/90">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Recovery is approved or resolved. Follow the instructions sent through your verified contact method.</span>
+                    <span>The case status is marked resolved. If you still cannot access your account, use the support contact shown on Opexnal.</span>
                   </p>
                 ) : (
                   <p className="text-gray-400">Current status: {trackedTicket.status.replace(/_/g, " ")}. Contact Opexnal Support if you need help.</p>
