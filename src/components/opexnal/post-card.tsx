@@ -144,12 +144,12 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
   const handleToggleFavorite = () => {
     if (!author) return;
-    const settings = getStoredSettings();
+    const settings = getStoredSettings(viewerId || undefined);
     const isFav = settings.favoriteCreators.includes(author.username);
     const updated = isFav
       ? settings.favoriteCreators.filter((u) => u !== author.username)
       : [...settings.favoriteCreators, author.username];
-    saveSettings({ favoriteCreators: updated });
+    saveSettings({ favoriteCreators: updated }, viewerId || undefined);
     setMenuOpen(false);
     toast.success(
       isFav
@@ -184,7 +184,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     };
     saveSettings({
       recentlyDeletedItems: [newItem, ...(settings.recentlyDeletedItems || [])],
-    });
+    }, viewerId || undefined);
     toast.success("Post deleted — you can restore it from Recently Deleted within 30 days");
   };
 
