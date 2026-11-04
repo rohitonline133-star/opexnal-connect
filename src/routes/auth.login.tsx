@@ -177,10 +177,7 @@ function LoginPage() {
           >
             Lost Access / Hacked?
           </Link>
-          <Link
-            to="/auth/forgot-password"
-            className="font-semibold text-[#8B5CF6] hover:underline"
-          >
+          <Link to="/auth/forgot-password" className="font-semibold text-[#8B5CF6] hover:underline">
             Forgot Password?
           </Link>
         </div>
