@@ -178,6 +178,7 @@ class QueryBuilder<T = unknown> {
       if (this.tableName === "posts" && this.operation === "select") {
         const res = await fetch(apiUrl("/api/v1/posts/feed"), {
           headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
           cache: "no-store",
         });
         if (!res.ok) {
@@ -243,6 +244,7 @@ class QueryBuilder<T = unknown> {
               "Content-Type": "application/json",
               ...authClient.getAuthHeader(),
             },
+            credentials: "same-origin",
             body: JSON.stringify({
               caption: typeof item["caption"] === "string" ? item["caption"] : "",
               mediaUrl,
@@ -401,6 +403,7 @@ class StorageBucketClient {
       const res = await fetch(apiUrl("/api/v1/storage/upload"), {
         method: "POST",
         headers: authClient.getAuthHeader(),
+        credentials: "same-origin",
         body: formData,
       });
 
@@ -432,6 +435,7 @@ class StorageBucketClient {
           "Content-Type": "application/json",
           ...authClient.getAuthHeader(),
         },
+        credentials: "same-origin",
         body: JSON.stringify({ path: objectKey, expiresIn }),
         cache: "no-store",
       });
@@ -474,6 +478,7 @@ class StorageBucketClient {
           const response = await fetch(apiUrl(`/api/v1/storage/${encodeURIComponent(objectKey)}`), {
             method: "DELETE",
             headers: authClient.getAuthHeader(),
+            credentials: "same-origin",
           });
           const payload = (await response.json().catch(() => ({}))) as { error?: string };
           if (!response.ok) {
