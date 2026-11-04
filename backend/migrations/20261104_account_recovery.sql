@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS account_recovery_requests (
   account_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   identity_hash CHAR(64) NOT NULL,
   ticket_token_hash CHAR(64) NOT NULL UNIQUE,
-  contact_email VARCHAR(254) NOT NULL,
   reason VARCHAR(32) NOT NULL CHECK (reason IN (
     'account_takeover','lost_email','lost_phone','suspicious_login','forgot_password','other'
   )),
