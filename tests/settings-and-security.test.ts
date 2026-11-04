@@ -274,3 +274,58 @@ describe("Story Highlights & Message Interactions", () => {
     assert.deepStrictEqual(reactions, {});
   });
 });
+
+
+import {
+  getSettingsStorageKey,
+  isUsableSettingsSession,
+} from "../src/lib/settings-store.ts";
+
+describe("Account-scoped settings storage boundary", () => {
+  const now = 1_800_000_000_000;
+  const validSession = {
+    token: "real-api-access-token",
+    userId: "user-a",
+    user: { id: "user-a" },
+    expiresAt: now + 60_000,
+  };
+
+  test("creates distinct encoded storage keys for different accounts", () => {
+    assert.notStrictEqual(getSettingsStorageKey("user-a"), getSettingsStorageKey("user-b"));
+    assert.ok(getSettingsStorageKey("user/a").endsWith("user%2Fa"));
+  });
+
+  test("accepts a structurally consistent, unexpired real API session", () => {
+    assert.strictEqual(isUsableSettingsSession(validSession, now), true);
+  });
+
+  test("rejects mismatched account identity and expired sessions", () => {
+    assert.strictEqual(
+      isUsableSettingsSession({ ...validSession, user: { id: "user-b" } }, now),
+      false,
+    );
+    assert.strictEqual(
+      isUsableSettingsSession({ ...validSession, expiresAt: now }, now),
+      false,
+    );
+  });
+
+  test("rejects demo and placeholder JWT sessions", () => {
+    assert.strictEqual(
+      isUsableSettingsSession({ ...validSession, token: "opexnal_demo_preview" }, now),
+      false,
+    );
+    assert.strictEqual(
+      isUsableSettingsSession({ ...validSession, token: "opexnal_jwt_placeholder" }, now),
+      false,
+    );
+  });
+
+  test("rejects malformed and non-finite session values", () => {
+    assert.strictEqual(isUsableSettingsSession(null, now), false);
+    assert.strictEqual(
+      isUsableSettingsSession({ ...validSession, expiresAt: Number.POSITIVE_INFINITY }, now),
+      false,
+    );
+  });
+});
