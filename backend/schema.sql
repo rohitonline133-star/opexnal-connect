@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   username_is_generated BOOLEAN NOT NULL DEFAULT FALSE,
   password_hash TEXT NOT NULL, display_name VARCHAR(80) NOT NULL,
   CHECK (email IS NOT NULL OR phone_e164 IS NOT NULL),
-  CHECK (phone_e164 IS NULL OR phone_e164 ~ E'^\\\\+[1-9][0-9]{7,14}$'),
+  CHECK (phone_e164 IS NULL OR phone_e164 ~ E'^\\+[1-9][0-9]{7,14}$'),
   avatar_url TEXT, bio TEXT NOT NULL DEFAULT '', website TEXT, location VARCHAR(120),
   locale VARCHAR(12) NOT NULL DEFAULT 'en', timezone VARCHAR(80) NOT NULL DEFAULT 'UTC',
   country_code CHAR(2), is_private BOOLEAN NOT NULL DEFAULT TRUE, is_deactivated BOOLEAN NOT NULL DEFAULT FALSE,
