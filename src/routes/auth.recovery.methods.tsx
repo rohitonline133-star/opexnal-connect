@@ -23,13 +23,14 @@ function RecoveryMethodsPage() {
         <div className="flex items-start gap-3">
           <Smartphone className="h-5 w-5 text-gray-400" />
           <p className="text-xs text-gray-300">
-            SMS recovery is inactive until a real provider and server-side OTP
-            verification are configured.
+            SMS recovery is inactive until a real provider and server-side OTP verification are
+            configured.
           </p>
         </div>
       </div>
       <p className="text-xs text-gray-500">
-        This screen does not save or verify contact details. Those settings need authenticated backend support first.
+        This screen does not save or verify contact details. Those settings need authenticated
+        backend support first.
       </p>
       <Link
         to="/auth/forgot-password"

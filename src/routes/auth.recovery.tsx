@@ -138,7 +138,8 @@ function AccountRecoveryPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Account Recovery Engine</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Submit a request for a compromised or inaccessible Opexnal account. This form does not restore access automatically.
+          Submit a request for a compromised or inaccessible Opexnal account. This form does not
+          restore access automatically.
         </p>
       </div>
 
@@ -281,7 +282,8 @@ function AccountRecoveryPage() {
               <p>
                 This form records your account identifier, selected reason, and optional details for
                 support review. Do not include passwords, one-time codes, payment details, or
-                government identity numbers. A request is not proof of ownership or an account recovery approval.
+                government identity numbers. A request is not proof of ownership or an account
+                recovery approval.
               </p>
             </div>
 
