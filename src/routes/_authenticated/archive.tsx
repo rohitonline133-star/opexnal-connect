@@ -118,7 +118,7 @@ export function ArchivePage() {
   const handlePermanentDelete = (item: RecentlyDeletedItem) => {
     const updated = recentlyDeleted.filter((x) => x.id !== item.id);
     setRecentlyDeleted(updated);
-    saveSettings({ recentlyDeletedItems: updated });
+    void saveSettings({ recentlyDeletedItems: updated }, user?.id);
     setItemToDeleteForever(null);
     toast.success(`Permanently deleted ${item.type}. It cannot be recovered.`);
   };
