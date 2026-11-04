@@ -17,3 +17,5 @@ CREATE INDEX IF NOT EXISTS account_recovery_requests_user_idx
   ON account_recovery_requests (account_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_recovery_requests_created_idx
   ON account_recovery_requests (created_at DESC);
+
+CREATE INDEX IF NOT EXISTS account_recovery_requests_expiry_idx ON account_recovery_requests (expires_at);
