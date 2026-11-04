@@ -42,7 +42,7 @@ function SignupPage() {
   const navigate = useNavigate();
 
   // Form Fields
-  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [email, setEmailOrPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [birthday, setBirthday] = useState("");
@@ -103,9 +103,9 @@ function SignupPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    const contact = emailOrPhone.trim();
-    if (!contact) {
-      setErrorMessage("Please enter an email address or mobile phone.");
+    const contact = email.trim().toLowerCase();
+    if (!contact || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
     if (!fullName.trim()) {
@@ -116,8 +116,12 @@ function SignupPage() {
       setErrorMessage("Username must be at least 3 characters.");
       return;
     }
-    if (usernameStatus === "taken") {
-      setErrorMessage("This username is already taken. Please choose another.");
+    if (usernameStatus !== "available") {
+      setErrorMessage(
+        usernameStatus === "taken"
+          ? "This username is already taken. Please choose another."
+          : "Wait for the username availability check to finish before creating your account.",
+      );
       return;
     }
     if (!birthday) {
@@ -251,10 +255,13 @@ function SignupPage() {
             </span>
             <input
               type="email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
               placeholder="Email address"
               aria-label="Email address"
               autoComplete="email"
-              value={emailOrPhone}
+              value={email}
               onChange={(e) => setEmailOrPhone(e.target.value)}
               disabled={loading}
               required
@@ -285,6 +292,10 @@ function SignupPage() {
             <span className="absolute left-4 text-gray-400 text-sm font-semibold">@</span>
             <input
               type="text"
+              inputMode="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder="Username"
               aria-label="Username"
               autoComplete="username"
