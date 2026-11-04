@@ -58,10 +58,6 @@ function AccountRecoveryPage() {
       setErrorMessage("Please enter your Opexnal username or the original email on the account.");
       return;
     }
-    if (!contactEmail.trim() || !contactEmail.includes("@")) {
-      setErrorMessage("Please enter a secure contact email where we can reach you right now.");
-      return;
-    }
 
     setLoading(true);
     try {
