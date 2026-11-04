@@ -4,7 +4,6 @@ import {
   ShieldAlert,
   User,
   Mail,
-  Phone,
   HelpCircle,
   Loader2,
   AlertCircle,
@@ -37,7 +36,6 @@ function AccountRecoveryPage() {
   const [identityInput, setIdentityInput] = useState("");
   const [reason, setReason] = useState<RecoveryReason>("account_takeover");
   const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
 
   // Status Check Form
@@ -75,7 +73,6 @@ function AccountRecoveryPage() {
           identityInput: identityInput.trim(),
           reason,
           contactEmail: contactEmail.trim(),
-          contactPhone: contactPhone.trim(),
           additionalDetails: additionalDetails.trim(),
         }),
       });
@@ -278,21 +275,6 @@ function AccountRecoveryPage() {
                 onChange={(e) => setContactEmail(e.target.value)}
                 disabled={loading}
                 required
-                className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
-              />
-            </div>
-
-            {/* Optional Contact Phone */}
-            <div className="relative flex items-center">
-              <span className="absolute left-4 text-gray-400">
-                <Phone size={18} />
-              </span>
-              <input
-                type="tel"
-                placeholder="Safe contact phone number (optional)"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                disabled={loading}
                 className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
               />
             </div>
