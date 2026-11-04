@@ -338,17 +338,16 @@ const recoveryReasons = new Set([
 ]);
 app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   const identity = typeof req.body?.identityInput === "string" ? req.body.identityInput.trim().toLowerCase() : "";
-  const contactEmail = typeof req.body?.contactEmail === "string" ? req.body.contactEmail.trim().toLowerCase() : "";
   const reason = typeof req.body?.reason === "string" ? req.body.reason : "";
   const details = typeof req.body?.additionalDetails === "string" ? req.body.additionalDetails.trim().slice(0, 1000) : "";
   if (!(validEmail(identity) || validUsername(identity))) {
     return res.status(400).json({ error: "Enter a valid Opexnal username or account email." });
   }
-  if (!validEmail(contactEmail) || !recoveryReasons.has(reason)) {
-    return res.status(400).json({ error: "Enter a valid contact email and choose a recovery reason." });
+  if (!recoveryReasons.has(reason)) {
+    return res.status(400).json({ error: "Choose a valid recovery reason." });
   }
   const ipKey = "recovery-request:" + String(req.ip || "unknown");
-  const identityKey = "recovery-identity:" + createHash("sha256").update(identity).digest("hex");
+  const identityKey = "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
   if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
     return res.status(429).json({ error: "Too many recovery requests. Try again later." });
   }
@@ -359,11 +358,12 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
     );
     const ticketId = "rec_" + randomBytes(24).toString("base64url");
     const ticketHash = createHash("sha256").update(ticketId).digest("hex");
-    const identityHash = createHash("sha256").update(identity).digest("hex");
+    const identityHash = createHmac("sha256", jwtSecret).update(identity).digest("hex");
     await pool.query(
-      "INSERT INTO account_recovery_requests (id,account_user_id,identity_hash,ticket_token_hash,contact_email,reason,details) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-      [randomUUID(), account.rows[0]?.id || null, identityHash, ticketHash, contactEmail, reason, details || null],
+      "INSERT INTO account_recovery_requests (id,account_user_id,identity_hash,ticket_token_hash,reason,details) VALUES ($1,$2,$3,$4,$5,$6)",
+      [randomUUID(), account.rows[0]?.id || null, identityHash, ticketHash, reason, details || null],
     );
+    res.setHeader("Cache-Control", "no-store");
     return res.status(201).json({
       ticket: { id: ticketId, status: "received", createdAt: Date.now() },
       message: "Your request was received. Keep the tracking ID private. This request does not itself restore account access.",
@@ -372,8 +372,8 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
     return next(error);
   }
 });
-app.get("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
-  const ticketId = typeof req.query.ticketId === "string" ? req.query.ticketId.trim() : "";
+app.post("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
+  const ticketId = typeof req.body?.ticketId === "string" ? req.body.ticketId.trim() : "";
   if (!/^rec_[A-Za-z0-9_-]{30,50}$/.test(ticketId)) {
     return res.status(400).json({ error: "Enter a valid recovery tracking ID." });
   }
@@ -388,6 +388,7 @@ app.get("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
     );
     if (!result.rowCount) return res.status(404).json({ error: "Tracking ID not found." });
     const ticket = result.rows[0];
+    res.setHeader("Cache-Control", "no-store");
     return res.json({
       ticket: {
         id: ticketId,
