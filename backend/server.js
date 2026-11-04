@@ -332,6 +332,75 @@ function validPassword(value) {
   );
 }
 
+// Public account recovery intake. Ticket IDs are bearer secrets; only their hashes are stored.
+const recoveryReasons = new Set([
+  "account_takeover", "lost_email", "lost_phone", "suspicious_login", "forgot_password", "other",
+]);
+app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
+  const identity = typeof req.body?.identityInput === "string" ? req.body.identityInput.trim().toLowerCase() : "";
+  const contactEmail = typeof req.body?.contactEmail === "string" ? req.body.contactEmail.trim().toLowerCase() : "";
+  const reason = typeof req.body?.reason === "string" ? req.body.reason : "";
+  const details = typeof req.body?.additionalDetails === "string" ? req.body.additionalDetails.trim().slice(0, 1000) : "";
+  if (!(validEmail(identity) || validUsername(identity))) {
+    return res.status(400).json({ error: "Enter a valid Opexnal username or account email." });
+  }
+  if (!validEmail(contactEmail) || !recoveryReasons.has(reason)) {
+    return res.status(400).json({ error: "Enter a valid contact email and choose a recovery reason." });
+  }
+  const ipKey = "recovery-request:" + String(req.ip || "unknown");
+  const identityKey = "recovery-identity:" + createHash("sha256").update(identity).digest("hex");
+  if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
+    return res.status(429).json({ error: "Too many recovery requests. Try again later." });
+  }
+  try {
+    const account = await pool.query(
+      "SELECT id FROM users WHERE username=$1 OR email=$1 LIMIT 1",
+      [identity],
+    );
+    const ticketId = "rec_" + randomBytes(24).toString("base64url");
+    const ticketHash = createHash("sha256").update(ticketId).digest("hex");
+    const identityHash = createHash("sha256").update(identity).digest("hex");
+    await pool.query(
+      "INSERT INTO account_recovery_requests (id,account_user_id,identity_hash,ticket_token_hash,contact_email,reason,details) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [randomUUID(), account.rows[0]?.id || null, identityHash, ticketHash, contactEmail, reason, details || null],
+    );
+    return res.status(201).json({
+      ticket: { id: ticketId, status: "received", createdAt: Date.now() },
+      message: "Your request was received. Keep the tracking ID private. This request does not itself restore account access.",
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+app.get("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
+  const ticketId = typeof req.query.ticketId === "string" ? req.query.ticketId.trim() : "";
+  if (!/^rec_[A-Za-z0-9_-]{30,50}$/.test(ticketId)) {
+    return res.status(400).json({ error: "Enter a valid recovery tracking ID." });
+  }
+  if (!rateLimit("recovery-status:" + String(req.ip || "unknown"), 20, 60 * 60 * 1000)) {
+    return res.status(429).json({ error: "Too many status checks. Try again later." });
+  }
+  const ticketHash = createHash("sha256").update(ticketId).digest("hex");
+  try {
+    const result = await pool.query(
+      "SELECT reason,status,created_at FROM account_recovery_requests WHERE ticket_token_hash=$1 LIMIT 1",
+      [ticketHash],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Tracking ID not found." });
+    const ticket = result.rows[0];
+    return res.json({
+      ticket: {
+        id: ticketId,
+        reason: ticket.reason,
+        status: ticket.status,
+        createdAt: new Date(ticket.created_at).getTime(),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/health", async (_req, res) => {
   if (!pool)
     return res
