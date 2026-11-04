@@ -186,6 +186,9 @@ function LoginPage() {
           <Link to="/auth/forgot-password" className="font-semibold text-pink-400 hover:underline">
             Forgot Password?
           </Link>
+          <Link to="/auth/help" className="text-gray-400 hover:text-white hover:underline transition">
+            Account Help
+          </Link>
         </div>
 
         <button
