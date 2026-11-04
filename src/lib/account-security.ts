@@ -403,62 +403,32 @@ export interface DeviceSessionRecord {
   isSuspicious?: boolean;
 }
 
+// This temporary in-memory store is not connected to authentication sessions.
+// Never fabricate device/IP/location records: an empty result means no real session
+// inventory is configured yet. Production session management must use persisted,
+// server-validated sessions and revoke them through the authentication backend.
 const activeSessionsStore = new Map<string, DeviceSessionRecord[]>();
 
 export function getSessionsForUser(userId: string): DeviceSessionRecord[] {
-  const existing = activeSessionsStore.get(userId);
-  if (existing && existing.length > 0) return existing;
-
-  // Initial seed sessions for realistic interactive display
-  const defaults: DeviceSessionRecord[] = [
-    {
-      id: "sess_curr_" + secureRandomHex(4),
-      userId,
-      token: "tok_curr_active",
-      device: "MacBook Pro 16",
-      browser: "Chrome 128",
-      os: "macOS 15.0",
-      ipAddress: "49.36.128.45",
-      location: "Bengaluru, Karnataka, India",
-      isCurrent: true,
-      createdAt: Date.now() - 3600 * 1000,
-      lastActiveAt: Date.now(),
-      isSuspicious: false,
-    },
-    {
-      id: "sess_mob_" + secureRandomHex(4),
-      userId,
-      token: "tok_mob_active",
-      device: "iPhone 15 Pro",
-      browser: "Opexnal Mobile App",
-      os: "iOS 18.0",
-      ipAddress: "103.212.150.12",
-      location: "Mumbai, Maharashtra, India",
-      isCurrent: false,
-      createdAt: Date.now() - 86400 * 1000 * 2,
-      lastActiveAt: Date.now() - 1800 * 1000,
-      isSuspicious: false,
-    },
-  ];
-
-  activeSessionsStore.set(userId, defaults);
-  return defaults;
+  return [...(activeSessionsStore.get(userId) || [])];
 }
 
 export function revokeSession(userId: string, sessionId: string): boolean {
-  const list = getSessionsForUser(userId);
-  const updated = list.filter((s) => s.id !== sessionId);
-  activeSessionsStore.set(userId, updated);
+  const list = activeSessionsStore.get(userId) || [];
+  if (!list.some((session) => session.id === sessionId)) return false;
+  activeSessionsStore.set(userId, list.filter((session) => session.id !== sessionId));
   recordSecurityAudit(userId, "SESSION_REVOKED", `Session ${sessionId} was manually revoked.`);
   return true;
 }
 
 export function revokeAllSessions(userId: string, keepCurrent = true): number {
-  const list = getSessionsForUser(userId);
-  const kept = keepCurrent ? list.filter((s) => s.isCurrent) : [];
+  const list = activeSessionsStore.get(userId) || [];
+  const kept = keepCurrent ? list.filter((session) => session.isCurrent) : [];
   const revokedCount = list.length - kept.length;
-  activeSessionsStore.set(userId, kept);
-  recordSecurityAudit(userId, "LOGOUT_ALL_DEVICES", `Revoked ${revokedCount} active sessions.`);
+  if (revokedCount > 0) {
+    activeSessionsStore.set(userId, kept);
+    recordSecurityAudit(userId, "LOGOUT_ALL_DEVICES", `Revoked ${revokedCount} active sessions.`);
+  }
   return revokedCount;
 }
 
