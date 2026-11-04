@@ -35,7 +35,6 @@ function AccountRecoveryPage() {
   // Form Fields
   const [identityInput, setIdentityInput] = useState("");
   const [reason, setReason] = useState<RecoveryReason>("account_takeover");
-  const [contactEmail, setContactEmail] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
 
   // Status Check Form
@@ -72,7 +71,6 @@ function AccountRecoveryPage() {
         body: JSON.stringify({
           identityInput: identityInput.trim(),
           reason,
-          contactEmail: contactEmail.trim(),
           additionalDetails: additionalDetails.trim(),
         }),
       });
@@ -106,9 +104,11 @@ function AccountRecoveryPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/auth/recovery/status?ticketId=${encodeURIComponent(lookupTicketId.trim())}`,
-      );
+      const res = await fetch("/api/auth/recovery/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId: lookupTicketId.trim() }),
+      });
       const data = await res.json();
       if (!res.ok || !data.ticket) {
         setErrorMessage(data.error || "Ticket not found. Check ID and try again.");
@@ -141,7 +141,7 @@ function AccountRecoveryPage() {
         </div>
         <h2 className="text-2xl font-bold text-white mb-1">Account Recovery Engine</h2>
         <p className="text-xs text-gray-400 font-medium">
-          Official recovery channel for compromised, hijacked, or inaccessible Opexnal accounts.
+          Submit a request for a compromised or inaccessible Opexnal account. This form does not restore access automatically.
         </p>
       </div>
 
@@ -202,7 +202,7 @@ function AccountRecoveryPage() {
               <p className="text-[11px] text-gray-400 pt-1 leading-normal">
                 Our Trust & Safety engineering team will review the timeline of recent credential
                 modifications and notify you at{" "}
-                <strong className="text-white">{contactEmail}</strong>.
+                Your tracking ID is the only way to look up this request.
               </p>
             </div>
 
@@ -261,22 +261,6 @@ function AccountRecoveryPage() {
                   I cannot reset my password via standard flow
                 </option>
               </select>
-            </div>
-
-            {/* Safe Contact Email */}
-            <div className="relative flex items-center">
-              <span className="absolute left-4 text-gray-400">
-                <Mail size={18} />
-              </span>
-              <input
-                type="email"
-                placeholder="Safe contact email (where we can email you now)"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                disabled={loading}
-                required
-                className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
-              />
             </div>
 
             {/* Additional details */}
