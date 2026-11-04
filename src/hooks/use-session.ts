@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
-import type { AuthSession, AuthUser } from "@/lib/auth-client";
+import type { AuthSession } from "@/lib/auth-client";
 import { authClient } from "@/lib/auth-client";
 
-export type Session =
-  | AuthSession
-  | {
-      access_token: string;
-      userId?: string;
-      user: { id: string; email?: string; [key: string]: unknown } | null;
-    };
+export type Session = AuthSession;
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -23,18 +17,35 @@ export function useSession() {
       setLoading(false);
     });
 
-    authClient.getUser().then(({ data, error }) => {
+    // Restore the existing session immediately, then verify it with the API.
+    // Transient API failures must not make a valid local session appear signed out.
+    void authClient.getSession().then(async ({ data: initial }) => {
       if (!active) return;
-      if (error || !data.user) {
-        setSession(null);
+      setSession(initial.session);
+
+      if (!initial.session) {
         setLoading(false);
         return;
       }
-      void authClient.getSession().then(({ data: sessionData }) => {
+
+      const { data, error } = await authClient.getUser();
+      if (!active) return;
+
+      if (data.user) {
+        const { data: verified } = await authClient.getSession();
         if (!active) return;
-        setSession(sessionData.session);
-        setLoading(false);
-      });
+        setSession(verified.session);
+      } else if (error) {
+        const { data: retained } = await authClient.getSession();
+        if (!active) return;
+        setSession(retained.session);
+      } else {
+        setSession(null);
+      }
+      setLoading(false);
+    }).catch(() => {
+      if (!active) return;
+      setLoading(false);
     });
 
     return () => {
@@ -45,7 +56,7 @@ export function useSession() {
 
   return {
     session,
-    user: (session?.user as (AuthUser & { id: string }) | null) ?? null,
+    user: session?.user ?? null,
     loading,
   };
 }
