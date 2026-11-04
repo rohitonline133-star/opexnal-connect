@@ -51,8 +51,15 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!destination || destination.trim().length < 3) {
         return jsonResponse({ error: "Valid phone number or email is required" }, 400);
       }
-      const result = requestOtp(destination, body.phone ? "phone" : "email");
-      return jsonResponse(result, result.success ? 200 : 429);
+      const result = await requestOtp(destination, body.phone ? "phone" : "email");
+      const status = result.success
+        ? 200
+        : result.message.includes("not configured")
+          ? 503
+          : result.message.includes("delivery failed")
+            ? 502
+            : 429;
+      return jsonResponse(result, status);
     }
 
     // 2. Phone / Email OTP Verify
