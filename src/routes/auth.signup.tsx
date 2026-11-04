@@ -112,11 +112,11 @@ function SignupPage() {
       setErrorMessage("Please enter your full name.");
       return;
     }
-    if (!username.trim() || username.length < 3) {
-      setErrorMessage("Username must be at least 3 characters.");
+    if (username.trim() && username.trim().length < 3) {
+      setErrorMessage("A chosen username must be at least 3 characters.");
       return;
     }
-    if (usernameStatus === "taken") {
+    if (username.trim() && usernameStatus === "taken") {
       setErrorMessage("This username is already taken. Please choose another.");
       return;
     }
@@ -182,7 +182,7 @@ function SignupPage() {
         dateOfBirth: birthday,
         options: {
           data: {
-            username: username.trim(),
+            ...(username.trim() ? { username: username.trim() } : {}),
             full_name: fullName.trim(),
           },
         },
@@ -282,7 +282,7 @@ function SignupPage() {
             <span className="absolute left-4 text-gray-400 text-sm font-semibold">@</span>
             <input
               type="text"
-              placeholder="Username"
+              placeholder="Username (optional — add it later)"
               value={username}
               onChange={(e) => checkUsername(e.target.value)}
               disabled={loading}
