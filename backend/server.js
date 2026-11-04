@@ -385,7 +385,7 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
   }
   const { email, password, displayName, dateOfBirth } = req.body || {};
   const requestedUsername = typeof req.body?.username === "string" ? req.body.username.trim().toLowerCase() : "";
-  const username = requestedUsername || `user_${randomBytes(6).toString("hex")}`;
+  const username = requestedUsername || `user_${randomBytes(12).toString("hex")}`;
   const usernameIsGenerated = !requestedUsername;
   if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) {
     return res.status(429).json({ error: "Too many signup attempts. Try again later." });
