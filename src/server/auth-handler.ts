@@ -51,7 +51,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
       if (!destination || destination.trim().length < 3) {
         return jsonResponse({ error: "Valid phone number or email is required" }, 400);
       }
-      const result = requestOtp(destination, body.phone ? "phone" : "email");
+      const result = await requestOtp(destination, body.phone ? "phone" : "email");
       return jsonResponse(result, result.success ? 200 : 429);
     }
 
@@ -250,7 +250,7 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
 
     // 13. Feed and Stories Fallback API endpoints
     if (pathname === "/api/v1/posts/feed" && method === "GET") {
-      const feed = await getHomeFeed({ limit: 10 });
+      const feed = await getHomeFeed("", undefined, 10);
       return jsonResponse(feed);
     }
     if (pathname === "/api/v1/stories/tray" && method === "GET") {
