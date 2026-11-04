@@ -136,6 +136,8 @@ function LoginPage() {
               id="login-identity-input"
               type="text"
               placeholder="Email or Username"
+              aria-label="Email or username"
+              autoComplete="username"
               value={emailOrUsername}
               onChange={(e) => setEmailOrUsername(e.target.value)}
               disabled={loading}
@@ -152,6 +154,8 @@ function LoginPage() {
               id="login-password-input"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
+              aria-label="Password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
