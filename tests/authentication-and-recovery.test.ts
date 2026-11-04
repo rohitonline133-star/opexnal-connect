@@ -10,8 +10,6 @@ import {
   getSessionsForUser,
   revokeSession,
   revokeAllSessions,
-  submitAccountRecoveryRequest,
-  getRecoveryStatus,
 } from "../src/lib/account-security.ts";
 
 describe("Authentication & Account Security Engine", () => {
@@ -140,23 +138,4 @@ describe("Authentication & Account Security Engine", () => {
     assert.deepStrictEqual(getSessionsForUser(testUserId), []);
   });
 
-  // 6. Account Recovery Engine
-  test("Recovery engine: files ticket, flags takeover for manual review, and provides lookup", () => {
-    const submission = submitAccountRecoveryRequest({
-      identityInput: "hacked_creator_account",
-      reason: "account_takeover",
-      contactEmail: "safe_contact@example.com",
-      additionalDetails: "Attacker changed my recovery phone yesterday",
-    });
-
-    assert.strictEqual(submission.success, true);
-    assert.ok(submission.ticket.id.startsWith("rec_"));
-    assert.strictEqual(submission.ticket.status, "manual_review");
-
-    // Lookup ticket
-    const lookup = getRecoveryStatus(submission.ticket.id);
-    assert.ok(lookup);
-    assert.strictEqual(lookup.id, submission.ticket.id);
-    assert.strictEqual(lookup.contactEmail, "safe_contact@example.com");
-  });
 });

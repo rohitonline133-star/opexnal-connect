@@ -439,69 +439,6 @@ export function revokeAllSessions(userId: string, keepCurrent = true): number {
 export type RecoveryReason =
   "forgot_password" | "lost_email" | "lost_phone" | "account_takeover" | "suspicious_login" | "other";
 
-export interface RecoveryTicket {
-  id: string;
-  userId: string;
-  identityInput: string;
-  reason: RecoveryReason;
-  status: "pending_verification" | "manual_review" | "approved" | "resolved" | "rejected";
-  contactEmail: string;
-  contactPhone?: string;
-  token?: string;
-  expiresAt: number;
-  createdAt: number;
-  notes?: string;
-}
-
-const recoveryTickets = new Map<string, RecoveryTicket>();
-
-export function submitAccountRecoveryRequest(params: {
-  identityInput: string;
-  reason: RecoveryReason;
-  contactEmail: string;
-  contactPhone?: string;
-  additionalDetails?: string;
-}): { success: boolean; ticket: RecoveryTicket; message: string } {
-  const ticketId = `rec_${secureRandomHex(12)}`;
-  const token = `oct_${secureRandomHex(32)}`;
-
-  const isTakeover = params.reason === "account_takeover" || params.reason === "lost_email";
-
-  const ticket: RecoveryTicket = {
-    id: ticketId,
-    userId: `user_${params.identityInput.toLowerCase().replace(/[^a-z0-9_]/g, "_")}`,
-    identityInput: params.identityInput,
-    reason: params.reason,
-    status: isTakeover ? "manual_review" : "approved",
-    contactEmail: params.contactEmail,
-    ...(params.contactPhone ? { contactPhone: params.contactPhone } : {}),
-    ...(!isTakeover ? { token } : {}),
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-    createdAt: Date.now(),
-    ...(params.additionalDetails ? { notes: params.additionalDetails } : {}),
-  };
-
-  recoveryTickets.set(ticketId, ticket);
-  recordSecurityAudit(
-    ticket.userId,
-    "RECOVERY_REQUESTED",
-    `Recovery request [${ticketId}] filed for reason: ${params.reason}.`,
-  );
-
-  return {
-    success: true,
-    ticket,
-    message: isTakeover
-      ? "Your recovery request has been submitted to the Opexnal Security Trust team for expedited review."
-      : "Recovery authorization initiated. Please check your recovery contact method.",
-  };
-}
-
-export function getRecoveryStatus(ticketId: string): RecoveryTicket | null {
-  return recoveryTickets.get(ticketId) || null;
-}
-
-// ============================================================================
 // 7. SECURITY AUDIT LOGGING
 // ============================================================================
 
@@ -525,16 +462,7 @@ export interface SecurityAuditEvent {
   ipAddress?: string;
 }
 
-const auditLogs: SecurityAuditEvent[] = [
-  {
-    id: "log_init_1",
-    userId: "user_maya",
-    action: "LOGIN_SUCCESS",
-    details: "Authenticated via password with verified device session.",
-    timestamp: new Date(Date.now() - 3600 * 1000).toISOString(),
-    ipAddress: "49.36.128.45",
-  },
-];
+const auditLogs: SecurityAuditEvent[] = [];
 
 export function recordSecurityAudit(
   userId: string,
@@ -548,7 +476,7 @@ export function recordSecurityAudit(
     action,
     details,
     timestamp: new Date().toISOString(),
-    ipAddress: ipAddress || "127.0.0.1",
+    ...(ipAddress ? { ipAddress } : {}),
   };
   auditLogs.unshift(event);
   if (auditLogs.length > 500) auditLogs.pop();
