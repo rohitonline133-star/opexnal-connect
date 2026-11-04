@@ -94,6 +94,20 @@ export const SEED_PROFILES: Record<string, Profile> = {
   },
 };
 
+/** Fetch only the persisted profile. This strict path never returns demo or fabricated profiles. */
+export async function getProfileByIdStrict(id: string): Promise<Profile | null> {
+  if (!id) return null;
+
+  const { data, error } = await supabase
+    .from<Profile>("profiles")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function getProfileById(id: string): Promise<Profile | null> {
   if (!id) return null;
 
