@@ -454,8 +454,11 @@ export async function saveSettings(
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
   const authenticatedUserId = authData.user?.id;
+  if (!authenticatedUserId) {
+    throw new Error("Sign in before saving account settings.");
+  }
   if (userId && userId !== authenticatedUserId) {
-    throw new Error("Settings cannot be saved for a different or unauthenticated user.");
+    throw new Error("Settings cannot be saved for a different user.");
   }
 
   const current = getStoredSettings(authenticatedUserId);
@@ -463,8 +466,7 @@ export async function saveSettings(
 
   if (typeof window !== "undefined") {
     try {
-      const key = authenticatedUserId ? `${STORAGE_KEY}_${authenticatedUserId}` : STORAGE_KEY;
-      localStorage.setItem(key, JSON.stringify(updated));
+      localStorage.setItem(`${STORAGE_KEY}_${authenticatedUserId}`, JSON.stringify(updated));
     } catch (error) {
       // Do not silently report a successful save when browser storage failed.
       throw new Error("Unable to save settings in this browser.", { cause: error });
