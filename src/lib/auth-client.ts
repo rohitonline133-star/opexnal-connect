@@ -279,16 +279,16 @@ class AuthClient {
     } | null;
     error: Error | null;
   }> {
-    const username = params.options?.data?.username?.trim() || params.email.split("@")[0] || "";
+    const username = params.options?.data?.username?.trim() || "";
     try {
       const response = await fetch(apiUrl("/api/v1/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          ...(username ? { username } : {}),
           email: params.email.trim(),
           password: params.password,
-          displayName: params.options?.data?.full_name?.trim() || username,
+          displayName: params.options?.data?.full_name?.trim() || params.email.split("@")[0],
           dateOfBirth: params.dateOfBirth,
         }),
         cache: "no-store",
@@ -314,11 +314,11 @@ class AuthClient {
         id: payload.user.id,
         username: payload.user.username,
         email: payload.user.email || params.email,
-        displayName: payload.user.displayName || username,
+        displayName: payload.user.displayName || username || payload.user.username,
         ...(payload.user.avatarUrl ? { avatarUrl: payload.user.avatarUrl } : {}),
         user_metadata: {
           username: payload.user.username,
-          full_name: payload.user.displayName || username,
+          full_name: payload.user.displayName || username || payload.user.username,
         },
       };
       return {
