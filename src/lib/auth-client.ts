@@ -338,9 +338,9 @@ class AuthClient {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: "no-store",
       });
-      if (!response.ok && response.status >= 500) {
+      if (!response.ok && response.status !== 401 && response.status !== 403) {
         revokeError = new Error(
-          "Signed out locally, but the server could not revoke this session.",
+          "Signed out locally, but the server could not confirm session revocation.",
         );
       }
     } catch {
