@@ -41,7 +41,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useSession } from "@/hooks/use-session";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 import { getExploreFeed, type FeedPost } from "@/lib/posts";
 import { initialsFor } from "@/lib/profile";
@@ -172,7 +171,7 @@ function Explore() {
       const response = await fetch(
         apiUrl(`/api/v1/users/search?q=${encodeURIComponent(query)}&limit=20`),
         {
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
           cache: "no-store",
         },
       );
@@ -196,7 +195,7 @@ function Explore() {
     queryKey: ["suggested-creators", user?.id],
     queryFn: async () => {
       const response = await fetch(apiUrl("/api/v1/users/search?limit=10"), {
-        headers: authClient.getAuthHeader(),
+        credentials: "same-origin",
         cache: "no-store",
       });
       const payload = (await response.json().catch(() => ({}))) as {
@@ -216,7 +215,7 @@ function Explore() {
     try {
       const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(targetId)}/follow`), {
         method: "POST",
-        headers: authClient.getAuthHeader(),
+        credentials: "same-origin",
         cache: "no-store",
       });
       const payload = (await response.json().catch(() => ({}))) as {

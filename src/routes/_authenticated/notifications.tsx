@@ -4,7 +4,6 @@ import { Bell, Check, Heart, MessageCircle, ShieldAlert, UserPlus, Loader2 } fro
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
@@ -89,10 +88,15 @@ function NotificationsPage() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const headers = authClient.getAuthHeader();
       const [notificationResponse, requestResponse] = await Promise.all([
-        fetch(apiUrl("/api/v1/notifications?limit=100"), { headers, cache: "no-store" }),
-        fetch(apiUrl("/api/v1/follow-requests"), { headers, cache: "no-store" }),
+        fetch(apiUrl("/api/v1/notifications?limit=100"), {
+          credentials: "same-origin",
+          cache: "no-store",
+        }),
+        fetch(apiUrl("/api/v1/follow-requests"), {
+          credentials: "same-origin",
+          cache: "no-store",
+        }),
       ]);
       const [notificationPayload, requestPayload] = (await Promise.all([
         notificationResponse.json().catch(() => ({})),
@@ -126,7 +130,7 @@ function NotificationsPage() {
         apiUrl(`/api/v1/follow-requests/${encodeURIComponent(requestId)}/${decision}`),
         {
           method: "POST",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         },
       );
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -147,7 +151,7 @@ function NotificationsPage() {
     try {
       const response = await fetch(apiUrl("/api/v1/notifications/read-all"), {
         method: "POST",
-        headers: authClient.getAuthHeader(),
+        credentials: "same-origin",
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || "Could not mark notifications read.");
@@ -167,7 +171,7 @@ function NotificationsPage() {
         apiUrl(`/api/v1/notifications/${encodeURIComponent(item.id)}/read`),
         {
           method: "PATCH",
-          headers: authClient.getAuthHeader(),
+          credentials: "same-origin",
         },
       );
       if (!response.ok) return;

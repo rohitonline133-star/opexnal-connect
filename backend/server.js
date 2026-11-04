@@ -18,6 +18,13 @@ import { WebSocketServer } from "ws";
 import nodemailer from "nodemailer";
 import multer from "multer";
 import { fileTypeFromFile } from "file-type";
+import {
+  parseSessionCookie,
+  createSessionCookie,
+  createClearedSessionCookie,
+  isAllowedCookieRequest,
+  isAllowedCookieAuthRequest,
+} from "./session-cookie.js";
 
 const { Pool } = pg;
 const app = express();
@@ -115,7 +122,7 @@ app.use((req, res, next) => {
     res.setHeader("Vary", "Origin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
-  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-CSRF-Token");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -151,8 +158,25 @@ async function authRequired(req, res, next) {
     return res.status(503).json({ error: "JWT_SECRET is not configured securely." });
   }
   const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const bearerToken = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const cookieToken = parseSessionCookie(req.headers.cookie || "");
+  const token = bearerToken || cookieToken;
   if (!token) return res.status(401).json({ error: "Authentication required." });
+  // Cookie authentication is browser ambient authority. Reject a supplied
+  // untrusted Origin or cross-site Fetch Metadata even on safe requests: the
+  // AI server verifies browser cookies through this endpoint using GET /auth/me.
+  if (cookieToken) {
+    if (
+      !isAllowedCookieAuthRequest(
+        req.headers.origin,
+        req.headers["sec-fetch-site"],
+        req.method,
+        allowedOrigins,
+      )
+    ) {
+      return res.status(403).json({ error: "Cross-site request rejected." });
+    }
+  }
 
   let claims;
   try {
@@ -639,9 +663,20 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
     if (!user.email_verified) {
       return res.status(403).json({ error: "Please verify your email before signing in." });
     }
+    const accessToken = await issueToken(user, req);
+    // Do not establish a browser session from an untrusted or missing Origin.
+    // Legacy API clients can continue using the JSON bearer token during migration.
+    if (isAllowedCookieRequest(req.headers.origin, req.headers["sec-fetch-site"], allowedOrigins)) {
+      res.setHeader(
+        "Set-Cookie",
+        createSessionCookie(accessToken, { secure: process.env.NODE_ENV !== "development" }),
+      );
+    }
+    // Keep the JSON bearer token during the compatibility phase; remove only after
+    // every client request has migrated to same-origin cookie credentials.
     return res.json({
       user: publicUser(user),
-      accessToken: await issueToken(user, req),
+      accessToken,
       tokenType: "Bearer",
       expiresIn: 3600,
       emailVerified: true,
@@ -667,6 +702,10 @@ app.post("/api/v1/auth/logout", dbRequired, authRequired, async (req, res, next)
     await pool.query(
       "UPDATE auth_sessions SET revoked_at=NOW() WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL",
       [req.authSessionId, req.user.id],
+    );
+    res.setHeader(
+      "Set-Cookie",
+      createClearedSessionCookie({ secure: process.env.NODE_ENV !== "development" }),
     );
     return res.json({ success: true });
   } catch (error) {

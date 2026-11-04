@@ -33,7 +33,6 @@ import {
   type ConversationSummary,
 } from "@/lib/messages";
 import { cn } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 
 export const Route = createFileRoute("/_authenticated/messages/")({
@@ -85,7 +84,7 @@ function Inbox() {
     if (!uname || !user?.id) return;
     try {
       const response = await fetch(apiUrl(`/api/v1/users/${encodeURIComponent(uname)}`), {
-        headers: authClient.getAuthHeader(),
+        credentials: "same-origin",
         cache: "no-store",
       });
       const payload = (await response.json().catch(() => ({}))) as {

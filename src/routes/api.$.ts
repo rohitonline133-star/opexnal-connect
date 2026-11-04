@@ -42,7 +42,15 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
   const incoming = new URL(request.url);
   const target = new URL(incoming.pathname.replace(/^\/api\//, "/api/") + incoming.search, origin);
   const headers = new Headers();
-  for (const name of ["authorization", "content-type", "accept", "x-request-id"]) {
+  for (const name of [
+    "authorization",
+    "content-type",
+    "accept",
+    "x-request-id",
+    "cookie",
+    "origin",
+    "sec-fetch-site",
+  ]) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
@@ -61,11 +69,8 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
     };
     if (body !== undefined) requestInit.body = body;
     const upstream = await fetch(target, requestInit);
-    const responseHeaders = new Headers();
-    for (const name of ["content-type", "cache-control", "location", "retry-after"]) {
-      const value = upstream.headers.get(name);
-      if (value) responseHeaders.set(name, value);
-    }
+    // Preserve Set-Cookie from the first-party API so HttpOnly sessions reach the browser.
+    const responseHeaders = new Headers(upstream.headers);
     responseHeaders.set("cache-control", "no-store");
     return new Response(method === "HEAD" ? null : upstream.body, {
       status: upstream.status,

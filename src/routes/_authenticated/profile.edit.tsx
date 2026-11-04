@@ -115,10 +115,8 @@ function EditProfile() {
     try {
       const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...authClient.getAuthHeader(),
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ avatarUrl: uploaded.path }),
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -147,10 +145,8 @@ function EditProfile() {
     try {
       const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...authClient.getAuthHeader(),
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           displayName: parsed.data.display_name,
           username: parsed.data.username,

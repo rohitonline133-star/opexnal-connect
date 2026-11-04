@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
 import { getProfileById, type Profile } from "@/lib/profile";
 import { useSession } from "@/hooks/use-session";
@@ -68,10 +67,8 @@ function Privacy() {
     try {
       const response = await fetch(apiUrl("/api/v1/users/me"), {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...authClient.getAuthHeader(),
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify(body),
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };

@@ -1,5 +1,3 @@
-import { authClient } from "@/lib/auth-client";
-
 export interface ChatMessage {
   id: string;
   sender: "user" | "ai";
@@ -52,10 +50,10 @@ export async function sendAiChatMessage(params: {
   const correlationId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const response = await fetch("/api/ai/chat", {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
       "X-Opex-Correlation-Id": correlationId,
-      ...authClient.getAuthHeader(),
     },
     body: JSON.stringify(params),
   });
@@ -73,10 +71,10 @@ export async function runAiCreatorTool(options: AiCreatorOptions): Promise<strin
   const correlationId = `tool_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   const response = await fetch("/api/ai/creator-tools", {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
       "X-Opex-Correlation-Id": correlationId,
-      ...authClient.getAuthHeader(),
     },
     body: JSON.stringify(options),
   });
@@ -127,9 +125,9 @@ export async function moderateContentWithAi(
 }> {
   const response = await fetch("/api/ai/moderate", {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      ...authClient.getAuthHeader(),
     },
     body: JSON.stringify({ content, contentType }),
   });

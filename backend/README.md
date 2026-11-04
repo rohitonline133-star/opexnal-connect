@@ -41,6 +41,12 @@ The frontend and API are separate processes. Deploy the API on a Node.js host th
 
 The TanStack web server proxies `/api/*` to the API using the server-only `OPEXNAL_API_URL` environment variable. For a Vercel web deployment, set `OPEXNAL_API_URL` to the public HTTPS origin of the separately deployed Node API, and set `PUBLIC_WEB_URL` to the exact HTTPS origin of the web app. Leave `VITE_OPEXNAL_API_URL` blank to use the same-origin proxy. Do not point a browser at a Docker-only hostname such as `api:4000`.
 
+### Session cookie compatibility rollout
+
+The compatibility branch can issue an `opexnal_session` cookie on login when the request Origin exactly matches an entry in `CORS_ORIGINS`. Configure that variable as a comma-separated list of exact trusted web origins (scheme + hostname + optional port), for example `https://opexnal-connect.vercel.app`; do not add wildcard origins. Keep `NODE_ENV=production` and terminate TLS at a trusted HTTPS reverse proxy so cookies receive the `Secure` attribute. Local HTTP development is supported only when `NODE_ENV=development`.
+
+This is an additive migration phase only: the login response still contains the legacy `accessToken` and the browser client still stores/uses that token. Do not treat the cookie as the sole authentication mechanism or remove legacy tokens until all clients, CSRF handling, backend HTTP integration tests, session refresh/revocation, and staging browser tests have been completed. If the deployed API's `CORS_ORIGINS` does not include the exact web origin, login will not set the cookie.
+
 The self-hosted Compose setup uses `OPEXNAL_API_URL=http://api:4000` internally and a same-origin web proxy. The default `VITE_OPEXNAL_API_URL` is blank. For a public deployment, use HTTPS and configure trusted reverse-proxy/TLS settings before exposing the API. Vercel does not run the long-lived Express/WebSocket process or PostgreSQL; those need a separate host and managed/persistent database/media storage.
 
 ## First administrator

@@ -154,10 +154,8 @@ function Conversation() {
     try {
       const response = await fetch(apiUrl("/api/v1/reports"), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authClient.getAuthHeader(),
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           targetType: "message",
           targetId: message.id,

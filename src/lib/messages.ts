@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
 import { apiUrl } from "@/lib/api-client";
@@ -20,9 +19,13 @@ export type ConversationSummary = {
 };
 
 async function messagesApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(authClient.getAuthHeader());
-  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
-  const response = await fetch(apiUrl(path), { ...init, headers, cache: "no-store" });
+  const headers = new Headers(init.headers);
+  const response = await fetch(apiUrl(path), {
+    ...init,
+    credentials: "same-origin",
+    headers,
+    cache: "no-store",
+  });
   const payload = (await response.json().catch(() => ({}))) as { error?: string } & T;
   if (!response.ok)
     throw new Error(payload.error || `Messaging API request failed (${response.status}).`);
