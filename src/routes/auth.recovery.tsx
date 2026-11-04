@@ -86,11 +86,14 @@ function AccountRecoveryPage() {
         return;
       }
 
-      setSubmittedTicketId(data.ticket?.id || "REC-" + Date.now().toString().slice(-6));
+      if (typeof data.ticket?.id !== "string" || !data.ticket.id.trim()) {
+        setErrorMessage("The recovery service returned an incomplete response. No request confirmation is available; please try again later.");
+        return;
+      }
+      setSubmittedTicketId(data.ticket.id);
       toast.success("Recovery request filed successfully!");
     } catch {
-      setSubmittedTicketId("REC-" + Date.now().toString().slice(-6));
-      toast.success("Recovery request submitted!");
+      setErrorMessage("Unable to reach the recovery service. Your request was not confirmed. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -385,20 +388,18 @@ function AccountRecoveryPage() {
               </div>
 
               <div className="pt-2 border-t border-[#222] text-[11px] text-gray-400">
-                {trackedTicket.status === "manual_review" ? (
+                {trackedTicket.status === "manual_review" || trackedTicket.status === "pending" ? (
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>
-                      Under active review by Opexnal Security. Estimated update within 24 hours.
-                    </span>
+                    <span> Your request is awaiting review. Opexnal will provide an update through your verified contact method.</span>
                   </p>
-                ) : (
+                ) : trackedTicket.status === "approved" || trackedTicket.status === "resolved" ? (
                   <p className="flex items-center gap-1.5 text-emerald-300/90">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>
-                      Recovery approved. Check your registered contact email for reset instructions.
-                    </span>
+                    <span>Recovery is approved or resolved. Follow the instructions sent through your verified contact method.</span>
                   </p>
+                ) : (
+                  <p className="text-gray-400">Current status: {trackedTicket.status.replace(/_/g, " ")}. Contact Opexnal Support if you need help.</p>
                 )}
               </div>
             </div>
