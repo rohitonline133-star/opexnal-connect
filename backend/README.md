@@ -20,7 +20,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/auth/verify-email?token=… — consumes a 30-minute single-use email verification token.
 - POST /api/v1/auth/login — returns a short-lived HS256 JWT only after email verification.
 - GET /api/v1/auth/me, POST /api/v1/auth/logout.
-- POST /api/auth/recovery/request and GET /api/auth/recovery/status — persist a recovery intake and track it with a private bearer ticket ID. Account identifiers and ticket IDs are stored only as SHA-256 hashes; requests are not automatic account restoration.
+- POST /api/auth/recovery/request and GET /api/auth/recovery/status — persist a recovery intake and track it with a private bearer ticket ID. Account identifiers and ticket IDs are stored only as SHA-256/HMAC hashes; tracking tickets expire after 90 days. Requests are not automatic account restoration.
 - GET /api/v1/posts/feed, POST /api/v1/posts.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
