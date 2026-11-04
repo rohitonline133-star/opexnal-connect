@@ -628,9 +628,13 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
         .status(429)
         .json({ error: "Too many login attempts for this account. Try again later." });
     }
+    const normalizedIdentity = identity.trim().toLowerCase();
+    const phoneIdentity = /^\\+[1-9][0-9]{7,14}$/.test(normalizedIdentity)
+      ? normalizedIdentity
+      : null;
     const result = await pool.query(
-      "SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1",
-      [identity.toLowerCase()],
+      "SELECT id, username, email, phone_e164, password_hash, display_name, avatar_url, created_at, email_verified, phone_verified FROM users WHERE username = $1 OR email = $1 OR ($2::varchar IS NOT NULL AND phone_e164 = $2 AND phone_verified = TRUE) LIMIT 1",
+      [normalizedIdentity, phoneIdentity],
     );
     const user = result.rows[0];
     if (!user || !(await verifyPassword(password, user.password_hash))) {
