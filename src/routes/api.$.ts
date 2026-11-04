@@ -9,7 +9,12 @@ async function proxyToFirstPartyApi({ request }: { request: Request }) {
   if (incomingUrl.pathname.startsWith("/api/ai/")) {
     return handleAiRequest(request);
   }
-  if (incomingUrl.pathname.startsWith("/api/auth/")) {
+  // Recovery intake and tracking are persisted by the separate first-party API.
+  // Do not send these routes to the legacy in-process fail-closed auth fallback.
+  if (
+    incomingUrl.pathname.startsWith("/api/auth/") &&
+    !incomingUrl.pathname.startsWith("/api/auth/recovery/")
+  ) {
     return handleAuthApiRequest(request);
   }
 
