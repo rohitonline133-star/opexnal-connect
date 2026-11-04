@@ -545,8 +545,9 @@ export async function saveSettings(
   userId?: string,
 ): Promise<OpexnalSettings> {
   const activeUserId = getActiveStorageUserId();
-  // Never allow a stale or caller-controlled userId to select another account's storage.
-  const ownerId = userId && userId === activeUserId ? activeUserId : activeUserId;
+  // Reject stale or caller-controlled IDs instead of writing to an unintended account.
+  if (userId && userId !== activeUserId) return getStoredSettings(activeUserId);
+  const ownerId = activeUserId;
   const current = getStoredSettings(ownerId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
