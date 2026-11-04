@@ -26,6 +26,19 @@ Status: planning/verification checklist for PR #41. This document does not claim
 - [ ] Logout clears client state and invalidates the server-side session.
 - [ ] Auth state listeners receive consistent signed-in/signed-out events during bootstrap and logout.
 
+## Supabase compatibility adapter: required coverage
+
+The adapter in `src/integrations/supabase/client.ts` has additional authenticated operations that must be covered independently:
+
+- [ ] Feed reads send same-origin cookies and are tested with a cookie-only browser session.
+- [ ] Story list reads send same-origin cookies and are tested with a cookie-only browser session.
+- [ ] Post and story creation send same-origin cookies and preserve existing request bodies and error handling.
+- [ ] Storage upload sends same-origin cookies; test successful upload and unauthenticated rejection.
+- [ ] Signed-URL creation sends same-origin cookies; test ownership/authorization rejection for another user's object.
+- [ ] Storage deletion sends same-origin cookies; test ownership/authorization rejection for another user's object.
+- [ ] Confirm whether each adapter operation still needs legacy Bearer compatibility; do not remove it until all native/server consumers are migrated.
+- [ ] Do not synthesize an `access_token` or fake Bearer header to represent an HttpOnly cookie session.
+
 ## Consumer and deployment checks
 
 - [ ] Audit all `getAuthHeader()`, direct `Authorization: Bearer`, Supabase auth-attacher, and server-function middleware consumers.
