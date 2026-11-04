@@ -37,10 +37,11 @@ export async function handleAuthApiRequest(request: Request): Promise<Response> 
   // A 503 is intentional: unavailable authentication must never degrade to a
   // fabricated identity, session, OTP, recovery approval, audit log, or demo feed.
   if (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/v1/")) {
-    return jsonResponse(
-      { error: "This legacy endpoint is disabled. Configure and use the first-party Opexnal API." },
-      503,
-    );
+    const error =
+      pathname === "/api/auth/phone/otp/request"
+        ? "OTP delivery is not configured. This legacy endpoint is disabled; configure and use the first-party Opexnal API."
+        : "This legacy endpoint is disabled. Configure and use the first-party Opexnal API.";
+    return jsonResponse({ error }, 503);
   }
 
   return jsonResponse({ error: "Endpoint not found" }, 404);
