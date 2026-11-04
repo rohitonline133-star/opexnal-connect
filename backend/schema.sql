@@ -269,7 +269,9 @@ CREATE TABLE IF NOT EXISTS account_recovery_requests (
   details VARCHAR(1000),
   status VARCHAR(20) NOT NULL DEFAULT 'received' CHECK (status IN ('received','manual_review','resolved','closed')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '90 days')
 );
 CREATE INDEX IF NOT EXISTS account_recovery_requests_user_idx ON account_recovery_requests (account_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_recovery_requests_created_idx ON account_recovery_requests (created_at DESC);
+CREATE INDEX IF NOT EXISTS account_recovery_requests_expiry_idx ON account_recovery_requests (expires_at);
