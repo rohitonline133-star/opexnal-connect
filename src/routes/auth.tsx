@@ -61,6 +61,7 @@ export function AuthLayout() {
           <Link to="/auth/signup" className="transition hover:text-white">Sign Up</Link>
           <Link to="/auth/forgot-password" className="transition hover:text-white">Forgot Password</Link>
           <Link to="/auth/recovery" className="transition hover:text-white">Account Recovery</Link>
+          <Link to="/auth/help" className="transition hover:text-white">Account Help</Link>
           <Link to="/help" className="transition hover:text-white">Help</Link>
         </nav>
         <p className="flex items-center justify-center gap-1.5 text-[10px] leading-relaxed text-gray-600">
