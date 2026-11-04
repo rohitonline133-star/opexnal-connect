@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSession } from "@/hooks/use-session";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Archive,
@@ -94,7 +95,7 @@ export function ArchivePage() {
 
   // Recently deleted items from store
   const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>(() => {
-    return getStoredSettings().recentlyDeletedItems || [];
+    return getStoredSettings(user?.id).recentlyDeletedItems || [];
   });
 
   const [itemToRestore, setItemToRestore] = useState<RecentlyDeletedItem | null>(null);
@@ -103,7 +104,7 @@ export function ArchivePage() {
   const handleRestore = (item: RecentlyDeletedItem) => {
     const updated = recentlyDeleted.filter((x) => x.id !== item.id);
     setRecentlyDeleted(updated);
-    saveSettings({ recentlyDeletedItems: updated });
+    void saveSettings({ recentlyDeletedItems: updated }, user?.id);
     setItemToRestore(null);
     toast.success(`Restored ${item.type} "${item.title}" to active profile!`);
   };
