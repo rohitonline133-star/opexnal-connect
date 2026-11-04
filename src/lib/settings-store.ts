@@ -476,6 +476,35 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
 const STORAGE_KEY = "opexnal_master_settings_v3";
 const AUTH_SESSION_KEY = "opexnal_auth_session";
 
+/** Pure validation helper so account-partition rules can be covered by unit tests. */
+export function isUsableSettingsSession(
+  value: unknown,
+  now = Date.now(),
+): value is { token: string; userId: string; user: { id: string }; expiresAt: number } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const session = value as Record<string, unknown>;
+  const user = session.user;
+  return (
+    typeof session.token === "string" &&
+    session.token.length > 0 &&
+    !session.token.startsWith("opexnal_demo_") &&
+    !session.token.startsWith("opexnal_jwt_") &&
+    typeof session.userId === "string" &&
+    session.userId.length > 0 &&
+    !!user &&
+    typeof user === "object" &&
+    !Array.isArray(user) &&
+    (user as Record<string, unknown>).id === session.userId &&
+    typeof session.expiresAt === "number" &&
+    Number.isFinite(session.expiresAt) &&
+    session.expiresAt > now
+  );
+}
+
+export function getSettingsStorageKey(userId?: string): string {
+  return userId ? `${STORAGE_KEY}_${encodeURIComponent(userId)}` : STORAGE_KEY;
+}
+
 /**
  * Resolve the currently stored app session only for client-side storage partitioning.
  * This value is NOT an authorization credential; server writes still require Supabase auth/RLS.
@@ -485,32 +514,12 @@ function getActiveStorageUserId(): string | undefined {
   try {
     const raw = window.sessionStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return undefined;
-    const session = JSON.parse(raw) as {
-      token?: unknown;
-      userId?: unknown;
-      user?: { id?: unknown };
-      expiresAt?: unknown;
-    };
-    if (
-      typeof session.token !== "string" ||
-      !session.token ||
-      session.token.startsWith("opexnal_demo_") ||
-      session.token.startsWith("opexnal_jwt_") ||
-      typeof session.userId !== "string" ||
-      !session.userId ||
-      session.user?.id !== session.userId ||
-      typeof session.expiresAt !== "number" ||
-      !Number.isFinite(session.expiresAt) ||
-      session.expiresAt <= Date.now()
-    ) return undefined;
+    const session: unknown = JSON.parse(raw);
+    if (!isUsableSettingsSession(session)) return undefined;
     return session.userId;
   } catch {
     return undefined;
   }
-}
-
-function settingsStorageKey(userId?: string): string {
-  return userId ? `${STORAGE_KEY}_${encodeURIComponent(userId)}` : STORAGE_KEY;
 }
 
 /**
@@ -525,7 +534,7 @@ export function getStoredSettings(userId?: string): OpexnalSettings {
     // A caller cannot select another account's local namespace by supplying an arbitrary ID.
     if (userId && userId !== activeUserId) return DEFAULT_SETTINGS;
     const ownerId = activeUserId;
-    const raw = localStorage.getItem(settingsStorageKey(ownerId));
+    const raw = localStorage.getItem(getSettingsStorageKey(ownerId));
     if (!raw) return DEFAULT_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return DEFAULT_SETTINGS;
