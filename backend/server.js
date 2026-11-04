@@ -383,7 +383,7 @@ app.post("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
   const ticketHash = createHash("sha256").update(ticketId).digest("hex");
   try {
     const result = await pool.query(
-      "SELECT reason,status,created_at FROM account_recovery_requests WHERE ticket_token_hash=$1 LIMIT 1",
+      "SELECT reason,status,created_at FROM account_recovery_requests WHERE ticket_token_hash=$1 AND expires_at>NOW() LIMIT 1",
       [ticketHash],
     );
     if (!result.rowCount) return res.status(404).json({ error: "Tracking ID not found." });
