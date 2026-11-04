@@ -48,8 +48,13 @@ class AuthClient {
         !token ||
         token.startsWith("opexnal_demo_") ||
         token.startsWith("opexnal_jwt_") ||
+        typeof session.access_token !== "string" ||
+        session.access_token !== token ||
         !session.userId ||
         session.userId !== user.id ||
+        session.user?.id !== user.id ||
+        typeof user.username !== "string" ||
+        !user.username ||
         !Number.isFinite(session.expiresAt) ||
         session.expiresAt <= Date.now()
       ) {
@@ -215,8 +220,10 @@ class AuthClient {
       }
       if (
         typeof payload.accessToken !== "string" ||
-        !payload.accessToken ||
-        !payload.user?.id ||
+        payload.accessToken.length < 32 ||
+        typeof payload.user?.id !== "string" ||
+        !payload.user.id ||
+        typeof payload.user.username !== "string" ||
         !payload.user.username
       ) {
         return {
@@ -236,12 +243,16 @@ class AuthClient {
           full_name: payload.user.displayName || payload.user.username,
         },
       };
+      const expiresIn =
+        typeof payload.expiresIn === "number" && Number.isFinite(payload.expiresIn)
+          ? Math.min(Math.max(payload.expiresIn, 60), 3600)
+          : 3600;
       const session: AuthSession = {
         token: payload.accessToken,
         access_token: payload.accessToken,
         userId: user.id,
         user,
-        expiresAt: Date.now() + Math.max(60, payload.expiresIn || 3600) * 1000,
+        expiresAt: Date.now() + expiresIn * 1000,
       };
       this.setSession(session);
       return { data: { user, session }, error: null };
