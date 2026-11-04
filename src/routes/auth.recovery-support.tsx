@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 
-export const Route = createFileRoute("/auth/recovery/support")({
+export const Route = createFileRoute("/auth/recovery-support")({
   head: () => ({ meta: [{ title: "Account Support — Opexnal" }] }),
   component: RecoverySupportPage,
 });

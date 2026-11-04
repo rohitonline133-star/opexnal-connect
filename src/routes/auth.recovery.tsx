@@ -394,16 +394,16 @@ function AccountRecoveryPage() {
         aria-label="Recovery steps"
         className="mt-5 grid grid-cols-2 gap-2 border-t border-white/10 pt-4 text-xs"
       >
-        <Link to="/auth/recovery/find-account" className="rounded-lg border p-3 text-gray-300">
+        <Link to="/auth/recovery-find-account" className="rounded-lg border p-3 text-gray-300">
           Find my account
         </Link>
-        <Link to="/auth/recovery/choose-method" className="rounded-lg border p-3 text-gray-300">
+        <Link to="/auth/recovery-choose-method" className="rounded-lg border p-3 text-gray-300">
           Choose recovery method
         </Link>
-        <Link to="/auth/recovery/support" className="rounded-lg border p-3 text-gray-300">
+        <Link to="/auth/recovery-support" className="rounded-lg border p-3 text-gray-300">
           Request support
         </Link>
-        <Link to="/auth/recovery/methods" className="rounded-lg border p-3 text-gray-300">
+        <Link to="/auth/recovery-methods" className="rounded-lg border p-3 text-gray-300">
           Recovery methods
         </Link>
       </nav>

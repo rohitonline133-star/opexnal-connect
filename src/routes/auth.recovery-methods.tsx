@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Smartphone } from "lucide-react";
 
-export const Route = createFileRoute("/auth/recovery/methods")({
+export const Route = createFileRoute("/auth/recovery-methods")({
   head: () => ({ meta: [{ title: "Recovery Methods — Opexnal" }] }),
   component: RecoveryMethodsPage,
 });

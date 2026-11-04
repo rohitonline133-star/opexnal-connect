@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Smartphone } from "lucide-react";
 
-export const Route = createFileRoute("/auth/recovery/choose-method")({
+export const Route = createFileRoute("/auth/recovery-choose-method")({
   head: () => ({ meta: [{ title: "Choose a Recovery Method — Opexnal" }] }),
   component: ChooseRecoveryMethodPage,
 });
@@ -32,7 +32,7 @@ function ChooseRecoveryMethodPage() {
         </span>
       </div>
       <Link
-        to="/auth/recovery/support"
+        to="/auth/recovery-support"
         className="block rounded-xl border border-white/10 p-4 text-sm"
       >
         I cannot use my recovery email — request support

@@ -59,19 +59,19 @@ function AccountHelpPage() {
             <span className="mt-0.5 block text-xs leading-relaxed text-gray-400">Use your private recovery ticket ID to check its current status.</span>
           </span>
         </Link>
-        <Link to="/auth/recovery/find-account" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
+        <Link to="/auth/recovery-find-account" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
           <Search className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
           <span className="min-w-0"><span className="block text-sm font-semibold text-white">Find my account</span><span className="mt-0.5 block text-xs leading-relaxed text-gray-400">Learn how to identify the account without exposing private account details.</span></span>
         </Link>
-        <Link to="/auth/recovery/choose-method" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
+        <Link to="/auth/recovery-choose-method" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
           <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
           <span className="min-w-0"><span className="block text-sm font-semibold text-white">Choose a recovery method</span><span className="mt-0.5 block text-xs leading-relaxed text-gray-400">See which verification methods are currently available.</span></span>
         </Link>
-        <Link to="/auth/recovery/methods" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
+        <Link to="/auth/recovery-methods" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
           <Mail className="mt-0.5 h-5 w-5 shrink-0 text-sky-300" />
           <span className="min-w-0"><span className="block text-sm font-semibold text-white">Recovery methods</span><span className="mt-0.5 block text-xs leading-relaxed text-gray-400">Review the current email and phone recovery limitations.</span></span>
         </Link>
-        <Link to="/auth/recovery/support" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
+        <Link to="/auth/recovery-support" className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 transition hover:border-violet-400/40 hover:bg-white/[0.06]">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
           <span className="min-w-0"><span className="block text-sm font-semibold text-white">Request account support</span><span className="mt-0.5 block text-xs leading-relaxed text-gray-400">Read the secure support steps before filing a recovery case.</span></span>
         </Link>

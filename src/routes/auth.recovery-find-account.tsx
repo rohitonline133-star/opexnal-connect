@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Search, ShieldCheck } from "lucide-react";
 
-export const Route = createFileRoute("/auth/recovery/find-account")({
+export const Route = createFileRoute("/auth/recovery-find-account")({
   head: () => ({ meta: [{ title: "Find Your Opexnal Account" }] }),
   component: FindAccountPage,
 });
