@@ -12,8 +12,10 @@ const loginSearchSchema = z.object({
 function safeRedirect(value?: string): string {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes(String.fromCharCode(92))) return "/home";
   try {
-    const target = new URL(value, window.location.origin);
-    return target.origin === window.location.origin ? target.pathname + target.search + target.hash : "/home";
+    const target = new URL(value, "https://opexnal.invalid");
+    return target.origin === "https://opexnal.invalid"
+      ? target.pathname + target.search + target.hash
+      : "/home";
   } catch {
     return "/home";
   }
