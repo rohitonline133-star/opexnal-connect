@@ -71,8 +71,23 @@ function VerifyPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) {
-      setErrorMessage("Please enter your 6-digit verification code");
+    const normalizedContact = contact.trim();
+    const normalizedCode = code.trim();
+
+    if (!normalizedContact) {
+      setErrorMessage(type === "email" ? "Enter the email address receiving the code." : "Enter the phone number receiving the code.");
+      return;
+    }
+    if (type === "email" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedContact)) {
+      setErrorMessage("Enter a valid email address.");
+      return;
+    }
+    if (type === "phone" && !/^\\+?[1-9]\\d{7,14}$/.test(normalizedContact.replace(/[\\s()-]/g, ""))) {
+      setErrorMessage("Enter a valid phone number with country code.");
+      return;
+    }
+    if (!/^\\d{6}$/.test(normalizedCode)) {
+      setErrorMessage("Enter the complete 6-digit verification code.");
       return;
     }
 
@@ -82,7 +97,7 @@ function VerifyPage() {
       const res = await fetch("/api/auth/phone/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [type]: contact.trim(), code: code.trim() }),
+        body: JSON.stringify({ [type]: normalizedContact, code: normalizedCode }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -152,9 +167,13 @@ function VerifyPage() {
             </span>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              pattern="[0-9]{6}"
               placeholder="6-digit verification code"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => setCode(e.target.value.replace(/\\D/g, "").slice(0, 6))}
               disabled={loading}
               autoFocus
               required
