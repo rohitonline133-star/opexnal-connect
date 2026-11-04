@@ -28,8 +28,7 @@ function ChooseRecoveryMethodPage() {
       <div className="flex items-start gap-3 rounded-xl border border-amber-400/20 p-4">
         <Smartphone className="h-5 w-5 text-amber-200" />
         <span className="text-xs text-amber-100">
-          Phone OTP is unavailable until a real SMS provider and server endpoint
-          are configured.
+          Phone OTP is unavailable until a real SMS provider and server endpoint are configured.
         </span>
       </div>
       <Link

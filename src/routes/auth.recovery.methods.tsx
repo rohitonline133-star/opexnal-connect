@@ -29,8 +29,7 @@ function RecoveryMethodsPage() {
         </div>
       </div>
       <p className="text-xs text-gray-500">
-        This screen does not save or verify contact details. Those settings need
-        authenticated backend support first.
+        This screen does not save or verify contact details. Those settings need authenticated backend support first.
       </p>
       <Link
         to="/auth/forgot-password"

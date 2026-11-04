@@ -75,13 +75,17 @@ function AccountRecoveryPage() {
       }
 
       if (typeof data.ticket?.id !== "string" || !data.ticket.id.trim()) {
-        setErrorMessage("The recovery service returned an incomplete response. No request confirmation is available; please try again later.");
+        setErrorMessage(
+          "The recovery service returned an incomplete response. No request confirmation is available; please try again later.",
+        );
         return;
       }
       setSubmittedTicketId(data.ticket.id);
       toast.success("Recovery request filed successfully!");
     } catch {
-      setErrorMessage("Unable to reach the recovery service. Your request was not confirmed. Check your connection and try again.");
+      setErrorMessage(
+        "Unable to reach the recovery service. Your request was not confirmed. Check your connection and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -351,20 +355,32 @@ function AccountRecoveryPage() {
                 {trackedTicket.status === "manual_review" ? (
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span> Your request has been received. It is not yet an approval or account-access change.</span>
+                    <span>
+                      {" "}
+                      Your request has been received. It is not yet an approval or account-access
+                      change.
+                    </span>
                   </p>
                 ) : trackedTicket.status === "received" ? (
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Your request has been received. It has not been reviewed or approved yet.</span>
+                    <span>
+                      Your request has been received. It has not been reviewed or approved yet.
+                    </span>
                   </p>
                 ) : trackedTicket.status === "resolved" ? (
                   <p className="flex items-center gap-1.5 text-emerald-300/90">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>The case status is marked resolved. If you still cannot access your account, use the support contact shown on Opexnal.</span>
+                    <span>
+                      The case status is marked resolved. If you still cannot access your account,
+                      use the support contact shown on Opexnal.
+                    </span>
                   </p>
                 ) : (
-                  <p className="text-gray-400">This support request is closed. If you still need help, submit a new request through Opexnal Support.</p>
+                  <p className="text-gray-400">
+                    This support request is closed. If you still need help, submit a new request
+                    through Opexnal Support.
+                  </p>
                 )}
               </div>
             </div>

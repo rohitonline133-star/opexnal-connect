@@ -26,8 +26,7 @@ function RecoverySupportPage() {
       </ol>
       <div className="rounded-xl border border-amber-400/20 p-4 text-xs text-amber-100">
         <AlertTriangle className="mr-1 inline h-4 w-4" />
-        Never submit passwords, OTPs, payment details, identity documents, or
-        selfies. A request does not automatically restore account access.
+        Never submit passwords, OTPs, payment details, identity documents, or selfies. A request does not automatically restore account access.
       </div>
       <Link
         to="/auth/recovery"

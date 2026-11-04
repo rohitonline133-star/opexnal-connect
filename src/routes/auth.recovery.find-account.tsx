@@ -20,8 +20,7 @@ function FindAccountPage() {
         </p>
       </header>
       <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-gray-300">
-        For privacy, this page does not reveal whether an account exists. Submit
-        a recovery request to support instead.
+        For privacy, this page does not reveal whether an account exists. Submit a recovery request to support instead.
       </p>
       <Link
         to="/auth/recovery"
