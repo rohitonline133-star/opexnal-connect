@@ -10,7 +10,14 @@ const loginSearchSchema = z.object({
 });
 
 function safeRedirect(value?: string): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes(String.fromCharCode(92))) return "/home";
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes(String.fromCharCode(92))
+  ) {
+    return "/home";
+  }
   try {
     const target = new URL(value, "https://opexnal.invalid");
     return target.origin === "https://opexnal.invalid"
@@ -91,7 +98,6 @@ function LoginPage() {
     }
   };
 
-
   return (
     <div className="w-full">
       {/* Back button */}
@@ -165,18 +171,18 @@ function LoginPage() {
 
         {/* Forgot password link */}
         <div className="flex justify-between items-center text-xs pt-0.5">
-            <Link
-              to="/auth/recovery"
-              className="text-gray-400 hover:text-white hover:underline transition"
-            >
-              Lost Access / Hacked?
-            </Link>
-            <Link
-              to="/auth/forgot-password"
-              className="font-semibold text-[#8B5CF6] hover:underline"
-            >
-              Forgot Password?
-            </Link>
+          <Link
+            to="/auth/recovery"
+            className="text-gray-400 hover:text-white hover:underline transition"
+          >
+            Lost Access / Hacked?
+          </Link>
+          <Link
+            to="/auth/forgot-password"
+            className="font-semibold text-[#8B5CF6] hover:underline"
+          >
+            Forgot Password?
+          </Link>
         </div>
 
         <button
