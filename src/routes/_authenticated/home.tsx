@@ -81,13 +81,13 @@ function HomeFeed() {
   const posts = useMemo(() => {
     if (activeTab === "for_you") return rawPosts;
     if (activeTab === "favorites") {
-      const favorites = getStoredSettings().favoriteCreators;
+      const favorites = getStoredSettings(user?.id).favoriteCreators;
       if (favorites.length === 0) return rawPosts;
       return rawPosts.filter((p) => p.author && favorites.includes(p.author.username));
     }
     // following tab
     return rawPosts;
-  }, [rawPosts, activeTab]);
+  }, [rawPosts, activeTab, user?.id]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
