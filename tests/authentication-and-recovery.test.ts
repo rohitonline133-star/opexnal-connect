@@ -132,32 +132,12 @@ describe("Authentication & Account Security Engine", () => {
   });
 
   // 5. Device Sessions & Remote Revocation
-  test("Session management: retrieves active sessions and revokes specific session", () => {
+  test("Session management: does not invent device sessions when no backend inventory exists", () => {
     const testUserId = "user_device_tester";
-    const initialSessions = getSessionsForUser(testUserId);
-    assert.ok(initialSessions.length >= 2);
-
-    const nonCurrentSession = initialSessions.find((s) => !s.isCurrent);
-    assert.ok(nonCurrentSession, "Must have a non-current session to test revocation");
-
-    const revoked = revokeSession(testUserId, nonCurrentSession.id);
-    assert.strictEqual(revoked, true);
-
-    const afterSessions = getSessionsForUser(testUserId);
-    assert.ok(!afterSessions.some((s) => s.id === nonCurrentSession.id));
-  });
-
-  test("Session management: revokeAllSessions terminates remote sessions while preserving current", () => {
-    const testUserId = "user_logout_all_tester";
-    const initial = getSessionsForUser(testUserId);
-    assert.ok(initial.length >= 2);
-
-    const count = revokeAllSessions(testUserId, true);
-    assert.ok(count >= 1);
-
-    const remaining = getSessionsForUser(testUserId);
-    assert.strictEqual(remaining.length, 1);
-    assert.strictEqual(remaining[0]?.isCurrent, true);
+    assert.deepStrictEqual(getSessionsForUser(testUserId), []);
+    assert.strictEqual(revokeSession(testUserId, "unknown-session"), false);
+    assert.strictEqual(revokeAllSessions(testUserId, true), 0);
+    assert.deepStrictEqual(getSessionsForUser(testUserId), []);
   });
 
   // 6. Account Recovery Engine
