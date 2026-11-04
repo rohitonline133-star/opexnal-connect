@@ -222,12 +222,12 @@ function SignupPage() {
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-1">
-          {step === "welcome" ? "Check your email" : "Create Your Account"}
+          {step === "welcome" ? "Check your email" : "Create your account"}
         </h2>
         <p className="text-xs text-gray-400 font-medium">
           {step === "welcome"
             ? "Your account was created. Open the verification link sent to your email before signing in."
-            : "Join Opexnal to connect with creators and share your ideas"}
+            : "Create your profile and start connecting with people on Opexnal"}
         </p>
       </div>
 
@@ -257,7 +257,7 @@ function SignupPage() {
               onChange={(e) => setEmailOrPhone(e.target.value)}
               disabled={loading}
               required
-              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
+              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
             />
           </div>
 
@@ -273,7 +273,7 @@ function SignupPage() {
               onChange={(e) => setFullName(e.target.value)}
               disabled={loading}
               required
-              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
+              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
             />
           </div>
 
@@ -287,7 +287,7 @@ function SignupPage() {
               onChange={(e) => checkUsername(e.target.value)}
               disabled={loading}
               required
-              className="w-full h-11 pl-9 pr-10 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
+              className="w-full h-11 pl-9 pr-10 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
             />
             <div className="absolute right-3">
               {usernameStatus === "checking" && (
@@ -322,7 +322,7 @@ function SignupPage() {
               onChange={(e) => setBirthday(e.target.value)}
               disabled={loading}
               required
-              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
+              className="w-full h-11 pl-11 pr-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
             />
           </div>
           <p className="text-[10px] text-gray-400 pl-1">
@@ -342,7 +342,7 @@ function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               required
-              className="w-full h-11 pl-11 pr-11 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
+              className="w-full h-11 pl-11 pr-11 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 transition disabled:opacity-50"
             />
             <button
               type="button"
@@ -396,15 +396,15 @@ function SignupPage() {
               id="agree-terms"
               checked={agreeTerms}
               onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded border-[#333] text-[#8B5CF6] focus:ring-[#8B5CF6] accent-[#8B5CF6]"
+              className="mt-0.5 w-4 h-4 rounded border-[#333] text-pink-400 focus:ring-[#8B5CF6] accent-[#8B5CF6]"
             />
             <label htmlFor="agree-terms" className="text-[11px] text-gray-400 leading-tight">
               I agree to Opexnal's{" "}
-              <Link to="/help" className="text-[#8B5CF6] hover:underline">
+              <Link to="/help" className="text-pink-400 hover:underline">
                 Terms of Service
               </Link>
               ,{" "}
-              <Link to="/help" className="text-[#8B5CF6] hover:underline">
+              <Link to="/help" className="text-pink-400 hover:underline">
                 Privacy Policy
               </Link>{" "}
               and confirm I am 13 years of age or older.
@@ -414,7 +414,7 @@ function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 mt-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] hover:from-[#6D28D9] hover:to-[#7E22CE] text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full h-11 mt-3 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-orange-500 hover:from-fuchsia-500 hover:via-pink-500 hover:to-orange-400 text-white font-semibold text-sm rounded-xl transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             <span>Create Account</span>
@@ -445,7 +445,7 @@ function SignupPage() {
                 replace: true,
               })
             }
-            className="w-full h-11 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white font-semibold text-sm rounded-xl transition shadow-lg"
+            className="w-full h-11 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-orange-500 text-white font-semibold text-sm rounded-xl transition shadow-lg"
           >
             Continue to Log In
           </button>
@@ -459,7 +459,7 @@ function SignupPage() {
             <Link
               to="/auth/login"
               search={{ redirect: search.redirect }}
-              className="text-[#8B5CF6] font-semibold hover:underline ml-1"
+              className="text-pink-400 font-semibold hover:underline ml-1"
             >
               Log In
             </Link>
