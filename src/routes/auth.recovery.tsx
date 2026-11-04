@@ -363,10 +363,8 @@ function AccountRecoveryPage() {
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>The case status is marked resolved. If you still cannot access your account, use the support contact shown on Opexnal.</span>
                   </p>
-                ) : trackedTicket.status === "closed" ? (
-                  <p className="text-gray-400">This support request is closed. If you still need help, submit a new request through Opexnal Support.</p>
                 ) : (
-                  <p className="text-gray-400">Current status: {trackedTicket.status.replace(/_/g, " ")}.</p>
+                  <p className="text-gray-400">This support request is closed. If you still need help, submit a new request through Opexnal Support.</p>
                 )}
               </div>
             </div>
