@@ -256,6 +256,7 @@ function AccountRecoveryPage() {
                 <option value="forgot_password">
                   I cannot reset my password via standard flow
                 </option>
+                <option value="other">Other account access problem</option>
               </select>
             </div>
 
@@ -354,6 +355,11 @@ function AccountRecoveryPage() {
                   <p className="flex items-center gap-1.5 text-amber-300/90">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span> Your request has been received. It is not yet an approval or account-access change.</span>
+                  </p>
+                ) : trackedTicket.status === "received" ? (
+                  <p className="flex items-center gap-1.5 text-amber-300/90">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Your request has been received. It has not been reviewed or approved yet.</span>
                   </p>
                 ) : trackedTicket.status === "approved" || trackedTicket.status === "resolved" ? (
                   <p className="flex items-center gap-1.5 text-emerald-300/90">
