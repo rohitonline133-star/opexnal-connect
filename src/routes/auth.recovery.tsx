@@ -3,13 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ShieldAlert,
   User,
-  Mail,
-  HelpCircle,
   Loader2,
   AlertCircle,
   CheckCircle2,
   ArrowLeft,
-  FileQuestion,
   Clock,
   Search,
 } from "lucide-react";
@@ -187,7 +184,7 @@ function AccountRecoveryPage() {
             <div className="p-4 bg-emerald-950/50 border border-emerald-800/70 rounded-xl text-emerald-200 text-left space-y-2">
               <div className="flex items-center gap-2 font-bold text-emerald-300">
                 <CheckCircle2 className="w-5 h-5" />
-                <span>Recovery Request Queued</span>
+                <span>Recovery Request Received</span>
               </div>
               <p className="text-xs text-emerald-200/90 leading-relaxed">
                 Your ticket has been generated. Keep your ticket ID safe for tracking:
@@ -196,9 +193,8 @@ function AccountRecoveryPage() {
                 {submittedTicketId}
               </div>
               <p className="text-[11px] text-gray-400 pt-1 leading-normal">
-                Our Trust & Safety engineering team will review the timeline of recent credential
-                modifications and notify you at{" "}
-                Your tracking ID is the only way to look up this request.
+                Your request has been recorded, but it has not yet been reviewed. Keep this tracking
+                ID private. Submitting a request does not restore account access.
               </p>
             </div>
 
@@ -267,7 +263,8 @@ function AccountRecoveryPage() {
               </label>
               <textarea
                 rows={2}
-                placeholder="Details help verify ownership (e.g. approximate account creation month, devices previously used)..."
+                maxLength={1000}
+                placeholder="Optional context (e.g. approximate account creation month). Never enter your password, OTP, or government ID."
                 value={additionalDetails}
                 onChange={(e) => setAdditionalDetails(e.target.value)}
                 disabled={loading}
@@ -276,11 +273,11 @@ function AccountRecoveryPage() {
             </div>
 
             <div className="p-3 bg-[#121212] border border-[#222222] rounded-xl text-[11px] text-gray-400 space-y-1">
-              <span className="font-semibold text-gray-300">Privacy & Data Minimization:</span>
+              <span className="font-semibold text-gray-300">Protect your account information:</span>
               <p>
-                Opexnal collects only the minimum necessary information to authenticate your claim.
-                We will never publicly expose identity data or demand unnecessary government IDs
-                without strict legal requirement.
+                This form records your account identifier, selected reason, and optional details for
+                support review. Do not include passwords, one-time codes, payment details, or
+                government identity numbers. A request is not proof of ownership or an account recovery approval.
               </p>
             </div>
 
