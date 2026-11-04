@@ -286,7 +286,6 @@ function SignupPage() {
               value={username}
               onChange={(e) => checkUsername(e.target.value)}
               disabled={loading}
-              required
               className="w-full h-11 pl-9 pr-10 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] transition disabled:opacity-50"
             />
             <div className="absolute right-3">
