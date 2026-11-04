@@ -5,7 +5,10 @@ export const Route = createFileRoute("/auth/help")({
   head: () => ({
     meta: [
       { title: "Account Help — Opexnal" },
-      { name: "description", content: "Choose the right Opexnal sign-in, password, or account recovery path." },
+      {
+        name: "description",
+        content: "Choose the right Opexnal sign-in, password, or account recovery path.",
+      },
     ],
   }),
   component: AccountHelpPage,
@@ -154,7 +157,12 @@ function AccountHelpPage() {
 
       <p className="text-center text-xs text-gray-500">
         Still need to sign in?{" "}
-        <Link to="/auth/login" className="font-semibold text-violet-300 hover:underline">Return to login</Link>
+        <Link
+          to="/auth/login"
+          className="font-semibold text-violet-300 hover:underline"
+        >
+          Return to login
+        </Link>
       </p>
     </div>
   );
