@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "@/hooks/use-session";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -94,9 +94,15 @@ export function ArchivePage() {
   ]);
 
   // Recently deleted items from store
-  const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>(() => {
-    return getStoredSettings(user?.id).recentlyDeletedItems || [];
-  });
+  const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      setRecentlyDeleted(getStoredSettings(user.id).recentlyDeletedItems || []);
+    } else {
+      setRecentlyDeleted([]);
+    }
+  }, [user?.id]);
 
   const [itemToRestore, setItemToRestore] = useState<RecentlyDeletedItem | null>(null);
   const [itemToDeleteForever, setItemToDeleteForever] = useState<RecentlyDeletedItem | null>(null);
