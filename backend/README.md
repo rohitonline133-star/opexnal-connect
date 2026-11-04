@@ -11,6 +11,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 3. Install dependencies at repository root with npm install.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
    psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261104_account_recovery.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
@@ -19,6 +20,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/auth/verify-email?token=… — consumes a 30-minute single-use email verification token.
 - POST /api/v1/auth/login — returns a short-lived HS256 JWT only after email verification.
 - GET /api/v1/auth/me, POST /api/v1/auth/logout.
+- POST /api/auth/recovery/request and GET /api/auth/recovery/status — persist a recovery intake and track it with a private bearer ticket ID. Account identifiers and ticket IDs are stored only as SHA-256 hashes; requests are not automatic account restoration.
 - GET /api/v1/posts/feed, POST /api/v1/posts.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
@@ -31,7 +33,7 @@ The frontend and API are separate processes. Deploy the API on a Node.js host th
 
 ## Not yet production complete
 
-- Email verification uses the configured SMTP server and expiring, single-use hashed tokens. Password reset and phone OTP still need their own delivery and token flows.
+- Email verification uses the configured SMTP server and expiring, single-use hashed tokens. Password reset is email-only; phone OTP/SMS delivery is not implemented. Recovery intake records a request but does not verify ownership, send a notification, or restore account access; a staffed review workflow and operator tooling are still required.
 - Durable access sessions and revocation are implemented; refresh-token rotation is not implemented, and access tokens expire after one hour.
 - WebSocket authorization uses one-time tickets bound to a currently active server-side session; it only broadcasts messages created through authenticated REST routes.
 - Rate limiting is process-local, not distributed. Add Redis rate limiting, stricter request validation, media storage, integration tests, monitoring, backups, and load testing before public launch.
