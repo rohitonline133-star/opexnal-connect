@@ -485,12 +485,22 @@ function getActiveStorageUserId(): string | undefined {
   try {
     const raw = window.sessionStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return undefined;
-    const session = JSON.parse(raw) as { userId?: unknown; user?: { id?: unknown }; expiresAt?: unknown };
+    const session = JSON.parse(raw) as {
+      token?: unknown;
+      userId?: unknown;
+      user?: { id?: unknown };
+      expiresAt?: unknown;
+    };
     if (
+      typeof session.token !== "string" ||
+      !session.token ||
+      session.token.startsWith("opexnal_demo_") ||
+      session.token.startsWith("opexnal_jwt_") ||
       typeof session.userId !== "string" ||
       !session.userId ||
       session.user?.id !== session.userId ||
       typeof session.expiresAt !== "number" ||
+      !Number.isFinite(session.expiresAt) ||
       session.expiresAt <= Date.now()
     ) return undefined;
     return session.userId;
@@ -511,7 +521,10 @@ function settingsStorageKey(userId?: string): string {
 export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const ownerId = userId || getActiveStorageUserId();
+    const activeUserId = getActiveStorageUserId();
+    // A caller cannot select another account's local namespace by supplying an arbitrary ID.
+    if (userId && userId !== activeUserId) return DEFAULT_SETTINGS;
+    const ownerId = activeUserId;
     const raw = localStorage.getItem(settingsStorageKey(ownerId));
     if (!raw) return DEFAULT_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
@@ -531,7 +544,9 @@ export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const ownerId = userId || getActiveStorageUserId();
+  const activeUserId = getActiveStorageUserId();
+  // Never allow a stale or caller-controlled userId to select another account's storage.
+  const ownerId = userId && userId === activeUserId ? activeUserId : activeUserId;
   const current = getStoredSettings(ownerId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
