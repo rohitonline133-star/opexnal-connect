@@ -58,3 +58,8 @@ Replace the example email with the verified owner account. Do not expose databas
 ## First-party media
 
 Media uploads use the API's local `MEDIA_STORAGE_DIR` volume, enforce file-size and MIME/signature checks, and store ownership metadata in PostgreSQL. Private media uses short-lived HMAC-signed URLs. The volume must be backed up and has not been load-tested; use durable object storage for a larger production deployment.
+
+
+## Email and WhatsApp OTP
+
+Apply `backend/migrations/20261105_secure_email_whatsapp_otp.sql`. See `backend/OTP_SETUP.md` for the API contract and SMTP / official Meta WhatsApp Cloud API environment variables. OTP verification confirms destination control only; it does not independently issue a login session or link a phone to an account.
