@@ -409,12 +409,12 @@ function normalizeOtpIdentifier(value, channel) {
   if (typeof value !== "string") return "";
   const v = value.trim();
   if (channel === "email") return v.toLowerCase();
-  return v.replace(/[\\s().-]/g, "");
+  return v.replace(/[\s().-]/g, "");
 }
 function validOtpIdentifier(value, channel) {
   return channel === "email"
     ? validEmail(value)
-    : channel === "whatsapp" && /^\\+[1-9]\\d{7,14}$/.test(value);
+    : channel === "whatsapp" && /^\+[1-9]\d{7,14}$/.test(value);
 }
 function otpDigest(id, code) {
   return createHmac("sha256", jwtSecret).update(id + ":" + code).digest("hex");
@@ -423,7 +423,7 @@ async function deliverOtp(identifier, channel, code) {
   if (channel === "email") {
     if (!emailTransport) throw new Error("Email delivery is not configured.");
     const logo = process.env.OPEXNAL_EMAIL_LOGO_URL || "";
-    const safeLogo = /^https:\\/\\//i.test(logo) ? logo : "";
+    const safeLogo = /^https:\/\//i.test(logo) ? logo : "";
     const logoHtml = safeLogo ? '<img src="' + safeLogo + '" alt="Opexnal" width="132" style="display:block;margin:0 auto 20px">' : '<div style="font-size:24px;font-weight:700;color:#ff7900;margin-bottom:20px">OPEXNAL</div>';
     await emailTransport.sendMail({
       from: smtpFrom, to: identifier, subject: "Your Opexnal verification code",
@@ -464,7 +464,7 @@ app.post("/api/v1/auth/otp/send", dbRequired, async (req, res, next) => {
     return res.status(429).json({ error: "Too many code requests. Try again later." });
   }
   if (jwtSecret.length < 32) return res.status(503).json({ error: "Secure OTP configuration is unavailable." });
-  const code = String(randomBytes(4).readUInt32BE(0) % 900000 + 100000);
+  const code = String(randomInt(100000, 1000000));
   const id = randomUUID();
   try {
     await pool.query("UPDATE auth_otps SET consumed_at=NOW() WHERE identifier_hash=$1 AND consumed_at IS NULL", [key]);
@@ -489,7 +489,7 @@ app.post("/api/v1/auth/otp/verify", dbRequired, async (req, res, next) => {
   const channel = req.body?.channel;
   const identifier = normalizeOtpIdentifier(req.body?.identifier, channel);
   const code = typeof req.body?.code === "string" ? req.body.code.trim() : "";
-  if (!["email", "whatsapp"].includes(channel) || !validOtpIdentifier(identifier, channel) || !/^\\d{6}$/.test(code)) {
+  if (!["email", "whatsapp"].includes(channel) || !validOtpIdentifier(identifier, channel) || !/^\d{6}$/.test(code)) {
     return res.status(400).json({ error: "Enter the valid destination and six-digit code." });
   }
   const key = createHmac("sha256", jwtSecret).update(channel + ":" + identifier).digest("hex");
