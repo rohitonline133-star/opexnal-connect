@@ -402,6 +402,135 @@ app.post("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
   }
 });
 
+
+/* Secure one-time verification codes. Delivery credentials are server-only.
+   OTPs are HMAC-hashed, expire after five minutes, and are single-use. */
+function normalizeOtpIdentifier(value, channel) {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  if (channel === "email") return v.toLowerCase();
+  return v.replace(/[\\s().-]/g, "");
+}
+function validOtpIdentifier(value, channel) {
+  return channel === "email"
+    ? validEmail(value)
+    : channel === "whatsapp" && /^\\+[1-9]\\d{7,14}$/.test(value);
+}
+function otpDigest(id, code) {
+  return createHmac("sha256", jwtSecret).update(id + ":" + code).digest("hex");
+}
+async function deliverOtp(identifier, channel, code) {
+  if (channel === "email") {
+    if (!emailTransport) throw new Error("Email delivery is not configured.");
+    const logo = process.env.OPEXNAL_EMAIL_LOGO_URL || "";
+    const safeLogo = /^https:\\/\\//i.test(logo) ? logo : "";
+    const logoHtml = safeLogo ? '<img src="' + safeLogo + '" alt="Opexnal" width="132" style="display:block;margin:0 auto 20px">' : '<div style="font-size:24px;font-weight:700;color:#ff7900;margin-bottom:20px">OPEXNAL</div>';
+    await emailTransport.sendMail({
+      from: smtpFrom, to: identifier, subject: "Your Opexnal verification code",
+      text: "Your Opexnal verification code is " + code + ". It expires in 5 minutes. Do not share it with anyone.",
+      html: '<div style="background:#f5f5f5;padding:32px;font-family:Arial,sans-serif"><div style="max-width:480px;margin:auto;background:#fff;border-radius:16px;padding:32px;text-align:center">' + logoHtml + '<h2 style="color:#171717">Verify your Opexnal account</h2><p style="color:#555">Use this one-time code. It expires in 5 minutes.</p><div style="font-size:32px;letter-spacing:8px;font-weight:700;color:#ff7900;padding:18px">' + code + '</div><p style="font-size:12px;color:#777">Opexnal will never ask you to share this code.</p></div></div>',
+    });
+    return;
+  }
+  const token = process.env.META_WHATSAPP_ACCESS_TOKEN || "";
+  const phoneId = process.env.META_WHATSAPP_PHONE_NUMBER_ID || "";
+  const template = process.env.META_WHATSAPP_OTP_TEMPLATE || "";
+  const language = process.env.META_WHATSAPP_TEMPLATE_LANGUAGE || "en";
+  if (!token || !phoneId || !template) throw new Error("Official WhatsApp Cloud API is not configured.");
+  const response = await fetch("https://graph.facebook.com/v22.0/" + encodeURIComponent(phoneId) + "/messages", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp", recipient_type: "individual", to: identifier.slice(1),
+      type: "template",
+      template: { name: template, language: { code: language }, components: [{ type: "body", parameters: [{ type: "text", text: code }] }] },
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.text().catch(() => "");
+    console.error("WhatsApp delivery failed", response.status, error.slice(0, 500));
+    throw new Error("WhatsApp message could not be delivered.");
+  }
+}
+app.post("/api/v1/auth/otp/send", dbRequired, async (req, res, next) => {
+  const channel = req.body?.channel;
+  const identifier = normalizeOtpIdentifier(req.body?.identifier, channel);
+  if (!["email", "whatsapp"].includes(channel) || !validOtpIdentifier(identifier, channel)) {
+    return res.status(400).json({ error: "Enter a valid email address or international phone number." });
+  }
+  const key = createHmac("sha256", jwtSecret).update(channel + ":" + identifier).digest("hex");
+  if (!rateLimit("otp-ip:" + String(req.ip || "unknown"), 10, 15 * 60 * 1000) ||
+      !rateLimit("otp-target:" + key, 3, 15 * 60 * 1000)) {
+    return res.status(429).json({ error: "Too many code requests. Try again later." });
+  }
+  if (jwtSecret.length < 32) return res.status(503).json({ error: "Secure OTP configuration is unavailable." });
+  const code = String(randomBytes(4).readUInt32BE(0) % 900000 + 100000);
+  const id = randomUUID();
+  try {
+    await pool.query("UPDATE auth_otps SET consumed_at=NOW() WHERE identifier_hash=$1 AND consumed_at IS NULL", [key]);
+    await pool.query(
+      "INSERT INTO auth_otps (id, identifier_hash, channel, otp_hash, expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL '5 minutes')",
+      [id, key, channel, otpDigest(id, code)],
+    );
+    try {
+      await deliverOtp(identifier, channel, code);
+    } catch (deliveryError) {
+      await pool.query("UPDATE auth_otps SET consumed_at=NOW() WHERE id=$1", [id]);
+      throw deliveryError;
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(202).json({ success: true, expiresInSeconds: 300, message: "Verification code sent if delivery is configured." });
+  } catch (error) {
+    if (error?.message?.includes("not configured")) return res.status(503).json({ error: error.message });
+    return next(error);
+  }
+});
+app.post("/api/v1/auth/otp/verify", dbRequired, async (req, res, next) => {
+  const channel = req.body?.channel;
+  const identifier = normalizeOtpIdentifier(req.body?.identifier, channel);
+  const code = typeof req.body?.code === "string" ? req.body.code.trim() : "";
+  if (!["email", "whatsapp"].includes(channel) || !validOtpIdentifier(identifier, channel) || !/^\\d{6}$/.test(code)) {
+    return res.status(400).json({ error: "Enter the valid destination and six-digit code." });
+  }
+  const key = createHmac("sha256", jwtSecret).update(channel + ":" + identifier).digest("hex");
+  if (!rateLimit("otp-verify:" + key, 8, 15 * 60 * 1000)) return res.status(429).json({ error: "Too many verification attempts. Request a new code later." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const found = await client.query(
+      "SELECT id, otp_hash, attempts FROM auth_otps WHERE identifier_hash=$1 AND channel=$2 AND consumed_at IS NULL AND expires_at>NOW() ORDER BY created_at DESC LIMIT 1 FOR UPDATE",
+      [key, channel],
+    );
+    if (!found.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ verified: false, error: "Code is invalid or expired. Request a new one." });
+    }
+    const record = found.rows[0];
+    if (record.attempts >= 5) {
+      await client.query("UPDATE auth_otps SET consumed_at=NOW() WHERE id=$1", [record.id]);
+      await client.query("COMMIT");
+      return res.status(429).json({ verified: false, error: "Too many incorrect attempts. Request a new code." });
+    }
+    const expected = Buffer.from(record.otp_hash, "hex");
+    const actual = Buffer.from(otpDigest(record.id, code), "hex");
+    const matches = expected.length === actual.length && timingSafeEqual(expected, actual);
+    if (!matches) {
+      await client.query("UPDATE auth_otps SET attempts=attempts+1 WHERE id=$1", [record.id]);
+      await client.query("COMMIT");
+      return res.status(400).json({ verified: false, error: "Incorrect verification code." });
+    }
+    await client.query("UPDATE auth_otps SET consumed_at=NOW(), verified_at=NOW() WHERE id=$1", [record.id]);
+    await client.query("COMMIT");
+    res.setHeader("Cache-Control", "no-store");
+    return res.json({ verified: true, channel, message: "Destination verified. Continue the account authentication flow." });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    return next(error);
+  } finally {
+    client.release();
+  }
+});
+
 app.get("/health", async (_req, res) => {
   if (!pool)
     return res
