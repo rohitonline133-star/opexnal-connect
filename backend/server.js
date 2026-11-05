@@ -9,6 +9,7 @@ import {
   randomUUID,
   scrypt as scryptCallback,
   randomBytes,
+  randomInt,
   timingSafeEqual,
 } from "node:crypto";
 import { promisify } from "node:util";
