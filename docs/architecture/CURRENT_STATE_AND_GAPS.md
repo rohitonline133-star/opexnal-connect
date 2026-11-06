@@ -1,6 +1,6 @@
 # Opexnal Current-State Scalability Gap Register
 
-**Reviewed against:** repository `main` source snapshot and the current hyperscale blueprint branch.
+**Reviewed against:** source files on the current hyperscale blueprint branch. This is a source inspection, not a production deployment audit or load test.
 **Purpose:** distinguish existing implementation from future architecture. This is a source inspection, not a production deployment audit or load test.
 
 ## 1. Observed current implementation
@@ -12,7 +12,7 @@
 | PostgreSQL | `pg.Pool` in `backend/server.js`; pool max defaults to 10 | One configured database endpoint/pool; no sharding or multi-region write topology is established by this code. |
 | Authentication | JWT HS256 plus a database-backed `auth_sessions` lookup | Session revocation is checked, but README says refresh-token rotation is not implemented. |
 | Rate limiting | Optional PostgreSQL atomic fixed-window limiter in API handlers when `RATE_LIMIT_HMAC_SECRET` is configured; bounded in-memory fallback otherwise | Shared limiter is wired into all identified rate-limited API handlers when the dedicated secret is configured; additive migration and bounded one-shot expiry cleanup worker exist. Migration/secret setup, external cleanup scheduling, PostgreSQL integration tests, and multi-instance load validation remain outstanding. |
-| WebSocket presence | In-memory `Map` named `socketsByUser` in `backend/server.js` | Connections and fan-out state are local to one process; multi-instance delivery needs a shared pub/sub or broker design. |
+| Cache adapter | Optional Memcached ASCII-protocol JSON adapter with bounded payloads, TTLs, timeouts, and stable key-to-server selection | Adapter is not yet wired to application endpoints; no cache hit-rate or invalidation behavior has been measured. Sensitive/authz-dependent responses are intentionally not cached. |\n| WebSocket presence | In-memory `Map` named `socketsByUser` in `backend/server.js` | Connections and fan-out state are local to one process; multi-instance delivery needs a shared pub/sub or broker design. |
 | Notifications | Identified notification-producing routes write versioned outbox events in the same transaction as their authoritative database changes; a separate worker persists in-app notifications | Worker and read-only health command exist in source, but external supervision, scheduled alerting, and PostgreSQL integration tests are not configured. |
 | Media storage | Multer writes files under `MEDIA_STORAGE_DIR`; README documents local volume storage and signed private URLs | Local disk is not a globally durable object store or CDN. Backups and multi-host access need a deliberate storage adapter. |
 | Email | Nodemailer SMTP transport configured from environment variables | Email requires production SMTP configuration. |
