@@ -550,7 +550,6 @@ export type Database = {
           comments_enabled?: boolean;
           created_at?: string;
           hide_likes_count?: boolean;
-          hide_likes_count?: boolean;
           id?: string;
           likes_count?: number;
           location_lat?: number | null;
@@ -567,6 +566,7 @@ export type Database = {
           comments_count?: number;
           comments_enabled?: boolean;
           created_at?: string;
+          hide_likes_count?: boolean;
           id?: string;
           likes_count?: number;
           location_lat?: number | null;
