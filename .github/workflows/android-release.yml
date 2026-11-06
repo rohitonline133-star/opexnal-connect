@@ -70,7 +70,8 @@ jobs:
             exit 1
           fi
           if ! keytool -list -keystore "$GITHUB_WORKSPACE/android/upload-keystore.jks" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::ANDROID_KEY_ALIAS was not found in the decoded keystore; verify the alias spelling"
+            echo "::error::ANDROID_KEY_ALIAS was not found. Available keystore entry names are listed below; set the repository secret to the exact private-key alias."
+            keytool -list -keystore "$GITHUB_WORKSPACE/android/upload-keystore.jks" -storepass "$ANDROID_KEYSTORE_PASSWORD" 2>&1 | grep -E 'PrivateKeyEntry|trustedCertEntry|SecretKeyEntry' || true
             exit 1
           fi
           python3 - <<'PY'
