@@ -1006,6 +1006,9 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
         )
+        AND ($4::boolean = FALSE OR p.user_id=$1 OR EXISTS (
+          SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id
+        ))
         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
       ORDER BY p.created_at DESC
       LIMIT $2`,
@@ -1016,6 +1019,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         Number.isFinite(new Date(req.query.cursor).getTime())
           ? new Date(req.query.cursor).toISOString()
           : null,
+        req.query.following === "true",
       ],
     );
     res.json({ posts: result.rows });
