@@ -33,6 +33,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/auth/me, POST /api/v1/auth/logout.
 - POST /api/auth/recovery/request and POST /api/auth/recovery/status — persist a recovery intake and track it with a private bearer ticket ID. Account identifiers are stored as keyed HMAC hashes and ticket IDs as SHA-256 hashes; tracking tickets expire after 90 days. Requests are not automatic account restoration.
 - GET /api/v1/posts/feed, POST /api/v1/posts. Feed supports keyset pagination with `limit` (1–50) and paired `beforeCreatedAt` / `beforeId` cursor fields; the legacy timestamp-only `cursor` remains accepted for compatibility.
+- GET /api/v1/reels supports keyset pagination (`limit` 1–50, default 20) with paired `beforeCreatedAt` / `beforeId` values from `nextCursor`. Results exclude archived posts and respect account privacy, follower visibility, and either-direction blocks. The partial video-feed index is in `20261107_reels_cursor_index.sql`; apply and benchmark before relying on it at scale.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints. The conversation inbox supports keyset pagination using `limit` (1–100, default 30) and the paired `beforeLastMessageAt` / `beforeId` values from `nextCursor`. Message history GET uses keyset pagination (`limit` 1–100, default 50; paired `beforeCreatedAt` / `beforeId` cursor) and returns each page in chronological order.
