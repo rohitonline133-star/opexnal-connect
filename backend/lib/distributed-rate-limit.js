@@ -27,10 +27,21 @@ export function rateLimitBucketHash(secret, key, windowStartMs, windowMs) {
 
 // Atomic fixed-window counter shared by all API instances through PostgreSQL.
 // The caller must use a transaction-capable pool; raw keys are never persisted.
-export async function consumeDistributedRateLimit(pool, secret, key, max = 10, windowMs = 60_000, now = Date.now()) {
+export async function consumeDistributedRateLimit(
+  pool,
+  secret,
+  key,
+  max = 10,
+  windowMs = 60_000,
+  now = Date.now(),
+) {
   validateRateLimitOptions(max, windowMs);
-  if (!pool || typeof pool.query !== "function") throw new TypeError("A PostgreSQL pool is required.");
-  if (!Number.isSafeInteger(now) || now < 0) throw new RangeError("Rate limit clock must be a non-negative integer.");
+  if (!pool || typeof pool.query !== "function") {
+    throw new TypeError("A PostgreSQL pool is required.");
+  }
+  if (!Number.isSafeInteger(now) || now < 0) {
+    throw new RangeError("Rate limit clock must be a non-negative integer.");
+  }
   const windowStartMs = Math.floor(now / windowMs) * windowMs;
   const bucketHash = rateLimitBucketHash(secret, key, windowStartMs, windowMs);
   const result = await pool.query(
@@ -42,6 +53,12 @@ export async function consumeDistributedRateLimit(pool, secret, key, max = 10, w
     [bucketHash, windowStartMs, windowMs],
   );
   const count = Number(result.rows[0]?.request_count);
-  if (!Number.isSafeInteger(count) || count < 1) throw new Error("Invalid distributed rate-limit counter response.");
-  return { allowed: count <= max, remaining: Math.max(0, max - count), resetAt: windowStartMs + windowMs };
+  if (!Number.isSafeInteger(count) || count < 1) {
+    throw new Error("Invalid distributed rate-limit counter response.");
+  }
+  return {
+    allowed: count <= max,
+    remaining: Math.max(0, max - count),
+    resetAt: windowStartMs + windowMs,
+  };
 }
