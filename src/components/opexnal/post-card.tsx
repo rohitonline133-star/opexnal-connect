@@ -42,6 +42,8 @@ import {
   type FeedPost,
 } from "@/lib/posts";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
+import { authClient } from "@/lib/auth-client";
+import { apiUrl } from "@/lib/api-client";
 
 function Caption({ text }: { text: string }) {
   const parts = text.split(/(#[A-Za-z0-9_]{1,50})/g);
@@ -137,9 +139,26 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     toast.success(`Snoozed @${author?.username || "creator"} for 30 days`);
   };
 
-  const handleUnfollow = () => {
-    setMenuOpen(false);
-    toast.success(`Unfollowed @${author?.username || "creator"}`);
+  const handleUnfollow = async () => {
+    if (!viewerId || !author || author.id === viewerId) {
+      toast.error("You must be signed in to unfollow this creator.");
+      return;
+    }
+    try {
+      const response = await fetch(
+        apiUrl(`/api/v1/users/${encodeURIComponent(author.id)}/follow`),
+        {
+          method: "DELETE",
+          headers: authClient.getAuthHeader(),
+        },
+      );
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not unfollow this creator.");
+      setMenuOpen(false);
+      toast.success(`Unfollowed @${author.username}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not unfollow this creator.");
+    }
   };
 
   const handleToggleFavorite = () => {
