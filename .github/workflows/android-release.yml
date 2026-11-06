@@ -2,11 +2,15 @@ name: Build Opexnal Play Store Release
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/android-release.yml
+    inputs:
+      version_code:
+        description: "Next versionCode (must be greater than the latest Play Console release)"
+        required: true
+        type: string
+      version_name:
+        description: "Version name (for example 1.0.12)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -27,10 +31,10 @@ jobs:
           test -n "$ANDROID_KEY_ALIAS" || (echo "::error::Missing ANDROID_KEY_ALIAS repository secret" && exit 1)
           test -n "$ANDROID_KEY_PASSWORD" || (echo "::error::Missing ANDROID_KEY_PASSWORD repository secret" && exit 1)
 
-      - name: Checkout Android wrapper source
+      - name: Checkout current main branch
         uses: actions/checkout@v4
         with:
-          ref: feature/android-apk-capacitor
+          ref: main
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -52,8 +56,8 @@ jobs:
         run: npx cap sync android
       - name: Set Play Store version
         env:
-          OPEXNAL_VERSION_CODE: ${{ github.run_number }}
-          OPEXNAL_VERSION_NAME: 1.0.${{ github.run_number }}
+          OPEXNAL_VERSION_CODE: ${{ inputs.version_code }}
+          OPEXNAL_VERSION_NAME: ${{ inputs.version_name }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
