@@ -1856,6 +1856,7 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
 app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
   if (req.params.userId === req.user.id)
     return res.status(400).json({ error: "You cannot follow yourself." });
+  let client;
   try {
     const target = await pool.query(
       "SELECT id,is_private,is_deactivated FROM users WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2)) LIMIT 1",
@@ -1863,28 +1864,40 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
     );
     if (!target.rowCount || target.rows[0].is_deactivated)
       return res.status(404).json({ error: "User not found." });
-    const alreadyFollowing = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const alreadyFollowing = await client.query(
       "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
       [req.user.id, req.params.userId],
     );
-    if (alreadyFollowing.rowCount) return res.json({ status: "following", following: true });
+    if (alreadyFollowing.rowCount) {
+      await client.query("COMMIT");
+      return res.json({ status: "following", following: true });
+    }
     if (target.rows[0].is_private) {
-      await pool.query(
-        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW()",
+      const request = await client.query(
+        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW() RETURNING id",
         [randomUUID(), req.user.id, req.params.userId],
       );
-      await notifyUser(req.params.userId, req.user.id, "follow_request", "user", req.user.id);
+      await enqueueNotification(client, req.params.userId, req.user.id, "follow_request", "user", req.user.id, {
+        followRequestId: request.rows[0].id,
+      });
+      await client.query("COMMIT");
       return res.json({ status: "requested", following: false });
     }
-    const inserted = await pool.query(
+    const inserted = await client.query(
       "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING following_id",
       [req.user.id, req.params.userId],
     );
     if (inserted.rowCount)
-      await notifyUser(req.params.userId, req.user.id, "new_follower", "user", req.user.id);
+      await enqueueNotification(client, req.params.userId, req.user.id, "new_follower", "user", req.user.id);
+    await client.query("COMMIT");
     return res.json({ status: "following", following: true });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
@@ -2102,22 +2115,29 @@ async function findVisiblePost(postId, userId) {
 }
 
 app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res, next) => {
+  let client;
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    const inserted = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const inserted = await client.query(
       "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING post_id",
       [req.user.id, post.id],
     );
     if (inserted.rowCount)
-      await notifyUser(post.user_id, req.user.id, "post_like", "post", post.id);
-    const count = await pool.query(
+      await enqueueNotification(client, post.user_id, req.user.id, "post_like", "post", post.id);
+    const count = await client.query(
       "SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1",
       [post.id],
     );
+    await client.query("COMMIT");
     return res.json({ liked: true, likeCount: count.rows[0].count });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
