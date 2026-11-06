@@ -439,7 +439,8 @@ export interface StoryHighlight {
 
 const LOCAL_HIGHLIGHTS_KEY = "opexnal_story_highlights";
 
-// No sample highlights: only user-created highlights may be shown.\nconst DEFAULT_HIGHLIGHTS: StoryHighlight[] = [];
+// No sample highlights: only user-created highlights may be shown.
+const DEFAULT_HIGHLIGHTS: StoryHighlight[] = [];
 
 const memoryHighlights: Record<string, StoryHighlight[]> = {};
 
