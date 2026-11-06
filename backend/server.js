@@ -2839,15 +2839,43 @@ app.delete("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (
 });
 
 app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 50." });
+  const limit = Math.min(requestedLimit, 50);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
   try {
-    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
-      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
-      [req.user.id, limit],
+      `SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at
+       FROM posts p JOIN users u ON u.id=p.user_id
+       WHERE p.media_type='video' AND p.archived_at IS NULL
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
+         AND (
+           p.user_id=$1
+           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
+           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
+         )
+         AND ($2::timestamptz IS NULL OR (p.created_at,p.id)<($2::timestamptz,$3::uuid))
+       ORDER BY p.created_at DESC,p.id DESC
+       LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
-    res.json({ reels: result.rows });
+    const hasMore = result.rows.length > limit;
+    const reels = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = reels.at(-1);
+    return res.json({
+      reels,
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id } : null,
+    });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
