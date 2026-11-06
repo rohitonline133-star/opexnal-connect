@@ -70,10 +70,15 @@ jobs:
             exit 1
           fi
           if ! keytool -list -keystore "$GITHUB_WORKSPACE/android/upload-keystore.jks" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null 2>&1; then
-            echo "::error::ANDROID_KEY_ALIAS was not found. Available keystore entry names are listed below; set the repository secret to the exact private-key alias."
-            keytool -list -keystore "$GITHUB_WORKSPACE/android/upload-keystore.jks" -storepass "$ANDROID_KEYSTORE_PASSWORD" 2>&1 | grep -E 'PrivateKeyEntry|trustedCertEntry|SecretKeyEntry' || true
+            echo "::error::ANDROID_KEY_ALIAS was not found. Set the repository secret to the exact private-key alias."
             exit 1
           fi
+          # Persist signing values for the later Gradle build steps without printing them.
+          {
+            echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
+            echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS"
+            echo "ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
           python3 - <<'PY'
           from pathlib import Path
           import re
