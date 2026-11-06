@@ -27,6 +27,7 @@ export type FeedPost = PostRow & {
   liked: boolean;
   saved: boolean;
   hide_likes_count?: boolean;
+  hide_share_count?: boolean;
 };
 
 const POST_SELECT = "*, post_media(*)";
