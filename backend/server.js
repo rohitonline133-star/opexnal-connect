@@ -2710,6 +2710,13 @@ app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, 
         ) AS others
        FROM conversations c
        JOIN conversation_members mine ON mine.conversation_id=c.id AND mine.user_id=$1
+       WHERE NOT EXISTS (
+         SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id
+         WHERE other.conversation_id=c.id AND other.user_id<>$1
+           AND (peer.is_deactivated=TRUE
+             OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$1))
+             OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$1 AND r.restricted_id=peer.id) OR (r.restricted_id=$1 AND r.restrictor_id=peer.id)))
+       )
        ORDER BY c.last_message_at DESC LIMIT 100`,
       [req.user.id],
     );
@@ -2774,7 +2781,7 @@ app.get(
   async (req, res, next) => {
     try {
       const membership = await pool.query(
-        "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+        "SELECT 1 FROM conversation_members mine WHERE mine.conversation_id=$1 AND mine.user_id=$2 AND NOT EXISTS (SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id WHERE other.conversation_id=mine.conversation_id AND other.user_id<>$2 AND (peer.is_deactivated=TRUE OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$2)) OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$2 AND r.restricted_id=peer.id) OR (r.restricted_id=$2 AND r.restrictor_id=peer.id)))) LIMIT 1",
         [req.params.conversationId, req.user.id],
       );
       if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
@@ -2798,7 +2805,7 @@ app.post(
   async (req, res, next) => {
     try {
       const result = await pool.query(
-        "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2 RETURNING conversation_id",
+        "UPDATE conversation_members mine SET last_read_at=NOW() WHERE mine.conversation_id=$1 AND mine.user_id=$2 AND NOT EXISTS (SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id WHERE other.conversation_id=mine.conversation_id AND other.user_id<>$2 AND (peer.is_deactivated=TRUE OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$2)) OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$2 AND r.restricted_id=peer.id) OR (r.restricted_id=$2 AND r.restrictor_id=peer.id)))) RETURNING mine.conversation_id",
         [req.params.conversationId, req.user.id],
       );
       if (!result.rowCount) return res.status(404).json({ error: "Conversation not found." });
@@ -2812,7 +2819,7 @@ app.post(
 app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
   try {
     const member = await pool.query(
-      "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2",
+      "SELECT 1 FROM conversation_members mine WHERE mine.conversation_id=$1 AND mine.user_id=$2 AND NOT EXISTS (SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id WHERE other.conversation_id=mine.conversation_id AND other.user_id<>$2 AND (peer.is_deactivated=TRUE OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$2)) OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$2 AND r.restricted_id=peer.id) OR (r.restricted_id=$2 AND r.restrictor_id=peer.id))))",
       [req.params.conversationId, req.user.id],
     );
     if (!member.rowCount) return res.status(404).json({ error: "Conversation not found." });
@@ -2840,7 +2847,7 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     return res.status(400).json({ error: "Message must contain 1–5000 characters." });
   try {
     const member = await pool.query(
-      "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
+      "SELECT cm.user_id FROM conversation_members cm JOIN users peer ON peer.id=cm.user_id WHERE cm.conversation_id=$1 AND peer.is_deactivated=FALSE",
       [conversationId],
     );
     if (!member.rowCount || !member.rows.some((row) => row.user_id === req.user.id)) {
@@ -2895,7 +2902,7 @@ app.get(
   async (req, res, next) => {
     try {
       const membership = await pool.query(
-        "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2 LIMIT 1",
+        "SELECT 1 FROM conversation_members mine WHERE mine.conversation_id=$1 AND mine.user_id=$2 AND NOT EXISTS (SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id WHERE other.conversation_id=mine.conversation_id AND other.user_id<>$2 AND (peer.is_deactivated=TRUE OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$2)) OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$2 AND r.restricted_id=peer.id) OR (r.restricted_id=$2 AND r.restrictor_id=peer.id)))) LIMIT 1",
         [req.params.conversationId, req.user.id],
       );
       if (!membership.rowCount) return res.status(404).json({ error: "Conversation not found." });
