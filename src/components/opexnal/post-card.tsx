@@ -74,7 +74,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [saved, setSaved] = useState(post.saved);
   const [hidden, setHidden] = useState(false);
   const [captionText, setCaptionText] = useState(post.caption || "");
-  const [commentsDisabled, setCommentsDisabled] = useState(false);
+  const [commentsDisabled, setCommentsDisabled] = useState(post.comments_enabled === false);
   const [hideLikes, setHideLikes] = useState(false);
 
   // 3 Dots Menu States
@@ -498,10 +498,36 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setCommentsDisabled(!commentsDisabled);
-                    setMenuOpen(false);
-                    toast.success(commentsDisabled ? "Comments enabled" : "Comments turned off");
+                  onClick={async () => {
+                    if (!viewerId || !isOwner) {
+                      toast.error("You can only change comments on your own posts.");
+                      return;
+                    }
+                    const nextCommentsEnabled = commentsDisabled;
+                    try {
+                      const response = await fetch(
+                        apiUrl(`/api/v1/posts/${encodeURIComponent(post.id)}`),
+                        {
+                          method: "PATCH",
+                          headers: {
+                            ...authClient.getAuthHeader(),
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ commentsEnabled: nextCommentsEnabled }),
+                        },
+                      );
+                      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+                      if (!response.ok) {
+                        throw new Error(payload.error || "Could not update comment settings.");
+                      }
+                      setCommentsDisabled(!nextCommentsEnabled);
+                      setMenuOpen(false);
+                      toast.success(nextCommentsEnabled ? "Comments enabled" : "Comments turned off");
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error ? error.message : "Could not update comment settings.",
+                      );
+                    }
                   }}
                   className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
                 >
