@@ -12,6 +12,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
    psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
    psql "$DATABASE_URL" -f backend/migrations/20261104_account_recovery.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261106_post_archive.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
