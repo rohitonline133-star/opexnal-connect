@@ -343,9 +343,7 @@ const recoveryReasons = new Set([
 ]);
 app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   const identity =
-    typeof req.body?.identityInput === "string"
-      ? req.body.identityInput.trim().toLowerCase()
-      : "";
+    typeof req.body?.identityInput === "string" ? req.body.identityInput.trim().toLowerCase() : "";
   const reason = typeof req.body?.reason === "string" ? req.body.reason : "";
   const details =
     typeof req.body?.additionalDetails === "string"
