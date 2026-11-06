@@ -439,26 +439,7 @@ export interface StoryHighlight {
 
 const LOCAL_HIGHLIGHTS_KEY = "opexnal_story_highlights";
 
-const DEFAULT_HIGHLIGHTS: StoryHighlight[] = [
-  {
-    id: "hl_travel",
-    userId: "user_maya",
-    title: "Travel ✈️",
-    coverUrl:
-      "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=300&q=80",
-    storyIds: ["story_maya_1"],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "hl_creative",
-    userId: "user_zenith",
-    title: "3D Art 🎨",
-    coverUrl:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80",
-    storyIds: ["story_zenith_1"],
-    createdAt: new Date().toISOString(),
-  },
-];
+// No sample highlights: only user-created highlights may be shown.\nconst DEFAULT_HIGHLIGHTS: StoryHighlight[] = [];
 
 const memoryHighlights: Record<string, StoryHighlight[]> = {};
 
