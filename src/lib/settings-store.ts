@@ -406,15 +406,6 @@ export async function saveSettings(
   const current = getStoredSettings(effectiveUserId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
-  if (typeof window !== "undefined") {
-    try {
-      const storageKey = effectiveUserId ? `${STORAGE_KEY}_${effectiveUserId}` : STORAGE_KEY;
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch {
-      // ignore storage quota error
-    }
-  }
-
   // Synchronize applicable privacy & profile columns with Supabase when userId is authenticated
 
   if (effectiveUserId) {
@@ -450,6 +441,15 @@ export async function saveSettings(
       // Do not report a successful save when server-backed profile settings failed.
       if (error instanceof Error) throw error;
       throw new Error("Could not sync account privacy settings.");
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const storageKey = effectiveUserId ? `${STORAGE_KEY}_${effectiveUserId}` : STORAGE_KEY;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch {
+      // ignore storage quota error
     }
   }
 
