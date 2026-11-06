@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Check release signing secrets
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: \${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: \${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: \${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: \${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           test -n "$ANDROID_KEYSTORE_BASE64" || (echo "::error::Missing ANDROID_KEYSTORE_BASE64 repository secret" && exit 1)
           test -n "$ANDROID_KEYSTORE_PASSWORD" || (echo "::error::Missing ANDROID_KEYSTORE_PASSWORD repository secret" && exit 1)
@@ -45,10 +45,10 @@ jobs:
         run: npx cap sync android
       - name: Configure Android release signing
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEYSTORE_BASE64: \${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: \${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: \${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: \${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/upload-keystore.jks"
           python3 - <<'PY'
@@ -68,11 +68,11 @@ jobs:
               }
           """
           if "signingConfigs {" not in source:
-              source = re.sub(r"(android\\s*\\{)", r"\\1" + signing, source, count=1)
-          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
+              source = re.sub(r"(android\s*\{)", r"\1" + signing, source, count=1)
+          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
           if not re.search(pattern, source):
               raise SystemExit("Could not find Android release buildType in generated Gradle file")
-          source = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", source, count=1)
+          source = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", source, count=1)
           gradle.write_text(source)
           PY
       - name: Build signed release bundle and APK
