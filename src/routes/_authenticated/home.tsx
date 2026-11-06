@@ -46,10 +46,16 @@ function HomeFeed() {
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
     useInfiniteQuery({
-      queryKey: ["home-feed", user?.id],
+      queryKey: ["home-feed", user?.id, activeTab === "following" ? "following" : "for_you"],
       enabled: Boolean(user),
       initialPageParam: null as string | null,
-      queryFn: ({ pageParam }) => getHomeFeed(user!.id, pageParam, FEED_PAGE_SIZE),
+      queryFn: ({ pageParam }) =>
+        getHomeFeed(
+          user!.id,
+          pageParam,
+          FEED_PAGE_SIZE,
+          activeTab === "following" ? "following" : "for_you",
+        ),
       getNextPageParam: (last) => last.nextCursor,
     });
 
