@@ -127,14 +127,37 @@ async function processEvent(event) {
 async function run() {
   console.info("Outbox worker started", { workerId, batchSize, pollIntervalMs });
   let stopping = false;
-  const stop = () => { stopping = true; };
+  let consecutiveClaimFailures = 0;
+  const stop = () => {
+    stopping = true;
+  };
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
   try {
     while (!stopping) {
-      const events = await claimBatch();
+      let events;
+      try {
+        events = await claimBatch();
+        consecutiveClaimFailures = 0;
+      } catch (error) {
+        consecutiveClaimFailures += 1;
+        const retryDelayMs = Math.min(
+          30_000,
+          pollIntervalMs * 2 ** Math.min(consecutiveClaimFailures - 1, 5),
+        );
+        console.error("Outbox batch claim failed; retrying", {
+          workerId,
+          consecutiveFailures: consecutiveClaimFailures,
+          retryDelayMs,
+          error: error?.message || "unknown error",
+        });
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        continue;
+      }
       if (events.length) {
-        for (const event of events) await processEvent(event);
+        for (const event of events) {
+          await processEvent(event);
+        }
       } else {
         await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
       }
