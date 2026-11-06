@@ -1,63 +1,187 @@
-import React, { useState } from "react";
-import { generate2FASecret, verify2FAToken } from "../lib/totp";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export const TwoFactorSetup = ({ userEmail }: { userEmail: string }) => {
-  const [qrCode, setQrCode] = useState<string>("");
-  const [secret, setSecret] = useState<string>("");
-  const [userToken, setUserToken] = useState<string>("");
-  const [isVerified, setIsVerified] = useState<boolean>(false);
+type TotpFactor = {
+  id: string;
+  status: string;
+  friendly_name?: string | null;
+};
 
-  const handleEnable2FA = async () => {
-    const { secret, qrCodeUrl } = generate2FASecret(userEmail);
-    setSecret(secret);
-    setQrCode(qrCodeUrl);
-  };
+export function TwoFactorSetup() {
+  const [factor, setFactor] = useState<TotpFactor | null>(null);
+  const [pendingFactorId, setPendingFactorId] = useState("");
+  const [qrCode, setQrCode] = useState("");
+  const [secret, setSecret] = useState("");
+  const [challengeId, setChallengeId] = useState("");
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
 
-  const handleVerify = () => {
-    const valid = verify2FAToken(userToken, secret);
-    if (valid) {
-      setIsVerified(true);
-      alert("2FA सफलतापूर्वक चालू हो गया है!");
-    } else {
-      alert("गलत OTP कोड! दोबारा कोशिश करें।");
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.mfa.listFactors().then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        toast.error("Could not load two-factor authentication status.");
+        setLoading(false);
+        return;
+      }
+      const verified = data?.totp?.find((item) => item.status === "verified");
+      setFactor(verified ? { id: verified.id, status: verified.status, friendly_name: verified.friendly_name } : null);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleEnable = async () => {
+    setWorking(true);
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: "totp",
+        friendlyName: "Opexnal authenticator",
+      });
+      if (error) throw error;
+      setPendingFactorId(data.id);
+      setQrCode(data.totp.qr_code);
+      setSecret(data.totp.secret);
+      setCode("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not start two-factor setup.");
+    } finally {
+      setWorking(false);
     }
   };
 
+  const handleVerify = async () => {
+    if (!pendingFactorId || !code.trim()) return;
+    setWorking(true);
+    try {
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: pendingFactorId,
+      });
+      if (challengeError) throw challengeError;
+      const { data, error } = await supabase.auth.mfa.verify({
+        factorId: pendingFactorId,
+        challengeId: challenge.id,
+        code: code.trim(),
+      });
+      if (error) throw error;
+      setFactor({
+        id: data.id,
+        status: "verified",
+        friendly_name: "Opexnal authenticator",
+      });
+      setPendingFactorId("");
+      setQrCode("");
+      setSecret("");
+      setChallengeId("");
+      setCode("");
+      toast.success("Two-factor authentication is enabled on your account.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The authenticator code could not be verified.");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const handleDisable = async () => {
+    if (!factor) return;
+    setWorking(true);
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+      if (error) throw error;
+      setFactor(null);
+      toast.success("Two-factor authentication has been disabled.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not disable two-factor authentication.");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground" role="status">Checking account security…</p>;
+  }
+
   return (
-    <div className="p-4 border rounded-lg bg-gray-900 text-white my-4">
-      <h3 className="text-lg font-bold mb-2">Two-Factor Authentication (2FA)</h3>
-
-      {!qrCode ? (
-        <button
-          onClick={handleEnable2FA}
-          className="bg-blue-600 px-4 py-2 rounded font-semibold text-white"
-        >
-          2FA चालू करें
-        </button>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm">Authenticator App (Google Authenticator) से QR कोड स्कैन करें:</p>
-          <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 bg-white p-2 rounded" />
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="6-digit OTP"
-              value={userToken}
-              onChange={(e) => setUserToken(e.target.value)}
-              className="p-2 rounded bg-gray-800 text-white border border-gray-700"
-            />
-            <button
-              onClick={handleVerify}
-              className="bg-green-600 px-4 py-2 rounded font-semibold text-white"
-            >
-              Verify
-            </button>
+    <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+      {factor ? (
+        <>
+          <p className="text-sm font-semibold text-emerald-600" role="status">
+            Two-factor authentication is enabled on this account.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Sign-in verification is managed by your authenticated Opexnal account provider.
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleDisable()}
+            disabled={working}
+            className="min-h-11 rounded-xl border border-destructive/40 px-4 text-sm font-semibold text-destructive disabled:opacity-50"
+          >
+            {working ? "Please wait…" : "Turn off two-factor authentication"}
+          </button>
+        </>
+      ) : pendingFactorId && qrCode ? (
+        <>
+          <p className="text-sm font-semibold">Scan this QR code with your authenticator app.</p>
+          <img src={qrCode} alt="Authenticator setup QR code" className="h-48 w-48 rounded-lg bg-white p-2" />
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Manual setup key</p>
+            <code className="block break-all rounded-lg bg-muted p-3 text-xs">{secret}</code>
           </div>
-        </div>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">6-digit authenticator code</span>
+            <input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\\D/g, "").slice(0, 6))}
+              className="h-11 w-full rounded-lg border border-border bg-background px-3 text-base tracking-widest"
+              placeholder="000000"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void handleVerify()}
+            disabled={working || code.length !== 6}
+            className="min-h-11 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {working ? "Verifying…" : "Verify and enable"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPendingFactorId("");
+              setQrCode("");
+              setSecret("");
+              setCode("");
+            }}
+            disabled={working}
+            className="min-h-11 w-full rounded-xl border border-border px-4 text-sm"
+          >
+            Cancel setup
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Add an authenticator app as a second sign-in factor. It becomes active only after the provider verifies a current code.
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleEnable()}
+            disabled={working}
+            className="min-h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {working ? "Starting setup…" : "Set up two-factor authentication"}
+          </button>
+        </>
       )}
-
-      {isVerified && <p className="text-green-400 mt-2">✓ 2FA आपके अकाउंट पर एक्टिव है।</p>}
     </div>
   );
-};
+}
