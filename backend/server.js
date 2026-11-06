@@ -255,30 +255,6 @@ async function enqueueNotification(client, recipientId, actorId, type, targetTyp
   });
 }
 
-async function notifyUser(
-  recipientId,
-  actorId,
-  type,
-  targetType = null,
-  targetId = null,
-  metadata = {},
-) {
-  if (!recipientId || recipientId === actorId) return;
-  let client;
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await enqueueNotification(client, recipientId, actorId, type, targetType, targetId, metadata);
-    await client.query("COMMIT");
-  } catch (error) {
-    if (client) await client.query("ROLLBACK").catch(() => {});
-    // A notification enqueue failure must not turn a successful social action into a client-visible failure.
-    console.error("Notification enqueue failed", error?.message || "unknown error");
-  } finally {
-    client?.release();
-  }
-}
-
 async function adminRequired(req, res, next) {
   try {
     const result = await pool.query(
