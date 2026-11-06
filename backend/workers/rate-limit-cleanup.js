@@ -1,6 +1,9 @@
 import "dotenv/config";
 import pg from "pg";
-import { deleteExpiredRateLimitBuckets, rateLimitCleanupBatchSize } from "../lib/rate-limit-cleanup.js";
+import {
+  deleteExpiredRateLimitBuckets,
+  rateLimitCleanupBatchSize,
+} from "../lib/rate-limit-cleanup.js";
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL || "";
