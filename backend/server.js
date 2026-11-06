@@ -1011,8 +1011,32 @@ app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
 });
 
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 50." });
+  }
+  const limit = Math.min(requestedLimit, 50);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+      ? req.query.beforeId
+      : null;
+  const legacyCursor =
+    typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime())
+      ? new Date(req.query.cursor).toISOString()
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
+  if (legacyCursor && (beforeCreatedAt || beforeId)) {
+    return res.status(400).json({ error: "Use either the legacy cursor or the keyset cursor, not both." });
+  }
   try {
-    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
       `SELECT
         p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
@@ -1046,25 +1070,33 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
         )
-        AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
+        AND (($3::timestamptz IS NOT NULL AND p.created_at<$3::timestamptz) OR ($3::timestamptz IS NULL AND $4::timestamptz IS NULL) OR ($4::timestamptz IS NOT NULL AND (p.created_at,p.id)<($4::timestamptz,$5::uuid)))
         AND (
-          COALESCE($4::text, 'for_you') <> 'following'
+          COALESCE($6::text, 'for_you') <> 'following'
           OR p.user_id=$1
           OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)
         )
-      ORDER BY p.created_at DESC
-      LIMIT $2`,
+      ORDER BY p.created_at DESC,p.id DESC
+      LIMIT $7`,
       [
         req.user.id,
         limit,
-        typeof req.query.cursor === "string" &&
-        Number.isFinite(new Date(req.query.cursor).getTime())
-          ? new Date(req.query.cursor).toISOString()
-          : null,
+        legacyCursor,
+        beforeCreatedAt,
+        beforeId,
         req.query.feed === "following" ? "following" : "for_you",
-      ],
+        limit + 1,
+      ]
     );
-    res.json({ posts: result.rows });
+    const hasMore = result.rows.length > limit;
+    const posts = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = posts[posts.length - 1];
+    res.json({
+      posts,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     next(error);
   }
