@@ -2811,43 +2811,54 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
   const conversationId = req.params.conversationId;
   if (!body || body.length > 5000)
     return res.status(400).json({ error: "Message must contain 1–5000 characters." });
+  let client;
+  let member;
+  let message;
   try {
-    const member = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    member = await client.query(
       "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
       [conversationId],
     );
     if (!member.rowCount || !member.rows.some((row) => row.user_id === req.user.id)) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Conversation not found." });
     }
     const otherIds = member.rows.map((row) => row.user_id).filter((id) => id !== req.user.id);
     if (otherIds.length) {
-      const blocked = await pool.query(
+      const blocked = await client.query(
         "SELECT 1 FROM user_blocks WHERE (blocker_id=$1 AND blocked_id=ANY($2::uuid[])) OR (blocked_id=$1 AND blocker_id=ANY($2::uuid[])) LIMIT 1",
         [req.user.id, otherIds],
       );
-      const restricted = await pool.query(
+      const restricted = await client.query(
         "SELECT 1 FROM user_restrictions WHERE (restrictor_id=$1 AND restricted_id=ANY($2::uuid[])) OR (restricted_id=$1 AND restrictor_id=ANY($2::uuid[])) LIMIT 1",
         [req.user.id, otherIds],
       );
       if (blocked.rowCount || restricted.rowCount) {
+        await client.query("ROLLBACK");
         return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
       }
     }
-    const result = await pool.query(
+    const messageId = randomUUID();
+    const result = await client.query(
       "INSERT INTO messages (id,conversation_id,sender_id,body) VALUES ($1,$2,$3,$4) RETURNING id,conversation_id,sender_id,body,created_at",
-      [randomUUID(), conversationId, req.user.id, body],
+      [messageId, conversationId, req.user.id, body],
     );
-    const message = result.rows[0];
-    await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [
+    message = result.rows[0];
+    await client.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [
       conversationId,
     ]);
     for (const recipientId of otherIds) {
-      await notifyUser(recipientId, req.user.id, "message", "conversation", conversationId);
+      await enqueueNotification(client, recipientId, req.user.id, "message", "conversation", conversationId, {
+        messageId,
+      });
     }
-    await pool.query(
+    await client.query(
       "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
       [conversationId, req.user.id],
     );
+    await client.query("COMMIT");
     for (const row of member.rows) {
       if (row.user_id === req.user.id) continue;
       for (const socket of socketsByUser.get(row.user_id) || []) {
@@ -2857,7 +2868,10 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     }
     return res.status(201).json({ message });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
