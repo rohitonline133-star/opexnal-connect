@@ -2284,6 +2284,42 @@ app.delete("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (
   }
 });
 
+app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
+  const body = req.body || {};
+  const updates = [];
+  const values = [req.params.postId, req.user.id];
+  if (body.caption !== undefined) {
+    if (typeof body.caption !== "string" || body.caption.length > 2200) {
+      return res.status(400).json({ error: "Caption must be 2200 characters or fewer." });
+    }
+    values.push(body.caption);
+    updates.push(`caption=${values.length}`);
+  }
+  if (body.commentsEnabled !== undefined) {
+    if (typeof body.commentsEnabled !== "boolean") {
+      return res.status(400).json({ error: "commentsEnabled must be a boolean." });
+    }
+    values.push(body.commentsEnabled);
+    updates.push(`comments_enabled=${values.length}`);
+  }
+  if (updates.length === 0) {
+    return res.status(400).json({ error: "No supported post changes were provided." });
+  }
+  updates.push("updated_at=NOW()");
+  try {
+    const result = await pool.query(
+      `UPDATE posts SET ${updates.join(",")} WHERE id=$1 AND user_id=$2 RETURNING id,caption,comments_enabled,updated_at`,
+      values,
+    );
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Post not found or not owned by this account." });
+    }
+    return res.json({ post: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.delete("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
   const client = await pool.connect();
   try {
