@@ -12,16 +12,8 @@ import {
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +36,6 @@ export function CreatorDashboardPage() {
   const [activeTab, setActiveTab] = useState<CreatorTab>("dashboard");
   // Settings store integration
   const [settings, setSettings] = useState(() => getStoredSettings());
-
-  // Subscription modal state
-
-  // Payout bank setup modal
 
   return (
     <AppShell
