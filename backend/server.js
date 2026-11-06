@@ -2052,6 +2052,41 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
     return next(error);
   }
 });
+app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
+  const body = req.body || {};
+  const hasCaption = Object.prototype.hasOwnProperty.call(body, "caption");
+  const hasCommentsEnabled = Object.prototype.hasOwnProperty.call(body, "commentsEnabled");
+  if (
+    (!hasCaption && !hasCommentsEnabled) ||
+    (hasCaption && (typeof body.caption !== "string" || body.caption.length > 2200)) ||
+    (hasCommentsEnabled && typeof body.commentsEnabled !== "boolean")
+  ) {
+    return res.status(400).json({ error: "Invalid post update payload." });
+  }
+  try {
+    const result = await pool.query(
+      `UPDATE posts
+       SET caption = CASE WHEN $3::boolean THEN $4::text ELSE caption END,
+           comments_enabled = CASE WHEN $5::boolean THEN $6::boolean ELSE comments_enabled END,
+           updated_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING id, caption, comments_enabled, updated_at`,
+      [
+        req.params.postId,
+        req.user.id,
+        hasCaption,
+        hasCaption ? body.caption : null,
+        hasCommentsEnabled,
+        hasCommentsEnabled ? body.commentsEnabled : null,
+      ],
+    );
+    if (!result.rowCount) return res.status(404).json({ error: "Post not found or not owned by this account." });
+    return res.json({ post: result.rows[0] });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 async function findVisiblePost(postId, userId) {
   const result = await pool.query(
     "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
