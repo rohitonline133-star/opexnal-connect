@@ -28,6 +28,7 @@ export type FeedPost = PostRow & {
   saved: boolean;
   hide_likes_count?: boolean;
   hide_share_count?: boolean;
+  is_pinned?: boolean;
 };
 
 const POST_SELECT = "*, post_media(*)";
@@ -426,6 +427,7 @@ type ApiPostRecord = {
   comments_enabled?: boolean;
   hide_likes_count?: boolean;
   hide_share_count?: boolean;
+  is_pinned?: boolean;
   created_at: string;
   updated_at?: string;
   like_count?: number | string;
@@ -467,6 +469,7 @@ function mapApiPost(row: ApiPostRecord): FeedPost {
     comments_enabled: row.comments_enabled !== false,
     hide_likes_count: row.hide_likes_count === true,
     hide_share_count: row.hide_share_count === true,
+    is_pinned: row.is_pinned === true,
     created_at: row.created_at,
     updated_at: row.updated_at || row.created_at,
     likes_count: Number(row.like_count || 0),
@@ -706,6 +709,7 @@ export async function updatePost(
     hideLikesCount?: boolean;
     hideShareCount?: boolean;
     isArchived?: boolean;
+    isPinned?: boolean;
   },
 ) {
   return apiRequest<{
@@ -716,6 +720,7 @@ export async function updatePost(
       hide_likes_count: boolean;
       hide_share_count: boolean;
       archived_at: string | null;
+      is_pinned: boolean;
       updated_at: string;
     };
   }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {
