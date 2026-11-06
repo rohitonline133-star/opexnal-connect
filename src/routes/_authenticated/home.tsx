@@ -81,7 +81,6 @@ function HomeFeed() {
     if (activeTab === "for_you") return rawPosts;
     if (activeTab === "favorites") {
       const favorites = getStoredSettings().favoriteCreators;
-      if (favorites.length === 0) return rawPosts;
       return rawPosts.filter((p) => p.author && favorites.includes(p.author.username));
     }
     // following tab
