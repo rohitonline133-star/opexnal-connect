@@ -225,6 +225,7 @@ function CreateFlow() {
         locationName: locationName.trim() || null,
         visibility,
         commentsEnabled,
+        hideLikesCount: hideLikes,
         media: items,
       });
       toast.success(
