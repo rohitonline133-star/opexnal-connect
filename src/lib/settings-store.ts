@@ -438,10 +438,18 @@ export async function saveSettings(
         profileUpdates.account_type = patch.accountType;
 
       if (Object.keys(profileUpdates).length > 0) {
-        await supabase.from("profiles").update(profileUpdates).eq("id", effectiveUserId);
+        const { error } = await supabase
+          .from("profiles")
+          .update(profileUpdates)
+          .eq("id", effectiveUserId);
+        if (error) {
+          throw new Error(`Could not sync account privacy settings: ${error.message}`);
+        }
       }
-    } catch {
-      // non-fatal fallback
+    } catch (error) {
+      // Do not report a successful save when server-backed profile settings failed.
+      if (error instanceof Error) throw error;
+      throw new Error("Could not sync account privacy settings.");
     }
   }
 
