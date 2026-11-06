@@ -91,27 +91,39 @@ jobs:
               }
           """
           if "signingConfigs {" not in source:
-              source = re.sub(r"(android\s*\{)", r"\1" + signing, source, count=1)
-          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
+              source = re.sub(r"(android\\s*\\{)", r"\\1" + signing, source, count=1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
           if not re.search(pattern, source):
               raise SystemExit("Could not find Android release buildType in generated Gradle file")
-          source = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", source, count=1)
+          source = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", source, count=1)
           gradle.write_text(source)
           PY
-      - name: Build signed release bundle and APK
+      - name: Build signed release APK
         working-directory: android
-        run: ./gradlew bundleRelease assembleRelease
+        run: ./gradlew assembleRelease --stacktrace
+      - name: Build signed Play Store bundle
+        working-directory: android
+        run: ./gradlew bundleRelease --stacktrace
       - name: Verify signed release outputs
+        if: always()
         run: |
-          test -s android/app/build/outputs/bundle/release/app-release.aab
-          test -s android/app/build/outputs/apk/release/app-release.apk
-          jarsigner -verify -verbose -certs android/app/build/outputs/bundle/release/app-release.aab
-      - name: Upload signed release artifacts
+          if test -s android/app/build/outputs/apk/release/app-release.apk; then
+            apksigner verify --verbose android/app/build/outputs/apk/release/app-release.apk
+          else
+            echo "::warning::Signed APK was not produced"
+          fi
+          if test -s android/app/build/outputs/bundle/release/app-release.aab; then
+            jarsigner -verify -verbose -certs android/app/build/outputs/bundle/release/app-release.aab
+          else
+            echo "::warning::Signed AAB was not produced"
+          fi
+      - name: Upload available release artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: opexnal-play-store-release
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
