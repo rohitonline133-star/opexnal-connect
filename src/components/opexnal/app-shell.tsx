@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, PlusSquare, Bell, User, Clapperboard, ArrowLeft } from "lucide-react";
+import { Home, Search, PlusSquare, User, Clapperboard, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -8,7 +8,6 @@ const tabs = [
   { to: "/explore", label: "Explore", icon: Search },
   { to: "/create", label: "Create", icon: PlusSquare, primary: true },
   { to: "/reels", label: "Reels", icon: Clapperboard },
-  { to: "/activity", label: "Activity", icon: Bell },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
