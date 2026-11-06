@@ -127,16 +127,16 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
         </div>
 
         <div className="grid grid-cols-4 gap-2 border-t border-border pt-3">
-          <button type="button" onClick={() => { window.location.href = `https://wa.me/?text=${encodeURIComponent(shareText)}`; }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
+          <button type="button" onClick={() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); window.location.href = `https://wa.me/?text=${encodeURIComponent(shareText)}`; }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
             <MessageCircle className="h-5 w-5" />WhatsApp
           </button>
           <button type="button" onClick={() => void copyLink()} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
             <Copy className="h-5 w-5" />Copy link
           </button>
-          <a href={`mailto:?subject=${encodeURIComponent("Opexnal post")}&body=${encodeURIComponent(shareText)}`} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
+          <a href={`mailto:?subject=${encodeURIComponent("Opexnal post")}&body=${encodeURIComponent(shareText)}`} onClick={() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
             <Mail className="h-5 w-5" />Email
           </a>
-          <button type="button" onClick={() => { if (navigator.share) void navigator.share({ title: "Opexnal post", text: shareText, url: postUrl }).catch(() => undefined); else void copyLink(); }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
+          <button type="button" onClick={() => { if (navigator.share) void navigator.share({ title: "Opexnal post", text: shareText, url: postUrl }).then(() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); }).catch(() => undefined); else void copyLink(); }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
             <Share2 className="h-5 w-5" />More
           </button>
         </div>
