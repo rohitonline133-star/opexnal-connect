@@ -73,7 +73,6 @@ jobs:
             echo "::error::ANDROID_KEY_ALIAS was not found. Set the repository secret to the exact private-key alias."
             exit 1
           fi
-          # Persist signing values for the later Gradle build steps without printing them.
           {
             echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
             echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS"
@@ -96,11 +95,11 @@ jobs:
               }
           """
           if "signingConfigs {" not in source:
-              source = re.sub(r"(android\s*\{)", r"\1" + signing, source, count=1)
-          pattern = r"(buildTypes\s*\{\s*release\s*\{)"
+              source = re.sub(r"(android\\s*\\{)", r"\\1" + signing, source, count=1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
           if not re.search(pattern, source):
               raise SystemExit("Could not find Android release buildType in generated Gradle file")
-          source = re.sub(pattern, r"\1\n            signingConfig signingConfigs.release", source, count=1)
+          source = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", source, count=1)
           gradle.write_text(source)
           PY
       - name: Build signed release APK
@@ -113,7 +112,13 @@ jobs:
         if: always()
         run: |
           if test -s android/app/build/outputs/apk/release/app-release.apk; then
-            apksigner verify --verbose android/app/build/outputs/apk/release/app-release.apk
+            SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+            APKSIGNER="$(find "$SDK_ROOT/build-tools" -type f -name apksigner -print 2>/dev/null | sort -V | tail -n 1)"
+            if test -z "$APKSIGNER"; then
+              echo "::error::apksigner was not found under $SDK_ROOT/build-tools"
+              exit 1
+            fi
+            "$APKSIGNER" verify --verbose android/app/build/outputs/apk/release/app-release.apk
           else
             echo "::warning::Signed APK was not produced"
           fi
