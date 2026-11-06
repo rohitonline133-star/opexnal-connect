@@ -75,7 +75,7 @@ jobs:
               }
           """
           if "signingConfigs {" not in source:
-              source = re.sub(r"(android\s*\{)", r"\\1" + signing, source, count=1)
+              source = re.sub(r"(android\s*\{)", r"\1" + signing, source, count=1)
           pattern = r"(buildTypes\s*\{\s*release\s*\{)"
           if not re.search(pattern, source):
               raise SystemExit("Could not find Android release buildType in generated Gradle file")
