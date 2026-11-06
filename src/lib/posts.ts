@@ -686,7 +686,7 @@ export async function updatePost(
       id: string;
       caption: string;
       comments_enabled: boolean;
-      is_archived: boolean;
+      archived_at: string | null;
       updated_at: string;
     };
   }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {
