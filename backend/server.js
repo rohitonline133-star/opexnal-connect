@@ -716,7 +716,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
         .json({ error: "Too many login attempts for this account. Try again later." });
     }
     const result = await pool.query(
-      "SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE username = $1 OR email = $1 LIMIT 1",
+      "SELECT id, username, email, password_hash, display_name, avatar_url, created_at, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_deactivated=FALSE LIMIT 1",
       [identity.toLowerCase()],
     );
     const user = result.rows[0];
