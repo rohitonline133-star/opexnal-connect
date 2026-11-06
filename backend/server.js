@@ -2902,6 +2902,26 @@ app.post(
 );
 
 app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const member = await pool.query(
       "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2",
@@ -2916,10 +2936,20 @@ app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req
       `SELECT m.id,m.conversation_id,m.sender_id,m.body,m.created_at,
         u.username AS sender_username,u.display_name AS sender_display_name,u.avatar_url AS sender_avatar_url
        FROM messages m JOIN users u ON u.id=m.sender_id
-       WHERE m.conversation_id=$1 ORDER BY m.created_at ASC LIMIT 200`,
-      [req.params.conversationId],
+       WHERE m.conversation_id=$1
+         AND ($2::timestamptz IS NULL OR (m.created_at,m.id)<($2::timestamptz,$3::uuid))
+       ORDER BY m.created_at DESC,m.id DESC LIMIT $4`,
+      [req.params.conversationId, beforeCreatedAt, beforeId, limit + 1],
     );
-    return res.json({ messages: result.rows });
+    const hasMore = result.rows.length > limit;
+    const pageDescending = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const oldest = pageDescending[pageDescending.length - 1];
+    return res.json({
+      messages: pageDescending.reverse(),
+      nextCursor: hasMore && oldest
+        ? { beforeCreatedAt: new Date(oldest.created_at).toISOString(), beforeId: oldest.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
