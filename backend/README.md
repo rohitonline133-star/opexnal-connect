@@ -50,7 +50,7 @@ Optional environment settings are validated at startup: `OUTBOX_DB_POOL_MAX` (de
 
 ## Transactional outbox status
 
-The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. The migration `backend/migrations/20261107_social_graph_read_indexes.sql` adds reverse-lookup indexes for blocks and restrictions, requester/status filtering for follow requests, and recent outgoing-follow ordering. These indexes improve query access paths but do not create a graph database or prove large-scale throughput. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. Keep sensitive values out of event payloads.
+The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. The migration `backend/migrations/20261107_social_graph_read_indexes.sql` adds reverse-lookup indexes for blocks and restrictions, requester/status filtering for follow requests, and recent outgoing-follow ordering. These indexes improve query access paths but do not create a graph database or prove large-scale throughput. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. The distributed limiter is opt-in via RATE_LIMIT_HMAC_SECRET; a bounded one-shot expiry cleanup worker is available as npm run backend:rate-limits:cleanup, but external scheduling remains an operator task. Keep sensitive values out of event payloads.
 
 ## Not yet production complete
 
@@ -66,21 +66,7 @@ The migration `backend/migrations/20261107_transactional_outbox.sql` creates an 
 
 After applying `backend/migrations/20261107_distributed_rate_limits.sql`, set the same unique `RATE_LIMIT_HMAC_SECRET` (32+ random characters) on every API instance. Do not reuse `JWT_SECRET` and do not commit either secret. When configured, the API uses PostgreSQL atomic counters shared by all instances and denies the request if the shared limiter is unavailable; without it, local development uses the bounded in-process fallback. The additive migration is not applied automatically.
 
-Schedule this bounded cleanup statement in the database maintenance system (repeat until it deletes zero rows; keep each batch small):
-
-```sql
-WITH expired AS (
-  SELECT bucket_hash FROM distributed_rate_limits
-  WHERE expires_at < NOW()
-  ORDER BY expires_at
-  LIMIT 5000
-)
-DELETE FROM distributed_rate_limits d
-USING expired e
-WHERE d.bucket_hash = e.bucket_hash;
-```
-
-The cleanup job is not installed by this repository. PostgreSQL integration tests, cleanup-job supervision, and multi-instance load tests are still required before enabling this for public production traffic.
+Schedule `npm run backend:rate-limits:cleanup` as a one-shot job (for example, every 5–15 minutes). It deletes at most `RATE_LIMIT_CLEANUP_BATCH_SIZE` expired rows per run (default 5000, range 1–20000); set `DATABASE_URL` and optional `DATABASE_SSL=true`. Repeat on the next schedule while expired rows remain. The job is implemented but external scheduling/supervision is not configured by this repository. PostgreSQL integration tests and multi-instance load tests are still required before enabling this for public production traffic.
 
 ## Web deployment and API proxy
 
