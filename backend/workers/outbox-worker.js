@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { notificationFromEvent } from "./notification-event.js";
-import { boundedInteger, workerIdentifier } from "../lib/outbox-config.js";
+import { boundedInteger, outboxWorkerSettings, workerIdentifier } from "../lib/outbox-config.js";
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -9,11 +9,7 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required to run the outbox worker.");
 }
 
-const poolMax = boundedInteger(process.env.OUTBOX_DB_POOL_MAX, 3, 1, 20, "OUTBOX_DB_POOL_MAX");
-const batchSize = boundedInteger(process.env.OUTBOX_BATCH_SIZE, 3, 1, 20, "OUTBOX_BATCH_SIZE");
-if (batchSize > poolMax) {
-  throw new RangeError("OUTBOX_BATCH_SIZE cannot exceed OUTBOX_DB_POOL_MAX.");
-}
+const { poolMax, batchSize } = outboxWorkerSettings(process.env);
 const pool = new Pool({
   connectionString: databaseUrl,
   max: poolMax,
