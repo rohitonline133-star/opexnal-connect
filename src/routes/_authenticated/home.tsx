@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, Loader2, MessageSquare, PlusSquare, Star, RefreshCw, Users } from "lucide-react";
+import { Heart, Loader2, Send, PlusSquare, Star, RefreshCw, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { OpexnalWordmark } from "@/components/opexnal/logo";
@@ -106,14 +106,14 @@ function HomeFeed() {
                 aria-label="Notifications and activity"
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
               >
-                <Bell className="h-5 w-5" />
+                <Heart className="h-5 w-5" />
               </Link>
               <Link
                 to="/messages"
                 aria-label="Direct Messages"
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
               >
-                <MessageSquare className="h-5 w-5" />
+                <Send className="h-5 w-5" />
               </Link>
             </div>
           }
