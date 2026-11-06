@@ -6,14 +6,13 @@ export const Route = createFileRoute("/_authenticated/settings/security")({
   head: () => ({
     meta: [
       { title: "Security Settings - Opexnal" },
-      { name: "description", content: "Manage two-factor authentication and security parameters." },
+      { name: "description", content: "Review available account security protections." },
     ],
   }),
   component: SecuritySettingsPage,
 });
 
 function SecuritySettingsPage() {
-
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto p-4 space-y-6">
@@ -22,10 +21,10 @@ function SecuritySettingsPage() {
         <div className="bg-card rounded-lg p-6 border shadow-sm space-y-4">
           <h2 className="text-xl font-semibold">Two-Factor Authentication (2FA)</h2>
           <p className="text-sm text-muted-foreground">
-            TOTP-आधारित सुरक्षा सक्रिय करें। अपने Google Authenticator या Authy ऐप द्वारा अकाउंट को
-            सुरक्षित करें।
+            Authenticator-based two-factor authentication is not enabled or available yet.
+            Do not assume this account has 2FA protection until setup and sign-in verification
+            are connected to Opexnal's server.
           </p>
-
           <TwoFactorSetup />
         </div>
       </div>
