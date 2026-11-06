@@ -33,8 +33,10 @@ jobs:
       - name: Build production web assets
         run: npm run build
 
-      - name: Generate Android project
-        run: npx cap add android
+      - name: Generate clean Android project
+        run: |
+          rm -rf android
+          npx cap add android
 
       - name: Sync Capacitor Android project
         run: npx cap sync android
