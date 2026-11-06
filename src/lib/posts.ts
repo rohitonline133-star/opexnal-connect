@@ -553,7 +553,7 @@ export async function deleteOpexnalMedia(storagePath: string): Promise<void> {
   const prefix = "/api/v1/storage/";
   if (!storagePath.startsWith(prefix)) return;
   const objectKey = storagePath.slice(prefix.length);
-  if (!/^[0-9a-f-]{36}\\.(jpg|png|webp|gif|mp4|webm|mov)$/i.test(objectKey)) return;
+  if (!/^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm|mov)$/i.test(objectKey)) return;
   const response = await fetch(apiUrl(`${prefix}${encodeURIComponent(objectKey)}`), {
     method: "DELETE",
     headers: authClient.getAuthHeader(),
