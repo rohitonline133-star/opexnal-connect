@@ -16,6 +16,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_like_visibility.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_transactional_outbox.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_read_indexes.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_distributed_rate_limits.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
@@ -56,7 +57,7 @@ The migration `backend/migrations/20261107_transactional_outbox.sql` creates an 
 - Email verification uses the configured SMTP server and expiring, single-use hashed tokens. Password reset is email-only; phone OTP/SMS delivery is not implemented. Recovery intake records a request but does not verify ownership, send a notification, or restore account access; a staffed review workflow and operator tooling are still required.
 - Durable access sessions and revocation are implemented; refresh-token rotation is not implemented, and access tokens expire after one hour.
 - WebSocket authorization uses one-time tickets bound to a currently active server-side session; it only broadcasts messages created through authenticated REST routes.
-- Rate limiting is process-local, not distributed. Add Redis rate limiting, stricter request validation, media storage, integration tests, monitoring, backups, and load testing before public launch.
+- The API request handlers still use the bounded process-local limiter. A PostgreSQL-backed distributed fixed-window counter primitive and additive bucket-table migration now exist, but the handlers have not yet been switched to it. It uses HMAC-derived bucket IDs so raw IP/account keys are not persisted. Redis/Memcached cache integration, shared-limiter integration tests, cleanup scheduling, stricter request validation, media storage, monitoring, backups, and load testing remain before public launch.
 - Never commit .env or production credentials.
 
 ## Web deployment and API proxy
