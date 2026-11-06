@@ -598,6 +598,22 @@ async function fetchApiUserPosts(
   return (payload.posts || []).map(mapApiPost);
 }
 
+
+export type ArchivedPostSummary = {
+  id: string;
+  caption: string;
+  media_type: "image" | "video" | "text";
+  archived_at: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+};
+
+export async function getArchivedPosts() {
+  const payload = await apiRequest<{ posts?: ArchivedPostSummary[] }>("/api/v1/posts/archive");
+  return payload.posts ?? [];
+}
+
 export async function getHomeFeed(
   viewerId: string,
   cursor?: string | null,
