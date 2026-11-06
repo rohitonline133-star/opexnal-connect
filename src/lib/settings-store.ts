@@ -482,7 +482,7 @@ export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
-    const raw = localStorage.getItem(key) || localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_SETTINGS, ...parsed };
@@ -492,26 +492,27 @@ export function getStoredSettings(userId?: string): OpexnalSettings {
 }
 
 /**
- * Saves updated settings, updates local storage, and syncs profile columns with Supabase when logged in.
+ * Saves settings in the authenticated user's own local namespace and syncs supported profile columns.
  */
 export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const current = getStoredSettings();
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData?.user?.id || userId;
+  const current = getStoredSettings(effectiveUserId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const storageKey = effectiveUserId ? `${STORAGE_KEY}_${effectiveUserId}` : STORAGE_KEY;
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch {
       // ignore storage quota error
     }
   }
 
-  // Synchronize applicable privacy & profile columns with Supabase if userId is authenticated
-  const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData?.user?.id || userId;
+  // Synchronize applicable privacy & profile columns with Supabase when userId is authenticated
 
   if (effectiveUserId) {
     try {
