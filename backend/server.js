@@ -1855,12 +1855,32 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
         "SELECT 1 FROM follow_requests WHERE requester_id=$1 AND target_id=$2 AND status='pending' LIMIT 1",
         [req.user.id, req.params.userId],
       ),
-      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE following_id=$1", [
-        req.params.userId,
-      ]),
-      pool.query("SELECT COUNT(*)::int AS count FROM follows WHERE follower_id=$1", [
-        req.params.userId,
-      ]),
+      pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM follows f
+         JOIN users u ON u.id=f.follower_id
+         WHERE f.following_id=$1
+           AND u.is_deactivated=FALSE
+           AND NOT EXISTS (
+             SELECT 1 FROM user_blocks b
+             WHERE (b.blocker_id=$1 AND b.blocked_id=u.id)
+                OR (b.blocker_id=u.id AND b.blocked_id=$1)
+           )`,
+        [req.params.userId],
+      ),
+      pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM follows f
+         JOIN users u ON u.id=f.following_id
+         WHERE f.follower_id=$1
+           AND u.is_deactivated=FALSE
+           AND NOT EXISTS (
+             SELECT 1 FROM user_blocks b
+             WHERE (b.blocker_id=$1 AND b.blocked_id=u.id)
+                OR (b.blocker_id=u.id AND b.blocked_id=$1)
+           )`,
+        [req.params.userId],
+      ),
     ]);
     return res.json({
       isFollowing: Boolean(following.rowCount),
