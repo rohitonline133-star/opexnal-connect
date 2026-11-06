@@ -18,6 +18,7 @@ const workerId = process.env.OUTBOX_WORKER_ID || `outbox-${randomUUID()}`;
 const batchSize = Math.min(Math.max(Number(process.env.OUTBOX_BATCH_SIZE || 20), 1), 100);
 const pollIntervalMs = Math.min(Math.max(Number(process.env.OUTBOX_POLL_INTERVAL_MS || 1000), 250), 30_000);
 const maxAttempts = Math.min(Math.max(Number(process.env.OUTBOX_MAX_ATTEMPTS || 8), 1), 20);
+const leaseSeconds = Math.min(Math.max(Number(process.env.OUTBOX_LEASE_SECONDS || 300), 30), 3600);
 
 async function claimBatch() {
   const client = await pool.connect();
@@ -28,7 +29,7 @@ async function claimBatch() {
          SELECT id
          FROM event_outbox
          WHERE (status = 'pending' AND available_at <= NOW())
-            OR (status = 'processing' AND locked_at < NOW() - INTERVAL '5 minutes')
+            OR (status = 'processing' AND locked_at < NOW() - ($3 * INTERVAL '1 second'))
          ORDER BY available_at, created_at
          FOR UPDATE SKIP LOCKED
          LIMIT $1
@@ -39,12 +40,12 @@ async function claimBatch() {
        FROM due
        WHERE event.id = due.id
        RETURNING event.id, event.event_type, event.event_version, event.payload, event.attempts`,
-      [batchSize, workerId],
+      [batchSize, workerId, leaseSeconds],
     );
     await client.query("COMMIT");
     return result.rows;
   } catch (error) {
-    await client.query("ROLLBACK");
+    await client.query("ROLLBACK").catch(() => {});
     throw error;
   } finally {
     client.release();
@@ -52,8 +53,9 @@ async function claimBatch() {
 }
 
 async function processEvent(event) {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
     if (event.event_type === "notification.requested" && event.event_version === 1) {
       const notification = notificationFromEvent(event);
@@ -70,27 +72,46 @@ async function processEvent(event) {
     } else {
       throw new Error("Unsupported outbox event type or version.");
     }
-    await client.query(
+    const completed = await client.query(
       `UPDATE event_outbox
        SET status = 'published', published_at = NOW(), locked_at = NULL,
            locked_by = NULL, last_error_code = NULL, updated_at = NOW()
-       WHERE id = $1 AND status = 'processing' AND locked_by = $2`,
+       WHERE id = $1 AND status = 'processing' AND locked_by = $2
+       RETURNING id`,
       [event.id, workerId],
     );
     await client.query("COMMIT");
+    if (completed.rowCount === 1) {
+      console.info("Outbox event published", { eventId: event.id, eventType: event.event_type });
+    } else {
+      console.warn("Outbox event lease no longer owned at completion", {
+        eventId: event.id,
+        eventType: event.event_type,
+      });
+    }
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (client) await client.query("ROLLBACK").catch(() => {});
     const terminal = event.attempts >= maxAttempts;
     const delaySeconds = Math.min(300, 2 ** Math.min(event.attempts, 8));
     try {
-      await pool.query(
+      const scheduled = await pool.query(
         `UPDATE event_outbox
          SET status = $3, available_at = NOW() + ($4 * INTERVAL '1 second'),
              locked_at = NULL, locked_by = NULL,
              last_error_code = 'event_processing_failed', updated_at = NOW()
-         WHERE id = $1 AND status = 'processing' AND locked_by = $2`,
+         WHERE id = $1 AND status = 'processing' AND locked_by = $2
+         RETURNING id`,
         [event.id, workerId, terminal ? "dead" : "pending", delaySeconds],
       );
+      if (scheduled.rowCount === 1) {
+        console.error("Outbox event processing failed", {
+          eventId: event.id,
+          eventType: event.event_type,
+          attempt: event.attempts,
+          outcome: terminal ? "dead_lettered" : "retry_scheduled",
+          error: error?.message || "unknown error",
+        });
+      }
     } catch (retryError) {
       // Leave the lease in place; another worker can reclaim it after lease expiry.
       console.error("Outbox retry scheduling failed", {
@@ -99,7 +120,7 @@ async function processEvent(event) {
       });
     }
   } finally {
-    client.release();
+    client?.release();
   }
 }
 
