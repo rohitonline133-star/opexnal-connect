@@ -69,12 +69,21 @@ function ArchivePage() {
           ) : archivedQuery.data?.length ? (
             <div className="space-y-3">
               {archivedQuery.data.map((post) => (
-                <article key={post.id} className="space-y-3 rounded-xl border border-border bg-card p-4">
+                <article
+                  key={post.id}
+                  className="space-y-3 rounded-xl border border-border bg-card p-4"
+                >
                   <p className="whitespace-pre-wrap break-words text-sm">
-                    {post.caption || (post.media_type === "video" ? "Archived video post" : post.media_type === "image" ? "Archived photo post" : "Archived post")}
+                    {post.caption ||
+                      (post.media_type === "video"
+                        ? "Archived video post"
+                        : post.media_type === "image"
+                          ? "Archived photo post"
+                          : "Archived post")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Archived {new Date(post.archived_at).toLocaleString()} · {post.likes_count} likes · {post.comments_count} comments
+                    Archived {new Date(post.archived_at).toLocaleString()} · {post.likes_count} likes
+                    · {post.comments_count} comments
                   </p>
                   <Button
                     size="sm"
