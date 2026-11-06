@@ -36,6 +36,7 @@ import { initialsFor } from "@/lib/profile";
 import {
   formatCount,
   recordShare,
+  reportPost,
   timeAgo,
   toggleLike,
   toggleSave,
@@ -194,10 +195,19 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     toast.success("Post deleted — you can restore it from Recently Deleted within 30 days");
   };
 
-  const handleReportSubmit = (reason: string) => {
-    setActiveModal(null);
-    setHidden(true);
-    toast.success(`Thank you. We received your report for "${reason}".`);
+  const handleReportSubmit = async (reason: string) => {
+    if (!viewerId) {
+      toast.error("Sign in to report this post.");
+      return;
+    }
+    try {
+      await reportPost(post.id, reason);
+      setActiveModal(null);
+      setHidden(true);
+      toast.success("Thank you. Your report was submitted for review.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not submit your report.");
+    }
   };
 
   if (hidden) {
