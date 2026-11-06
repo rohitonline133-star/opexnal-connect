@@ -24,8 +24,10 @@ jobs:
           test -n "$ANDROID_KEY_ALIAS" || (echo "::error::Missing ANDROID_KEY_ALIAS repository secret" && exit 1)
           test -n "$ANDROID_KEY_PASSWORD" || (echo "::error::Missing ANDROID_KEY_PASSWORD repository secret" && exit 1)
 
-      - name: Checkout source
+      - name: Checkout Android wrapper source
         uses: actions/checkout@v4
+        with:
+          ref: feature/android-apk-capacitor
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
