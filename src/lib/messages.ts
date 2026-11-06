@@ -195,7 +195,10 @@ export async function fetchMessageReactions(conversationId: string) {
  * Subscribe to first-party message events. The short-lived ticket keeps the
  * session token out of the WebSocket URL; polling remains as a fallback.
  */
-export function subscribeToMessageEvents(onMessageCreated: () => void): () => void {
+export function subscribeToMessageEvents(
+  onMessageCreated: () => void,
+  onNotificationCreated?: () => void,
+): () => void {
   let socket: WebSocket | null = null;
   let cancelled = false;
 
@@ -219,6 +222,7 @@ export function subscribeToMessageEvents(onMessageCreated: () => void): () => vo
         try {
           const message = JSON.parse(String(event.data)) as { type?: string };
           if (message.type === "message.created") onMessageCreated();
+          if (message.type === "notification.created") onNotificationCreated?.();
         } catch {
           // Ignore malformed events; the API polling fallback will recover state.
         }
