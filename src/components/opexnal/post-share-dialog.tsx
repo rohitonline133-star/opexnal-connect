@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Copy, Mail, MessageCircle, Search, Send, Share2 } from "lucide-react";
+import { Copy, Mail, MessageCircle, Search, Send, Share2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -150,7 +150,7 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
           )}
         </div>
 
-        <div className="grid grid-cols-4 gap-2 border-t border-border pt-3">
+        <div className="grid grid-cols-5 gap-2 border-t border-border pt-3">
           <button
             type="button"
             onClick={() => {
@@ -183,6 +183,18 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
           >
             <Mail className="h-5 w-5" />
             Email
+          </a>
+          <a
+            href={`sms:?body=${encodeURIComponent(shareText)}`}
+            onClick={() => {
+              if (user?.id) {
+                void recordShare(postId, user.id, "other").catch(() => undefined);
+              }
+            }}
+            className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
+          >
+            <Smartphone className="h-5 w-5" />
+            SMS
           </a>
           <button
             type="button"
