@@ -1007,6 +1007,11 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
         )
         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
+        AND (
+          COALESCE($4::text, 'for_you') <> 'following'
+          OR p.user_id=$1
+          OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)
+        )
       ORDER BY p.created_at DESC
       LIMIT $2`,
       [
@@ -1016,6 +1021,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         Number.isFinite(new Date(req.query.cursor).getTime())
           ? new Date(req.query.cursor).toISOString()
           : null,
+        req.query.feed === "following" ? "following" : "for_you",
       ],
     );
     res.json({ posts: result.rows });
