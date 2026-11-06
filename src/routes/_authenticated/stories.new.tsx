@@ -12,7 +12,7 @@ import { createStory, type StoryAudience } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 const MAX_IMAGE = 15 * 1024 * 1024;
-const MAX_VIDEO = 200 * 1024 * 1024;
+const MAX_VIDEO = 100 * 1024 * 1024;
 
 const audiences: { value: StoryAudience; label: string; hint: string }[] = [
   { value: "public", label: "Everyone", hint: "Anyone who can see your account" },
@@ -62,7 +62,7 @@ function NewStory() {
       return;
     }
     if (next.size > (video ? MAX_VIDEO : MAX_IMAGE)) {
-      toast.error(video ? "Videos must be under 200MB" : "Photos must be under 15MB");
+      toast.error(video ? "Videos must be under 100MB" : "Photos must be under 15MB");
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
