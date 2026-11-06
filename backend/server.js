@@ -1472,6 +1472,25 @@ app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, n
 
 app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next) => {
   const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 30." });
+  const limit = Math.min(requestedLimit, 30);
+  const beforeFollowers = req.query.beforeFollowers === undefined ? null : Number(req.query.beforeFollowers);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  const hasCursor = req.query.beforeFollowers !== undefined || req.query.beforeCreatedAt !== undefined || req.query.beforeId !== undefined;
+  if (hasCursor && (!Number.isSafeInteger(beforeFollowers) || beforeFollowers < 0 || !beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeFollowers, beforeCreatedAt and beforeId cursor is required." });
+  if (!(await rateLimit("user-search:" + req.user.id, 60)))
+    return res.status(429).json({ error: "Too many searches. Try again shortly." });
+  try {
+    const searchPattern = `%${query.replace(/[\\%_]/g, "\\app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next) => {
+  const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
   const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 30);
   if (!(await rateLimit("user-search:" + req.user.id, 60))) {
     return res.status(429).json({ error: "Too many searches. Try again shortly." });
@@ -1489,6 +1508,33 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
           [req.user.id, limit],
         );
     return res.json({ profiles: result.rows.map(publicProfile) });
+  } catch (error) {
+    return next(error);
+  }
+});")}%`;
+    const result = await pool.query(
+      `SELECT ranked.* FROM (
+        ${profileSelect}
+        WHERE u.is_deactivated=FALSE AND u.id<>$1
+          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))
+          AND ($2='' OR u.username ILIKE $3 OR u.display_name ILIKE $3)
+      ) ranked
+      WHERE ($4::bigint IS NULL OR (ranked.followers_count,ranked.created_at,ranked.id)<($4::bigint,$5::timestamptz,$6::uuid))
+      ORDER BY ranked.followers_count DESC,ranked.created_at DESC,ranked.id DESC
+      LIMIT $7`,
+      [req.user.id, query, searchPattern, beforeFollowers, beforeCreatedAt, beforeId, limit + 1],
+    );
+    const hasMore = result.rows.length > limit;
+    const page = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = page.at(-1);
+    return res.json({
+      profiles: page.map(publicProfile),
+      nextCursor: hasMore && last ? {
+        beforeFollowers: Number(last.followers_count),
+        beforeCreatedAt: new Date(last.created_at).toISOString(),
+        beforeId: last.id,
+      } : null,
+    });
   } catch (error) {
     return next(error);
   }
