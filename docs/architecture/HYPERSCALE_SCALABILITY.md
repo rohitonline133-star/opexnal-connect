@@ -92,7 +92,8 @@ Do not create a database cluster for every city by default. That multiplies oper
 
 ### Specialized stores
 
-- Redis: ephemeral cache, shared rate-limit counters, presence, and short-lived coordination; never the only copy of durable business data.
+- Memcached: optional low-latency cache for explicitly cacheable derived data; use short TTLs and deliberate invalidation, and never treat it as authoritative storage. An ASCII-protocol adapter exists in the backend but is not yet wired to application endpoints.
+- Redis: ephemeral cache, shared rate-limit counters, presence, and short-lived coordination; never the only copy of durable business data. The current shared rate limiter uses PostgreSQL, not Memcached.
 - Search engine: derived index for full-text and discovery queries.
 - Wide-column / distributed store: consider for very high-volume feed or message workloads only after workload benchmarks establish the need.
 - Object storage: originals, variants, thumbnails, and processed media with lifecycle policies.
