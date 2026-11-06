@@ -59,7 +59,7 @@ export async function checkForPlayStoreUpdates() {
     if (info.flexibleUpdateAllowed) {
       toast("A new Opexnal update is available", {
         description: "Download it in the background while you keep using Opexnal.",
-        duration: Infinity,
+        duration: 10000,
         action: {
           label: "Update",
           onClick: () => {
@@ -69,7 +69,6 @@ export async function checkForPlayStoreUpdates() {
             });
           },
         },
-        cancel: { label: "Later", onClick: () => undefined },
       });
     } else {
       toast("A new Opexnal update is available", {
