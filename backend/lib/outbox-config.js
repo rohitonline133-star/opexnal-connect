@@ -15,3 +15,12 @@ export function workerIdentifier(value, fallback) {
   }
   return identifier;
 }
+
+export function outboxWorkerSettings(env = {}) {
+  const poolMax = boundedInteger(env.OUTBOX_DB_POOL_MAX, 3, 1, 20, "OUTBOX_DB_POOL_MAX");
+  const batchSize = boundedInteger(env.OUTBOX_BATCH_SIZE, 3, 1, 20, "OUTBOX_BATCH_SIZE");
+  if (batchSize > poolMax) {
+    throw new RangeError("OUTBOX_BATCH_SIZE cannot exceed OUTBOX_DB_POOL_MAX.");
+  }
+  return { poolMax, batchSize };
+}
