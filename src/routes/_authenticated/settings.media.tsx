@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +38,13 @@ function SettingsMediaPage() {
     settings?.highQualityUploads ?? true,
   );
   const [autoPlayVideos, setAutoPlayVideos] = useState(settings?.autoPlayVideosOnCellular ?? true);
+
+  useEffect(() => {
+    if (!settings) return;
+    setDataSaver(settings.cellularDataSaver);
+    setHighQualityUploads(settings.highQualityUploads ?? true);
+    setAutoPlayVideos(settings.autoPlayVideosOnCellular ?? true);
+  }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
