@@ -65,7 +65,7 @@ export function ShareProfileDialog({
           url: profileUrl,
         });
       } else {
-        handleCopy();
+        await handleCopy();
       }
     } catch {
       // User cancelled
