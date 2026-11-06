@@ -25,17 +25,11 @@ type PostShareDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function PostShareDialog({
-  postId,
-  open,
-  onOpenChange,
-}: PostShareDialogProps) {
+export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogProps) {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(
-    null,
-  );
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
   const { data: conversations = [], isLoading } = useQuery({
@@ -51,10 +45,10 @@ export function PostShareDialog({
       .filter((conversation) => {
         const peer = conversation.others[0]!;
         return (
-          !query ||
-          peer.username.toLowerCase().includes(query) ||
-          peer.display_name.toLowerCase().includes(query)
-        );
+        !query ||
+        peer.username.toLowerCase().includes(query) ||
+        peer.display_name.toLowerCase().includes(query)
+      );
       });
   }, [conversations, search]);
 
@@ -84,9 +78,7 @@ export function PostShareDialog({
       setSelectedConversation(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not send this post.",
-      );
+      toast.error(error instanceof Error ? error.message : "Could not send this post.");
     } finally {
       setSending(false);
     }
@@ -97,9 +89,7 @@ export function PostShareDialog({
       <DialogContent className="flex max-h-[80vh] max-w-md flex-col gap-4 overflow-hidden rounded-t-2xl p-4">
         <DialogHeader>
           <DialogTitle>Share post</DialogTitle>
-          <DialogDescription>
-            Send this post to a conversation or share its link.
-          </DialogDescription>
+          <DialogDescription>Send this post to a conversation or share its link.</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
@@ -114,9 +104,7 @@ export function PostShareDialog({
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Loading conversations…
-            </p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Loading conversations…</p>
           ) : contacts.length ? (
             <div className="grid grid-cols-3 gap-3">
               {contacts.map((conversation) => {
@@ -126,11 +114,7 @@ export function PostShareDialog({
                   <button
                     key={conversation.id}
                     type="button"
-                    onClick={() =>
-                      setSelectedConversation(
-                        selected ? null : conversation.id,
-                      )
-                    }
+                    onClick={() => setSelectedConversation(selected ? null : conversation.id)}
                     aria-pressed={selected}
                     className={`flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2 text-center transition-colors ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-secondary"}`}
                   >
@@ -155,9 +139,7 @@ export function PostShareDialog({
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                No matching conversations yet.
-              </p>
+              <p className="text-sm text-muted-foreground">No matching conversations yet.</p>
               <Link
                 to="/messages"
                 onClick={() => onOpenChange(false)}
@@ -174,9 +156,7 @@ export function PostShareDialog({
             type="button"
             onClick={() => {
               if (user?.id) {
-                void recordShare(postId, user.id, "other").catch(
-                  () => undefined,
-                );
+                void recordShare(postId, user.id, "other").catch(() => undefined);
               }
               window.location.href = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
             }}
@@ -197,9 +177,7 @@ export function PostShareDialog({
             href={`mailto:?subject=${encodeURIComponent("Opexnal post")}&body=${encodeURIComponent(shareText)}`}
             onClick={() => {
               if (user?.id) {
-                void recordShare(postId, user.id, "other").catch(
-                  () => undefined,
-                );
+                void recordShare(postId, user.id, "other").catch(() => undefined);
               }
             }}
             className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
