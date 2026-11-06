@@ -18,6 +18,7 @@ import { WebSocketServer } from "ws";
 import nodemailer from "nodemailer";
 import multer from "multer";
 import { fileTypeFromFile } from "file-type";
+import { enqueueOutboxEvent } from "./lib/outbox.js";
 
 const { Pool } = pg;
 const app = express();
@@ -239,22 +240,36 @@ async function notifyUser(
   metadata = {},
 ) {
   if (!recipientId || recipientId === actorId) return;
+  const client = await pool.connect();
   try {
-    await pool.query(
-      "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
-      [
-        randomUUID(),
+    await client.query("BEGIN");
+    const aggregateId =
+      typeof targetId === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)
+        ? targetId
+        : randomUUID();
+    await enqueueOutboxEvent(client, {
+      eventType: "notification.requested",
+      eventVersion: 1,
+      aggregateType: "notification",
+      aggregateId,
+      idempotencyKey: randomUUID(),
+      payload: {
         recipientId,
-        actorId || null,
-        type,
+        actorId: actorId || null,
+        notificationType: type,
         targetType,
         targetId,
-        JSON.stringify(metadata),
-      ],
-    );
+        metadata,
+      },
+    });
+    await client.query("COMMIT");
   } catch (error) {
-    // A notification failure must not turn a successful post/message action into a client-visible failure.
-    console.error("Notification write failed", error?.message || "unknown error");
+    await client.query("ROLLBACK").catch(() => {});
+    // A notification enqueue failure must not turn a successful post/message action into a client-visible failure.
+    console.error("Notification enqueue failed", error?.message || "unknown error");
+  } finally {
+    client.release();
   }
 }
 
