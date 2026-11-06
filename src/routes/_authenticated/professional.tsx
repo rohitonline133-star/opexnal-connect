@@ -1,13 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  BarChart3,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Award,
-  ArrowRight,
-  ShieldCheck,
-} from "lucide-react";
+import { DollarSign, Award, ArrowRight, BarChart3 } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 
 export const Route = createFileRoute("/_authenticated/professional")({
@@ -33,22 +25,25 @@ function ProfessionalDashboardPage() {
         />
 
         <div className="p-4 space-y-6">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-1">
-              <span className="text-[11px] text-gray-400">Accounts Reached (30d)</span>
-              <p className="text-xl font-bold text-white">48.2K</p>
-              <span className="text-[11px] text-emerald-400 font-semibold">+14.2%</span>
+          <section
+            aria-labelledby="insights-status"
+            className="rounded-2xl border border-[#333] bg-[#121212] p-4 space-y-2"
+          >
+            <div className="flex items-center gap-2 text-gray-300">
+              <BarChart3 className="h-5 w-5" aria-hidden="true" />
+              <h2 id="insights-status" className="text-sm font-bold">Insights & analytics</h2>
             </div>
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-1">
-              <span className="text-[11px] text-gray-400">Total Followers</span>
-              <p className="text-xl font-bold text-white">12,840</p>
-              <span className="text-[11px] text-emerald-400 font-semibold">+412 this week</span>
-            </div>
-          </div>
+            <p className="text-sm font-semibold text-white">Verified analytics are not available yet</p>
+            <p className="text-xs leading-5 text-gray-400">
+              Opexnal will show reach, profile visits, views, engagement and follower growth here
+              when event tracking and account metrics are connected. We do not display sample
+              numbers as real account results.
+            </p>
+          </section>
 
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Creator Monetization
+              Creator tools
             </h3>
 
             <Link
@@ -60,9 +55,9 @@ function ProfessionalDashboardPage() {
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white">Monetization & Payouts</h4>
+                  <h4 className="text-xs font-bold text-white">Monetization & payouts</h4>
                   <p className="text-[11px] text-gray-400">
-                    Subscriptions, gifts, and partner payouts
+                    Subscriptions, gifts and partner payouts
                   </p>
                 </div>
               </div>
@@ -78,7 +73,7 @@ function ProfessionalDashboardPage() {
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white">Branded Content Tools</h4>
+                  <h4 className="text-xs font-bold text-white">Branded content tools</h4>
                   <p className="text-[11px] text-gray-400">
                     Paid partnership tags and sponsor approvals
                   </p>
