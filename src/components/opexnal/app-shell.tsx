@@ -29,7 +29,7 @@ export function AppShell({
 
       <nav
         aria-label="Primary"
-        className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto flex w-full max-w-md items-center justify-around border-t border-border bg-background/95 px-2 pt-2 backdrop-blur"
+        className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto flex h-14 w-full max-w-md items-center justify-around border-t border-border bg-background/95 px-2 backdrop-blur"
       >
         {tabs.map(({ to, label, icon: Icon, ...rest }) => {
           const primary = "primary" in rest && rest.primary;
@@ -50,7 +50,7 @@ export function AppShell({
                   (active ? "text-foreground" : "text-muted-foreground hover:text-foreground"),
               )}
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <Icon className="h-6 w-6" aria-hidden="true" />
             </Link>
           );
         })}
