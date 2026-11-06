@@ -48,7 +48,7 @@ function SettingsAccountPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Account information saved successfully.");
+      toast.success("Saved on this device. Server-side account sync is not connected.");
     },
     onError: () => {
       toast.error("Failed to update account information.");
@@ -68,8 +68,7 @@ function SettingsAccountPage() {
           <div className="p-3.5 bg-[#121212] border border-[#262626] rounded-xl flex items-center gap-3 text-xs text-gray-300">
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
             <p>
-              Your contact details are encrypted and used for account verification and security
-              notifications.
+              These details are saved in this browser on this device. They are not verified or synced to your account server yet.
             </p>
           </div>
 
