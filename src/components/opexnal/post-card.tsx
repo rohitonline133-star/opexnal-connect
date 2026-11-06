@@ -177,34 +177,50 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     );
   };
 
-  const handleSaveEdit = () => {
-    setCaptionText(editInput);
-    setActiveModal(null);
-    toast.success("Caption updated successfully");
+  const handleSaveEdit = async () => {
+    if (!viewerId || !isOwner) {
+      toast.error("You can only edit your own posts.");
+      return;
+    }
+    try {
+      const response = await fetch(apiUrl(`/api/v1/posts/${encodeURIComponent(post.id)}`), {
+        method: "PATCH",
+        headers: { ...authClient.getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify({ caption: editInput }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; post?: { caption?: string } };
+      if (!response.ok) throw new Error(payload.error || "Could not update this post.");
+      setCaptionText(payload.post?.caption ?? editInput);
+      setActiveModal(null);
+      toast.success("Caption updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update this post.");
+    }
   };
 
   const handleArchivePost = () => {
-    setHidden(true);
     setActiveModal(null);
-    toast.success("Post moved to your private Archive");
+    toast.error("Post Archive is not connected yet. Your post was not changed.");
   };
 
-  const handleDeletePost = () => {
-    setHidden(true);
-    setActiveModal(null);
-    // Add to Recently Deleted in settings store
-    const settings = getStoredSettings();
-    const newItem = {
-      id: post.id,
-      type: "post" as const,
-      title: captionText.slice(0, 30) || "Post without caption",
-      deletedAt: "Just now",
-      daysRemaining: 30,
-    };
-    saveSettings({
-      recentlyDeletedItems: [newItem, ...(settings.recentlyDeletedItems || [])],
-    });
-    toast.success("Post deleted — you can restore it from Recently Deleted within 30 days");
+  const handleDeletePost = async () => {
+    if (!viewerId || !isOwner) {
+      toast.error("You can only delete your own posts.");
+      return;
+    }
+    try {
+      const response = await fetch(apiUrl(`/api/v1/posts/${encodeURIComponent(post.id)}`), {
+        method: "DELETE",
+        headers: authClient.getAuthHeader(),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not delete this post.");
+      setHidden(true);
+      setActiveModal(null);
+      toast.success("Post deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete this post.");
+    }
   };
 
   const handleReportSubmit = async (reason: string) => {
