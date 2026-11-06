@@ -1499,7 +1499,7 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
       ) ranked
       WHERE ($4::bigint IS NULL OR (ranked.followers_count,ranked.created_at,ranked.id)<($4::bigint,$5::timestamptz,$6::uuid))
       ORDER BY ranked.followers_count DESC,ranked.created_at DESC,ranked.id DESC
-      LIMIT $7\`,
+      LIMIT $7`,
       [req.user.id, query, searchPattern, beforeFollowers, beforeCreatedAt, beforeId, limit + 1],
     );
     const hasMore = result.rows.length > limit;
