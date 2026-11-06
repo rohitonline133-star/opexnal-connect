@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS posts (
   media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video','text')),
   visibility VARCHAR(10) NOT NULL DEFAULT 'public' CHECK (visibility IN ('public','followers','private')),
   location_name VARCHAR(120), comments_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK (media_type = 'text' OR media_url IS NOT NULL)
 );
