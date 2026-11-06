@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Eye, Type, Sparkles, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +36,13 @@ function SettingsAccessibilityPage() {
   const [autoCaptions, setAutoCaptions] = useState(settings?.autoGenerateCaptions ?? true);
   const [highContrast, setHighContrast] = useState(settings?.highContrastText ?? false);
   const [reducedMotion, setReducedMotion] = useState(settings?.reducedMotion ?? false);
+
+  useEffect(() => {
+    if (!settings) return;
+    setAutoCaptions(settings.autoGenerateCaptions);
+    setHighContrast(settings.highContrastText ?? false);
+    setReducedMotion(settings.reducedMotion ?? false);
+  }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
