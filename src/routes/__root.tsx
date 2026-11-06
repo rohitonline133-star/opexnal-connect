@@ -8,6 +8,12 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { Capacitor } from "@capacitor/core";
+import {
+  AppUpdate,
+  AppUpdateAvailability,
+  FlexibleUpdateInstallStatus,
+} from "@capawesome/capacitor-app-update";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -138,6 +144,91 @@ function RootComponent() {
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== "android") return;
+
+    let active = true;
+    let updateListener: { remove: () => Promise<void> } | undefined;
+
+    const checkForPlayStoreUpdate = async () => {
+      try {
+        updateListener = await AppUpdate.addListener(
+          "onFlexibleUpdateStateChange",
+          (state) => {
+            if (
+              active &&
+              state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED
+            ) {
+              toast("Opexnal update is ready", {
+                description: "Restart Opexnal to finish installing the update.",
+                duration: Infinity,
+                action: {
+                  label: "Restart",
+                  onClick: () => {
+                    void AppUpdate.completeFlexibleUpdate().catch(() => {
+                      toast.error("Update could not be completed. Please try again.");
+                    });
+                  },
+                },
+              });
+            }
+          },
+        );
+
+        const info = await AppUpdate.getAppUpdateInfo();
+        if (!active || info.updateAvailability !== AppUpdateAvailability.UPDATE_AVAILABLE) {
+          return;
+        }
+
+        if (info.updatePriority >= 4 && info.immediateUpdateAllowed) {
+          await AppUpdate.performImmediateUpdate();
+          return;
+        }
+
+        const openStore = () => {
+          void AppUpdate.openAppStore().catch(() => {
+            toast.error("Could not open Google Play Store.");
+          });
+        };
+
+        if (info.flexibleUpdateAllowed) {
+          toast("A new Opexnal update is available", {
+            description: "Download it in the background while you keep using Opexnal.",
+            duration: Infinity,
+            action: {
+              label: "Update",
+              onClick: () => {
+                void AppUpdate.startFlexibleUpdate().catch(() => {
+                  toast.error("The update could not be started. Try Google Play Store.");
+                  openStore();
+                });
+              },
+            },
+            cancel: {
+              label: "Later",
+              onClick: () => undefined,
+            },
+          });
+        } else {
+          toast("A new Opexnal update is available", {
+            description: "Open Google Play Store to install the latest version.",
+            duration: Infinity,
+            action: { label: "Open Play Store", onClick: openStore },
+          });
+        }
+      } catch {
+        // Update checks are best-effort; they must never block app startup.
+      }
+    };
+
+    void checkForPlayStoreUpdate();
+
+    return () => {
+      active = false;
+      void updateListener?.remove();
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
