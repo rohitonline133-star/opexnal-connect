@@ -21,6 +21,7 @@ import {
   Check,
   QrCode,
   Pin,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -91,7 +92,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<
-    "why" | "report" | "edit" | "delete" | "archive" | "qr" | null
+    "why" | "report" | "edit" | "delete" | "archive" | "qr" | "insights" | null
   >(null);
   const [editInput, setEditInput] = useState(captionText);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -457,6 +458,17 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
+                    setActiveModal("insights");
+                  }}
+                  className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+                >
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span>View insights</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
                     setActiveModal("edit");
                   }}
                   className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors font-semibold"
@@ -578,6 +590,45 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
               </>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post Insights: show only counters returned by the post record. */}
+      <Dialog open={activeModal === "insights"} onOpenChange={() => setActiveModal(null)}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Post insights
+            </DialogTitle>
+            <DialogDescription>
+              Available engagement totals for this post. These are not reach or impression analytics.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <div className="rounded-xl border border-border bg-surface p-3">
+              <p className="text-xs text-muted-foreground">Likes</p>
+              <p className="text-xl font-semibold tabular-nums">{formatCount(likes)}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-3">
+              <p className="text-xs text-muted-foreground">Comments</p>
+              <p className="text-xl font-semibold tabular-nums">{formatCount(post.comments_count)}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-3">
+              <p className="text-xs text-muted-foreground">Shares</p>
+              <p className="text-xl font-semibold tabular-nums">{formatCount(post.shares_count)}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-3">
+              <p className="text-xs text-muted-foreground">Saves</p>
+              <p className="text-xl font-semibold tabular-nums">{formatCount(post.saves_count)}</p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">
+            Impressions, reach, watch time, profile visits, follows, audience demographics and trend graphs are not connected yet.
+          </div>
+          <Button variant="surface" onClick={() => setActiveModal(null)} className="w-full rounded-xl">
+            Close
+          </Button>
         </DialogContent>
       </Dialog>
 
