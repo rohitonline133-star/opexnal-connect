@@ -38,6 +38,7 @@ import {
   recordShare,
   reportPost,
   timeAgo,
+  updatePost,
   toggleLike,
   toggleSave,
   type FeedPost,
@@ -165,10 +166,16 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     );
   };
 
-  const handleSaveEdit = () => {
-    setCaptionText(editInput);
-    setActiveModal(null);
-    toast.success("Caption updated successfully");
+  const handleSaveEdit = async () => {
+    if (!isOwner) return;
+    try {
+      const result = await updatePost(post.id, { caption: editInput });
+      setCaptionText(result.post.caption);
+      setActiveModal(null);
+      toast.success("Caption updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update caption.");
+    }
   };
 
   const handleArchivePost = () => {
@@ -433,10 +440,17 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setCommentsDisabled(!commentsDisabled);
-                    setMenuOpen(false);
-                    toast.success(commentsDisabled ? "Comments enabled" : "Comments turned off");
+                  onClick={async () => {
+                    if (!isOwner) return;
+                    const nextDisabled = !commentsDisabled;
+                    try {
+                      await updatePost(post.id, { commentsEnabled: !nextDisabled });
+                      setCommentsDisabled(nextDisabled);
+                      setMenuOpen(false);
+                      toast.success(nextDisabled ? "Comments turned off" : "Comments enabled");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not update comment settings.");
+                    }
                   }}
                   className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
                 >
