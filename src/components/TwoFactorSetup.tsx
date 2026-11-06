@@ -27,7 +27,11 @@ export function TwoFactorSetup() {
         return;
       }
       const verified = data?.totp?.find((item) => item.status === "verified");
-      setFactor(verified ? { id: verified.id, status: verified.status, friendly_name: verified.friendly_name } : null);
+      setFactor(
+        verified
+          ? { id: verified.id, status: verified.status, friendly_name: verified.friendly_name }
+          : null,
+      );
       setLoading(false);
     });
     return () => {
@@ -79,7 +83,11 @@ export function TwoFactorSetup() {
       setCode("");
       toast.success("Two-factor authentication is enabled on your account.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The authenticator code could not be verified.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "The authenticator code could not be verified.",
+      );
     } finally {
       setWorking(false);
     }
@@ -168,7 +176,8 @@ export function TwoFactorSetup() {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            Add an authenticator app as a second sign-in factor. It becomes active only after the provider verifies a current code.
+            Add an authenticator app as a second sign-in factor. It becomes active only after the
+            provider verifies a current code.
           </p>
           <button
             type="button"
