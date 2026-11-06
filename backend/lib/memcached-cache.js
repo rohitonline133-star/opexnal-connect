@@ -70,11 +70,11 @@ function command(server, payload, timeoutMs = 750) {
       }
       const text = data.toString("utf8");
       if (
-        text.endsWith("END\\r\\n") ||
-        text === "STORED\\r\\n" ||
-        text === "NOT_STORED\\r\\n" ||
-        text === "DELETED\\r\\n" ||
-        text === "NOT_FOUND\\r\\n" ||
+        text.endsWith("END\r\n") ||
+        text === "STORED\r\n" ||
+        text === "NOT_STORED\r\n" ||
+        text === "DELETED\r\n" ||
+        text === "NOT_FOUND\r\n" ||
         text.startsWith("CLIENT_ERROR") ||
         text.startsWith("SERVER_ERROR") ||
         text.startsWith("ERROR")
