@@ -1489,7 +1489,7 @@ app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next)
   if (!(await rateLimit("user-search:" + req.user.id, 60)))
     return res.status(429).json({ error: "Too many searches. Try again shortly." });
   try {
-    const searchPattern = `%${query.replace(/[\\%_]/g, "\\"\\\\$&"")}%`;
+    const searchPattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
     const result = await pool.query(
       `SELECT ranked.* FROM (
         ${profileSelect}
