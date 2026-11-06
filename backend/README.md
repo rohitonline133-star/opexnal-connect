@@ -16,6 +16,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_like_visibility.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_transactional_outbox.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_read_indexes.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_follow_requests_cursor_index.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_distributed_rate_limits.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
@@ -30,6 +31,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints.
+- GET /api/v1/follow-requests supports keyset pagination with `limit` (1–100, default 30) and the paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; callers should pass both cursor fields unchanged for the next page.
 - GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
 
 ## Deployment boundary
