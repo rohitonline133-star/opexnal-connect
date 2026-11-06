@@ -2665,7 +2665,24 @@ app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
-      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND p.archived_at IS NULL AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
+      `SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at
+       FROM posts p JOIN users u ON u.id=p.user_id
+       WHERE p.media_type='video' AND p.archived_at IS NULL AND u.is_deactivated=FALSE
+         AND NOT EXISTS (
+           SELECT 1 FROM user_blocks b
+           WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id)
+              OR (b.blocker_id=p.user_id AND b.blocked_id=$1)
+         )
+         AND (
+           p.user_id=$1
+           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (
+             SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id
+           )))
+           OR (p.visibility='followers' AND EXISTS (
+             SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id
+           ))
+         )
+       ORDER BY p.created_at DESC LIMIT $2`,
       [req.user.id, limit],
     );
     res.json({ reels: result.rows });
