@@ -1841,9 +1841,10 @@ app.delete("/api/v1/users/:userId/restrict", dbRequired, authRequired, async (re
 
 app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const target = await pool.query("SELECT id FROM users WHERE id=$1 LIMIT 1", [
-      req.params.userId,
-    ]);
+    const target = await pool.query(
+      "SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2)) LIMIT 1",
+      [req.params.userId, req.user.id],
+    );
     if (!target.rowCount) return res.status(404).json({ error: "User not found." });
     const [following, pending, followers, own] = await Promise.all([
       pool.query("SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1", [
@@ -1941,7 +1942,9 @@ app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, ne
     const result = await pool.query(
       `SELECT fr.id,fr.requester_id,fr.created_at,u.username,u.display_name,u.avatar_url
        FROM follow_requests fr JOIN users u ON u.id=fr.requester_id
-       WHERE fr.target_id=$1 AND fr.status='pending' ORDER BY fr.created_at DESC LIMIT 100`,
+       WHERE fr.target_id=$1 AND fr.status='pending' AND u.is_deactivated=FALSE
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))
+       ORDER BY fr.created_at DESC LIMIT 100`,
       [req.user.id],
     );
     return res.json({ requests: result.rows });
@@ -1959,7 +1962,11 @@ app.post(
     try {
       await client.query("BEGIN");
       const request = await client.query(
-        "SELECT id,requester_id,target_id FROM follow_requests WHERE id=$1 AND target_id=$2 AND status='pending' FOR UPDATE",
+        `SELECT fr.id,fr.requester_id,fr.target_id FROM follow_requests fr
+         JOIN users requester ON requester.id=fr.requester_id
+         WHERE fr.id=$1 AND fr.target_id=$2 AND fr.status='pending' AND requester.is_deactivated=FALSE
+           AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=requester.id) OR (b.blocker_id=requester.id AND b.blocked_id=$2))
+         FOR UPDATE OF fr`,
         [req.params.requestId, req.user.id],
       );
       if (!request.rowCount) {
