@@ -34,6 +34,14 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 
 The frontend and API are separate processes. Deploy the API on a Node.js host that supports WebSocket connections and configure OPEXNAL_API_URL on the web server to the API's fixed origin. The TanStack server proxies /api/v1/* requests to that configured origin. The current Vercel environment has not been configured with this API URL, and several legacy data modules still need migration to first-party endpoints; this is not a completed production migration.
 
+## Transactional outbox worker
+
+The worker supports version 1 `notification.requested` events. After applying the migration, configure `DATABASE_URL` and run `npm run backend:outbox` as a separately supervised process. It claims rows with PostgreSQL `FOR UPDATE SKIP LOCKED`, writes the notification and marks the event published in one transaction, and uses the event UUID as the notification ID for idempotent retries. Failed events use bounded exponential retry and move to `dead` after the configured attempt limit.
+
+Optional environment settings: `OUTBOX_DB_POOL_MAX` (default 3), `OUTBOX_BATCH_SIZE` (default 20, maximum 100), `OUTBOX_POLL_INTERVAL_MS` (default 1000), `OUTBOX_MAX_ATTEMPTS` (default 8), and `OUTBOX_WORKER_ID`.
+
+**Activation boundary:** the existing `notifyUser` request helper is not yet changed to enqueue outbox events. The worker remains idle until application code inserts `notification.requested` rows in the same transaction as the business action. Do not run multiple independent delivery systems for the same notification. Configure process supervision, queue-age/dead-event alerts, and staging integration tests before production use.
+
 ## Transactional outbox status
 
 The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. It does not change request handlers, publish events, or start a worker. Do not treat notifications or other side effects as outbox-backed until application writes enqueue rows in the same database transaction and a separately operated publisher/consumer has idempotency, retry, dead-letter, monitoring, and integration-test coverage. Keep sensitive values out of event payloads.
