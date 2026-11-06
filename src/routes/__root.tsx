@@ -139,6 +139,26 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    let active = true;
+    let stopUpdateCheck: (() => void) | undefined;
+
+    void import("@/lib/play-store-updates")
+      .then(({ checkForPlayStoreUpdates }) => checkForPlayStoreUpdates())
+      .then((cleanup) => {
+        if (active) stopUpdateCheck = cleanup;
+        else cleanup();
+      })
+      .catch(() => {
+        // Native update support is optional; never block the web app.
+      });
+
+    return () => {
+      active = false;
+      stopUpdateCheck?.();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
