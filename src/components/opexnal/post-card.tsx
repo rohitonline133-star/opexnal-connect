@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import QRCode from "qrcode";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { MediaCarousel } from "@/components/opexnal/post-media";
+import { PostShareDialog } from "@/components/opexnal/post-share-dialog";
 import {
   Dialog,
   DialogContent,
@@ -84,6 +85,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
   // 3 Dots Menu States
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<
     "why" | "report" | "edit" | "delete" | "archive" | "qr" | null
   >(null);
@@ -119,23 +121,8 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     }
   }
 
-  async function onShare() {
-    const url = `${window.location.origin}/p/${post.id}`;
-    const canShare = typeof navigator.share === "function";
-    try {
-      if (canShare) {
-        await navigator.share({ url, title: "Opexnal post" });
-        if (viewerId) await recordShare(post.id, viewerId, "other");
-      } else {
-        await navigator.clipboard.writeText(url);
-        if (viewerId) await recordShare(post.id, viewerId, "link");
-        toast.success("Link copied to clipboard");
-      }
-    } catch (error) {
-      // A cancelled native share is not an error and must not be counted.
-      if (error instanceof Error && error.name === "AbortError") return;
-      toast.error("Could not share this post. Please try again.");
-    }
+  function onShare() {
+    setShareDialogOpen(true);
   }
 
   // 3-Dots Action Handlers
@@ -741,6 +728,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
           </div>
         </DialogContent>
       </Dialog>
+      <PostShareDialog postId={post.id} open={shareDialogOpen} onOpenChange={setShareDialogOpen} />
     </article>
   );
 }
