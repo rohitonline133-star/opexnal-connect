@@ -674,7 +674,7 @@ export async function toggleSave(postId: string, _userId: string, saved: boolean
 
 export async function updatePost(
   postId: string,
-  update: { caption?: string; commentsEnabled?: boolean },
+  update: { caption?: string; commentsEnabled?: boolean; isArchived?: boolean },
 ) {
   return apiRequest<{
     post: { id: string; caption: string; comments_enabled: boolean; updated_at: string };
