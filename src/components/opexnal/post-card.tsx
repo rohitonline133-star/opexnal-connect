@@ -75,7 +75,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [hidden, setHidden] = useState(false);
   const [captionText, setCaptionText] = useState(post.caption || "");
   const [commentsDisabled, setCommentsDisabled] = useState(post.comments_enabled === false);
-  const [hideLikes, setHideLikes] = useState(false);
+  const [hideLikes, setHideLikes] = useState(post.hide_likes_count === true);
 
   // 3 Dots Menu States
   const [menuOpen, setMenuOpen] = useState(false);
@@ -485,10 +485,36 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setHideLikes(!hideLikes);
-                    setMenuOpen(false);
-                    toast.success(hideLikes ? "Like count visible" : "Like count hidden");
+                  onClick={async () => {
+                    if (!viewerId || !isOwner) {
+                      toast.error("You can only change like visibility on your own posts.");
+                      return;
+                    }
+                    const nextHideLikes = !hideLikes;
+                    try {
+                      const response = await fetch(
+                        apiUrl(`/api/v1/posts/${encodeURIComponent(post.id)}`),
+                        {
+                          method: "PATCH",
+                          headers: {
+                            ...authClient.getAuthHeader(),
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ hideLikesCount: nextHideLikes }),
+                        },
+                      );
+                      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+                      if (!response.ok) {
+                        throw new Error(payload.error || "Could not update like visibility.");
+                      }
+                      setHideLikes(nextHideLikes);
+                      setMenuOpen(false);
+                      toast.success(nextHideLikes ? "Like count hidden" : "Like count visible");
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error ? error.message : "Could not update like visibility.",
+                      );
+                    }
                   }}
                   className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
                 >
