@@ -29,6 +29,7 @@ test("validates keys, TTL, and timeout limits", async () => {
   await assert.rejects(cache.getJson("bad key"), /safe ASCII/);
   await assert.rejects(cache.setJson("safe:key", {}, 0), /TTL/);
   assert.throws(() => createMemcachedCache({ timeoutMs: 10 }), /timeout/);
+  assert.throws(() => createMemcachedCache({ servers: ["bad-host"] }), /host:port/);
 });
 
 test("speaks Memcached ASCII get/set/delete protocol and JSON round-trips", async () => {
