@@ -14,6 +14,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261104_account_recovery.sql
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_archive.sql
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_like_visibility.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_transactional_outbox.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
@@ -32,6 +33,10 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 ## Deployment boundary
 
 The frontend and API are separate processes. Deploy the API on a Node.js host that supports WebSocket connections and configure OPEXNAL_API_URL on the web server to the API's fixed origin. The TanStack server proxies /api/v1/* requests to that configured origin. The current Vercel environment has not been configured with this API URL, and several legacy data modules still need migration to first-party endpoints; this is not a completed production migration.
+
+## Transactional outbox status
+
+The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. It does not change request handlers, publish events, or start a worker. Do not treat notifications or other side effects as outbox-backed until application writes enqueue rows in the same database transaction and a separately operated publisher/consumer has idempotency, retry, dead-letter, monitoring, and integration-test coverage. Keep sensitive values out of event payloads.
 
 ## Not yet production complete
 
