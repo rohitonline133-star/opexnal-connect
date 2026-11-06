@@ -2,11 +2,10 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  Bell,
   Loader2,
   MessageSquare,
   PlusSquare,
-  Sparkles,
-  Radio,
   Star,
   RefreshCw,
   Users,
@@ -100,26 +99,16 @@ function HomeFeed() {
     <AppShell
       header={
         <ScreenHeader
-          title={
-            <div className="flex items-center gap-2">
-              <OpexnalWordmark className="text-lg" />
-            </div>
-          }
+          title=""
+          left={<OpexnalWordmark className="text-lg" />}
           right={
             <div className="flex items-center gap-1">
               <Link
-                to="/live"
-                aria-label="Start Live broadcast"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-red-500 hover:bg-red-500/10 transition-colors"
+                to="/activity"
+                aria-label="Notifications and activity"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
               >
-                <Radio className="h-5 w-5" />
-              </Link>
-              <Link
-                to="/ai"
-                aria-label="Opexnal AI Studio"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-primary hover:bg-primary/10 transition-colors"
-              >
-                <Sparkles className="h-5 w-5" />
+                <Bell className="h-5 w-5" />
               </Link>
               <Link
                 to="/messages"
