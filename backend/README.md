@@ -34,6 +34,10 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 
 The frontend and API are separate processes. Deploy the API on a Node.js host that supports WebSocket connections and configure OPEXNAL_API_URL on the web server to the API's fixed origin. The TanStack server proxies /api/v1/* requests to that configured origin. The current Vercel environment has not been configured with this API URL, and several legacy data modules still need migration to first-party endpoints; this is not a completed production migration.
 
+### Producer transaction contract
+
+Application code can use `backend/lib/outbox.js` and call `enqueueOutboxEvent(client, event)` with the same PostgreSQL client that performs the authoritative write. Insert the event before committing that transaction; this prevents a successful business write from losing its corresponding event. The helper validates the envelope and uses the unique idempotency key to avoid duplicate event rows. It is not yet wired into the existing route handlers or `notifyUser`.
+
 ## Transactional outbox worker
 
 The worker supports version 1 `notification.requested` events. After applying the migration, configure `DATABASE_URL` and run `npm run backend:outbox` as a separately supervised process. It claims rows with PostgreSQL `FOR UPDATE SKIP LOCKED`, writes the notification and marks the event published in one transaction, and uses the event UUID as the notification ID for idempotent retries. Failed events use bounded exponential retry and move to `dead` after the configured attempt limit.
