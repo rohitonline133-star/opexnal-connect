@@ -15,6 +15,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_archive.sql
    psql "$DATABASE_URL" -f backend/migrations/20261106_post_like_visibility.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_transactional_outbox.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_read_indexes.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
 ## Endpoints
@@ -48,7 +49,7 @@ Optional environment settings are validated at startup: `OUTBOX_DB_POOL_MAX` (de
 
 ## Transactional outbox status
 
-The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. Keep sensitive values out of event payloads.
+The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. The migration `backend/migrations/20261107_social_graph_read_indexes.sql` adds reverse-lookup indexes for blocks and restrictions, requester/status filtering for follow requests, and recent outgoing-follow ordering. These indexes improve query access paths but do not create a graph database or prove large-scale throughput. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. Keep sensitive values out of event payloads.
 
 ## Not yet production complete
 
