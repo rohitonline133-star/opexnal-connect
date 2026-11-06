@@ -971,6 +971,41 @@ app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
   }
 });
 
+app.post("/api/v1/posts/:postId/hide", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const post = await pool.query("SELECT id, user_id FROM posts WHERE id=$1", [req.params.postId]);
+    if (!post.rowCount) return res.status(404).json({ error: "Post not found." });
+    if (post.rows[0].user_id === req.user.id)
+      return res.status(400).json({ error: "You cannot hide your own post from yourself." });
+    await pool.query(
+      "INSERT INTO hidden_posts (user_id, post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+      [req.user.id, req.params.postId],
+    );
+    return res.json({ hidden: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post("/api/v1/users/:userId/snooze", dbRequired, authRequired, async (req, res, next) => {
+  if (req.user.id === req.params.userId)
+    return res.status(400).json({ error: "You cannot snooze your own account." });
+  try {
+    const creator = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE", [req.params.userId]);
+    if (!creator.rowCount) return res.status(404).json({ error: "Creator not found." });
+    const result = await pool.query(
+      `INSERT INTO creator_snoozes (user_id, creator_id, snoozed_until)
+       VALUES ($1,$2,NOW() + INTERVAL '30 days')
+       ON CONFLICT (user_id, creator_id) DO UPDATE SET snoozed_until=EXCLUDED.snoozed_until, created_at=NOW()
+       RETURNING snoozed_until`,
+      [req.user.id, req.params.userId],
+    );
+    return res.json({ snoozed: true, snoozed_until: result.rows[0].snoozed_until });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
@@ -1001,6 +1036,8 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
       FROM posts p
       JOIN users u ON u.id=p.user_id
       WHERE p.archived_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM hidden_posts hp WHERE hp.user_id=$1 AND hp.post_id=p.id)
+        AND NOT EXISTS (SELECT 1 FROM creator_snoozes cs WHERE cs.user_id=$1 AND cs.creator_id=p.user_id AND cs.snoozed_until>NOW())
         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
         AND (
           p.user_id=$1
