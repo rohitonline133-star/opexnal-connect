@@ -677,7 +677,13 @@ export async function updatePost(
   update: { caption?: string; commentsEnabled?: boolean; isArchived?: boolean },
 ) {
   return apiRequest<{
-    post: { id: string; caption: string; comments_enabled: boolean; updated_at: string };
+    post: {
+      id: string;
+      caption: string;
+      comments_enabled: boolean;
+      is_archived: boolean;
+      updated_at: string;
+    };
   }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
