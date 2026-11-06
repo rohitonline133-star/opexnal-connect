@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Sparkles, Archive, Download, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,14 @@ function SettingsStoryPage() {
   const [saveToGallery, setSaveToGallery] = useState(settings?.saveStoryToCameraRoll ?? false);
   const [allowReshare, setAllowReshare] = useState(settings?.allowStoryResharing ?? true);
   const [allowReplies, setAllowReplies] = useState(settings?.storyReplyPermission ?? "everyone");
+
+  useEffect(() => {
+    if (!settings) return;
+    setSaveToArchive(settings.storiesArchiveAutoSave);
+    setSaveToGallery(settings.saveStoryToCameraRoll);
+    setAllowReshare(settings.allowStoryResharing);
+    setAllowReplies(settings.storyReplyPermission);
+  }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
