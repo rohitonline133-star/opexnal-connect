@@ -1057,6 +1057,7 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
         ) AS media
       FROM posts p JOIN users u ON u.id=p.user_id
       WHERE p.id=$1
+        AND (p.is_archived=FALSE OR p.user_id=$2)
         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2))
         AND (
           p.user_id=$2
