@@ -207,10 +207,40 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     toast.success("Post deleted — you can restore it from Recently Deleted within 30 days");
   };
 
-  const handleReportSubmit = (reason: string) => {
-    setActiveModal(null);
-    setHidden(true);
-    toast.success(`Thank you. We received your report for "${reason}".`);
+  const handleReportSubmit = async (reason: string) => {
+    const reasonMap: Record<string, string> = {
+      "It's spam or a scam": "spam",
+      "Hate speech or symbols": "hate",
+      "Nudity or sexual content": "nudity",
+      "Violence or dangerous organizations": "violence",
+      "Harassment or bullying": "harassment",
+      "Intellectual property violation": "other",
+    };
+    if (!viewerId) {
+      toast.error("Sign in to report this post.");
+      return;
+    }
+    try {
+      const response = await fetch(apiUrl("/api/v1/reports"), {
+        method: "POST",
+        headers: {
+          ...authClient.getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetType: "post",
+          targetId: post.id,
+          reason: reasonMap[reason] || "other",
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not submit your report.");
+      setActiveModal(null);
+      setHidden(true);
+      toast.success("Thank you. Your report was submitted for review.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not submit your report.");
+    }
   };
 
   if (hidden) {
