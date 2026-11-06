@@ -2120,6 +2120,7 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
            hide_likes_count = CASE WHEN $7::boolean THEN $8::boolean ELSE hide_likes_count END,
            hide_share_count = CASE WHEN $9::boolean THEN $10::boolean ELSE hide_share_count END,
            archived_at = CASE WHEN $11::boolean THEN CASE WHEN $12::boolean THEN NOW() ELSE NULL END ELSE archived_at END,
+           is_pinned = CASE WHEN $13::boolean THEN $14::boolean ELSE is_pinned END,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2
        RETURNING id, caption, comments_enabled, hide_likes_count, hide_share_count, archived_at, is_pinned, updated_at`,
@@ -2136,6 +2137,8 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
         hasHideShareCount ? body.hideShareCount : null,
         hasArchived,
         hasArchived ? body.isArchived : null,
+         hasPinned,
+         hasPinned ? body.isPinned : null,
       ],
     );
     if (!result.rowCount) return res.status(404).json({ error: "Post not found or not owned by this account." });
