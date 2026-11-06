@@ -11,7 +11,7 @@
 | API process | `backend/server.js` creates one Express app and one HTTP server | Domain logic currently shares one process and release lifecycle. |
 | PostgreSQL | `pg.Pool` in `backend/server.js`; pool max defaults to 10 | One configured database endpoint/pool; no sharding or multi-region write topology is established by this code. |
 | Authentication | JWT HS256 plus a database-backed `auth_sessions` lookup | Session revocation is checked, but README says refresh-token rotation is not implemented. |
-| Rate limiting | Optional PostgreSQL atomic fixed-window limiter in API handlers when `RATE_LIMIT_HMAC_SECRET` is configured; bounded in-memory fallback otherwise | Shared limiter and additive migration exist, but migration/secret setup, expiry cleanup scheduling, PostgreSQL integration tests, and multi-instance load validation are not complete. |
+| Rate limiting | Optional PostgreSQL atomic fixed-window limiter in API handlers when `RATE_LIMIT_HMAC_SECRET` is configured; bounded in-memory fallback otherwise | Shared limiter is wired into all identified rate-limited API handlers when the dedicated secret is configured; additive migration and bounded one-shot expiry cleanup worker exist. Migration/secret setup, external cleanup scheduling, PostgreSQL integration tests, and multi-instance load validation remain outstanding. |
 | WebSocket presence | In-memory `Map` named `socketsByUser` in `backend/server.js` | Connections and fan-out state are local to one process; multi-instance delivery needs a shared pub/sub or broker design. |
 | Notifications | Identified notification-producing routes write versioned outbox events in the same transaction as their authoritative database changes; a separate worker persists in-app notifications | Worker and read-only health command exist in source, but external supervision, scheduled alerting, and PostgreSQL integration tests are not configured. |
 | Media storage | Multer writes files under `MEDIA_STORAGE_DIR`; README documents local volume storage and signed private URLs | Local disk is not a globally durable object store or CDN. Backups and multi-host access need a deliberate storage adapter. |
@@ -24,7 +24,7 @@
 
 ### P0 — Correctness and security before horizontal scaling
 
-1. Configure and validate the new PostgreSQL shared atomic limiter on every API replica, schedule bounded expiry cleanup, and complete multi-instance integration/load tests before public scaling.
+1. Apply the rate-limit migration, configure the same dedicated HMAC secret on every API replica, schedule the bounded cleanup worker, and complete PostgreSQL integration/load tests before public scaling.
 2. Add distributed WebSocket coordination or a broker-backed event channel; do not rely on process-local socket maps for cross-replica delivery.
 3. Complete OTP end-to-end: challenge issue, provider delivery, verification, verified destination binding to the intended account, session issuance/revocation, replay protection, shared rate limits, and provider failure handling.
 4. Keep all provider secrets in the deployment secret manager; no credentials in source, client bundles, logs, or test fixtures.
