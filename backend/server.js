@@ -1000,7 +1000,8 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
+      WHERE p.is_archived=FALSE
+        AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
         AND (
           p.user_id=$1
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
@@ -1573,7 +1574,7 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
           )) ELSE '[]'::json END
         ) AS media
        FROM posts p JOIN users u ON u.id=p.user_id
-       WHERE LOWER(u.username)=LOWER($1)
+       WHERE LOWER(u.username)=LOWER($1) AND p.is_archived=FALSE
          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
@@ -2056,10 +2057,12 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
   const body = req.body || {};
   const hasCaption = Object.prototype.hasOwnProperty.call(body, "caption");
   const hasCommentsEnabled = Object.prototype.hasOwnProperty.call(body, "commentsEnabled");
+  const hasArchived = Object.prototype.hasOwnProperty.call(body, "isArchived");
   if (
-    (!hasCaption && !hasCommentsEnabled) ||
+    (!hasCaption && !hasCommentsEnabled && !hasArchived) ||
     (hasCaption && (typeof body.caption !== "string" || body.caption.length > 2200)) ||
-    (hasCommentsEnabled && typeof body.commentsEnabled !== "boolean")
+    (hasCommentsEnabled && typeof body.commentsEnabled !== "boolean") ||
+    (hasArchived && typeof body.isArchived !== "boolean")
   ) {
     return res.status(400).json({ error: "Invalid post update payload." });
   }
@@ -2068,9 +2071,10 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
       `UPDATE posts
        SET caption = CASE WHEN $3::boolean THEN $4::text ELSE caption END,
            comments_enabled = CASE WHEN $5::boolean THEN $6::boolean ELSE comments_enabled END,
+           is_archived = CASE WHEN $7::boolean THEN $8::boolean ELSE is_archived END,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2
-       RETURNING id, caption, comments_enabled, updated_at`,
+       RETURNING id, caption, comments_enabled, is_archived, updated_at`,
       [
         req.params.postId,
         req.user.id,
@@ -2078,6 +2082,8 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
         hasCaption ? body.caption : null,
         hasCommentsEnabled,
         hasCommentsEnabled ? body.commentsEnabled : null,
+        hasArchived,
+        hasArchived ? body.isArchived : null,
       ],
     );
     if (!result.rowCount) return res.status(404).json({ error: "Post not found or not owned by this account." });
@@ -2540,7 +2546,7 @@ app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
-      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
+      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND p.is_archived=FALSE AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
       [req.user.id, limit],
     );
     res.json({ reels: result.rows });
