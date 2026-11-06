@@ -240,8 +240,9 @@ async function notifyUser(
   metadata = {},
 ) {
   if (!recipientId || recipientId === actorId) return;
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
     const aggregateId =
       typeof targetId === "string" &&
@@ -265,11 +266,11 @@ async function notifyUser(
     });
     await client.query("COMMIT");
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (client) await client.query("ROLLBACK").catch(() => {});
     // A notification enqueue failure must not turn a successful post/message action into a client-visible failure.
     console.error("Notification enqueue failed", error?.message || "unknown error");
   } finally {
-    client.release();
+    client?.release();
   }
 }
 
