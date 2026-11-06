@@ -19,6 +19,7 @@ import nodemailer from "nodemailer";
 import multer from "multer";
 import { fileTypeFromFile } from "file-type";
 import { enqueueOutboxEvent } from "./lib/outbox.js";
+import { consumeDistributedRateLimit } from "./lib/distributed-rate-limit.js";
 
 const { Pool } = pg;
 const app = express();
@@ -95,6 +96,7 @@ function signMediaUrl(objectKey, expires) {
 }
 const socketsByUser = new Map();
 const attempts = new Map();
+const rateLimitHmacSecret = process.env.RATE_LIMIT_HMAC_SECRET || "";
 const scrypt = promisify(scryptCallback);
 
 if (jwtSecret.length < 32) {
@@ -129,9 +131,21 @@ function dbRequired(_req, res, next) {
     return res.status(503).json({ error: "Database is not configured on this deployment." });
   next();
 }
-function rateLimit(key, max = 10, windowMs = 60_000) {
+async function rateLimit(key, max = 10, windowMs = 60_000) {
+  if (rateLimitHmacSecret.length >= 32 && pool) {
+    try {
+      const result = await consumeDistributedRateLimit(pool, rateLimitHmacSecret, key, max, windowMs);
+      return result.allowed;
+    } catch (error) {
+      // Fail closed when distributed limiting is explicitly enabled.
+      console.error("Distributed rate limiter unavailable; request denied.", {
+        code: typeof error?.code === "string" ? error.code : "RATE_LIMIT_STORAGE_ERROR",
+      });
+      return false;
+    }
+  }
   const now = Date.now();
-  // Keep the in-process fallback bounded; use Redis/shared storage for multi-instance production.
+  // Bounded single-process fallback for local development only.
   if (attempts.size > 10_000) {
     for (const [attemptKey, record] of attempts) {
       if (record.resetAt <= now) attempts.delete(attemptKey);
@@ -363,7 +377,7 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   const ipKey = "recovery-request:" + String(req.ip || "unknown");
   const identityKey =
     "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
-  if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
+  if (!(await rateLimit(ipKey, 5, 60 * 60 * 1000)) || !(await rateLimit(identityKey, 3, 60 * 60 * 1000))) {
     return res.status(429).json({ error: "Too many recovery requests. Try again later." });
   }
   try {
@@ -399,7 +413,7 @@ app.post("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
   if (!/^rec_[A-Za-z0-9_-]{30,50}$/.test(ticketId)) {
     return res.status(400).json({ error: "Enter a valid recovery tracking ID." });
   }
-  if (!rateLimit("recovery-status:" + String(req.ip || "unknown"), 20, 60 * 60 * 1000)) {
+  if (!(await rateLimit("recovery-status:" + String(req.ip || "unknown"), 20, 60 * 60 * 1000))) {
     return res.status(429).json({ error: "Too many status checks. Try again later." });
   }
   const ticketHash = createHash("sha256").update(ticketId).digest("hex");
@@ -453,7 +467,7 @@ app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next)
       error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
     });
   }
-  if (!rateLimit("username-check:" + String(req.ip || "unknown"), 30)) {
+  if (!(await rateLimit("username-check:" + String(req.ip || "unknown"), 30))) {
     return res
       .status(429)
       .json({ available: false, error: "Too many username checks. Try again shortly." });
@@ -476,7 +490,7 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     });
   }
   const { username, email, password, displayName, dateOfBirth } = req.body || {};
-  if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) {
+  if (!(await rateLimit("signup:" + String(req.ip || "unknown"), 5))) {
     return res.status(429).json({ error: "Too many signup attempts. Try again later." });
   }
   if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
@@ -486,8 +500,8 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     });
   }
   if (
-    !rateLimit("signup-email:" + email.toLowerCase(), 3) ||
-    !rateLimit("signup-username:" + username.toLowerCase(), 3)
+    !(await rateLimit("signup-email:" + email.toLowerCase(), 3)) ||
+    !(await rateLimit("signup-username:" + username.toLowerCase(), 3))
   ) {
     return res.status(429).json({ error: "Too many signup attempts for this email or username." });
   }
@@ -592,8 +606,8 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
   if (!validEmail(email))
     return res.status(400).json({ error: "A valid email address is required." });
   if (
-    !rateLimit("password-reset:" + String(req.ip || "unknown"), 5) ||
-    !rateLimit("password-reset-email:" + email, 3)
+    !(await rateLimit("password-reset:" + String(req.ip || "unknown"), 5)) ||
+    !(await rateLimit("password-reset-email:" + email, 3))
   ) {
     return res.status(429).json({ error: "Too many reset requests. Try again later." });
   }
@@ -659,7 +673,7 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
         "Password must be 12–128 characters and include lowercase, uppercase, a number, and a symbol.",
     });
   }
-  if (!rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10)) {
+  if (!(await rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10))) {
     return res.status(429).json({ error: "Too many reset attempts. Try again later." });
   }
 
@@ -706,7 +720,7 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
 app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
   try {
     const { identity, password } = req.body || {};
-    if (!rateLimit("login:" + String(req.ip || "unknown"), 10))
+    if (!(await rateLimit("login:" + String(req.ip || "unknown"), 10)))
       return res.status(429).json({ error: "Too many login attempts. Try again later." });
     if (
       typeof identity !== "string" ||
@@ -715,7 +729,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
       password.length > 128
     )
       return res.status(400).json({ error: "Username/email and password are required." });
-    if (!rateLimit("login-identity:" + identity.toLowerCase(), 10)) {
+    if (!(await rateLimit("login-identity:" + identity.toLowerCase(), 10))) {
       return res
         .status(429)
         .json({ error: "Too many login attempts for this account. Try again later." });
@@ -1187,7 +1201,7 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   ) {
     return res.status(400).json({ error: "Invalid report payload." });
   }
-  if (!rateLimit("report:" + req.user.id, 20)) {
+  if (!(await rateLimit("report:" + req.user.id, 20))) {
     return res.status(429).json({ error: "Too many reports. Try again later." });
   }
   const tables = {
@@ -1395,7 +1409,7 @@ app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, n
 app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next) => {
   const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
   const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 30);
-  if (!rateLimit("user-search:" + req.user.id, 60)) {
+  if (!(await rateLimit("user-search:" + req.user.id, 60))) {
     return res.status(429).json({ error: "Too many searches. Try again shortly." });
   }
   try {
