@@ -1134,7 +1134,7 @@ const profileSelect = `
   SELECT u.id,u.username,u.display_name,u.bio,u.avatar_url,u.website,u.location,u.locale,u.timezone,
     u.country_code,u.is_private,u.is_deactivated,u.account_type,u.allow_mentions_from,u.allow_tags_from,
     u.show_activity_status,u.last_active_at,u.created_at,u.updated_at,
-    (SELECT COUNT(*) FROM posts p WHERE p.user_id=u.id) AS posts_count,
+    (SELECT COUNT(*) FROM posts p WHERE p.user_id=u.id AND p.archived_at IS NULL) AS posts_count,
     (SELECT COUNT(*) FROM follows f WHERE f.following_id=u.id) AS followers_count,
     (SELECT COUNT(*) FROM follows f WHERE f.follower_id=u.id) AS following_count
   FROM users u
