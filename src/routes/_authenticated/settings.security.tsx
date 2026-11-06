@@ -21,9 +21,9 @@ function SecuritySettingsPage() {
         <div className="bg-card rounded-lg p-6 border shadow-sm space-y-4">
           <h2 className="text-xl font-semibold">Two-Factor Authentication (2FA)</h2>
           <p className="text-sm text-muted-foreground">
-            Authenticator-based two-factor authentication is not enabled or available yet.
-            Do not assume this account has 2FA protection until setup and sign-in verification
-            are connected to Opexnal's server.
+            Authenticator-based two-factor authentication is not enabled or available yet. Do not
+            assume this account has 2FA protection until setup and sign-in verification are
+            connected to Opexnal's server.
           </p>
           <TwoFactorSetup />
         </div>
