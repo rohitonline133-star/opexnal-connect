@@ -86,9 +86,8 @@ function SettingsHiddenWordsPage() {
           <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-gray-400">
             <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p>
-              Your custom words and filter preferences are stored on this device
-              only. They are not yet applied to incoming comments or server-side
-              moderation.
+              Your custom words and filter preferences are stored on this device only. They are not
+              yet applied to incoming comments or server-side moderation.
             </p>
           </div>
           <div className="space-y-3">
