@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS posts (
   location_name VARCHAR(120), comments_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   hide_likes_count BOOLEAN NOT NULL DEFAULT FALSE,
   hide_share_count BOOLEAN NOT NULL DEFAULT FALSE,
+  is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
   archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK (media_type = 'text' OR media_url IS NOT NULL)
