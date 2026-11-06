@@ -218,7 +218,7 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
     localStorage.setItem("opexnal_user_email", email);
     localStorage.setItem("opexnal_user_phone", phone);
     localStorage.setItem("opexnal_user_dob", birthday);
-    toast.success("Personal details updated");
+    toast.success("Personal details saved on this device.");
     onClose();
   }
 
@@ -227,7 +227,7 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
       <DialogHeader>
         <DialogTitle className="text-lg font-bold">Personal Details</DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          Opexnal uses this information to keep your account secure and verified.
+          These details are stored only on this device. They are not verified or synced to your Opexnal account.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3 pt-2">
@@ -249,9 +249,9 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
           />
         </div>
         <div className="rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground flex items-center justify-between">
-          <span>Account Ownership & Confirmation</span>
+          <span>Account ownership verification</span>
           <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
-            Verified
+            Not verified
           </Badge>
         </div>
       </div>
@@ -281,26 +281,26 @@ function AccountStatusModal({ username, onClose }: { username: string; onClose: 
           <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
           <div className="text-xs">
             <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-              Community Guidelines: Clean
+              Community guideline status unavailable
             </p>
-            <p className="text-muted-foreground">You have zero strikes or reported violations.</p>
+            <p className="text-muted-foreground">Violation and report records are not connected to this status panel.</p>
           </div>
         </div>
         <div className="flex items-center gap-3 p-3 rounded-2xl bg-primary/10 border border-primary/20">
           <BadgeCheck className="h-5 w-5 text-primary shrink-0" />
           <div className="text-xs">
-            <p className="font-semibold text-foreground">Creator Monetization: Eligible</p>
+            <p className="font-semibold text-foreground">Creator monetization status unavailable</p>
             <p className="text-muted-foreground">
-              Subscription gifts and brand partnerships are unlocked.
+              No creator monetization eligibility decision is currently available.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3 p-3 rounded-2xl bg-secondary border border-border">
           <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0" />
           <div className="text-xs">
-            <p className="font-semibold text-foreground">Search Recommendation: Recommended</p>
+            <p className="font-semibold text-foreground">Recommendation eligibility unavailable</p>
             <p className="text-muted-foreground">
-              Your content is eligible to be shown in Explore and Reels.
+              Opexnal has not connected a recommendation-eligibility assessment here.
             </p>
           </div>
         </div>
@@ -327,7 +327,9 @@ function AccountsCenterModal({ username, onClose }: { username: string; onClose:
     setCrossPost(checked);
     localStorage.setItem("opexnal_crosspost", String(checked));
     toast.success(
-      checked ? "Cross-posting to connected accounts enabled" : "Cross-posting disabled",
+      checked
+        ? "Preference saved on this device; external cross-posting is not connected."
+        : "Cross-posting preference saved on this device.",
     );
   }
 
@@ -339,8 +341,7 @@ function AccountsCenterModal({ username, onClose }: { username: string; onClose:
           Opexnal Accounts Center
         </DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          Manage connected profiles, synchronized experiences, and identity settings across
-          platforms.
+          Manage connected-profile preferences. External account linking and cross-posting are not connected yet.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3 pt-1">
