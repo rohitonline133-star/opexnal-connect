@@ -1076,7 +1076,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         Number.isFinite(new Date(req.query.cursor).getTime())
           ? new Date(req.query.cursor).toISOString()
           : null,
-        req.query.following === "true",
+        req.query.following === "true" || req.query.feed === "following",
       ],
     );
     res.json({ posts: result.rows });
@@ -2125,6 +2125,23 @@ app.get("/api/v1/posts/archive", dbRequired, authRequired, async (req, res, next
       [req.user.id],
     );
     return res.json({ posts: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/posts/:postId/archive", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `UPDATE posts SET archived_at=CASE WHEN $3::boolean THEN NULL ELSE NOW() END,
+       updated_at=NOW() WHERE id=$1 AND user_id=$2
+       RETURNING id, archived_at`,
+      [req.params.postId, req.user.id, req.body?.restore === true],
+    );
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Post not found or not owned by this account." });
+    }
+    return res.json({ post: result.rows[0] });
   } catch (error) {
     return next(error);
   }
