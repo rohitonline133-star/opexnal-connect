@@ -72,7 +72,9 @@ function command(server, payload, timeoutMs = 750) {
 }
 
 export function createMemcachedCache({ servers = [], timeoutMs = 750 } = {}) {
-  const configured = [...servers];
+  const configured = Array.isArray(servers)
+    ? parseMemcachedServers(servers.join(","))
+    : parseMemcachedServers(servers);
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 50 || timeoutMs > 5000) {
     throw new RangeError("Memcached timeout must be 50–5000 ms.");
   }
@@ -87,7 +89,6 @@ export function createMemcachedCache({ servers = [], timeoutMs = 750 } = {}) {
         const match = /^VALUE [^ ]+ \d+ (\d+)\r\n([\s\S]*)\r\nEND\r\n$/.exec(response);
         if (!match) return null;
         const bytes = Number(match[1]);
-        const body = Buffer.from(match[2], "utf8");
         if (bytes !== Buffer.byteLength(match[2])) return null;
         return JSON.parse(match[2]);
       } catch {
