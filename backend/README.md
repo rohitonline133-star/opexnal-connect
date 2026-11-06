@@ -18,6 +18,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_read_indexes.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_follow_requests_cursor_index.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_cursor_indexes.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_notification_cursor_index.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_distributed_rate_limits.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
@@ -33,6 +34,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints.
 - GET /api/v1/follow-requests supports keyset pagination with `limit` (1–100, default 30) and the paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; callers should pass both cursor fields unchanged for the next page. Follow-graph cursor indexes for both incoming and outgoing edges are included in `20261107_social_graph_cursor_indexes.sql`; apply and benchmark them before relying on them at scale. Query-plan review examples are in `docs/performance/SOCIAL_GRAPH_EXPLAIN.sql`; run them on staging with a test account and inspect buffer reads and actual row counts.
+- GET /api/v1/notifications supports keyset pagination with `limit` (1–100, default 50) and paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; unread count is still returned with every page.
 - GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
 
 ## Deployment boundary
@@ -53,7 +55,7 @@ Optional environment settings are validated at startup: `OUTBOX_DB_POOL_MAX` (de
 
 ## Transactional outbox status
 
-The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. The migration `backend/migrations/20261107_social_graph_read_indexes.sql` adds reverse-lookup indexes for blocks and restrictions, requester/status filtering for follow requests, and recent outgoing-follow ordering. These indexes improve query access paths but do not create a graph database or prove large-scale throughput. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. The distributed limiter is opt-in via RATE_LIMIT_HMAC_SECRET; a bounded one-shot expiry cleanup worker is available as npm run backend:rate-limits:cleanup, but external scheduling remains an operator task. Keep sensitive values out of event payloads.
+The migration `backend/migrations/20261107_transactional_outbox.sql` creates an additive outbox table and indexes only. The `20261107_notification_cursor_index.sql` migration adds the recipient/time/id index for notification timeline pagination. The migration `backend/migrations/20261107_social_graph_read_indexes.sql` adds reverse-lookup indexes for blocks and restrictions, requester/status filtering for follow requests, and recent outgoing-follow ordering. These indexes improve query access paths but do not create a graph database or prove large-scale throughput. All identified notification-producing routes enqueue events transactionally, and the worker must be operated separately. Notification persistence is idempotent per outbox event; semantic deduplication across separate user actions is not implemented. The read-only health command is available, but scheduling it in external monitoring, database integration tests, and production worker supervision remain outstanding. The distributed limiter is opt-in via RATE_LIMIT_HMAC_SECRET; a bounded one-shot expiry cleanup worker is available as npm run backend:rate-limits:cleanup, but external scheduling remains an operator task. Keep sensitive values out of event payloads.
 
 ## Not yet production complete
 
