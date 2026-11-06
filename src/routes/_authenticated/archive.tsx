@@ -35,8 +35,7 @@ function ArchivePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["archived-posts", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["home-feed", user?.id] });
-      queryClient.invalidateQueries({ queryKey: ["user-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["profile-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["current-user-profile", user?.id] });
       toast.success("Post restored to your profile.");
     },
     onError: (error) => {
