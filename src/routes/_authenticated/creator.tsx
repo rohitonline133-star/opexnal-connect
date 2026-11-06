@@ -4,7 +4,6 @@ import {
   BarChart3,
   DollarSign,
   Crown,
-  Building2,
   AlertTriangle,
   ChevronLeft,
   ShieldCheck,
@@ -52,7 +51,6 @@ export function CreatorDashboardPage() {
   const [subsEnabled, setSubsEnabled] = useState(settings.creatorSubscriptionsEnabled);
 
   // Payout bank setup modal
-  const [payoutModalOpen, setPayoutModalOpen] = useState(false);
 
   const handleSaveSubscriptions = () => {
     saveSettings({
@@ -66,12 +64,6 @@ export function CreatorDashboardPage() {
         ? `Creator Subscriptions active at $${tierPrice.toFixed(2)}/month`
         : "Creator Subscriptions disabled",
     );
-  };
-
-  const handleSavePayoutDestination = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.error("Payout setup is unavailable until a verified payment provider is connected.");
-    setPayoutModalOpen(false);
   };
 
   return (
@@ -235,92 +227,16 @@ export function CreatorDashboardPage() {
         {/* 3. MONETIZATION & PAYOUTS */}
         {/* ============================================================== */}
         {activeTab === "payouts" && (
-          <div className="space-y-4">
-            {/* Gateway Status Banner */}
-            <div className="p-3.5 bg-amber-950/30 border border-amber-800/60 rounded-2xl text-xs space-y-1.5">
-              <div className="flex items-center gap-2 text-amber-400 font-semibold">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>Monetization Gateway Status: NOT VERIFIED</span>
-              </div>
-              <p className="text-amber-200/80 leading-relaxed text-[11px]">
-                External Stripe Connect or payment gateway credentials are not configured in this
-                environment. Payout balances, banking setups, and subscription records persist
-                safely in state without charging live credit cards.
-              </p>
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Monetization is not connected
             </div>
-
-            {/* Earnings Balance Card */}
-            <div className="p-5 bg-card border border-border rounded-3xl space-y-3 shadow-xs">
-              <p className="text-xs font-semibold text-muted-foreground">Creator Balance</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-extrabold text-foreground">
-                  ${(settings.creatorBalanceCents / 100).toFixed(2)}
-                </p>
-                <span className="text-xs text-muted-foreground">USD</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border text-xs">
-                <div>
-                  <span className="text-muted-foreground text-[11px]">Pending Payouts:</span>
-                  <p className="font-semibold">
-                    ${(settings.pendingPayoutsCents / 100).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-[11px]">Lifetime Earned:</span>
-                  <p className="font-semibold">
-                    ${(settings.lifetimeEarningsCents / 100).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                disabled={settings.creatorBalanceCents < settings.minimumPayoutThresholdCents}
-                onClick={() => toast.info("Payout threshold is $50.00. Keep creating!")}
-                className="w-full brand-gradient-bg text-white font-semibold rounded-xl text-xs h-10 mt-1 disabled:opacity-50"
-              >
-                Request Payout (Min $50.00)
-              </Button>
-            </div>
-
-            {/* Payout Destination */}
-            <div className="p-4 bg-card border border-border rounded-3xl space-y-3 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  <p className="text-xs font-bold text-foreground">Payout Destination</p>
-                </div>
-                <Badge
-                  variant={settings.payoutDestination.verified ? "default" : "outline"}
-                  className="text-[10px]"
-                >
-                  {settings.payoutDestination.verified ? "Linked" : "Not Linked"}
-                </Badge>
-              </div>
-
-              {settings.payoutDestination.verified ? (
-                <div className="p-3 bg-surface border border-border rounded-2xl text-xs space-y-1">
-                  <p className="font-bold text-foreground">
-                    Bank Account ({settings.payoutDestination.accountIdentifier})
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Account Holder: {settings.payoutDestination.holderName}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Connect your bank account or UPI ID to receive monthly automated creator payouts.
-                </p>
-              )}
-
-              <Button
-                variant="surface"
-                onClick={() => setPayoutModalOpen(true)}
-                className="w-full text-xs h-9 rounded-xl"
-              >
-                {settings.payoutDestination.verified ? "Change Payout Account" : "Add Bank Account"}
-              </Button>
-            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              No verified payment provider, creator payout ledger, or subscription billing
+              integration is connected. Opexnal will not display sample balances, collect bank
+              details, or mark a payout destination as verified until those services are live.
+            </p>
           </div>
         )}
       </div>
