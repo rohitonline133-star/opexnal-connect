@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { notificationFromEvent } from "./notification-event.js";
+import { boundedInteger, workerIdentifier } from "../lib/outbox-config.js";
 
 const { Pool } = pg;
 const databaseUrl = process.env.DATABASE_URL;
@@ -10,15 +11,15 @@ if (!databaseUrl) {
 
 const pool = new Pool({
   connectionString: databaseUrl,
-  max: Number(process.env.OUTBOX_DB_POOL_MAX || 3),
+  max: boundedInteger(process.env.OUTBOX_DB_POOL_MAX, 3, 1, 20, "OUTBOX_DB_POOL_MAX"),
   connectionTimeoutMillis: 5_000,
   idleTimeoutMillis: 30_000,
 });
-const workerId = process.env.OUTBOX_WORKER_ID || `outbox-${randomUUID()}`;
-const batchSize = Math.min(Math.max(Number(process.env.OUTBOX_BATCH_SIZE || 20), 1), 100);
-const pollIntervalMs = Math.min(Math.max(Number(process.env.OUTBOX_POLL_INTERVAL_MS || 1000), 250), 30_000);
-const maxAttempts = Math.min(Math.max(Number(process.env.OUTBOX_MAX_ATTEMPTS || 8), 1), 20);
-const leaseSeconds = Math.min(Math.max(Number(process.env.OUTBOX_LEASE_SECONDS || 300), 30), 3600);
+const workerId = workerIdentifier(process.env.OUTBOX_WORKER_ID, `outbox-${randomUUID()}`);
+const batchSize = boundedInteger(process.env.OUTBOX_BATCH_SIZE, 20, 1, 100, "OUTBOX_BATCH_SIZE");
+const pollIntervalMs = boundedInteger(process.env.OUTBOX_POLL_INTERVAL_MS, 1000, 250, 30_000, "OUTBOX_POLL_INTERVAL_MS");
+const maxAttempts = boundedInteger(process.env.OUTBOX_MAX_ATTEMPTS, 8, 1, 20, "OUTBOX_MAX_ATTEMPTS");
+const leaseSeconds = boundedInteger(process.env.OUTBOX_LEASE_SECONDS, 300, 30, 3600, "OUTBOX_LEASE_SECONDS");
 
 async function claimBatch() {
   const client = await pool.connect();
