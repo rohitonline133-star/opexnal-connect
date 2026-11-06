@@ -39,6 +39,7 @@ import {
   reportPost,
   timeAgo,
   updatePost,
+  deletePost,
   toggleLike,
   toggleSave,
   type FeedPost,
@@ -74,7 +75,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [saved, setSaved] = useState(post.saved);
   const [hidden, setHidden] = useState(false);
   const [captionText, setCaptionText] = useState(post.caption || "");
-  const [commentsDisabled, setCommentsDisabled] = useState(false);
+  const [commentsDisabled, setCommentsDisabled] = useState(post.comments_enabled === false);
   const [hideLikes, setHideLikes] = useState(false);
 
   // 3 Dots Menu States
@@ -184,22 +185,16 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     toast.success("Post moved to your private Archive");
   };
 
-  const handleDeletePost = () => {
-    setHidden(true);
-    setActiveModal(null);
-    // Add to Recently Deleted in settings store
-    const settings = getStoredSettings();
-    const newItem = {
-      id: post.id,
-      type: "post" as const,
-      title: captionText.slice(0, 30) || "Post without caption",
-      deletedAt: "Just now",
-      daysRemaining: 30,
-    };
-    saveSettings({
-      recentlyDeletedItems: [newItem, ...(settings.recentlyDeletedItems || [])],
-    });
-    toast.success("Post deleted — you can restore it from Recently Deleted within 30 days");
+  const handleDeletePost = async () => {
+    if (!isOwner) return;
+    try {
+      await deletePost(post.id, viewerId || undefined);
+      setHidden(true);
+      setActiveModal(null);
+      toast.success("Post deleted successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete this post.");
+    }
   };
 
   const handleReportSubmit = async (reason: string) => {
