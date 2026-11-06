@@ -18,7 +18,11 @@ export function parseMemcachedServers(value) {
 }
 
 function validateKey(key) {
-  if (typeof key !== "string" || !/^[A-Za-z0-9:_-]+$/.test(key) || Buffer.byteLength(key) > MAX_KEY_BYTES) {
+  if (
+    typeof key !== "string" ||
+    !/^[A-Za-z0-9:_-]+$/.test(key) ||
+    Buffer.byteLength(key) > MAX_KEY_BYTES
+  ) {
     throw new TypeError("Memcached keys must be 1–250 safe ASCII characters.");
   }
 }
@@ -61,7 +65,9 @@ function command(server, payload, timeoutMs = 750) {
     socket.on("data", (chunk) => {
       chunks.push(chunk);
       const data = Buffer.concat(chunks);
-      if (data.length > MAX_VALUE_BYTES + 4096) return finish(new Error("Memcached response exceeded limit."));
+      if (data.length > MAX_VALUE_BYTES + 4096) {
+        return finish(new Error("Memcached response exceeded limit."));
+      }
       const text = data.toString("utf8");
       if (text.endsWith("END\r\n") || text === "STORED\r\n" || text === "NOT_STORED\r\n" || text === "DELETED\r\n" || text === "NOT_FOUND\r\n" || text.startsWith("CLIENT_ERROR") || text.startsWith("SERVER_ERROR") || text.startsWith("ERROR")) {
         finish(null, text);
