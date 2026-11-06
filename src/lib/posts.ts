@@ -424,6 +424,8 @@ type ApiPostRecord = {
   visibility?: "public" | "followers" | "private";
   location_name?: string | null;
   comments_enabled?: boolean;
+  hide_likes_count?: boolean;
+  hide_share_count?: boolean;
   created_at: string;
   updated_at?: string;
   like_count?: number | string;
@@ -463,6 +465,8 @@ function mapApiPost(row: ApiPostRecord): FeedPost {
     caption: row.caption || "",
     comments_count: Number(row.comments_count || 0),
     comments_enabled: row.comments_enabled !== false,
+    hide_likes_count: row.hide_likes_count === true,
+    hide_share_count: row.hide_share_count === true,
     created_at: row.created_at,
     updated_at: row.updated_at || row.created_at,
     likes_count: Number(row.like_count || 0),
