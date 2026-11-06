@@ -1,0 +1,104 @@
+name: Build Opexnal Play Store Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check release signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "::error::Missing ANDROID_KEYSTORE_BASE64 repository secret" && exit 1)
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || (echo "::error::Missing ANDROID_KEYSTORE_PASSWORD repository secret" && exit 1)
+          test -n "$ANDROID_KEY_ALIAS" || (echo "::error::Missing ANDROID_KEY_ALIAS repository secret" && exit 1)
+          test -n "$ANDROID_KEY_PASSWORD" || (echo "::error::Missing ANDROID_KEY_PASSWORD repository secret" && exit 1)
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install web and Capacitor dependencies
+        run: npm install
+
+      - name: Build production web assets
+        run: npm run build
+
+      - name: Generate clean Android project
+        run: |
+          rm -rf android
+          npx cap add android
+
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/upload-keystore.jks"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gradle = Path("android/app/build.gradle")
+          source = gradle.read_text()
+          signing = """
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("GITHUB_WORKSPACE") + "/android/upload-keystore.jks")
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }
+          """
+          if "signingConfigs {" not in source:
+              source = re.sub(r"(android\\s*\\{)", r"\\1" + signing, source, count=1)
+          pattern = r"(buildTypes\\s*\\{\\s*release\\s*\\{)"
+          if not re.search(pattern, source):
+              raise SystemExit("Could not find Android release buildType in generated Gradle file")
+          source = re.sub(pattern, r"\\1\\n            signingConfig signingConfigs.release", source, count=1)
+          gradle.write_text(source)
+          PY
+
+      - name: Build signed release bundle and APK
+        working-directory: android
+        run: ./gradlew bundleRelease assembleRelease
+
+      - name: Verify signed release outputs
+        run: |
+          test -s android/app/build/outputs/bundle/release/app-release.aab
+          test -s android/app/build/outputs/apk/release/app-release.apk
+          jarsigner -verify -verbose -certs android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Upload signed release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opexnal-play-store-release
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
