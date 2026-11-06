@@ -82,8 +82,8 @@ function ArchivePage() {
                           : "Archived post")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Archived {new Date(post.archived_at).toLocaleString()} · {post.likes_count} likes
-                    · {post.comments_count} comments
+                    Archived {new Date(post.archived_at).toLocaleString()} {"·"} {post.likes_count}{" "}
+                    likes {"·"} {post.comments_count} comments
                   </p>
                   <Button
                     size="sm"
