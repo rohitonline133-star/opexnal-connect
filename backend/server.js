@@ -1125,7 +1125,26 @@ const profileSelect = `
 `;
 
 app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next) => {
-  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT n.id,n.notification_type,n.target_type,n.target_id,n.metadata,n.read_at,n.created_at,
@@ -1139,14 +1158,24 @@ app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next
         END AS target_summary
        FROM notifications n LEFT JOIN users actor ON actor.id=n.actor_id
        WHERE n.recipient_id=$1
-       ORDER BY n.created_at DESC LIMIT $2`,
-      [req.user.id, limit],
+         AND ($2::timestamptz IS NULL OR (n.created_at,n.id)<($2::timestamptz,$3::uuid))
+       ORDER BY n.created_at DESC,n.id DESC LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
+    const hasMore = result.rows.length > limit;
+    const notifications = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = notifications[notifications.length - 1];
     const unread = await pool.query(
       "SELECT COUNT(*)::int AS count FROM notifications WHERE recipient_id=$1 AND read_at IS NULL",
       [req.user.id],
     );
-    return res.json({ notifications: result.rows, unreadCount: unread.rows[0].count });
+    return res.json({
+      notifications,
+      unreadCount: unread.rows[0].count,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
