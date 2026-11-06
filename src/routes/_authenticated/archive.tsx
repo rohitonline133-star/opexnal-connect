@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/archive")({
       {
         name: "description",
         content:
-          "View your archived posts, stories, live broadcasts and restore recently deleted media.",
+          "Manage archived content and review deletion status. Some archive and restore features are not connected yet.",
       },
     ],
   }),
@@ -45,52 +45,10 @@ type ArchiveTab = "posts" | "stories" | "live" | "recently_deleted";
 export function ArchivePage() {
   const [activeTab, setActiveTab] = useState<ArchiveTab>("posts");
 
-  // Mock initial archive items
-  const [archivedPosts, setArchivedPosts] = useState([
-    {
-      id: "arc-p1",
-      caption: "Early morning mountain summit snapshot 🏔️",
-      date: "Aug 14, 2024",
-      likes: 142,
-      imageUrl:
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&auto=format&fit=crop&q=80",
-    },
-    {
-      id: "arc-p2",
-      caption: "Coffee roaster setup test run ☕",
-      date: "Sep 02, 2024",
-      likes: 89,
-      imageUrl:
-        "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80",
-    },
-  ]);
-
-  const [archivedStories, setArchivedStories] = useState([
-    {
-      id: "arc-s1",
-      date: "Sep 20, 2024",
-      caption: "Behind the lens 📷",
-      imageUrl:
-        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80",
-    },
-    {
-      id: "arc-s2",
-      date: "Sep 18, 2024",
-      caption: "Studio mood board ✨",
-      imageUrl:
-        "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&auto=format&fit=crop&q=80",
-    },
-  ]);
-
-  const [archivedLives, setArchivedLives] = useState([
-    {
-      id: "arc-l1",
-      title: "Weekend Community Q&A & Product Drop",
-      date: "Sep 15, 2024",
-      duration: "24:18",
-      viewers: 284,
-    },
-  ]);
+  // These sections remain empty until authenticated archive APIs are available.
+  const [archivedPosts, setArchivedPosts] = useState<Array<{ id: string; caption: string; date: string; likes: number; imageUrl: string }>>([]);
+  const [archivedStories, setArchivedStories] = useState<Array<{ id: string; date: string; caption: string; imageUrl: string }>>([]);
+  const [archivedLives, setArchivedLives] = useState<Array<{ id: string; title: string; date: string; duration: string; viewers: number }>>([]);
 
   // Recently deleted items from store
   const [recentlyDeleted, setRecentlyDeleted] = useState<RecentlyDeletedItem[]>(() => {
@@ -118,7 +76,7 @@ export function ArchivePage() {
 
   const handleUnarchivePost = (postId: string) => {
     setArchivedPosts((prev) => prev.filter((p) => p.id !== postId));
-    toast.success("Post restored to public profile grid!");
+    toast.error("Post Archive is not connected yet. No post was changed.");
   };
 
   return (
@@ -186,7 +144,7 @@ export function ArchivePage() {
                 <Archive className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">No Archived Posts</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Posts you archive from your profile will appear here.
+                  Your archived posts will appear here once the Archive service is connected.
                 </p>
               </div>
             ) : (
@@ -243,7 +201,7 @@ export function ArchivePage() {
                 <Clock className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">No Stories in Archive</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Your expired stories will be automatically preserved here.
+                  Story Archive is not connected yet. Expired stories are not being stored here.
                 </p>
               </div>
             ) : (
@@ -285,7 +243,7 @@ export function ArchivePage() {
                 <Radio className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">No Live Broadcasts</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Saved live streams will appear here for 30 days.
+                  Live Archive is not connected yet. Live broadcasts are not being stored here.
                 </p>
                 <Button
                   asChild
@@ -328,8 +286,7 @@ export function ArchivePage() {
         {activeTab === "recently_deleted" && (
           <div className="space-y-3">
             <div className="p-3 bg-amber-950/20 border border-amber-800/40 rounded-2xl text-[11px] text-amber-200">
-              Items in Recently Deleted are automatically permanently deleted after 30 days. Only
-              you can view or restore them.
+              Post deletion currently removes posts immediately. Recently Deleted and 30-day restore are not connected yet.
             </div>
 
             {recentlyDeleted.length === 0 ? (
@@ -337,7 +294,7 @@ export function ArchivePage() {
                 <Trash2 className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">Recently Deleted is Empty</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Deleted photos, reels, and stories will appear here for 30 days.
+                  Recently Deleted is not connected yet. Deleted posts cannot currently be restored.
                 </p>
               </div>
             ) : (
