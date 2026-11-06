@@ -53,8 +53,6 @@ type CreatorTab = "dashboard" | "tools" | "payouts";
 
 export function CreatorDashboardPage() {
   const [activeTab, setActiveTab] = useState<CreatorTab>("dashboard");
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
-
   // Settings store integration
   const [settings, setSettings] = useState(() => getStoredSettings());
 
@@ -100,9 +98,6 @@ export function CreatorDashboardPage() {
     setPayoutModalOpen(false);
     toast.success("Bank payout account linked successfully!");
   };
-
-  // Metrics multipliers based on time range
-  const multiplier = timeRange === "7d" ? 0.3 : timeRange === "90d" ? 2.8 : 1.0;
 
   return (
     <AppShell
@@ -151,143 +146,18 @@ export function CreatorDashboardPage() {
           })}
         </div>
 
-        {/* ============================================================== */}
-        {/* 1. INSIGHTS & ANALYTICS */}
-        {/* ============================================================== */}
+        {/* Real analytics are not connected yet; never show fabricated metrics. */}
         {activeTab === "dashboard" && (
-          <div className="space-y-4">
-            {/* Time Filter Pill Selector */}
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-muted-foreground">Account Overview</p>
-              <div className="flex bg-surface border border-border p-0.5 rounded-xl gap-1">
-                {(["7d", "30d", "90d"] as const).map((range) => (
-                  <button
-                    key={range}
-                    type="button"
-                    onClick={() => setTimeRange(range)}
-                    className={cn(
-                      "px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all",
-                      timeRange === range
-                        ? "bg-primary text-primary-foreground shadow-xs"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {range === "7d"
-                      ? "Last 7 Days"
-                      : range === "30d"
-                        ? "Last 30 Days"
-                        : "Last 90 Days"}
-                  </button>
-                ))}
-              </div>
+          <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              Insights are not available yet
             </div>
-
-            {/* Stat Cards 2x2 Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-card border border-border rounded-2xl shadow-xs space-y-1">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-xs font-medium">Accounts Reached</span>
-                  <Eye className="h-4 w-4 text-primary" />
-                </div>
-                <p className="text-xl font-bold text-foreground">
-                  {Math.round(14820 * multiplier).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>+18.4% vs prev</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-card border border-border rounded-2xl shadow-xs space-y-1">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-xs font-medium">Impressions</span>
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                </div>
-                <p className="text-xl font-bold text-foreground">
-                  {Math.round(48910 * multiplier).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>+24.1% vs prev</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-card border border-border rounded-2xl shadow-xs space-y-1">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-xs font-medium">Content Interactions</span>
-                  <Heart className="h-4 w-4 text-primary" />
-                </div>
-                <p className="text-xl font-bold text-foreground">
-                  {Math.round(3140 * multiplier).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>+12.6% vs prev</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-card border border-border rounded-2xl shadow-xs space-y-1">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-xs font-medium">Profile Visits</span>
-                  <Users className="h-4 w-4 text-primary" />
-                </div>
-                <p className="text-xl font-bold text-foreground">
-                  {Math.round(1280 * multiplier).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                  <TrendingUp className="h-3 w-3" />
-                  <span>+8.2% vs prev</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Performing Content Section */}
-            <div className="p-4 bg-card border border-border rounded-3xl space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-foreground">Top Performing Content</p>
-                <span className="text-[11px] text-primary hover:underline cursor-pointer">
-                  See all
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {[
-                  {
-                    title: "Sunset over the valley reel",
-                    type: "Reel",
-                    reach: "24.2K",
-                    engagement: "14.8%",
-                  },
-                  {
-                    title: "Studio desk setup & workflow tips",
-                    type: "Post",
-                    reach: "12.8K",
-                    engagement: "11.2%",
-                  },
-                  {
-                    title: "AI Prompt Engineering Masterclass",
-                    type: "Reel",
-                    reach: "38.5K",
-                    engagement: "19.4%",
-                  },
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 bg-surface border border-border rounded-2xl flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">{item.title}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {item.type} • {item.reach} reach
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="text-[10px] text-emerald-400">
-                      {item.engagement}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Opexnal has not connected verified impression, reach, profile-visit, audience, or
+              per-post analytics events to this dashboard. Metrics and performance comparisons
+              will appear here only after the analytics backend is implemented and tested.
+            </p>
           </div>
         )}
 
