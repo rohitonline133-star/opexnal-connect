@@ -17,6 +17,7 @@ import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { useSession } from "@/hooks/use-session";
 import { initialsFor } from "@/lib/profile";
 import { listConversations, sendMessage } from "@/lib/messages";
+import { recordShare } from "@/lib/posts";
 
 type PostShareDialogProps = {
   postId: string;
@@ -54,6 +55,7 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(postUrl);
+      if (user?.id) await recordShare(postId, user.id, "link");
       toast.success("Post link copied");
     } catch {
       toast.error("Could not copy the post link.");
@@ -65,6 +67,7 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
     setSending(true);
     try {
       await sendMessage(selectedConversation, user.id, postUrl);
+      void recordShare(postId, user.id, "message").catch(() => undefined);
       await queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
       await queryClient.invalidateQueries({ queryKey: ["messages"] });
       toast.success("Post sent in your conversation.");
