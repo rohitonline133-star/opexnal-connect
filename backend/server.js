@@ -990,13 +990,13 @@ app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
 
 app.post("/api/v1/posts/:postId/hide", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const post = await pool.query("SELECT id, user_id FROM posts WHERE id=$1", [req.params.postId]);
-    if (!post.rowCount) return res.status(404).json({ error: "Post not found." });
-    if (post.rows[0].user_id === req.user.id)
+    const post = await findVisiblePost(req.params.postId, req.user.id);
+    if (!post) return res.status(404).json({ error: "Post not found." });
+    if (post.user_id === req.user.id)
       return res.status(400).json({ error: "You cannot hide your own post from yourself." });
     await pool.query(
       "INSERT INTO hidden_posts (user_id, post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
-      [req.user.id, req.params.postId],
+      [req.user.id, post.id],
     );
     return res.json({ hidden: true });
   } catch (error) {
