@@ -146,7 +146,7 @@ export function TwoFactorSetup() {
               autoComplete="one-time-code"
               maxLength={6}
               value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\\D/g, "").slice(0, 6))}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
               className="h-11 w-full rounded-lg border border-border bg-background px-3 text-base tracking-widest"
               placeholder="000000"
             />
