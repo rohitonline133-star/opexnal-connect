@@ -1155,11 +1155,13 @@ app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next
         END AS target_summary
        FROM notifications n LEFT JOIN users actor ON actor.id=n.actor_id
        WHERE n.recipient_id=$1
+         AND (n.actor_id IS NULL OR (actor.is_deactivated=FALSE
+           AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=actor.id) OR (b.blocker_id=actor.id AND b.blocked_id=$1))))
        ORDER BY n.created_at DESC LIMIT $2`,
       [req.user.id, limit],
     );
     const unread = await pool.query(
-      "SELECT COUNT(*)::int AS count FROM notifications WHERE recipient_id=$1 AND read_at IS NULL",
+      `SELECT COUNT(*)::int AS count FROM notifications n LEFT JOIN users actor ON actor.id=n.actor_id WHERE n.recipient_id=$1 AND n.read_at IS NULL AND (n.actor_id IS NULL OR (actor.is_deactivated=FALSE AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=actor.id) OR (b.blocker_id=actor.id AND b.blocked_id=$1))))`,
       [req.user.id],
     );
     return res.json({ notifications: result.rows, unreadCount: unread.rows[0].count });
@@ -2831,7 +2833,7 @@ app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req
       `SELECT m.id,m.conversation_id,m.sender_id,m.body,m.created_at,
         u.username AS sender_username,u.display_name AS sender_display_name,u.avatar_url AS sender_avatar_url
        FROM messages m JOIN users u ON u.id=m.sender_id
-       WHERE m.conversation_id=$1 ORDER BY m.created_at ASC LIMIT 200`,
+       WHERE m.conversation_id=$1 AND u.is_deactivated=FALSE ORDER BY m.created_at ASC LIMIT 200`,
       [req.params.conversationId],
     );
     return res.json({ messages: result.rows });
@@ -2935,7 +2937,12 @@ app.put(
     try {
       const message = await pool.query(
         `SELECT m.id FROM messages m JOIN conversation_members cm ON cm.conversation_id=m.conversation_id
-       WHERE m.id=$1 AND cm.user_id=$2 LIMIT 1`,
+       WHERE m.id=$1 AND cm.user_id=$2
+         AND NOT EXISTS (SELECT 1 FROM conversation_members other JOIN users peer ON peer.id=other.user_id
+           WHERE other.conversation_id=m.conversation_id AND other.user_id<>$2
+             AND (peer.is_deactivated=TRUE
+               OR EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=peer.id) OR (b.blocker_id=peer.id AND b.blocked_id=$2))
+               OR EXISTS (SELECT 1 FROM user_restrictions r WHERE (r.restrictor_id=$2 AND r.restricted_id=peer.id) OR (r.restricted_id=$2 AND r.restrictor_id=peer.id)))) LIMIT 1`,
         [req.params.messageId, req.user.id],
       );
       if (!message.rowCount) return res.status(404).json({ error: "Message not found." });
