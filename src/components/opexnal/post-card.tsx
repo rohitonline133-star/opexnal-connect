@@ -113,14 +113,20 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
   async function onShare() {
     const url = `${window.location.origin}/p/${post.id}`;
+    const canShare = typeof navigator.share === "function";
     try {
-      const canShare = typeof navigator.share === "function";
-      if (canShare) await navigator.share({ url, title: "Opexnal post" });
-      else await navigator.clipboard.writeText(url);
-      if (viewerId) await recordShare(post.id, viewerId, canShare ? "native" : "link");
-      if (!canShare) toast.success("Link copied to clipboard");
-    } catch {
-      /* user dismissed share sheet */
+      if (canShare) {
+        await navigator.share({ url, title: "Opexnal post" });
+        if (viewerId) await recordShare(post.id, viewerId, "other");
+      } else {
+        await navigator.clipboard.writeText(url);
+        if (viewerId) await recordShare(post.id, viewerId, "link");
+        toast.success("Link copied to clipboard");
+      }
+    } catch (error) {
+      // A cancelled native share is not an error and must not be counted.
+      if (error instanceof Error && error.name === "AbortError") return;
+      toast.error("Could not share this post. Please try again.");
     }
   }
 
