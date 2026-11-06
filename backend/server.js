@@ -334,12 +334,23 @@ function validPassword(value) {
 
 // Public account recovery intake. Ticket IDs are bearer secrets; only their hashes are stored.
 const recoveryReasons = new Set([
-  "account_takeover", "lost_email", "lost_phone", "suspicious_login", "forgot_password", "other",
+  "account_takeover",
+  "lost_email",
+  "lost_phone",
+  "suspicious_login",
+  "forgot_password",
+  "other",
 ]);
 app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
-  const identity = typeof req.body?.identityInput === "string" ? req.body.identityInput.trim().toLowerCase() : "";
+  const identity =
+    typeof req.body?.identityInput === "string"
+      ? req.body.identityInput.trim().toLowerCase()
+      : "";
   const reason = typeof req.body?.reason === "string" ? req.body.reason : "";
-  const details = typeof req.body?.additionalDetails === "string" ? req.body.additionalDetails.trim().slice(0, 1000) : "";
+  const details =
+    typeof req.body?.additionalDetails === "string"
+      ? req.body.additionalDetails.trim().slice(0, 1000)
+      : "";
   if (!(validEmail(identity) || validUsername(identity))) {
     return res.status(400).json({ error: "Enter a valid Opexnal username or account email." });
   }
@@ -347,26 +358,34 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
     return res.status(400).json({ error: "Choose a valid recovery reason." });
   }
   const ipKey = "recovery-request:" + String(req.ip || "unknown");
-  const identityKey = "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
+  const identityKey =
+    "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
   if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
     return res.status(429).json({ error: "Too many recovery requests. Try again later." });
   }
   try {
-    const account = await pool.query(
-      "SELECT id FROM users WHERE username=$1 OR email=$1 LIMIT 1",
-      [identity],
-    );
+    const account = await pool.query("SELECT id FROM users WHERE username=$1 OR email=$1 LIMIT 1", [
+      identity,
+    ]);
     const ticketId = "rec_" + randomBytes(24).toString("base64url");
     const ticketHash = createHash("sha256").update(ticketId).digest("hex");
     const identityHash = createHmac("sha256", jwtSecret).update(identity).digest("hex");
     await pool.query(
       "INSERT INTO account_recovery_requests (id,account_user_id,identity_hash,ticket_token_hash,reason,details) VALUES ($1,$2,$3,$4,$5,$6)",
-      [randomUUID(), account.rows[0]?.id || null, identityHash, ticketHash, reason, details || null],
+      [
+        randomUUID(),
+        account.rows[0]?.id || null,
+        identityHash,
+        ticketHash,
+        reason,
+        details || null,
+      ],
     );
     res.setHeader("Cache-Control", "no-store");
     return res.status(201).json({
       ticket: { id: ticketId, status: "received", createdAt: Date.now() },
-      message: "Your request was received. Keep the tracking ID private. This request does not itself restore account access.",
+      message:
+        "Your request was received. Keep the tracking ID private. This request does not itself restore account access.",
     });
   } catch (error) {
     return next(error);
