@@ -2862,8 +2862,15 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     for (const row of member.rows) {
       if (row.user_id === req.user.id) continue;
       for (const socket of socketsByUser.get(row.user_id) || []) {
-        if (socket.readyState === 1)
+        if (socket.readyState !== 1) continue;
+        try {
           socket.send(JSON.stringify({ type: "message.created", message }));
+        } catch (socketError) {
+          console.warn("Message websocket delivery failed", {
+            conversationId,
+            error: socketError?.message || "unknown error",
+          });
+        }
       }
     }
     return res.status(201).json({ message });
