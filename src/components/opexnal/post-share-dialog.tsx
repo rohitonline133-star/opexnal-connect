@@ -25,11 +25,17 @@ type PostShareDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogProps) {
+export function PostShareDialog({
+  postId,
+  open,
+  onOpenChange,
+}: PostShareDialogProps) {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(
+    null,
+  );
   const [sending, setSending] = useState(false);
 
   const { data: conversations = [], isLoading } = useQuery({
@@ -44,12 +50,16 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
       .filter((conversation) => conversation.others[0])
       .filter((conversation) => {
         const peer = conversation.others[0]!;
-        return !query || peer.username.toLowerCase().includes(query) ||
-          peer.display_name.toLowerCase().includes(query);
+        return (
+          !query ||
+          peer.username.toLowerCase().includes(query) ||
+          peer.display_name.toLowerCase().includes(query)
+        );
       });
   }, [conversations, search]);
 
-  const postUrl = typeof window === "undefined" ? "" : `${window.location.origin}/p/${postId}`;
+  const postUrl =
+    typeof window === "undefined" ? "" : `${window.location.origin}/p/${postId}`;
   const shareText = `Check out this post on Opexnal: ${postUrl}`;
 
   async function copyLink() {
@@ -74,7 +84,9 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
       setSelectedConversation(null);
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not send this post.");
+      toast.error(
+        error instanceof Error ? error.message : "Could not send this post.",
+      );
     } finally {
       setSending(false);
     }
@@ -85,17 +97,26 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
       <DialogContent className="flex max-h-[80vh] max-w-md flex-col gap-4 overflow-hidden rounded-t-2xl p-4">
         <DialogHeader>
           <DialogTitle>Share post</DialogTitle>
-          <DialogDescription>Send this post to a conversation or share its link.</DialogDescription>
+          <DialogDescription>
+            Send this post to a conversation or share its link.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search conversations..." className="pl-9" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search conversations..."
+            className="pl-9"
+          />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Loading conversations…</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Loading conversations…
+            </p>
           ) : contacts.length ? (
             <div className="grid grid-cols-3 gap-3">
               {contacts.map((conversation) => {
@@ -105,44 +126,124 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
                   <button
                     key={conversation.id}
                     type="button"
-                    onClick={() => setSelectedConversation(selected ? null : conversation.id)}
+                    onClick={() =>
+                      setSelectedConversation(
+                        selected ? null : conversation.id,
+                      )
+                    }
                     aria-pressed={selected}
                     className={`flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2 text-center transition-colors ${selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-secondary"}`}
                   >
                     <span className="relative">
-                      <ProfileAvatar path={peer.avatar_url} fallback={initialsFor(peer)} className="h-14 w-14" />
-                      {selected && <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground"><span aria-hidden="true">✓</span></span>}
+                      <ProfileAvatar
+                        path={peer.avatar_url}
+                        fallback={initialsFor(peer)}
+                        className="h-14 w-14"
+                      />
+                      {selected && (
+                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <span aria-hidden="true">✓</span>
+                        </span>
+                      )}
                     </span>
-                    <span className="w-full truncate text-xs">{peer.display_name || peer.username}</span>
+                    <span className="w-full truncate text-xs">
+                      {peer.display_name || peer.username}
+                    </span>
                   </button>
                 );
               })}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">No matching conversations yet.</p>
-              <Link to="/messages" onClick={() => onOpenChange(false)} className="mt-2 inline-block text-sm font-medium text-primary">Open messages</Link>
+              <p className="text-sm text-muted-foreground">
+                No matching conversations yet.
+              </p>
+              <Link
+                to="/messages"
+                onClick={() => onOpenChange(false)}
+                className="mt-2 inline-block text-sm font-medium text-primary"
+              >
+                Open messages
+              </Link>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-4 gap-2 border-t border-border pt-3">
-          <button type="button" onClick={() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); window.location.href = `https://wa.me/?text=${encodeURIComponent(shareText)}`; }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
-            <MessageCircle className="h-5 w-5" />WhatsApp
+          <button
+            type="button"
+            onClick={() => {
+              if (user?.id) {
+                void recordShare(postId, user.id, "other").catch(
+                  () => undefined,
+                );
+              }
+              window.location.href = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+            }}
+            className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
+          >
+            <MessageCircle className="h-5 w-5" />
+            WhatsApp
           </button>
-          <button type="button" onClick={() => void copyLink()} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
-            <Copy className="h-5 w-5" />Copy link
+          <button
+            type="button"
+            onClick={() => void copyLink()}
+            className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
+          >
+            <Copy className="h-5 w-5" />
+            Copy link
           </button>
-          <a href={`mailto:?subject=${encodeURIComponent("Opexnal post")}&body=${encodeURIComponent(shareText)}`} onClick={() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
-            <Mail className="h-5 w-5" />Email
+          <a
+            href={`mailto:?subject=${encodeURIComponent("Opexnal post")}&body=${encodeURIComponent(shareText)}`}
+            onClick={() => {
+              if (user?.id) {
+                void recordShare(postId, user.id, "other").catch(
+                  () => undefined,
+                );
+              }
+            }}
+            className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
+          >
+            <Mail className="h-5 w-5" />
+            Email
           </a>
-          <button type="button" onClick={() => { if (navigator.share) void navigator.share({ title: "Opexnal post", text: shareText, url: postUrl }).then(() => { if (user?.id) void recordShare(postId, user.id, "other").catch(() => undefined); }).catch(() => undefined); else void copyLink(); }} className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary">
-            <Share2 className="h-5 w-5" />More
+          <button
+            type="button"
+            onClick={() => {
+              if (navigator.share) {
+                void navigator
+                  .share({
+                    title: "Opexnal post",
+                    text: shareText,
+                    url: postUrl,
+                  })
+                  .then(() => {
+                    if (user?.id) {
+                      void recordShare(postId, user.id, "other").catch(
+                        () => undefined,
+                      );
+                    }
+                  })
+                  .catch(() => undefined);
+              } else {
+                void copyLink();
+              }
+            }}
+            className="flex flex-col items-center gap-1 rounded-xl p-2 text-xs hover:bg-secondary"
+          >
+            <Share2 className="h-5 w-5" />
+            More
           </button>
         </div>
 
-        <Button type="button" onClick={() => void sendToContact()} disabled={!selectedConversation || sending} className="w-full">
-          <Send className="mr-2 h-4 w-4" />{sending ? "Sending…" : "Send"}
+        <Button
+          type="button"
+          onClick={() => void sendToContact()}
+          disabled={!selectedConversation || sending}
+          className="w-full"
+        >
+          <Send className="mr-2 h-4 w-4" />
+          {sending ? "Sending…" : "Send"}
         </Button>
       </DialogContent>
     </Dialog>
