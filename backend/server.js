@@ -2847,7 +2847,7 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
     return res.status(400).json({ error: "Message must contain 1–5000 characters." });
   try {
     const member = await pool.query(
-      "SELECT cm.user_id FROM conversation_members cm JOIN users peer ON peer.id=cm.user_id WHERE cm.conversation_id=$1 AND peer.is_deactivated=FALSE",
+      "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
       [conversationId],
     );
     if (!member.rowCount || !member.rows.some((row) => row.user_id === req.user.id)) {
@@ -2863,7 +2863,11 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
         "SELECT 1 FROM user_restrictions WHERE (restrictor_id=$1 AND restricted_id=ANY($2::uuid[])) OR (restricted_id=$1 AND restrictor_id=ANY($2::uuid[])) LIMIT 1",
         [req.user.id, otherIds],
       );
-      if (blocked.rowCount || restricted.rowCount) {
+      const deactivated = await pool.query(
+        "SELECT 1 FROM users WHERE id=ANY($1::uuid[]) AND is_deactivated=TRUE LIMIT 1",
+        [otherIds],
+      );
+      if (blocked.rowCount || restricted.rowCount || deactivated.rowCount) {
         return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
       }
     }
