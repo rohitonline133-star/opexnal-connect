@@ -1949,14 +1949,40 @@ app.delete(
 );
 
 app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
+  const limit = Math.min(Math.max(Number(req.query.limit || 30), 1), 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT fr.id,fr.requester_id,fr.created_at,u.username,u.display_name,u.avatar_url
        FROM follow_requests fr JOIN users u ON u.id=fr.requester_id
-       WHERE fr.target_id=$1 AND fr.status='pending' ORDER BY fr.created_at DESC LIMIT 100`,
-      [req.user.id],
+       WHERE fr.target_id=$1 AND fr.status='pending'
+         AND ($2::timestamptz IS NULL OR (fr.created_at,fr.id)<($2::timestamptz,$3::uuid))
+       ORDER BY fr.created_at DESC,fr.id DESC LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
-    return res.json({ requests: result.rows });
+    const hasMore = result.rows.length > limit;
+    const requests = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = requests[requests.length - 1];
+    return res.json({
+      requests,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
