@@ -2058,11 +2058,15 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
   const body = req.body || {};
   const hasCaption = Object.prototype.hasOwnProperty.call(body, "caption");
   const hasCommentsEnabled = Object.prototype.hasOwnProperty.call(body, "commentsEnabled");
+  const hasHideLikesCount = Object.prototype.hasOwnProperty.call(body, "hideLikesCount");
+  const hasHideShareCount = Object.prototype.hasOwnProperty.call(body, "hideShareCount");
   const hasArchived = Object.prototype.hasOwnProperty.call(body, "isArchived");
   if (
-    (!hasCaption && !hasCommentsEnabled && !hasArchived) ||
+    (!hasCaption && !hasCommentsEnabled && !hasHideLikesCount && !hasHideShareCount && !hasArchived) ||
     (hasCaption && (typeof body.caption !== "string" || body.caption.length > 2200)) ||
     (hasCommentsEnabled && typeof body.commentsEnabled !== "boolean") ||
+    (hasHideLikesCount && typeof body.hideLikesCount !== "boolean") ||
+    (hasHideShareCount && typeof body.hideShareCount !== "boolean") ||
     (hasArchived && typeof body.isArchived !== "boolean")
   ) {
     return res.status(400).json({ error: "Invalid post update payload." });
