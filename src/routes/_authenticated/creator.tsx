@@ -3,22 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BarChart3,
   DollarSign,
-  TrendingUp,
-  Users,
-  Eye,
-  Heart,
-  Share2,
   Crown,
-  CreditCard,
   Building2,
-  FileCheck,
   AlertTriangle,
   ChevronLeft,
-  ChevronRight,
   ShieldCheck,
   Sparkles,
-  Check,
-  Sliders,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
@@ -63,8 +53,6 @@ export function CreatorDashboardPage() {
 
   // Payout bank setup modal
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
-  const [accountNumber, setAccountNumber] = useState("");
-  const [holderName, setHolderName] = useState("");
 
   const handleSaveSubscriptions = () => {
     saveSettings({
@@ -82,21 +70,8 @@ export function CreatorDashboardPage() {
 
   const handleSavePayoutDestination = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountNumber || !holderName) {
-      toast.error("Please complete all required banking fields");
-      return;
-    }
-    saveSettings({
-      payoutDestination: {
-        type: "bank",
-        accountIdentifier: `•••• ${accountNumber.slice(-4)}`,
-        holderName,
-        verified: true,
-      },
-    });
-    setSettings(getStoredSettings());
+    toast.error("Payout setup is unavailable until a verified payment provider is connected.");
     setPayoutModalOpen(false);
-    toast.success("Bank payout account linked successfully!");
   };
 
   return (
@@ -406,63 +381,6 @@ export function CreatorDashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Bank Account Linking Dialog */}
-      <Dialog open={payoutModalOpen} onOpenChange={setPayoutModalOpen}>
-        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-bold flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              Link Payout Destination
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Add your banking details for verified payouts.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSavePayoutDestination} className="space-y-3 py-2">
-            <div>
-              <label className="text-xs font-semibold block mb-1">Account Holder Legal Name</label>
-              <Input
-                placeholder="Full name as on bank records"
-                value={holderName}
-                onChange={(e) => setHolderName(e.target.value)}
-                className="h-10 rounded-xl bg-surface border-border text-xs"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold block mb-1">
-                Account / IBAN / Routing Number
-              </label>
-              <Input
-                placeholder="Enter account number"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                className="h-10 rounded-xl bg-surface border-border text-xs"
-                required
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button
-                type="button"
-                variant="surface"
-                onClick={() => setPayoutModalOpen(false)}
-                className="flex-1 text-xs rounded-xl"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold"
-              >
-                Save Bank
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </AppShell>
   );
 }
