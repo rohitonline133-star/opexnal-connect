@@ -672,6 +672,19 @@ export async function toggleSave(postId: string, _userId: string, saved: boolean
   });
 }
 
+export async function updatePost(
+  postId: string,
+  update: { caption?: string; commentsEnabled?: boolean },
+) {
+  return apiRequest<{
+    post: { id: string; caption: string; comments_enabled: boolean; updated_at: string };
+  }>(`/api/v1/posts/${encodeURIComponent(postId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(update),
+  });
+}
+
 export async function reportPost(postId: string, reason: string) {
   const normalizedReason =
     reason === "It's spam or a scam"
