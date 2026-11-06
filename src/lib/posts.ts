@@ -864,6 +864,7 @@ export async function createPost(input: {
   visibility: PostVisibility;
   locationName?: string | null;
   commentsEnabled: boolean;
+  hideLikesCount?: boolean;
   media: NewPostMedia[];
 }) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -911,6 +912,7 @@ export async function createPost(input: {
         visibility: input.visibility,
         locationName: input.locationName?.trim() || null,
         commentsEnabled: input.commentsEnabled,
+        hideLikesCount: input.hideLikesCount === true,
         media,
       }),
     });
