@@ -6,6 +6,7 @@ import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { apiUrl } from "@/lib/api-client";
+import { subscribeToMessageEvents } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
@@ -118,6 +119,11 @@ function NotificationsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(
+    () => subscribeToMessageEvents(() => undefined, () => void load()),
+    [load],
+  );
 
   async function respondToFollowRequest(requestId: string, decision: "accept" | "reject") {
     setActionId(requestId);
