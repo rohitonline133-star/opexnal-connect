@@ -1949,7 +1949,11 @@ app.delete(
 );
 
 app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
-  const limit = Math.min(Math.max(Number(req.query.limit || 30), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
   const beforeCreatedAt =
     typeof req.query.beforeCreatedAt === "string" &&
     Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
