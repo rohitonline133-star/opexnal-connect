@@ -82,15 +82,22 @@ async function processEvent(event) {
     await client.query("ROLLBACK");
     const terminal = event.attempts >= maxAttempts;
     const delaySeconds = Math.min(300, 2 ** Math.min(event.attempts, 8));
-    await pool.query(
-      `UPDATE event_outbox
-       SET status = $3, available_at = NOW() + ($4 * INTERVAL '1 second'),
-           locked_at = NULL, locked_by = NULL,
-           last_error_code = $5, updated_at = NOW()
-       WHERE id = $1 AND status = 'processing' AND locked_by = $2`,
-      [event.id, workerId, terminal ? "dead" : "pending", delaySeconds,
-        String(error?.message || "processing_error").slice(0, 80)],
-    );
+    try {
+      await pool.query(
+        `UPDATE event_outbox
+         SET status = $3, available_at = NOW() + ($4 * INTERVAL '1 second'),
+             locked_at = NULL, locked_by = NULL,
+             last_error_code = 'event_processing_failed', updated_at = NOW()
+         WHERE id = $1 AND status = 'processing' AND locked_by = $2`,
+        [event.id, workerId, terminal ? "dead" : "pending", delaySeconds],
+      );
+    } catch (retryError) {
+      // Leave the lease in place; another worker can reclaim it after lease expiry.
+      console.error("Outbox retry scheduling failed", {
+        eventId: event.id,
+        error: retryError?.message || "unknown error",
+      });
+    }
   } finally {
     client.release();
   }
