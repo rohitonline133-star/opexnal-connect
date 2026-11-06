@@ -68,6 +68,14 @@ After applying `backend/migrations/20261107_distributed_rate_limits.sql`, set th
 
 Schedule `npm run backend:rate-limits:cleanup` as a one-shot job (for example, every 5–15 minutes). It deletes at most `RATE_LIMIT_CLEANUP_BATCH_SIZE` expired rows per run (default 5000, range 1–20000); set `DATABASE_URL` and optional `DATABASE_SSL=true`. Repeat on the next schedule while expired rows remain. The job is implemented but external scheduling/supervision is not configured by this repository. PostgreSQL integration tests and multi-instance load tests are still required before enabling this for public production traffic.
 
+
+
+## Optional Memcached cache adapter
+
+The backend now includes `backend/lib/memcached-cache.js`, a small Memcached ASCII-protocol JSON adapter with stable key-to-server selection, strict key/TTL/value bounds, request timeouts, and fail-open cache reads/writes. Configure `MEMCACHED_SERVERS=cache-a:11211,cache-b:11211` and optional `MEMCACHED_TIMEOUT_MS` (50–5000, default 750) when creating the adapter. Keep Memcached on a private trusted network; this adapter does not implement SASL authentication or TLS and must not be exposed to the public internet.
+
+**Integration boundary:** this adapter is currently a tested infrastructure primitive, not yet connected to profile/feed/business endpoints. No authorization-sensitive response is cached. Before enabling endpoint caching, define explicit cache keys, short TTLs, privacy/block-aware invalidation, and stale-data behavior; PostgreSQL remains authoritative. Do not cache OTPs, credentials, private messages, session tokens, or raw personal identifiers.
+
 ## Web deployment and API proxy
 
 The TanStack web server proxies `/api/*` to the API using the server-only `OPEXNAL_API_URL` environment variable. For a Vercel web deployment, set `OPEXNAL_API_URL` to the public HTTPS origin of the separately deployed Node API, and set `PUBLIC_WEB_URL` to the exact HTTPS origin of the web app. Leave `VITE_OPEXNAL_API_URL` blank to use the same-origin proxy. Do not point a browser at a Docker-only hostname such as `api:4000`.
