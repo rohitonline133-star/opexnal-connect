@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Bell, Clock, Moon, Volume2, Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Switch } from "@/components/ui/switch";
@@ -49,7 +49,7 @@ function SettingsNotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Notification preferences saved on this device.");
+      toast.success("Notification preferences saved on this device. Push and email delivery are not connected yet.");
     },
     onError: () => {
       toast.error("Failed to update notification settings.");
@@ -62,6 +62,10 @@ function SettingsNotificationsPage() {
         <ScreenHeader title="Notifications" showBack onBack={() => navigate({ to: "/settings" })} />
 
         <div className="p-4 space-y-6">
+          <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-gray-400">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>These preferences are stored on this device. Push notifications, scheduled quiet hours, bedtime reminders, and security-alert emails are not yet connected to a delivery service.</p>
+          </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Push Notifications
@@ -70,7 +74,7 @@ function SettingsNotificationsPage() {
             <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Pause All</span>
-                <p className="text-xs text-gray-400">Temporarily silence all push notifications</p>
+                <p className="text-xs text-gray-400">Preference only; push delivery is not connected</p>
               </div>
               <Switch checked={pauseAll} onCheckedChange={setPauseAll} />
             </div>
@@ -79,7 +83,7 @@ function SettingsNotificationsPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Quiet Mode</span>
                 <p className="text-xs text-gray-400">
-                  Automatically mute notifications overnight (11 PM - 7 AM)
+                  Preference only; scheduled notification muting is not connected
                 </p>
               </div>
               <Switch checked={quietMode} onCheckedChange={setQuietMode} />
@@ -89,7 +93,7 @@ function SettingsNotificationsPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Sleep & Bedtime Reminder</span>
                 <p className="text-xs text-gray-400">
-                  Receive gentle alerts to wind down screen time
+                  Preference only; bedtime reminder delivery is not connected
                 </p>
               </div>
               <Switch checked={bedtimeReminder} onCheckedChange={setBedtimeReminder} />
@@ -105,7 +109,7 @@ function SettingsNotificationsPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Security Alerts by Email</span>
                 <p className="text-xs text-gray-400">
-                  Immediate email whenever a new login or password reset occurs
+                  Preference only; security alert email delivery is not connected
                 </p>
               </div>
               <Switch checked={securityAlerts} onCheckedChange={setSecurityAlerts} />
