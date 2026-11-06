@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Sparkles, Archive, Download, Save, Loader2 } from "lucide-react";
+import { Sparkles, Archive, Download, Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Switch } from "@/components/ui/switch";
@@ -57,7 +57,7 @@ function SettingsStoryPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Story settings saved on this device.");
+      toast.success("Story preferences saved on this device. Story controls are not enforced yet.");
     },
     onError: () => {
       toast.error("Failed to save story settings.");
@@ -74,6 +74,10 @@ function SettingsStoryPage() {
         />
 
         <div className="p-4 space-y-6">
+          <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-gray-400">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>These preferences are stored on this device only. Automatic story archiving, gallery saving, reshare permissions and story-reply enforcement are not connected yet.</p>
+          </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Saving & Archive
@@ -83,7 +87,7 @@ function SettingsStoryPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Save Story to Archive</span>
                 <p className="text-xs text-gray-400">
-                  Automatically save stories after their 24-hour expiration
+                  Preference only; automatic story archiving is not connected
                 </p>
               </div>
               <Switch checked={saveToArchive} onCheckedChange={setSaveToArchive} />
@@ -95,7 +99,7 @@ function SettingsStoryPage() {
                   Save to Camera Roll / Gallery
                 </span>
                 <p className="text-xs text-gray-400">
-                  Save posted stories directly to your phone storage
+                  Preference only; automatic gallery saving is not connected
                 </p>
               </div>
               <Switch checked={saveToGallery} onCheckedChange={setSaveToGallery} />
