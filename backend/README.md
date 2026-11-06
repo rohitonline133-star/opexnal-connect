@@ -20,6 +20,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
    psql "$DATABASE_URL" -f backend/migrations/20261107_social_graph_cursor_indexes.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_notification_cursor_index.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_conversation_inbox_cursor_indexes.sql
+   psql "$DATABASE_URL" -f backend/migrations/20261107_message_history_cursor_index.sql
    psql "$DATABASE_URL" -f backend/migrations/20261107_distributed_rate_limits.sql
 5. Start the API with npm run backend:start; health check: GET http://localhost:4000/health.
 
@@ -33,7 +34,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET /api/v1/posts/feed, POST /api/v1/posts.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
-- GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints. The conversation inbox supports keyset pagination using `limit` (1–100, default 30) and the paired `beforeLastMessageAt` / `beforeId` values from `nextCursor`.
+- GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints. The conversation inbox supports keyset pagination using `limit` (1–100, default 30) and the paired `beforeLastMessageAt` / `beforeId` values from `nextCursor`. Message history GET uses keyset pagination (`limit` 1–100, default 50; paired `beforeCreatedAt` / `beforeId` cursor) and returns each page in chronological order.
 - GET /api/v1/follow-requests supports keyset pagination with `limit` (1–100, default 30) and the paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; callers should pass both cursor fields unchanged for the next page. Follow-graph cursor indexes for both incoming and outgoing edges are included in `20261107_social_graph_cursor_indexes.sql`; apply and benchmark them before relying on them at scale. Query-plan review examples are in `docs/performance/SOCIAL_GRAPH_EXPLAIN.sql`; run them on staging with a test account and inspect buffer reads and actual row counts.
 - GET /api/v1/notifications supports keyset pagination with `limit` (1–100, default 50) and paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; unread count is still returned with every page.
 - GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
