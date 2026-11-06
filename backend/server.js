@@ -854,7 +854,7 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
       `SELECT m.object_key,
         (m.owner_id=$2
           OR EXISTS (SELECT 1 FROM users avatar_owner WHERE avatar_owner.avatar_url=$3 AND (avatar_owner.id=$2 OR (avatar_owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=avatar_owner.id))))
-          OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$3 AND (p.is_archived=FALSE OR p.user_id=$2) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
+          OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$3 AND (p.archived_at IS NULL OR p.user_id=$2) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
           OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
       [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
@@ -921,7 +921,7 @@ app.get("/api/v1/storage/public/:objectKey", dbRequired, async (req, res, next) 
     const result = await pool.query(
       `SELECT m.object_key,m.mime_type FROM media_objects m
        WHERE m.object_key=$1 AND m.deleted_at IS NULL
-       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$2 AND p.is_archived=FALSE AND p.visibility='public' AND owner.is_private=FALSE)
+       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$2 AND p.archived_at IS NULL AND p.visibility='public' AND owner.is_private=FALSE)
          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$2 AND s.visibility='public' AND s.expires_at>NOW() AND owner.is_private=FALSE))
        LIMIT 1`,
       [objectKey, `/api/v1/storage/${objectKey}`],
@@ -1000,7 +1000,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE p.is_archived=FALSE
+      WHERE p.archived_at IS NULL
         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
         AND (
           p.user_id=$1
@@ -1057,7 +1057,7 @@ app.get("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next
         ) AS media
       FROM posts p JOIN users u ON u.id=p.user_id
       WHERE p.id=$1
-        AND (p.is_archived=FALSE OR p.user_id=$2)
+        AND (p.archived_at IS NULL OR p.user_id=$2)
         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2))
         AND (
           p.user_id=$2
@@ -1575,7 +1575,7 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
           )) ELSE '[]'::json END
         ) AS media
        FROM posts p JOIN users u ON u.id=p.user_id
-       WHERE LOWER(u.username)=LOWER($1) AND p.is_archived=FALSE
+       WHERE LOWER(u.username)=LOWER($1) AND p.archived_at IS NULL
          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
@@ -2072,10 +2072,10 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
       `UPDATE posts
        SET caption = CASE WHEN $3::boolean THEN $4::text ELSE caption END,
            comments_enabled = CASE WHEN $5::boolean THEN $6::boolean ELSE comments_enabled END,
-           is_archived = CASE WHEN $7::boolean THEN $8::boolean ELSE is_archived END,
+           archived_at = CASE WHEN $7::boolean THEN CASE WHEN $8::boolean THEN NOW() ELSE NULL END ELSE archived_at END,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2
-       RETURNING id, caption, comments_enabled, is_archived, updated_at`,
+       RETURNING id, caption, comments_enabled, archived_at, updated_at`,
       [
         req.params.postId,
         req.user.id,
@@ -2096,7 +2096,7 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
 
 async function findVisiblePost(postId, userId) {
   const result = await pool.query(
-    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND p.is_archived=FALSE AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
+    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND p.archived_at IS NULL AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
     [postId, userId],
   );
   return result.rows[0] || null;
@@ -2547,7 +2547,7 @@ app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
-      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND p.is_archived=FALSE AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
+      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND p.archived_at IS NULL AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
       [req.user.id, limit],
     );
     res.json({ reels: result.rows });
