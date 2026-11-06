@@ -231,7 +231,15 @@ async function issueToken(user, req) {
     algorithm: "HS256",
   });
 }
-async function enqueueNotification(client, recipientId, actorId, type, targetType = null, targetId = null, metadata = {}) {
+async function enqueueNotification(
+  client,
+  recipientId,
+  actorId,
+  type,
+  targetType = null,
+  targetId = null,
+  metadata = {},
+) {
   if (!recipientId || recipientId === actorId) return null;
   const aggregateId =
     typeof targetId === "string" &&
@@ -1855,9 +1863,17 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
         "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW() RETURNING id",
         [randomUUID(), req.user.id, req.params.userId],
       );
-      await enqueueNotification(client, req.params.userId, req.user.id, "follow_request", "user", req.user.id, {
-        followRequestId: request.rows[0].id,
-      });
+      await enqueueNotification(
+        client,
+        req.params.userId,
+        req.user.id,
+        "follow_request",
+        "user",
+        req.user.id,
+        {
+          followRequestId: request.rows[0].id,
+        },
+      );
       await client.query("COMMIT");
       return res.json({ status: "requested", following: false });
     }
@@ -1866,7 +1882,14 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
       [req.user.id, req.params.userId],
     );
     if (inserted.rowCount)
-      await enqueueNotification(client, req.params.userId, req.user.id, "new_follower", "user", req.user.id);
+      await enqueueNotification(
+        client,
+        req.params.userId,
+        req.user.id,
+        "new_follower",
+        "user",
+        req.user.id,
+      );
     await client.query("COMMIT");
     return res.json({ status: "following", following: true });
   } catch (error) {
@@ -2102,7 +2125,14 @@ app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res
       [req.user.id, post.id],
     );
     if (inserted.rowCount)
-      await enqueueNotification(client, post.user_id, req.user.id, "post_like", "post", post.id);
+      await enqueueNotification(
+        client,
+        post.user_id,
+        req.user.id,
+        "post_like",
+        "post",
+        post.id,
+      );
     const count = await client.query(
       "SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1",
       [post.id],
@@ -2237,9 +2267,15 @@ app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req,
         "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
         [id, post.id, req.user.id, parentId, body],
       );
-      await enqueueNotification(client, post.user_id, req.user.id, "post_comment", "comment", id, {
-        postId: post.id,
-      });
+      await enqueueNotification(
+        client,
+        post.user_id,
+        req.user.id,
+        "post_comment",
+        "comment",
+        id,
+        { postId: post.id },
+      );
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
@@ -2826,9 +2862,15 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
       conversationId,
     ]);
     for (const recipientId of otherIds) {
-      await enqueueNotification(client, recipientId, req.user.id, "message", "conversation", conversationId, {
-        messageId,
-      });
+      await enqueueNotification(
+        client,
+        recipientId,
+        req.user.id,
+        "message",
+        "conversation",
+        conversationId,
+        { messageId },
+      );
     }
     await client.query(
       "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
