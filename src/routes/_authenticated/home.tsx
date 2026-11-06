@@ -106,16 +106,16 @@ function HomeFeed() {
               <Link
                 to="/activity"
                 aria-label="Notifications and activity"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-6 w-6" />
               </Link>
               <Link
                 to="/messages"
                 aria-label="Direct Messages"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-foreground hover:bg-secondary transition-colors"
               >
-                <MessageSquare className="h-5 w-5" />
+                <MessageSquare className="h-6 w-6" />
               </Link>
             </div>
           }
