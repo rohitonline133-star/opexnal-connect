@@ -402,6 +402,9 @@ function CreateFlow() {
             </div>
 
             {/* Adjustments Controls */}
+            <p className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+              Edit controls currently change only this preview. Cropping, rotation and color adjustments are not applied to the uploaded file.
+            </p>
             <div className="p-4 bg-card border border-border rounded-3xl space-y-4 shadow-xs">
               {/* Aspect Ratio & Rotate */}
               <div className="flex items-center justify-between">
@@ -500,6 +503,9 @@ function CreateFlow() {
             </div>
 
             {/* Filter Swatches Carousel */}
+            <p className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-muted-foreground">
+              Filters are preview-only and are not applied to the published media yet.
+            </p>
             <div className="p-4 bg-card border border-border rounded-3xl space-y-3 shadow-xs">
               <p className="text-xs font-bold text-foreground">Select Filter</p>
               <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -532,6 +538,7 @@ function CreateFlow() {
                 </p>
                 <select
                   value={selectedMusic}
+                  disabled
                   onChange={(e) => setSelectedMusic(e.target.value)}
                   className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-xs text-foreground focus:outline-none"
                 >
@@ -611,6 +618,7 @@ function CreateFlow() {
                 <Input
                   placeholder="@username1, @username2"
                   value={taggedPeople}
+                  disabled
                   onChange={(e) => setTaggedPeople(e.target.value)}
                   className="h-9 rounded-xl bg-surface border-border text-xs"
                 />
@@ -634,6 +642,7 @@ function CreateFlow() {
                 <Input
                   placeholder="Enter @username to co-author post"
                   value={collaboration}
+                  disabled
                   onChange={(e) => setCollaboration(e.target.value)}
                   className="h-9 rounded-xl bg-surface border-border text-xs"
                 />
