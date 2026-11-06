@@ -54,7 +54,9 @@ jobs:
           ANDROID_KEY_ALIAS: \${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: \${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/upload-keystore.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$GITHUB_WORKSPACE/android/upload-keystore.jks"
+          test -s "$GITHUB_WORKSPACE/android/upload-keystore.jks"
+          keytool -list -keystore "$GITHUB_WORKSPACE/android/upload-keystore.jks" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
           python3 - <<'PY'
           from pathlib import Path
           import re
