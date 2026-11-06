@@ -97,6 +97,9 @@ function signMediaUrl(objectKey, expires) {
 const socketsByUser = new Map();
 const attempts = new Map();
 const rateLimitHmacSecret = process.env.RATE_LIMIT_HMAC_SECRET || "";
+if (rateLimitHmacSecret && rateLimitHmacSecret.length < 32) {
+  throw new Error("RATE_LIMIT_HMAC_SECRET must contain at least 32 characters when configured.");
+}
 const scrypt = promisify(scryptCallback);
 
 if (jwtSecret.length < 32) {
