@@ -49,7 +49,7 @@ function SettingsStoryPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Story settings saved.");
+      toast.success("Story settings saved on this device.");
     },
     onError: () => {
       toast.error("Failed to save story settings.");
