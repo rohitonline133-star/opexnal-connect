@@ -2754,6 +2754,26 @@ app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
   }
 });
 app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeLastMessageAt =
+    typeof req.query.beforeLastMessageAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeLastMessageAt).getTime())
+      ? new Date(req.query.beforeLastMessageAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeLastMessageAt || req.query.beforeId) && (!beforeLastMessageAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeLastMessageAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT c.id,c.created_at,c.last_message_at,
@@ -2773,10 +2793,19 @@ app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, 
         ) AS others
        FROM conversations c
        JOIN conversation_members mine ON mine.conversation_id=c.id AND mine.user_id=$1
-       ORDER BY c.last_message_at DESC LIMIT 100`,
-      [req.user.id],
+       WHERE ($2::timestamptz IS NULL OR (c.last_message_at,c.id)<($2::timestamptz,$3::uuid))
+       ORDER BY c.last_message_at DESC,c.id DESC LIMIT $4`,
+      [req.user.id, beforeLastMessageAt, beforeId, limit + 1],
     );
-    return res.json({ conversations: result.rows });
+    const hasMore = result.rows.length > limit;
+    const conversations = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = conversations[conversations.length - 1];
+    return res.json({
+      conversations,
+      nextCursor: hasMore && last
+        ? { beforeLastMessageAt: new Date(last.last_message_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
