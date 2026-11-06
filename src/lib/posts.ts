@@ -496,9 +496,14 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   return payload;
 }
 
-async function fetchApiFeed(limit = 100, cursor?: string | null): Promise<FeedPost[]> {
+async function fetchApiFeed(
+  limit = 100,
+  cursor?: string | null,
+  feedMode: "for_you" | "following" = "for_you",
+): Promise<FeedPost[]> {
   const params = new URLSearchParams({
     limit: String(Math.min(Math.max(limit, 1), 100)),
+    feed: feedMode,
   });
   if (cursor) params.set("cursor", cursor);
   const payload = await apiRequest<{ posts?: ApiPostRecord[] }>(
@@ -528,9 +533,10 @@ export async function getHomeFeed(
   viewerId: string,
   cursor?: string | null,
   limit = FEED_PAGE_SIZE,
+  feedMode: "for_you" | "following" = "for_you",
 ) {
   try {
-    const all = await fetchApiFeed(Math.min(limit + 1, 100), cursor);
+    const all = await fetchApiFeed(Math.min(limit + 1, 100), cursor, feedMode);
     const visible = all;
     const items = visible.slice(0, limit);
     const last = items[items.length - 1];
