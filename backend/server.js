@@ -921,7 +921,7 @@ app.get("/api/v1/storage/public/:objectKey", dbRequired, async (req, res, next) 
     const result = await pool.query(
       `SELECT m.object_key,m.mime_type FROM media_objects m
        WHERE m.object_key=$1 AND m.deleted_at IS NULL
-       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$2 AND p.visibility='public' AND owner.is_private=FALSE)
+       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$2 AND p.is_archived=FALSE AND p.visibility='public' AND owner.is_private=FALSE)
          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$2 AND s.visibility='public' AND s.expires_at>NOW() AND owner.is_private=FALSE))
        LIMIT 1`,
       [objectKey, `/api/v1/storage/${objectKey}`],
@@ -2095,7 +2095,7 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
 
 async function findVisiblePost(postId, userId) {
   const result = await pool.query(
-    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
+    "SELECT p.id,p.user_id,p.visibility,p.comments_enabled FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.id=$1 AND p.is_archived=FALSE AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) LIMIT 1",
     [postId, userId],
   );
   return result.rows[0] || null;
