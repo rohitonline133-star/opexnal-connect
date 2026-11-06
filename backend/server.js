@@ -2336,13 +2336,20 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
     values.push(body.commentsEnabled);
     updates.push(`comments_enabled=${values.length}`);
   }
+  if (body.hideLikesCount !== undefined) {
+    if (typeof body.hideLikesCount !== "boolean") {
+      return res.status(400).json({ error: "hideLikesCount must be a boolean." });
+    }
+    values.push(body.hideLikesCount);
+    updates.push(`hide_likes_count=${values.length}`);
+  }
   if (updates.length === 0) {
     return res.status(400).json({ error: "No supported post changes were provided." });
   }
   updates.push("updated_at=NOW()");
   try {
     const result = await pool.query(
-      `UPDATE posts SET ${updates.join(",")} WHERE id=$1 AND user_id=$2 RETURNING id,caption,comments_enabled,updated_at`,
+      `UPDATE posts SET ${updates.join(",")} WHERE id=$1 AND user_id=$2 RETURNING id,caption,comments_enabled,hide_likes_count,updated_at`,
       values,
     );
     if (!result.rowCount) {
