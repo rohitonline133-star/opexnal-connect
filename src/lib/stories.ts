@@ -31,6 +31,18 @@ export async function resolveStoryMediaUrl(path: string, expiresIn = 300) {
   ) {
     return path;
   }
+  if (path.startsWith("/api/v1/storage/")) {
+    try {
+      const payload = await storyApiRequest<{ signedUrl?: string }>("/api/v1/storage/signed-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path, expiresIn }),
+      });
+      return payload.signedUrl ? apiUrl(payload.signedUrl) : null;
+    } catch {
+      return null;
+    }
+  }
   try {
     const { data, error } = await supabase.storage
       .from("story-media")
