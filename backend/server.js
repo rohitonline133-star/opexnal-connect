@@ -1707,20 +1707,29 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
 
 app.get("/api/v1/users/me/followers", dbRequired, authRequired, async (req, res, next) => {
   const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
-  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime()) ? new Date(req.query.beforeCreatedAt).toISOString() : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId) ? req.query.beforeId : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
-    const result = query
-      ? await pool.query(
-          profileSelect +
-            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY f.created_at DESC LIMIT $3",
-          [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
-        )
-      : await pool.query(
-          profileSelect +
-            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 ORDER BY f.created_at DESC LIMIT $2",
-          [req.user.id, limit],
-        );
-    return res.json({ profiles: result.rows.map(publicProfile) });
+    const result = await pool.query(
+      profileSelect.replace("SELECT u.id,", "SELECT f.created_at AS follow_created_at,u.id,") +
+        " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND ($2::text IS NULL OR u.username ILIKE $2 OR u.display_name ILIKE $2) AND ($3::timestamptz IS NULL OR (f.created_at,f.follower_id)<($3::timestamptz,$4::uuid)) ORDER BY f.created_at DESC,f.follower_id DESC LIMIT $5",
+      [req.user.id, query ? "%" + query.replace(/[\\%_]/g, "\\$&") + "%" : null, beforeCreatedAt, beforeId, limit + 1],
+    );
+    const hasMore = result.rows.length > limit;
+    const rows = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = rows[rows.length - 1];
+    return res.json({
+      profiles: rows.map(publicProfile),
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.follow_created_at).toISOString(), beforeId: last.id } : null,
+    });
   } catch (error) {
     return next(error);
   }
