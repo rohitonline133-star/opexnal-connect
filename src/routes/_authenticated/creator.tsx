@@ -46,25 +46,8 @@ export function CreatorDashboardPage() {
   const [settings, setSettings] = useState(() => getStoredSettings());
 
   // Subscription modal state
-  const [subModalOpen, setSubModalOpen] = useState(false);
-  const [tierPrice, setTierPrice] = useState(settings.creatorTierPrice || 4.99);
-  const [subsEnabled, setSubsEnabled] = useState(settings.creatorSubscriptionsEnabled);
 
   // Payout bank setup modal
-
-  const handleSaveSubscriptions = () => {
-    saveSettings({
-      creatorSubscriptionsEnabled: subsEnabled,
-      creatorTierPrice: tierPrice,
-    });
-    setSettings(getStoredSettings());
-    setSubModalOpen(false);
-    toast.success(
-      subsEnabled
-        ? `Creator Subscriptions active at $${tierPrice.toFixed(2)}/month`
-        : "Creator Subscriptions disabled",
-    );
-  };
 
   return (
     <AppShell
@@ -133,44 +116,20 @@ export function CreatorDashboardPage() {
         {/* ============================================================== */}
         {activeTab === "tools" && (
           <div className="space-y-3">
-            {/* Creator Subscriptions */}
-            <div className="p-4 bg-card border border-border rounded-3xl space-y-3 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl brand-gradient-bg flex items-center justify-center text-white">
-                    <Crown className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Creator Subscriptions</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Offer monthly subscriber badges & exclusive posts
-                    </p>
-                  </div>
+            {/* Creator subscriptions are unavailable until billing is connected. */}
+            <div className="p-4 bg-card border border-border rounded-3xl space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl brand-gradient-bg flex items-center justify-center text-white">
+                  <Crown className="h-5 w-5" />
                 </div>
-                <Badge
-                  variant={settings.creatorSubscriptionsEnabled ? "default" : "outline"}
-                  className="text-[10px]"
-                >
-                  {settings.creatorSubscriptionsEnabled ? "Active" : "Disabled"}
-                </Badge>
+                <div>
+                  <p className="text-xs font-bold text-foreground">Creator Subscriptions</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Subscriber billing and exclusive-access enforcement are not connected yet.
+                  </p>
+                </div>
               </div>
-
-              {settings.creatorSubscriptionsEnabled && (
-                <div className="p-3 bg-surface border border-border rounded-2xl flex justify-between items-center text-xs">
-                  <span>Current Tier Price:</span>
-                  <span className="font-bold text-foreground">
-                    ${settings.creatorTierPrice.toFixed(2)}/month
-                  </span>
-                </div>
-              )}
-
-              <Button
-                variant="surface"
-                onClick={() => setSubModalOpen(true)}
-                className="w-full text-xs h-9 rounded-xl"
-              >
-                Configure Subscription Tier & Pricing
-              </Button>
+              <Badge variant="outline" className="text-[10px]">Unavailable</Badge>
             </div>
 
             {/* Branded Content & Sponsorships */}
@@ -241,61 +200,6 @@ export function CreatorDashboardPage() {
         )}
       </div>
 
-      {/* Subscription Tier Configuration Dialog */}
-      <Dialog open={subModalOpen} onOpenChange={setSubModalOpen}>
-        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-bold flex items-center gap-2">
-              <Crown className="h-4 w-4 text-amber-400" />
-              Creator Subscriptions
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Set your monthly subscription price for dedicated followers.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Enable Subscriptions</span>
-              <Switch checked={subsEnabled} onCheckedChange={setSubsEnabled} />
-            </div>
-
-            {subsEnabled && (
-              <div>
-                <label className="text-xs font-semibold block mb-1">Monthly Price (USD)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-xs text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    step="0.50"
-                    min="0.99"
-                    max="99.99"
-                    value={tierPrice}
-                    onChange={(e) => setTierPrice(parseFloat(e.target.value) || 0)}
-                    className="pl-7 h-10 rounded-xl bg-surface border-border text-xs"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="surface"
-              onClick={() => setSubModalOpen(false)}
-              className="flex-1 text-xs rounded-xl"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveSubscriptions}
-              className="flex-1 text-xs rounded-xl brand-gradient-bg text-white font-semibold"
-            >
-              Save Tier
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
     </AppShell>
   );
