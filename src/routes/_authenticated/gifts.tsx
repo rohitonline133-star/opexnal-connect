@@ -1,67 +1,52 @@
-import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Gift, Star, Sparkles, SwitchCamera } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, ShieldAlert } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
-import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/gifts")({
   head: () => ({
     meta: [
-      { title: "Virtual Gifts & Stars — Opexnal" },
-      {
-        name: "description",
-        content: "Receive gifts and appreciation stars on reels and livestreams.",
-      },
+      { title: "Gifts & Stars — Opexnal" },
+      { name: "description", content: "Virtual gift purchases, star balances, realtime delivery, and creator payouts are not connected. Gift controls are unavailable until payments and server-side entitlement checks exist." },
     ],
   }),
-  component: GiftsPage,
+  component: StatusPage,
 });
 
-function GiftsPage() {
+function StatusPage() {
   const navigate = useNavigate();
-  const [reelsGifts, setReelsGifts] = useState(true);
-  const [liveGifts, setLiveGifts] = useState(true);
 
   return (
     <AppShell activeTab="profile">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader
-          title="Gifts & Stars"
-          showBack
-          onBack={() => navigate({ to: "/monetization" })}
-        />
-
-        <div className="p-4 space-y-6">
-          <div className="p-4 bg-gradient-to-r from-rose-950/40 to-black border border-rose-800/50 rounded-2xl flex items-center gap-3">
-            <Gift className="w-6 h-6 text-rose-400 shrink-0" />
-            <div>
-              <h4 className="text-xs font-bold text-white">Gifts on Reels & Live</h4>
-              <p className="text-[11px] text-gray-400">
-                Fans can buy stars and send virtual gifts to support your creative work.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-sm font-semibold text-white">Allow Gifts on Reels</span>
-                <p className="text-xs text-gray-400">Show the Send Gift button on eligible reels</p>
-              </div>
-              <Switch checked={reelsGifts} onCheckedChange={setReelsGifts} />
-            </div>
-
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-sm font-semibold text-white">
-                  Allow Gifts on Live Streams
-                </span>
-                <p className="text-xs text-gray-400">
-                  Display animated gift badges during broadcasts
+      <div className="min-h-screen bg-black pb-20 text-white">
+        <div className="mx-auto max-w-xl">
+          <ScreenHeader
+            title="Gifts & Stars"
+            showBack
+            onBack={() => navigate({ to: "/monetization" })}
+          />
+          <div className="space-y-4 p-4">
+            <section className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold">This feature is not connected yet</h2>
+                <p className="text-xs leading-5 text-gray-300">
+                  Virtual gift purchases, star balances, realtime delivery, and creator payouts are not connected. Gift controls are unavailable until payments and server-side entitlement checks exist.
                 </p>
               </div>
-              <Switch checked={liveGifts} onCheckedChange={setLiveGifts} />
+            </section>
+            <div className="rounded-xl border border-[#262626] bg-[#121212] p-4">
+              <ShieldAlert className="mb-2 h-5 w-5 text-gray-400" />
+              <p className="text-xs leading-5 text-gray-400">
+                The feature will become available only after its backend, data storage,
+                access controls, and required external services are implemented and tested.
+              </p>
             </div>
+            <Link
+              to="/monetization"
+              className="inline-flex rounded-lg bg-white px-4 py-2.5 text-xs font-semibold text-black"
+            >
+              Back to Monetization
+            </Link>
           </div>
         </div>
       </div>

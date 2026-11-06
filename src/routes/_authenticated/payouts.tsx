@@ -1,81 +1,51 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { DollarSign, Landmark, CreditCard, History, ShieldCheck, ArrowRight } from "lucide-react";
+import { AlertTriangle, ShieldAlert } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 
 export const Route = createFileRoute("/_authenticated/payouts")({
   head: () => ({
     meta: [
-      { title: "Payouts & Bank Settings — Opexnal" },
-      {
-        name: "description",
-        content: "Manage payout methods, tax compliance and earnings disbursements.",
-      },
+      { title: "Payouts & Banking — Opexnal" },
+      { name: "description", content: "There is no connected payout provider or verified earnings ledger. No estimated balance, bank account, payout schedule, or verification status is displayed or collected." },
     ],
   }),
-  component: PayoutsPage,
+  component: StatusPage,
 });
 
-function PayoutsPage() {
+function StatusPage() {
   const navigate = useNavigate();
 
   return (
     <AppShell activeTab="profile">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader
-          title="Payouts & Banking"
-          showBack
-          onBack={() => navigate({ to: "/monetization" })}
-        />
-
-        <div className="p-4 space-y-6">
-          <div className="p-4 bg-[#121212] border border-[#262626] rounded-2xl space-y-2">
-            <span className="text-xs text-gray-400 font-medium">
-              Estimated Upcoming Disbursement
-            </span>
-            <p className="text-3xl font-extrabold text-white">$142.50</p>
-            <p className="text-[11px] text-emerald-400 font-medium">
-              Scheduled for 21st of next month via direct bank deposit
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Payment Receiving Methods
-            </h3>
-
-            <div className="p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#1e1e1e] text-emerald-400">
-                  <Landmark className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Direct Bank Deposit (ACH / NEFT)</h4>
-                  <p className="text-[11px] text-gray-400">HDFC Bank •••••• 4821 (Verified)</p>
-                </div>
+      <div className="min-h-screen bg-black pb-20 text-white">
+        <div className="mx-auto max-w-xl">
+          <ScreenHeader
+            title="Payouts & Banking"
+            showBack
+            onBack={() => navigate({ to: "/monetization" })}
+          />
+          <div className="space-y-4 p-4">
+            <section className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold">This feature is not connected yet</h2>
+                <p className="text-xs leading-5 text-gray-300">
+                  There is no connected payout provider or verified earnings ledger. No estimated balance, bank account, payout schedule, or verification status is displayed or collected.
+                </p>
               </div>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-400">
-                Primary
-              </span>
+            </section>
+            <div className="rounded-xl border border-[#262626] bg-[#121212] p-4">
+              <ShieldAlert className="mb-2 h-5 w-5 text-gray-400" />
+              <p className="text-xs leading-5 text-gray-400">
+                The feature will become available only after its backend, data storage,
+                access controls, and required external services are implemented and tested.
+              </p>
             </div>
-          </div>
-
-          <div className="space-y-2">
             <Link
-              to="/transactions"
-              className="p-4 bg-[#121212] border border-[#262626] rounded-2xl flex items-center justify-between hover:bg-[#1a1a1a] transition"
+              to="/monetization"
+              className="inline-flex rounded-lg bg-white px-4 py-2.5 text-xs font-semibold text-black"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#1e1e1e] text-purple-400">
-                  <History className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Transaction & Payout History</h4>
-                  <p className="text-[11px] text-gray-400">
-                    Detailed receipts and past monthly remittances
-                  </p>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-500" />
+              Back to Monetization
             </Link>
           </div>
         </div>
