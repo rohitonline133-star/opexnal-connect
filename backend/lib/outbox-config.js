@@ -1,5 +1,6 @@
 export function boundedInteger(value, fallback, minimum, maximum, name) {
-  const candidate = value === undefined || value === null || value === "" ? fallback : Number(value);
+  const candidate =
+    value === undefined || value === null || value === "" ? fallback : Number(value);
   if (!Number.isSafeInteger(candidate) || candidate < minimum || candidate > maximum) {
     throw new RangeError(`${name} must be an integer from ${minimum} to ${maximum}.`);
   }
