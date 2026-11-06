@@ -150,6 +150,28 @@ Use a hybrid fan-out model:
 - Start with measurable ranking baselines before introducing GPU-heavy models.
 - Provide safe fallbacks when ranking or model infrastructure is unavailable.
 
+## 5A. Large-scale industry reference patterns (Meta / OCP)
+
+Use large social-platform engineering as a source of design patterns, not as a requirement to reproduce proprietary systems. The names below describe reference approaches; they are not evidence that Opexnal has deployed equivalent infrastructure.
+
+| Reference | Transferable engineering idea | Opexnal adoption path |
+|---|---|---|
+| Open Compute Project (OCP) | Open hardware specifications and efficient rack/data-center designs | Prefer standard cloud or colocation infrastructure first; evaluate OCP-compatible hardware only when Opexnal operates its own fleet and has measured power, cooling, and total-cost requirements. OCP itself is an open industry project, not a single proprietary Meta server product. |
+| Tupperware / Twine | Container scheduling, deployment orchestration, placement, and fleet management | Use a maintained orchestrator such as Kubernetes or a managed container platform. Add autoscaling, health checks, rollout/rollback, resource quotas, and regional placement; do not attempt a bespoke scheduler at the current stage. |
+| TAO-style social graph | Low-latency graph-edge access for relationships and social actions | Keep PostgreSQL authoritative initially; model follows/blocks/mutes with indexed, well-defined edges and build read-optimized projections/caches. Consider a graph-specific store only after real traversal/query benchmarks justify it. |
+| MyRocks | LSM-tree storage-engine trade-offs for write-heavy workloads | Benchmark PostgreSQL and suitable managed/distributed alternatives using Opexnal's actual read/write mix before considering a storage-engine or database migration. |
+| Memcached clusters | Distributed in-memory caching to reduce repeated database reads | Introduce a shared cache for disposable, reconstructible data with TTLs, bounded memory, invalidation rules, and stampede protection. Redis may also serve coordination/rate-limit needs; neither cache is the durable source of truth. |
+| PyTorch | Train and serve ranking, recommendation, and moderation models | Start with offline evaluation and a small inference service; version datasets/models, monitor quality and drift, protect user data, and retain deterministic non-AI fallbacks. |
+| Meta Scalable Video Processor (MSVP) / custom video ASICs | Hardware acceleration for high-volume video processing | Use cloud or open-source transcoding workers (for example FFmpeg-based pipelines) and adaptive-bitrate HLS/DASH first. Consider specialized accelerators only after codec, throughput, energy, and unit-cost benchmarks show a clear advantage. |
+
+### Adoption gates
+
+1. Do not select infrastructure from brand prestige alone; compare operational burden, portability, security, and total cost.
+2. Keep PostgreSQL and object storage authoritative until measured bottlenecks justify specialized stores.
+3. Treat caches, search indexes, feed projections, and graph read models as rebuildable derived data.
+4. Introduce orchestration and model-serving complexity only with monitoring, rollback, capacity tests, and an accountable operator.
+5. Custom silicon, private global networks, and petabyte-scale RAM fleets are long-term possibilities, not near-term prerequisites or current Opexnal capabilities.
+
 ## 6. Network and service protocols
 
 - Keep HTTPS/HTTP APIs as the default public interface.
