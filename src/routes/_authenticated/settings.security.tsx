@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, ScreenHeader } from "@/components/AppShell";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
-import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/settings/security")({
   head: () => ({
@@ -14,8 +13,6 @@ export const Route = createFileRoute("/_authenticated/settings/security")({
 });
 
 function SecuritySettingsPage() {
-  const { session } = useSession();
-  const userEmail = session?.user?.email || "user@opexnal.com";
 
   return (
     <AppShell>
@@ -29,7 +26,7 @@ function SecuritySettingsPage() {
             सुरक्षित करें।
           </p>
 
-          <TwoFactorSetup userEmail={userEmail} />
+          <TwoFactorSetup />
         </div>
       </div>
     </AppShell>
