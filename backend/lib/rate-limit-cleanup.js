@@ -8,7 +8,9 @@ export function rateLimitCleanupBatchSize(value = 5000) {
 
 export async function deleteExpiredRateLimitBuckets(pool, batchSize = 5000) {
   const size = rateLimitCleanupBatchSize(batchSize);
-  if (!pool || typeof pool.query !== "function") throw new TypeError("A PostgreSQL pool is required.");
+  if (!pool || typeof pool.query !== "function") {
+    throw new TypeError("A PostgreSQL pool is required.");
+  }
   const result = await pool.query(
     `WITH expired AS (
        SELECT bucket_hash FROM distributed_rate_limits
