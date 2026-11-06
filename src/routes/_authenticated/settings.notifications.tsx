@@ -49,7 +49,7 @@ function SettingsNotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Notification preferences updated.");
+      toast.success("Notification preferences saved on this device.");
     },
     onError: () => {
       toast.error("Failed to update notification settings.");
