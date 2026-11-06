@@ -227,7 +227,8 @@ function PersonalDetailsModal({ username, onClose }: { username: string; onClose
       <DialogHeader>
         <DialogTitle className="text-lg font-bold">Personal Details</DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          These details are stored only on this device. They are not verified or synced to your Opexnal account.
+          These details are stored only on this device. They are not verified or synced to your
+          Opexnal account.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3 pt-2">
@@ -283,7 +284,9 @@ function AccountStatusModal({ username, onClose }: { username: string; onClose: 
             <p className="font-semibold text-emerald-600 dark:text-emerald-400">
               Community guideline status unavailable
             </p>
-            <p className="text-muted-foreground">Violation and report records are not connected to this status panel.</p>
+            <p className="text-muted-foreground">
+              Violation and report records are not connected to this status panel.
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3 p-3 rounded-2xl bg-primary/10 border border-primary/20">
@@ -341,7 +344,8 @@ function AccountsCenterModal({ username, onClose }: { username: string; onClose:
           Opexnal Accounts Center
         </DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
-          Manage connected-profile preferences. External account linking and cross-posting are not connected yet.
+          Manage connected-profile preferences. External account linking and cross-posting are not
+          connected yet.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-3 pt-1">
