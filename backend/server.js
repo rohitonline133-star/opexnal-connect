@@ -1812,12 +1812,34 @@ app.delete(
 );
 
 app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 100 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 100)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
   try {
     const result = await pool.query(
-      "SELECT following_id FROM follows WHERE follower_id=$1 ORDER BY created_at DESC LIMIT 5000",
-      [req.user.id],
+      `SELECT following_id, created_at
+       FROM follows
+       WHERE follower_id=$1
+         AND ($2::timestamptz IS NULL OR (created_at,following_id)<($2::timestamptz,$3::uuid))
+       ORDER BY created_at DESC, following_id DESC
+       LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, requestedLimit + 1],
     );
-    return res.json({ following: result.rows.map((row) => row.following_id) });
+    const hasMore = result.rows.length > requestedLimit;
+    const page = hasMore ? result.rows.slice(0, requestedLimit) : result.rows;
+    const last = page.at(-1);
+    return res.json({
+      following: page.map((row) => row.following_id),
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.following_id } : null,
+    });
   } catch (error) {
     return next(error);
   }
