@@ -870,9 +870,9 @@ app.post("/api/v1/storage/signed-url", dbRequired, authRequired, async (req, res
     const result = await pool.query(
       `SELECT m.object_key,
         (m.owner_id=$2
-          OR EXISTS (SELECT 1 FROM users avatar_owner WHERE avatar_owner.avatar_url=$3 AND (avatar_owner.id=$2 OR (avatar_owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=avatar_owner.id))))
-          OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$3 AND (p.archived_at IS NULL OR p.user_id=$2) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
-          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))) AS can_access
+          OR EXISTS (SELECT 1 FROM users avatar_owner WHERE avatar_owner.avatar_url=$3 AND avatar_owner.is_deactivated=FALSE AND (avatar_owner.id=$2 OR (avatar_owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=avatar_owner.id))))
+          OR EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE (p.media_url=$3 OR EXISTS (SELECT 1 FROM post_media pm WHERE pm.post_id=p.id AND pm.storage_path=$3)) AND owner.is_deactivated=FALSE AND (p.archived_at IS NULL OR p.user_id=$2) AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2)) AND (p.user_id=$2 OR (p.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))) OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=p.user_id))))
+          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$3 AND s.expires_at>NOW() AND owner.is_deactivated=FALSE AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=s.user_id) OR (b.blocker_id=s.user_id AND b.blocked_id=$2)) AND (s.user_id=$2 OR (s.visibility='public' AND (owner.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id))) OR (s.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=s.user_id)) OR (s.visibility='close_friends' AND EXISTS (SELECT 1 FROM close_friends cf WHERE cf.owner_id=s.user_id AND cf.friend_id=$2)))) AS can_access
        FROM media_objects m WHERE m.object_key=$1 AND m.deleted_at IS NULL LIMIT 1`,
       [objectKey, req.user.id, `/api/v1/storage/${objectKey}`],
     );
@@ -938,8 +938,8 @@ app.get("/api/v1/storage/public/:objectKey", dbRequired, async (req, res, next) 
     const result = await pool.query(
       `SELECT m.object_key,m.mime_type FROM media_objects m
        WHERE m.object_key=$1 AND m.deleted_at IS NULL
-       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE p.media_url=$2 AND p.archived_at IS NULL AND p.visibility='public' AND owner.is_private=FALSE)
-         OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$2 AND s.visibility='public' AND s.expires_at>NOW() AND owner.is_private=FALSE))
+       AND (EXISTS (SELECT 1 FROM posts p JOIN users owner ON owner.id=p.user_id WHERE (p.media_url=$2 OR EXISTS (SELECT 1 FROM post_media pm WHERE pm.post_id=p.id AND pm.storage_path=$2)) AND p.archived_at IS NULL AND p.visibility='public' AND owner.is_private=FALSE AND owner.is_deactivated=FALSE)
+          OR EXISTS (SELECT 1 FROM stories s JOIN users owner ON owner.id=s.user_id WHERE s.media_url=$2 AND s.visibility='public' AND s.expires_at>NOW() AND owner.is_private=FALSE AND owner.is_deactivated=FALSE))
        LIMIT 1`,
       [objectKey, `/api/v1/storage/${objectKey}`],
     );
