@@ -1990,6 +1990,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
   const caption = body.caption === undefined ? "" : body.caption;
   const visibility = body.visibility === undefined ? "public" : body.visibility;
   const commentsEnabled = body.commentsEnabled !== false;
+  const hideLikesCount = body.hideLikesCount === true;
   const locationName =
     typeof body.locationName === "string" ? body.locationName.trim().slice(0, 120) : null;
   let media = Array.isArray(body.media) ? body.media : [];
@@ -2050,7 +2051,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
       await client.query("BEGIN");
       const first = media[0];
       const result = await client.query(
-        "INSERT INTO posts (id,user_id,caption,media_url,media_type,visibility,location_name,comments_enabled) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+        "INSERT INTO posts (id,user_id,caption,media_url,media_type,visibility,location_name,comments_enabled,hide_likes_count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
         [
           randomUUID(),
           req.user.id,
@@ -2060,6 +2061,7 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
           visibility,
           locationName,
           commentsEnabled,
+          hideLikesCount,
         ],
       );
       const post = result.rows[0];
