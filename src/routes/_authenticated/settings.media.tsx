@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Wifi, Video, Image, Save, Loader2 } from "lucide-react";
+import { Video, Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Switch } from "@/components/ui/switch";
@@ -49,7 +49,7 @@ function SettingsMediaPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Media settings saved.");
+      toast.success("Media preferences saved on this device. Delivery controls are not connected yet.");
     },
     onError: () => {
       toast.error("Failed to save media settings.");
@@ -62,6 +62,10 @@ function SettingsMediaPage() {
         <ScreenHeader title="Media Quality" showBack onBack={() => navigate({ to: "/settings" })} />
 
         <div className="p-4 space-y-6">
+          <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>These preferences are saved on this device only. Video preloading, upload quality, and cellular autoplay are not yet enforced by Opexnal media delivery.</p>
+          </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Cellular Data Usage
@@ -70,7 +74,7 @@ function SettingsMediaPage() {
             <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Use Less Cellular Data</span>
-                <p className="text-xs text-gray-400">When data saver is on, videos won't preload</p>
+                <p className="text-xs text-gray-400">Preference only; video preloading is not yet controlled</p>
               </div>
               <Switch checked={dataSaver} onCheckedChange={setDataSaver} />
             </div>
@@ -79,7 +83,7 @@ function SettingsMediaPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Upload at Highest Quality</span>
                 <p className="text-xs text-gray-400">
-                  Always upload 4K and uncompressed audio even on mobile
+                  Preference only; upload quality controls are not yet connected
                 </p>
               </div>
               <Switch checked={highQualityUploads} onCheckedChange={setHighQualityUploads} />
@@ -89,7 +93,7 @@ function SettingsMediaPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Autoplay Reels on Cellular</span>
                 <p className="text-xs text-gray-400">
-                  Stream reels automatically without tapping play
+                  Preference only; cellular autoplay is not yet controlled
                 </p>
               </div>
               <Switch checked={autoPlayVideos} onCheckedChange={setAutoPlayVideos} />
