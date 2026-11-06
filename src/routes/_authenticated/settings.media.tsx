@@ -49,7 +49,9 @@ function SettingsMediaPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Media preferences saved on this device. Delivery controls are not connected yet.");
+      toast.success(
+        "Media preferences saved on this device. Delivery controls are not connected yet.",
+      );
     },
     onError: () => {
       toast.error("Failed to save media settings.");
@@ -64,7 +66,10 @@ function SettingsMediaPage() {
         <div className="p-4 space-y-6">
           <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-            <p>These preferences are saved on this device only. Video preloading, upload quality, and cellular autoplay are not yet enforced by Opexnal media delivery.</p>
+            <p>
+              These preferences are saved on this device only. Video preloading, upload quality,
+              and cellular autoplay are not yet enforced by Opexnal media delivery.
+            </p>
           </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -74,7 +79,9 @@ function SettingsMediaPage() {
             <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Use Less Cellular Data</span>
-                <p className="text-xs text-gray-400">Preference only; video preloading is not yet controlled</p>
+                <p className="text-xs text-gray-400">
+                  Preference only; video preloading is not yet controlled
+                </p>
               </div>
               <Switch checked={dataSaver} onCheckedChange={setDataSaver} />
             </div>
