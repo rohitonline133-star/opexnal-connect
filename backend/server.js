@@ -231,6 +231,30 @@ async function issueToken(user, req) {
     algorithm: "HS256",
   });
 }
+async function enqueueNotification(client, recipientId, actorId, type, targetType = null, targetId = null, metadata = {}) {
+  if (!recipientId || recipientId === actorId) return null;
+  const aggregateId =
+    typeof targetId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)
+      ? targetId
+      : randomUUID();
+  return enqueueOutboxEvent(client, {
+    eventType: "notification.requested",
+    eventVersion: 1,
+    aggregateType: "notification",
+    aggregateId,
+    idempotencyKey: randomUUID(),
+    payload: {
+      recipientId,
+      actorId: actorId || null,
+      notificationType: type,
+      targetType,
+      targetId,
+      metadata,
+    },
+  });
+}
+
 async function notifyUser(
   recipientId,
   actorId,
@@ -244,30 +268,11 @@ async function notifyUser(
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const aggregateId =
-      typeof targetId === "string" &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)
-        ? targetId
-        : randomUUID();
-    await enqueueOutboxEvent(client, {
-      eventType: "notification.requested",
-      eventVersion: 1,
-      aggregateType: "notification",
-      aggregateId,
-      idempotencyKey: randomUUID(),
-      payload: {
-        recipientId,
-        actorId: actorId || null,
-        notificationType: type,
-        targetType,
-        targetId,
-        metadata,
-      },
-    });
+    await enqueueNotification(client, recipientId, actorId, type, targetType, targetId, metadata);
     await client.query("COMMIT");
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
-    // A notification enqueue failure must not turn a successful post/message action into a client-visible failure.
+    // A notification enqueue failure must not turn a successful social action into a client-visible failure.
     console.error("Notification enqueue failed", error?.message || "unknown error");
   } finally {
     client?.release();
@@ -2228,15 +2233,28 @@ app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req,
         return res.status(400).json({ error: "Reply target is not part of this post." });
     }
     const id = randomUUID();
-    const result = await pool.query(
-      "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
-      [id, post.id, req.user.id, parentId, body],
-    );
+    const client = await pool.connect();
+    let result;
+    try {
+      await client.query("BEGIN");
+      result = await client.query(
+        "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
+        [id, post.id, req.user.id, parentId, body],
+      );
+      await enqueueNotification(client, post.user_id, req.user.id, "post_comment", "comment", id, {
+        postId: post.id,
+      });
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
     const author = await pool.query(
       "SELECT username,display_name,avatar_url FROM users WHERE id=$1",
       [req.user.id],
     );
-    await notifyUser(post.user_id, req.user.id, "post_comment", "comment", id, { postId: post.id });
     return res.status(201).json({
       comment: { ...result.rows[0], ...author.rows[0], liked_by_me: false },
     });
