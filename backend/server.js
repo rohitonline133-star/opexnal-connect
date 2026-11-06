@@ -2076,10 +2076,12 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
       `UPDATE posts
        SET caption = CASE WHEN $3::boolean THEN $4::text ELSE caption END,
            comments_enabled = CASE WHEN $5::boolean THEN $6::boolean ELSE comments_enabled END,
-           archived_at = CASE WHEN $7::boolean THEN CASE WHEN $8::boolean THEN NOW() ELSE NULL END ELSE archived_at END,
+           hide_likes_count = CASE WHEN $7::boolean THEN $8::boolean ELSE hide_likes_count END,
+           hide_share_count = CASE WHEN $9::boolean THEN $10::boolean ELSE hide_share_count END,
+           archived_at = CASE WHEN $11::boolean THEN CASE WHEN $12::boolean THEN NOW() ELSE NULL END ELSE archived_at END,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2
-       RETURNING id, caption, comments_enabled, archived_at, updated_at`,
+       RETURNING id, caption, comments_enabled, hide_likes_count, hide_share_count, archived_at, updated_at`,
       [
         req.params.postId,
         req.user.id,
@@ -2087,6 +2089,10 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
         hasCaption ? body.caption : null,
         hasCommentsEnabled,
         hasCommentsEnabled ? body.commentsEnabled : null,
+        hasHideLikesCount,
+        hasHideLikesCount ? body.hideLikesCount : null,
+        hasHideShareCount,
+        hasHideShareCount ? body.hideShareCount : null,
         hasArchived,
         hasArchived ? body.isArchived : null,
       ],
