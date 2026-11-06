@@ -749,8 +749,8 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
               Delete Post?
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground pt-1">
-              This post will be moved to Recently Deleted. You can restore it within 30 days before
-              it is permanently erased.
+              This action permanently deletes the post. It cannot currently be restored from a
+              Recently Deleted folder.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-2 pt-2">
