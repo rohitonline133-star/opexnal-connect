@@ -13,7 +13,7 @@
 | Authentication | JWT HS256 plus a database-backed `auth_sessions` lookup | Session revocation is checked, but README says refresh-token rotation is not implemented. |
 | Rate limiting | Optional PostgreSQL atomic fixed-window limiter in API handlers when `RATE_LIMIT_HMAC_SECRET` is configured; bounded in-memory fallback otherwise | Shared limiter is wired into all identified rate-limited API handlers when the dedicated secret is configured; additive migration and bounded one-shot expiry cleanup worker exist. Migration/secret setup, external cleanup scheduling, PostgreSQL integration tests, and multi-instance load validation remain outstanding. |
 | Cache adapter | Optional Memcached ASCII-protocol JSON adapter with bounded payloads, TTLs, timeouts, and stable key-to-server selection | Adapter is not yet wired to application endpoints; no cache hit-rate or invalidation behavior has been measured. Sensitive/authz-dependent responses are intentionally not cached. |\n| Social graph reads | Additive indexes cover reverse block/restriction lookup, pending follow-request ordering, and stable incoming/outgoing follow cursors; follow-request API supports bounded keyset pagination using `(created_at,id)` | Cursor-index migrations must be applied; a read-only EXPLAIN ANALYZE diagnostic script is authored, but no query-plan results, large-cardinality benchmarks, or dedicated graph service are established. |\n| WebSocket presence | In-memory `Map` named `socketsByUser` in `backend/server.js` | Connections and fan-out state are local to one process; multi-instance delivery needs a shared pub/sub or broker design. |
-| Notifications | Identified notification-producing routes write versioned outbox events transactionally; notifications API now supports bounded keyset pagination | Notification cursor index migration must be applied; unread count is still an exact COUNT query; worker supervision, scheduled alerting, and PostgreSQL integration tests remain. |
+| Notifications | Identified notification-producing routes write versioned outbox events transactionally; notifications API supports bounded keyset pagination | Notification cursor index migration must be applied; unread count is still an exact COUNT query; worker supervision, scheduled alerting, and PostgreSQL integration tests remain. |
 | Media storage | Multer writes files under `MEDIA_STORAGE_DIR`; README documents local volume storage and signed private URLs | Local disk is not a globally durable object store or CDN. Backups and multi-host access need a deliberate storage adapter. |
 | Email | Nodemailer SMTP transport configured from environment variables | Email requires production SMTP configuration. |
 | Phone / WhatsApp OTP | Draft PR #47 describes server-side OTP foundation, but explicitly says frontend wiring, destination-to-account binding, session issuance, shared throttling, and delivery/runtime tests remain outstanding | Do not claim phone OTP login is end-to-end working based on the draft API foundation alone. Preserve current OTP work and finish the complete verified flow. |
@@ -50,7 +50,7 @@
 
 1. Add query-plan review and indexes based on measured slow-query data.
 2. Introduce connection pooling/proxying and explicit per-service connection budgets.
-3. Extend keyset pagination to feed, profile, search, and message history; follow-request, notification, and conversation-inbox pagination are now implemented in the API. Apply the corresponding index migrations and benchmark.
+3. Extend keyset pagination to feed, profile, search, and message history; follow-request, notification, conversation-inbox, and message-history pagination are now implemented in the API. Apply the corresponding index migrations and benchmark.
 4. Add read replicas only for queries with understood consistency requirements.
 5. Introduce partitioning/sharding only after measured bottlenecks and a migration/restore plan exist.
 6. Add region-aware routing and failover only after replication lag and recovery objectives are tested.
@@ -64,7 +64,7 @@
 | Publishing | posts, post_media metadata | feed candidates, moderation jobs |
 | Media | upload records and object ownership | thumbnails, renditions, CDN state |
 | Engagement | likes, comments, saves, shares | counters, notification requests |
-| Messaging | conversations, members, durable messages; inbox keyset pagination by activity timestamp and conversation ID | push notifications, unread summaries; conversation cursor indexes and large-inbox benchmarks remain |
+| Messaging | conversations, members, durable messages; inbox keyset pagination by activity timestamp and conversation ID; message history keyset pagination in chronological response order | push notifications, unread summaries; inbox/message cursor migrations and large-inbox/history benchmarks remain |
 | Feed | no duplicate ownership of source posts | ranked/cached candidate lists |
 | Discovery | search index and ranking features are derived | trending topics, recommendations |
 | Trust & safety | reports, moderation decisions, enforcement records | review queues and audit events |
