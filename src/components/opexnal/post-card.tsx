@@ -198,9 +198,25 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     }
   };
 
-  const handleArchivePost = () => {
-    setActiveModal(null);
-    toast.error("Post Archive is not connected yet. Your post was not changed.");
+  const handleArchivePost = async () => {
+    if (!viewerId || !isOwner) {
+      toast.error("You can only archive your own posts.");
+      return;
+    }
+    try {
+      const response = await fetch(apiUrl(`/api/v1/posts/${encodeURIComponent(post.id)}/archive`), {
+        method: "PATCH",
+        headers: { ...authClient.getAuthHeader(), "Content-Type": "application/json" },
+        body: JSON.stringify({ restore: false }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not archive this post.");
+      setHidden(true);
+      setActiveModal(null);
+      toast.success("Post moved to your archive");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not archive this post.");
+    }
   };
 
   const handleDeletePost = async () => {
