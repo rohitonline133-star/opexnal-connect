@@ -191,6 +191,49 @@ export async function fetchMessageReactions(conversationId: string) {
   );
 }
 
+/**
+ * Subscribe to first-party message events. The short-lived ticket keeps the
+ * session token out of the WebSocket URL; polling remains as a fallback.
+ */
+export function subscribeToMessageEvents(onMessageCreated: () => void): () => void {
+  let socket: WebSocket | null = null;
+  let cancelled = false;
+
+  void (async () => {
+    try {
+      const response = await fetch(apiUrl("/api/v1/auth/websocket-ticket"), {
+        method: "POST",
+        headers: authClient.getAuthHeader(),
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const payload = (await response.json().catch(() => ({}))) as { ticket?: string };
+      if (!payload.ticket || cancelled || typeof window === "undefined") return;
+
+      const configuredUrl = apiUrl("/ws");
+      const socketUrl = /^https?:\/\//i.test(configuredUrl)
+        ? configuredUrl.replace(/^http/i, "ws")
+        : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
+      socket = new WebSocket(`${socketUrl}?ticket=${encodeURIComponent(payload.ticket)}`);
+      socket.addEventListener("message", (event) => {
+        try {
+          const message = JSON.parse(String(event.data)) as { type?: string };
+          if (message.type === "message.created") onMessageCreated();
+        } catch {
+          // Ignore malformed events; the API polling fallback will recover state.
+        }
+      });
+    } catch {
+      // WebSocket is an enhancement; existing API polling remains available.
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+    socket?.close();
+  };
+}
+
 export async function updateMessageReaction(messageId: string, emoji: string) {
   await messagesApiRequest<{ reaction: { message_id: string; emoji: string } | null }>(
     `/api/v1/messages/${encodeURIComponent(messageId)}/reaction`,
