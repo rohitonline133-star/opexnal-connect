@@ -42,6 +42,7 @@ import {
   deletePost,
   toggleLike,
   toggleSave,
+  unfollowUser,
   type FeedPost,
 } from "@/lib/posts";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
@@ -143,12 +144,22 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const handleSnooze = () => {
     setHidden(true);
     setMenuOpen(false);
-    toast.success(`Snoozed @${author?.username || "creator"} for 30 days`);
+    toast.success("Post hidden from this feed. A 30-day snooze is not saved yet.");
   };
 
-  const handleUnfollow = () => {
-    setMenuOpen(false);
-    toast.success(`Unfollowed @${author?.username || "creator"}`);
+  const handleUnfollow = async () => {
+    if (!viewerId || !author?.id) {
+      toast.error("Sign in to unfollow this creator.");
+      return;
+    }
+    try {
+      await unfollowUser(author.id);
+      setHidden(true);
+      setMenuOpen(false);
+      toast.success(`Unfollowed @${author.username}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not unfollow this creator.");
+    }
   };
 
   const handleToggleFavorite = () => {
