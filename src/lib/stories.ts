@@ -3,6 +3,7 @@ import { authClient } from "@/lib/auth-client";
 import type { Database } from "@/integrations/supabase/types";
 import type { FeedAuthor } from "@/lib/posts";
 import { apiUrl } from "@/lib/api-client";
+import { deleteOpexnalMedia, uploadOpexnalMedia } from "@/lib/posts";
 
 const IS_DEV_ENVIRONMENT =
   import.meta.env?.DEV ??
@@ -300,21 +301,13 @@ export async function createStory(input: {
   if (authError || authData.user?.id !== input.userId) {
     throw new Error("Verified authentication is required to create a story.");
   }
-  const { data: uploaded, error: uploadError } = await supabase.storage
-    .from("story-media")
-    .upload(`${input.userId}/${crypto.randomUUID()}`, input.file, {
-      contentType: input.file.type,
-      upsert: false,
-    });
-  if (uploadError || !uploaded?.path) {
-    throw uploadError || new Error("Story media upload failed.");
-  }
+  const storagePath = await uploadOpexnalMedia(input.file);
   try {
     const payload = await storyApiRequest<{ story?: { id?: string } }>("/api/v1/stories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mediaUrl: uploaded.path,
+        mediaUrl: storagePath,
         mediaType: input.mediaType,
         visibility: input.audience,
         caption: input.caption.trim(),
@@ -325,7 +318,7 @@ export async function createStory(input: {
     if (!payload.story?.id) throw new Error("The API did not return the created story.");
     return payload.story.id;
   } catch (error) {
-    await supabase.storage.from("story-media").remove([uploaded.path]);
+    await deleteOpexnalMedia(storagePath).catch(() => undefined);
     throw error;
   }
 }
