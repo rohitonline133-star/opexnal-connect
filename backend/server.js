@@ -240,8 +240,8 @@ async function notifyUser(
 ) {
   if (!recipientId || recipientId === actorId) return;
   try {
-    await pool.query(
-      "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
+    const result = await pool.query(
+      "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb) RETURNING id,notification_type,target_type,target_id,created_at",
       [
         randomUUID(),
         recipientId,
@@ -252,6 +252,10 @@ async function notifyUser(
         JSON.stringify(metadata),
       ],
     );
+    const event = JSON.stringify({ type: "notification.created", notification: result.rows[0] });
+    for (const socket of socketsByUser.get(recipientId) || []) {
+      if (socket.readyState === 1) socket.send(event);
+    }
   } catch (error) {
     // A notification failure must not turn a successful post/message action into a client-visible failure.
     console.error("Notification write failed", error?.message || "unknown error");
