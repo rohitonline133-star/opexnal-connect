@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,14 @@ function SettingsNotificationsPage() {
   const [quietMode, setQuietMode] = useState(settings?.quietModeEnabled ?? false);
   const [bedtimeReminder, setBedtimeReminder] = useState(settings?.bedtimeReminderEnabled ?? true);
   const [securityAlerts, setSecurityAlerts] = useState(settings?.securityAlertsEmail ?? true);
+
+  useEffect(() => {
+    if (!settings) return;
+    setPauseAll(settings.pauseAllNotifications);
+    setQuietMode(settings.quietModeEnabled);
+    setBedtimeReminder(settings.bedtimeReminderEnabled);
+    setSecurityAlerts(settings.securityAlertsEmail);
+  }, [settings]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
