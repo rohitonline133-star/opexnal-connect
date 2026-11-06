@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { EyeOff, Plus, X, Save, Loader2, Shield } from "lucide-react";
+import { EyeOff, Plus, X, Save, Loader2, Shield, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Switch } from "@/components/ui/switch";
@@ -70,7 +70,7 @@ function SettingsHiddenWordsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Hidden words settings updated.");
+      toast.success("Hidden words preferences saved on this device.");
     },
     onError: () => {
       toast.error("Failed to update settings.");
@@ -83,6 +83,10 @@ function SettingsHiddenWordsPage() {
         <ScreenHeader title="Hidden Words" showBack onBack={() => navigate({ to: "/settings" })} />
 
         <div className="p-4 space-y-6">
+          <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-gray-400">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>Your custom words and filter preferences are stored on this device only. They are not yet applied to incoming comments or server-side moderation.</p>
+          </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Offensive Comments
@@ -92,7 +96,7 @@ function SettingsHiddenWordsPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Hide Offensive Comments</span>
                 <p className="text-xs text-gray-400">
-                  Comments that may be offensive will be automatically filtered
+                  Preference only; automatic offensive-comment filtering is not connected
                 </p>
               </div>
               <Switch checked={hideOffensive} onCheckedChange={setHideOffensive} />
@@ -102,7 +106,7 @@ function SettingsHiddenWordsPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Advanced Comment Filtering</span>
                 <p className="text-xs text-gray-400">
-                  Stricter AI classification of scam and hate speech
+                  Preference only; AI comment classification is not connected
                 </p>
               </div>
               <Switch checked={advancedFilter} onCheckedChange={setAdvancedFilter} />
