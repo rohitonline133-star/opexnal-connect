@@ -217,6 +217,10 @@ function CreateFlow() {
 
   async function onPublish() {
     if (items.length === 0 || !user) return;
+    if (scheduledTime) {
+      toast.error("Scheduled publishing is not available yet. Clear the schedule date to publish now.");
+      return;
+    }
     setSubmitting(true);
     try {
       await createPost({
@@ -228,9 +232,7 @@ function CreateFlow() {
         hideLikesCount: hideLikes,
         media: items,
       });
-      toast.success(
-        scheduledTime ? `Post scheduled for ${scheduledTime}!` : "Published to your profile!",
-      );
+      toast.success("Published to your profile!");
       navigate({ to: "/home" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not publish your post");
@@ -522,6 +524,7 @@ function CreateFlow() {
                   <Music className="h-4 w-4 text-primary" />
                   <span className="text-xs font-bold text-foreground">Add Music Audio</span>
                 </div>
+                <p className="text-[11px] text-muted-foreground">Audio attachment is not connected yet. Choosing a sample here will not add music to the published post.</p>
                 <select
                   value={selectedMusic}
                   onChange={(e) => setSelectedMusic(e.target.value)}
@@ -597,6 +600,7 @@ function CreateFlow() {
             <div className="p-4 bg-card border border-border rounded-3xl space-y-3 shadow-xs text-xs">
               <div>
                 <Label className="font-semibold block mb-1">Tag People</Label>
+                <p className="mb-1 text-[11px] text-muted-foreground">People tagging is not saved to posts yet.</p>
                 <Input
                   placeholder="@username1, @username2"
                   value={taggedPeople}
@@ -617,6 +621,7 @@ function CreateFlow() {
 
               <div>
                 <Label className="font-semibold block mb-1">Invite Collaborator</Label>
+                <p className="mb-1 text-[11px] text-muted-foreground">Co-author invitations are not connected yet; this entry will not be published.</p>
                 <Input
                   placeholder="Enter @username to co-author post"
                   value={collaboration}
@@ -642,6 +647,7 @@ function CreateFlow() {
 
               <div className="pt-2 border-t border-border space-y-1">
                 <span className="font-semibold block">Schedule Post</span>
+                <p className="text-[11px] text-muted-foreground">Scheduling is not connected yet. Leave this empty to publish immediately.</p>
                 <Input
                   type="datetime-local"
                   value={scheduledTime}
