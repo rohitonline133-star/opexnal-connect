@@ -510,6 +510,41 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   return payload;
 }
 
+export async function uploadOpexnalMedia(file: File): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const response = await fetch(apiUrl("/api/v1/storage/upload"), {
+    method: "POST",
+    headers: authClient.getAuthHeader(),
+    body: form,
+    cache: "no-store",
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    storagePath?: string;
+    error?: string;
+  };
+  if (!response.ok || !payload.storagePath) {
+    throw new Error(payload.error || `Media upload failed (${response.status}).`);
+  }
+  return payload.storagePath;
+}
+
+export async function deleteOpexnalMedia(storagePath: string): Promise<void> {
+  const prefix = "/api/v1/storage/";
+  if (!storagePath.startsWith(prefix)) return;
+  const objectKey = storagePath.slice(prefix.length);
+  if (!/^[0-9a-f-]{36}\\.(jpg|png|webp|gif|mp4|webm|mov)$/i.test(objectKey)) return;
+  const response = await fetch(apiUrl(`${prefix}${encodeURIComponent(objectKey)}`), {
+    method: "DELETE",
+    headers: authClient.getAuthHeader(),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(payload.error || `Media cleanup failed (${response.status}).`);
+  }
+}
+
 async function fetchApiFeed(
   limit = 100,
   cursor?: string | null,
@@ -893,16 +928,10 @@ export async function createPost(input: {
       height?: number | null;
     }> = [];
     for (const item of input.media) {
-      const { data, error } = await supabase.storage
-        .from("post-media")
-        .upload(`${effectiveUserId}/${crypto.randomUUID()}`, item.file, {
-          contentType: item.file.type,
-          upsert: false,
-        });
-      if (error || !data?.path) throw error || new Error("Media upload returned no storage path.");
-      uploadedPaths.push(data.path);
+      const storagePath = await uploadOpexnalMedia(item.file);
+      uploadedPaths.push(storagePath);
       media.push({
-        mediaUrl: data.path,
+        mediaUrl: storagePath,
         mediaType: item.mediaType,
         width: item.width ?? null,
         height: item.height ?? null,
@@ -924,11 +953,8 @@ export async function createPost(input: {
     if (!payload.post?.id) throw new Error("The API did not return the created post.");
     return payload.post.id;
   } catch (error) {
-    if (uploadedPaths.length) {
-      await supabase.storage
-        .from("post-media")
-        .remove(uploadedPaths)
-        .catch(() => undefined);
+    for (const storagePath of uploadedPaths) {
+      await deleteOpexnalMedia(storagePath).catch(() => undefined);
     }
     throw error;
   }
