@@ -32,7 +32,7 @@ Requirements: Node.js 22+, PostgreSQL 15+.
 - GET/POST /api/v1/stories — stories expire after 24 hours.
 - GET /api/v1/reels — video posts.
 - GET/POST /api/v1/messages/conversations; GET/POST/DELETE /api/v1/messages/:conversationId; member/read/reaction endpoints.
-- GET /api/v1/follow-requests supports keyset pagination with `limit` (1–100, default 30) and the paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; callers should pass both cursor fields unchanged for the next page. Follow-graph cursor indexes for both incoming and outgoing edges are included in `20261107_social_graph_cursor_indexes.sql`; apply and benchmark them before relying on them at scale.
+- GET /api/v1/follow-requests supports keyset pagination with `limit` (1–100, default 30) and the paired `beforeCreatedAt` / `beforeId` values returned in `nextCursor`; callers should pass both cursor fields unchanged for the next page. Follow-graph cursor indexes for both incoming and outgoing edges are included in `20261107_social_graph_cursor_indexes.sql`; apply and benchmark them before relying on them at scale. Query-plan review examples are in `docs/performance/SOCIAL_GRAPH_EXPLAIN.sql`; run them on staging with a test account and inspect buffer reads and actual row counts.
 - GET /health. For WebSocket access, POST /api/v1/auth/websocket-ticket and connect to /ws?ticket=<single-use-ticket>; tickets expire in 30 seconds and can be consumed once.
 
 ## Deployment boundary
