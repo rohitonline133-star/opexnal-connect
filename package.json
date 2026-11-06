@@ -16,7 +16,8 @@
     "backend:start": "node backend/server.js",
     "backend:dev": "node --watch backend/server.js",
     "backend:check": "node --check backend/server.js && node --check backend/lib/outbox.js && node --check backend/lib/outbox-config.js && node --check backend/lib/outbox-health.js && node --check backend/workers/notification-event.js && node --check backend/workers/outbox-worker.js && node --check backend/workers/outbox-health-check.js",
-    "backend:outbox": "node backend/workers/outbox-worker.js"
+    "backend:outbox": "node backend/workers/outbox-worker.js",
+    "backend:outbox:health": "node backend/workers/outbox-health-check.js"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
