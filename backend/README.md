@@ -7,7 +7,7 @@ First-party Node.js/Express API with PostgreSQL persistence, JWT access tokens, 
 Requirements: Node.js 22+, PostgreSQL 15+.
 
 1. Copy .env.example to .env and set DATABASE_URL and a unique JWT_SECRET of at least 32 characters.
-2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_WEB_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured.
+2. Configure a self-hosted SMTP server using SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, and PUBLIC_WEB_URL. Signup deliberately returns 503 and creates no account when email verification delivery is not configured. For shared rate limits across API instances, also set RATE_LIMIT_HMAC_SECRET to a unique random secret of at least 32 characters on every instance.
 3. Install dependencies at repository root with npm install.
 4. Create a PostgreSQL database and run: psql "$DATABASE_URL" -f backend/schema.sql
    psql "$DATABASE_URL" -f backend/migrations/20261022_first_party_security_social.sql
@@ -59,6 +59,28 @@ The migration `backend/migrations/20261107_transactional_outbox.sql` creates an 
 - WebSocket authorization uses one-time tickets bound to a currently active server-side session; it only broadcasts messages created through authenticated REST routes.
 - The API request handlers still use the bounded process-local limiter. A PostgreSQL-backed distributed fixed-window counter primitive and additive bucket-table migration now exist, but the handlers have not yet been switched to it. It uses HMAC-derived bucket IDs so raw IP/account keys are not persisted. Redis/Memcached cache integration, shared-limiter integration tests, cleanup scheduling, stricter request validation, media storage, monitoring, backups, and load testing remain before public launch.
 - Never commit .env or production credentials.
+
+
+
+### Distributed rate-limit operation
+
+After applying `backend/migrations/20261107_distributed_rate_limits.sql`, set the same unique `RATE_LIMIT_HMAC_SECRET` (32+ random characters) on every API instance. Do not reuse `JWT_SECRET` and do not commit either secret. When configured, the API uses PostgreSQL atomic counters shared by all instances and denies the request if the shared limiter is unavailable; without it, local development uses the bounded in-process fallback. The additive migration is not applied automatically.
+
+Schedule this bounded cleanup statement in the database maintenance system (repeat until it deletes zero rows; keep each batch small):
+
+```sql
+WITH expired AS (
+  SELECT bucket_hash FROM distributed_rate_limits
+  WHERE expires_at < NOW()
+  ORDER BY expires_at
+  LIMIT 5000
+)
+DELETE FROM distributed_rate_limits d
+USING expired e
+WHERE d.bucket_hash = e.bucket_hash;
+```
+
+The cleanup job is not installed by this repository. PostgreSQL integration tests, cleanup-job supervision, and multi-instance load tests are still required before enabling this for public production traffic.
 
 ## Web deployment and API proxy
 
