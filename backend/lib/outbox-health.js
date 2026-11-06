@@ -12,6 +12,7 @@ export function summarizeOutboxHealth(row, thresholds = {}) {
     processingCount,
     deadCount,
     staleProcessingCount,
+    publishedLastFiveMinutes,
     ...(oldestPendingSeconds === null ? {} : { oldestPendingSeconds }),
   })) {
     if (!Number.isSafeInteger(value) || value < 0) {
@@ -30,7 +31,15 @@ export function summarizeOutboxHealth(row, thresholds = {}) {
       throw new TypeError(`Outbox health threshold ${name} must be a non-negative integer.`);
     }
   }
-  if (!deadByEventType || typeof deadByEventType !== "object" || Array.isArray(deadByEventType)) {\n    throw new TypeError("Outbox deadByEventType must be an object.");\n  }\n  for (const [eventType, count] of Object.entries(deadByEventType)) {\n    if (!eventType || !Number.isSafeInteger(Number(count)) || Number(count) < 0) {\n      throw new TypeError("Outbox deadByEventType entries must have a name and non-negative integer count.");\n    }\n  }\n  const alerts = [];
+  if (!deadByEventType || typeof deadByEventType !== "object" || Array.isArray(deadByEventType)) {
+    throw new TypeError("Outbox deadByEventType must be an object.");
+  }
+  for (const [eventType, count] of Object.entries(deadByEventType)) {
+    if (!eventType || !Number.isSafeInteger(Number(count)) || Number(count) < 0) {
+      throw new TypeError("Outbox deadByEventType entries must have a name and non-negative integer count.");
+    }
+  }
+  const alerts = [];
   if (deadCount > maxDeadEvents) alerts.push("dead_events_above_threshold");
   if (staleProcessingCount > maxStaleProcessing) alerts.push("stale_processing_above_threshold");
   if (oldestPendingSeconds !== null && oldestPendingSeconds > maxPendingAgeSeconds) {
@@ -42,6 +51,8 @@ export function summarizeOutboxHealth(row, thresholds = {}) {
     processingCount,
     deadCount,
     staleProcessingCount,
+    publishedLastFiveMinutes,
+    deadByEventType,
     oldestPendingSeconds,
     alerts,
   };
