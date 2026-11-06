@@ -34,8 +34,9 @@ function ArchivePage() {
     mutationFn: (postId: string) => updatePost(postId, { isArchived: false }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["archived-posts", user?.id] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["home-feed", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-posts"] });
       toast.success("Post restored to your profile.");
     },
     onError: (error) => {
