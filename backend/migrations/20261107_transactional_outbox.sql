@@ -1,6 +1,6 @@
--- Durable event handoff foundation.
--- This migration only creates storage; application writes and a publisher worker
--- must be implemented and tested before any code relies on these rows.
+-- Durable event handoff storage for transactional application events.
+-- Application producers and the publisher worker live in backend/lib and backend/workers;
+-- deploy this migration and worker only after staging database integration tests.
 CREATE TABLE IF NOT EXISTS event_outbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_type VARCHAR(120) NOT NULL,
