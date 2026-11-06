@@ -9,14 +9,19 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required to run the outbox worker.");
 }
 
+const poolMax = boundedInteger(process.env.OUTBOX_DB_POOL_MAX, 3, 1, 20, "OUTBOX_DB_POOL_MAX");
+const batchSize = boundedInteger(process.env.OUTBOX_BATCH_SIZE, 3, 1, 20, "OUTBOX_BATCH_SIZE");
+if (batchSize > poolMax) {
+  throw new RangeError("OUTBOX_BATCH_SIZE cannot exceed OUTBOX_DB_POOL_MAX.");
+}
 const pool = new Pool({
   connectionString: databaseUrl,
-  max: boundedInteger(process.env.OUTBOX_DB_POOL_MAX, 3, 1, 20, "OUTBOX_DB_POOL_MAX"),
+  max: poolMax,
   connectionTimeoutMillis: 5_000,
   idleTimeoutMillis: 30_000,
+  ...(process.env.DATABASE_SSL === "true" ? { ssl: { rejectUnauthorized: true } } : {}),
 });
 const workerId = workerIdentifier(process.env.OUTBOX_WORKER_ID, `outbox-${randomUUID()}`);
-const batchSize = boundedInteger(process.env.OUTBOX_BATCH_SIZE, 20, 1, 100, "OUTBOX_BATCH_SIZE");
 const pollIntervalMs = boundedInteger(process.env.OUTBOX_POLL_INTERVAL_MS, 1000, 250, 30_000, "OUTBOX_POLL_INTERVAL_MS");
 const maxAttempts = boundedInteger(process.env.OUTBOX_MAX_ATTEMPTS, 8, 1, 20, "OUTBOX_MAX_ATTEMPTS");
 const leaseSeconds = boundedInteger(process.env.OUTBOX_LEASE_SECONDS, 300, 30, 3600, "OUTBOX_LEASE_SECONDS");
@@ -156,9 +161,7 @@ async function run() {
         continue;
       }
       if (events.length) {
-        for (const event of events) {
-          await processEvent(event);
-        }
+        await Promise.all(events.map((event) => processEvent(event)));
       } else {
         await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
       }
