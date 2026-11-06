@@ -671,6 +671,21 @@ export async function getPostsByHashtag(tag: string, viewerId?: string | null) {
   }
 }
 
+export async function hidePostForViewer(postId: string) {
+  if (!postId) throw new Error("A valid post is required to hide it.");
+  await apiRequest<{ hidden: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/hide`, {
+    method: "POST",
+  });
+}
+
+export async function snoozeCreatorForViewer(creatorId: string) {
+  if (!creatorId) throw new Error("A valid creator is required to snooze.");
+  await apiRequest<{ snoozed: boolean; snoozed_until: string }>(
+    `/api/v1/users/${encodeURIComponent(creatorId)}/snooze`,
+    { method: "POST" },
+  );
+}
+
 export async function toggleLike(postId: string, _userId: string, liked: boolean) {
   await apiRequest<{ liked: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/like`, {
     method: liked ? "DELETE" : "POST",
