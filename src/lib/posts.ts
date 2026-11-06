@@ -691,6 +691,14 @@ export async function updatePost(
   });
 }
 
+export async function unfollowUser(userId: string) {
+  if (!userId) throw new Error("A valid creator is required to unfollow.");
+  await apiRequest<{ following: boolean }>(
+    `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    { method: "DELETE" },
+  );
+}
+
 export async function reportPost(postId: string, reason: string) {
   const normalizedReason =
     reason === "It's spam or a scam"
