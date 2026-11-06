@@ -50,6 +50,39 @@ jobs:
           npx cap add android
       - name: Sync Capacitor Android project
         run: npx cap sync android
+      - name: Set Play Store version
+        env:
+          OPEXNAL_VERSION_CODE: ${{ github.run_number }}
+          OPEXNAL_VERSION_NAME: 1.0.${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          gradle = Path("android/app/build.gradle")
+          source = gradle.read_text()
+          version_code = os.environ["OPEXNAL_VERSION_CODE"]
+          version_name = os.environ["OPEXNAL_VERSION_NAME"]
+          if not version_code.isdigit() or int(version_code) < 1:
+              raise SystemExit("Invalid Play Store versionCode")
+          source, code_count = re.subn(
+              r"versionCode\\s+\\d+",
+              f"versionCode {version_code}",
+              source,
+              count=1,
+          )
+          source, name_count = re.subn(
+              r'versionName\\s+"[^"]+"',
+              f'versionName "{version_name}"',
+              source,
+              count=1,
+          )
+          if code_count != 1 or name_count != 1:
+              raise SystemExit("Could not safely set Android versionCode/versionName")
+          gradle.write_text(source)
+          print(f"Configured Play Store version {version_name} ({version_code})")
+          PY
       - name: Configure Android release signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
