@@ -20,6 +20,7 @@ import {
   Sliders,
   Check,
   QrCode,
+  Pin,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -84,6 +85,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [commentsDisabled, setCommentsDisabled] = useState(post.comments_enabled === false);
   const [hideLikes, setHideLikes] = useState(post.hide_likes_count === true);
   const [hideShares, setHideShares] = useState(post.hide_share_count === true);
+  const [isPinned, setIsPinned] = useState(post.is_pinned === true);
 
   // 3 Dots Menu States
   const [menuOpen, setMenuOpen] = useState(false);
@@ -521,6 +523,24 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
                 >
                   <MessageCircle className="h-4 w-4 text-muted-foreground" />
                   <span>{commentsDisabled ? "Turn on commenting" : "Turn off commenting"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await updatePost(post.id, { isPinned: !isPinned });
+                      setIsPinned(!isPinned);
+                      setMenuOpen(false);
+                      toast.success(isPinned ? "Post unpinned from your profile." : "Post pinned to your profile.");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not update pinned post.");
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+                >
+                  <Pin className="h-4 w-4 text-muted-foreground" />
+                  <span>{isPinned ? "Unpin from profile" : "Pin to profile"}</span>
                 </button>
 
                 <button
