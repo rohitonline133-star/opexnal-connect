@@ -119,7 +119,7 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
       const canShare = typeof navigator.share === "function";
       if (canShare) await navigator.share({ url, title: "Opexnal post" });
       else await navigator.clipboard.writeText(url);
-      if (viewerId) await recordShare(post.id, viewerId, canShare ? "native" : "link");
+      if (viewerId) await recordShare(post.id, viewerId, canShare ? "other" : "link");
       if (!canShare) toast.success("Link copied to clipboard");
     } catch {
       /* user dismissed share sheet */
