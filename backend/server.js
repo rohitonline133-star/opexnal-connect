@@ -1012,7 +1012,7 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
     const result = await pool.query(
       `SELECT
         p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
-        p.caption, p.media_url, p.media_type, p.visibility, p.location_name, p.comments_enabled, p.hide_likes_count, p.hide_share_count, p.created_at, p.updated_at,
+        p.caption, p.media_url, p.media_type, p.visibility, p.location_name, p.comments_enabled, p.hide_likes_count, p.hide_share_count, p.is_pinned, p.created_at, p.updated_at,
         (SELECT COUNT(*) FROM post_likes l WHERE l.post_id=p.id) AS like_count,
         (SELECT COUNT(*) FROM post_comments c WHERE c.post_id=p.id) AS comments_count,
         (SELECT COUNT(*) FROM post_saves s WHERE s.post_id=p.id) AS saves_count,
@@ -1617,7 +1617,7 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
          AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
-       ORDER BY p.created_at DESC LIMIT $4`,
+       ORDER BY p.is_pinned DESC, p.created_at DESC LIMIT $4`,
       [
         String(req.params.username).toLowerCase(),
         req.user.id,
@@ -2100,13 +2100,15 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
   const hasHideLikesCount = Object.prototype.hasOwnProperty.call(body, "hideLikesCount");
   const hasHideShareCount = Object.prototype.hasOwnProperty.call(body, "hideShareCount");
   const hasArchived = Object.prototype.hasOwnProperty.call(body, "isArchived");
+  const hasPinned = Object.prototype.hasOwnProperty.call(body, "isPinned");
   if (
-    (!hasCaption && !hasCommentsEnabled && !hasHideLikesCount && !hasHideShareCount && !hasArchived) ||
+    (!hasCaption && !hasCommentsEnabled && !hasHideLikesCount && !hasHideShareCount && !hasArchived && !hasPinned) ||
     (hasCaption && (typeof body.caption !== "string" || body.caption.length > 2200)) ||
     (hasCommentsEnabled && typeof body.commentsEnabled !== "boolean") ||
     (hasHideLikesCount && typeof body.hideLikesCount !== "boolean") ||
     (hasHideShareCount && typeof body.hideShareCount !== "boolean") ||
-    (hasArchived && typeof body.isArchived !== "boolean")
+    (hasArchived && typeof body.isArchived !== "boolean") ||
+    (hasPinned && typeof body.isPinned !== "boolean")
   ) {
     return res.status(400).json({ error: "Invalid post update payload." });
   }
@@ -2120,7 +2122,7 @@ app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, ne
            archived_at = CASE WHEN $11::boolean THEN CASE WHEN $12::boolean THEN NOW() ELSE NULL END ELSE archived_at END,
            updated_at = NOW()
        WHERE id = $1 AND user_id = $2
-       RETURNING id, caption, comments_enabled, hide_likes_count, hide_share_count, archived_at, updated_at`,
+       RETURNING id, caption, comments_enabled, hide_likes_count, hide_share_count, archived_at, is_pinned, updated_at`,
       [
         req.params.postId,
         req.user.id,
