@@ -42,7 +42,7 @@ export async function checkForPlayStoreUpdates() {
       };
     }
 
-    if (info.updatePriority >= 4 && info.immediateUpdateAllowed) {
+    if ((info.updatePriority ?? 0) >= 4 && info.immediateUpdateAllowed) {
       await AppUpdate.performImmediateUpdate();
       return () => {
         active = false;
