@@ -179,10 +179,16 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     }
   };
 
-  const handleArchivePost = () => {
-    setHidden(true);
-    setActiveModal(null);
-    toast.success("Post moved to your private Archive");
+  const handleArchivePost = async () => {
+    if (!isOwner) return;
+    try {
+      await updatePost(post.id, { isArchived: true });
+      setHidden(true);
+      setActiveModal(null);
+      toast.success("Post moved to your private Archive.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not archive this post.");
+    }
   };
 
   const handleDeletePost = async () => {
