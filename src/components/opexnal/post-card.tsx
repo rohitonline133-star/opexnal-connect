@@ -19,8 +19,10 @@ import {
   Edit3,
   Sliders,
   Check,
+  QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 import { ProfileAvatar } from "@/components/opexnal/avatar";
 import { MediaCarousel } from "@/components/opexnal/post-media";
 import {
@@ -83,9 +85,10 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   // 3 Dots Menu States
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<
-    "why" | "report" | "edit" | "delete" | "archive" | null
+    "why" | "report" | "edit" | "delete" | "archive" | "qr" | null
   >(null);
   const [editInput, setEditInput] = useState(captionText);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const author = post.author;
   const isOwner = Boolean(viewerId && author && viewerId === author.id);
@@ -136,6 +139,18 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   }
 
   // 3-Dots Action Handlers
+  const handleShowQr = async () => {
+    try {
+      const url = `${window.location.origin}/p/${post.id}`;
+      const dataUrl = await QRCode.toDataURL(url, { width: 280, margin: 2, errorCorrectionLevel: "M" });
+      setQrDataUrl(dataUrl);
+      setMenuOpen(false);
+      setActiveModal("qr");
+    } catch {
+      toast.error("Could not create a QR code for this post.");
+    }
+  };
+
   const handleHidePost = () => {
     setHidden(true);
     setMenuOpen(false);
@@ -500,6 +515,15 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
                 <button
                   type="button"
+                  onClick={() => void handleShowQr()}
+                  className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+                >
+                  <QrCode className="h-4 w-4 text-muted-foreground" />
+                  <span>QR code for this post</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => {
                     setMenuOpen(false);
                     setActiveModal("archive");
@@ -660,6 +684,29 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
               Archive
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post QR Code Dialog */}
+      <Dialog open={activeModal === "qr"} onOpenChange={() => setActiveModal(null)}>
+        <DialogContent className="max-w-xs rounded-3xl p-5 bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <QrCode className="h-4 w-4 text-primary" />
+              Share this post
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Scan this code to open the Opexnal post.
+            </DialogDescription>
+          </DialogHeader>
+          {qrDataUrl ? (
+            <img src={qrDataUrl} alt="QR code linking to this Opexnal post" className="mx-auto h-64 w-64 rounded-xl bg-white p-2" />
+          ) : (
+            <p role="status" className="py-8 text-center text-sm text-muted-foreground">Creating QR code…</p>
+          )}
+          <Button variant="surface" onClick={() => setActiveModal(null)} className="w-full rounded-xl">
+            Close
+          </Button>
         </DialogContent>
       </Dialog>
 
