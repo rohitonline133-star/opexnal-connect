@@ -46,6 +46,8 @@ import {
   toggleLike,
   toggleSave,
   unfollowUser,
+  hidePostForViewer,
+  snoozeCreatorForViewer,
   type FeedPost,
 } from "@/lib/posts";
 import { getStoredSettings, saveSettings } from "@/lib/settings-store";
@@ -138,16 +140,34 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
     }
   };
 
-  const handleHidePost = () => {
-    setHidden(true);
-    setMenuOpen(false);
-    toast.success("Post hidden from your feed");
+  const handleHidePost = async () => {
+    if (!viewerId) {
+      toast.error("Sign in to hide this post.");
+      return;
+    }
+    try {
+      await hidePostForViewer(post.id);
+      setHidden(true);
+      setMenuOpen(false);
+      toast.success("Post hidden from your feed.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not hide this post.");
+    }
   };
 
-  const handleSnooze = () => {
-    setHidden(true);
-    setMenuOpen(false);
-    toast.success("Post hidden from this feed. A 30-day snooze is not saved yet.");
+  const handleSnooze = async () => {
+    if (!viewerId || !author?.id) {
+      toast.error("Sign in to snooze this creator.");
+      return;
+    }
+    try {
+      await snoozeCreatorForViewer(author.id);
+      setHidden(true);
+      setMenuOpen(false);
+      toast.success(`@${author.username} snoozed for 30 days.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not snooze this creator.");
+    }
   };
 
   const handleUnfollow = async () => {
