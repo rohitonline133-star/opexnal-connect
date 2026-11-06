@@ -77,7 +77,8 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
   const [hidden, setHidden] = useState(false);
   const [captionText, setCaptionText] = useState(post.caption || "");
   const [commentsDisabled, setCommentsDisabled] = useState(post.comments_enabled === false);
-  const [hideLikes, setHideLikes] = useState(false);
+  const [hideLikes, setHideLikes] = useState(post.hide_likes_count === true);
+  const [hideShares, setHideShares] = useState(post.hide_share_count === true);
 
   // 3 Dots Menu States
   const [menuOpen, setMenuOpen] = useState(false);
@@ -439,15 +440,42 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setHideLikes(!hideLikes);
-                    setMenuOpen(false);
-                    toast.success(hideLikes ? "Like count visible" : "Like count hidden");
+                  onClick={async () => {
+                    if (!isOwner) return;
+                    const nextHidden = !hideLikes;
+                    try {
+                      await updatePost(post.id, { hideLikesCount: nextHidden });
+                      setHideLikes(nextHidden);
+                      setMenuOpen(false);
+                      toast.success(nextHidden ? "Like count hidden" : "Like count visible");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not update like count visibility.");
+                    }
                   }}
                   className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
                 >
                   <Sliders className="h-4 w-4 text-muted-foreground" />
                   <span>{hideLikes ? "Unhide like count" : "Hide like count"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!isOwner) return;
+                    const nextHidden = !hideShares;
+                    try {
+                      await updatePost(post.id, { hideShareCount: nextHidden });
+                      setHideShares(nextHidden);
+                      setMenuOpen(false);
+                      toast.success(nextHidden ? "Share count hidden" : "Share count visible");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not update share count visibility.");
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-3 text-foreground hover:bg-surface rounded-xl transition-colors"
+                >
+                  <Sliders className="h-4 w-4 text-muted-foreground" />
+                  <span>{hideShares ? "Unhide share count" : "Hide share count"}</span>
                 </button>
 
                 <button
