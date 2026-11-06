@@ -13,7 +13,6 @@ export function TwoFactorSetup() {
   const [pendingFactorId, setPendingFactorId] = useState("");
   const [qrCode, setQrCode] = useState("");
   const [secret, setSecret] = useState("");
-  const [challengeId, setChallengeId] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -77,7 +76,6 @@ export function TwoFactorSetup() {
       setPendingFactorId("");
       setQrCode("");
       setSecret("");
-      setChallengeId("");
       setCode("");
       toast.success("Two-factor authentication is enabled on your account.");
     } catch (error) {
