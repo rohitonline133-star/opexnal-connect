@@ -2112,6 +2112,24 @@ app.post("/api/v1/posts", dbRequired, authRequired, async (req, res, next) => {
     return next(error);
   }
 });
+app.get("/api/v1/posts/archive", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.caption, p.media_type, p.archived_at, p.created_at,
+              (SELECT COUNT(*)::int FROM post_likes l WHERE l.post_id=p.id) AS likes_count,
+              (SELECT COUNT(*)::int FROM post_comments c WHERE c.post_id=p.id) AS comments_count
+       FROM posts p
+       WHERE p.user_id=$1 AND p.archived_at IS NOT NULL
+       ORDER BY p.archived_at DESC
+       LIMIT 100`,
+      [req.user.id],
+    );
+    return res.json({ posts: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 app.patch("/api/v1/posts/:postId", dbRequired, authRequired, async (req, res, next) => {
   const body = req.body || {};
   const hasCaption = Object.prototype.hasOwnProperty.call(body, "caption");
