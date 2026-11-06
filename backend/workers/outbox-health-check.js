@@ -41,7 +41,17 @@ try {
     `SELECT
        COUNT(*) FILTER (WHERE status='pending')::int AS pending_count,
        COUNT(*) FILTER (WHERE status='processing')::int AS processing_count,
-       COUNT(*) FILTER (WHERE status='dead')::int AS dead_count,\n       COUNT(*) FILTER (WHERE status='published' AND published_at >= NOW() - INTERVAL '5 minutes')::int AS published_last_five_minutes,\n       COALESCE((\n         SELECT jsonb_object_agg(event_type, event_count)\n         FROM (\n           SELECT event_type, COUNT(*)::int AS event_count\n           FROM event_outbox\n           WHERE status='dead'\n           GROUP BY event_type\n         ) dead_types\n       ), '{}'::jsonb) AS dead_by_event_type,
+       COUNT(*) FILTER (WHERE status='dead')::int AS dead_count,
+       COUNT(*) FILTER (WHERE status='published' AND published_at >= NOW() - INTERVAL '5 minutes')::int AS published_last_five_minutes,
+       COALESCE((
+         SELECT jsonb_object_agg(event_type, event_count)
+         FROM (
+           SELECT event_type, COUNT(*)::int AS event_count
+           FROM event_outbox
+           WHERE status='dead'
+           GROUP BY event_type
+         ) dead_types
+       ), '{}'::jsonb) AS dead_by_event_type,
        COALESCE(
          EXTRACT(EPOCH FROM NOW() - MIN(created_at) FILTER (WHERE status='pending')),
          0
