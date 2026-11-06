@@ -45,15 +45,14 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
       .filter((conversation) => {
         const peer = conversation.others[0]!;
         return (
-        !query ||
-        peer.username.toLowerCase().includes(query) ||
-        peer.display_name.toLowerCase().includes(query)
-      );
+          !query ||
+          peer.username.toLowerCase().includes(query) ||
+          peer.display_name.toLowerCase().includes(query)
+        );
       });
   }, [conversations, search]);
 
-  const postUrl =
-    typeof window === "undefined" ? "" : `${window.location.origin}/p/${postId}`;
+  const postUrl = typeof window === "undefined" ? "" : `${window.location.origin}/p/${postId}`;
   const shareText = `Check out this post on Opexnal: ${postUrl}`;
 
   async function copyLink() {
@@ -197,9 +196,7 @@ export function PostShareDialog({ postId, open, onOpenChange }: PostShareDialogP
                   })
                   .then(() => {
                     if (user?.id) {
-                      void recordShare(postId, user.id, "other").catch(
-                        () => undefined,
-                      );
+                      void recordShare(postId, user.id, "other").catch(() => undefined);
                     }
                   })
                   .catch(() => undefined);
