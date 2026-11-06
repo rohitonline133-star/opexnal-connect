@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { EyeOff, Plus, X, Save, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -39,6 +39,13 @@ function SettingsHiddenWordsPage() {
     settings?.customBlockedWords ?? ["scam", "dm me for promo", "free crypto"],
   );
   const [wordInput, setWordInput] = useState("");
+
+  useEffect(() => {
+    if (!settings) return;
+    setHideOffensive(settings.hideOffensiveComments);
+    setAdvancedFilter(settings.advancedCommentFiltering ?? true);
+    setCustomWords(settings.customBlockedWords ?? []);
+  }, [settings]);
 
   const handleAddWord = (e: React.FormEvent) => {
     e.preventDefault();
