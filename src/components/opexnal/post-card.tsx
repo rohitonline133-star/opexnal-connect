@@ -595,15 +595,16 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div className="p-3 bg-surface border border-border rounded-xl space-y-1">
-              <p className="font-semibold text-foreground">You follow @{author?.username}</p>
+              <p className="font-semibold text-foreground">Feed context</p>
               <p className="text-[11px] text-muted-foreground">
-                This post was shared by an account you follow in your primary feed.
+                This post is available in your Opexnal feed. A personalized explanation of why it
+                was ranked or recommended is not currently provided.
               </p>
             </div>
             <div className="p-3 bg-surface border border-border rounded-xl space-y-1">
-              <p className="font-semibold text-foreground">Content Engagement</p>
+              <p className="font-semibold text-foreground">Recommendation details unavailable</p>
               <p className="text-[11px] text-muted-foreground">
-                You frequently interact with photo posts and design content on Opexnal.
+                Opexnal does not currently expose the specific ranking signals used for this post.
               </p>
             </div>
           </div>
