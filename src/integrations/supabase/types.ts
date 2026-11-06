@@ -312,6 +312,7 @@ export type Database = {
         Row: {
           body: string;
           created_at: string;
+          hide_likes_count: boolean;
           id: string;
           likes_count: number;
           parent_id: string | null;
@@ -322,6 +323,8 @@ export type Database = {
         Insert: {
           body: string;
           created_at?: string;
+          hide_likes_count?: boolean;
+          hide_likes_count?: boolean;
           id?: string;
           likes_count?: number;
           parent_id?: string | null;
