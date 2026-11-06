@@ -2383,10 +2383,12 @@ app.delete("/api/v1/comments/:commentId", dbRequired, authRequired, async (req, 
 
 app.post("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [
+    const comment = await pool.query("SELECT id,post_id FROM post_comments WHERE id=$1 LIMIT 1", [
       req.params.commentId,
     ]);
     if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
+    const visiblePost = await findVisiblePost(comment.rows[0].post_id, req.user.id);
+    if (!visiblePost) return res.status(404).json({ error: "Comment not found." });
     await pool.query(
       "INSERT INTO comment_likes (user_id,comment_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
       [req.user.id, req.params.commentId],
@@ -2403,10 +2405,12 @@ app.post("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (re
 
 app.delete("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (req, res, next) => {
   try {
-    const comment = await pool.query("SELECT id FROM post_comments WHERE id=$1 LIMIT 1", [
+    const comment = await pool.query("SELECT id,post_id FROM post_comments WHERE id=$1 LIMIT 1", [
       req.params.commentId,
     ]);
     if (!comment.rowCount) return res.status(404).json({ error: "Comment not found." });
+    const visiblePost = await findVisiblePost(comment.rows[0].post_id, req.user.id);
+    if (!visiblePost) return res.status(404).json({ error: "Comment not found." });
     await pool.query("DELETE FROM comment_likes WHERE user_id=$1 AND comment_id=$2", [
       req.user.id,
       req.params.commentId,
