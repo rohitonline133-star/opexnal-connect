@@ -2,7 +2,8 @@ export function summarizeOutboxHealth(row, thresholds = {}) {
   const pendingCount = Number(row?.pending_count);
   const processingCount = Number(row?.processing_count);
   const deadCount = Number(row?.dead_count);
-  const oldestPendingSeconds = row?.oldest_pending_seconds == null ? null : Number(row.oldest_pending_seconds);
+  const oldestPendingSeconds =
+    row?.oldest_pending_seconds == null ? null : Number(row.oldest_pending_seconds);
   const staleProcessingCount = Number(row?.stale_processing_count);
   for (const [name, value] of Object.entries({
     pendingCount,
@@ -18,7 +19,11 @@ export function summarizeOutboxHealth(row, thresholds = {}) {
   const maxPendingAgeSeconds = thresholds.maxPendingAgeSeconds ?? 300;
   const maxStaleProcessing = thresholds.maxStaleProcessing ?? 0;
   const maxDeadEvents = thresholds.maxDeadEvents ?? 0;
-  for (const [name, value] of Object.entries({ maxPendingAgeSeconds, maxStaleProcessing, maxDeadEvents })) {
+  for (const [name, value] of Object.entries({
+    maxPendingAgeSeconds,
+    maxStaleProcessing,
+    maxDeadEvents,
+  })) {
     if (!Number.isSafeInteger(value) || value < 0) {
       throw new TypeError(`Outbox health threshold ${name} must be a non-negative integer.`);
     }
