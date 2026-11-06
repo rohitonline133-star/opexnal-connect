@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, Type, Sparkles, Save, Loader2 } from "lucide-react";
+import { Eye, Type, Sparkles, Save, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Switch } from "@/components/ui/switch";
@@ -54,7 +54,7 @@ function SettingsAccessibilityPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings", userId] });
-      toast.success("Accessibility settings updated.");
+      toast.success("Accessibility preferences saved on this device.");
     },
     onError: () => {
       toast.error("Failed to update accessibility settings.");
@@ -67,6 +67,10 @@ function SettingsAccessibilityPage() {
         <ScreenHeader title="Accessibility" showBack onBack={() => navigate({ to: "/settings" })} />
 
         <div className="p-4 space-y-6">
+          <div className="flex gap-3 rounded-xl border border-border bg-surface p-3 text-xs text-gray-400">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>These preferences are stored on this device. Automatic captions and app-wide high-contrast or reduced-motion enforcement are not fully connected yet.</p>
+          </div>
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Captions & Visuals
@@ -76,7 +80,7 @@ function SettingsAccessibilityPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Always Show Auto-Captions</span>
                 <p className="text-xs text-gray-400">
-                  Generate real-time subtitles on reels and videos
+                  Preference only; real-time caption generation is not connected
                 </p>
               </div>
               <Switch checked={autoCaptions} onCheckedChange={setAutoCaptions} />
@@ -86,7 +90,7 @@ function SettingsAccessibilityPage() {
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">High Contrast UI</span>
                 <p className="text-xs text-gray-400">
-                  Increase border definition and text visibility
+                  Preference only; app-wide high-contrast styling is not yet applied
                 </p>
               </div>
               <Switch checked={highContrast} onCheckedChange={setHighContrast} />
@@ -95,7 +99,7 @@ function SettingsAccessibilityPage() {
             <div className="p-4 bg-[#121212] border border-[#262626] rounded-xl flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-sm font-semibold text-white">Reduced Motion</span>
-                <p className="text-xs text-gray-400">Minimize animations and transition effects</p>
+                <p className="text-xs text-gray-400">Preference only; app-wide reduced-motion handling is not yet applied</p>
               </div>
               <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
             </div>
