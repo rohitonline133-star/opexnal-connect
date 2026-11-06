@@ -343,9 +343,7 @@ const recoveryReasons = new Set([
 ]);
 app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   const identity =
-    typeof req.body?.identityInput === "string"
-      ? req.body.identityInput.trim().toLowerCase()
-      : "";
+    typeof req.body?.identityInput === "string" ? req.body.identityInput.trim().toLowerCase() : "";
   const reason = typeof req.body?.reason === "string" ? req.body.reason : "";
   const details =
     typeof req.body?.additionalDetails === "string"
@@ -359,8 +357,7 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   }
   const ipKey = "recovery-request:" + String(req.ip || "unknown");
   const identityKey =
-    "recovery-identity:" +
-    createHmac("sha256", jwtSecret).update(identity).digest("hex");
+    "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
   if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
     return res.status(429).json({ error: "Too many recovery requests. Try again later." });
   }
@@ -1011,10 +1008,9 @@ app.post("/api/v1/users/:userId/snooze", dbRequired, authRequired, async (req, r
   if (req.user.id === req.params.userId)
     return res.status(400).json({ error: "You cannot snooze your own account." });
   try {
-    const creator = await pool.query(
-      "SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE",
-      [req.params.userId],
-    );
+    const creator = await pool.query("SELECT id FROM users WHERE id=$1 AND is_deactivated=FALSE", [
+      req.params.userId,
+    ]);
     if (!creator.rowCount) return res.status(404).json({ error: "Creator not found." });
     const result = await pool.query(
       `INSERT INTO creator_snoozes (user_id, creator_id, snoozed_until)
