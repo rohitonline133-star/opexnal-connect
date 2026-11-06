@@ -12,10 +12,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/**/*.test.ts tests/outbox-notification.test.js tests/outbox-producer.test.js tests/outbox-config.test.js",
+    "test": "node --import tsx --test tests/**/*.test.ts tests/outbox-notification.test.js tests/outbox-producer.test.js tests/outbox-config.test.js tests/outbox-health.test.js",
     "backend:start": "node backend/server.js",
     "backend:dev": "node --watch backend/server.js",
-    "backend:check": "node --check backend/server.js && node --check backend/lib/outbox.js && node --check backend/lib/outbox-config.js && node --check backend/workers/notification-event.js && node --check backend/workers/outbox-worker.js",
+    "backend:check": "node --check backend/server.js && node --check backend/lib/outbox.js && node --check backend/lib/outbox-config.js && node --check backend/lib/outbox-health.js && node --check backend/workers/notification-event.js && node --check backend/workers/outbox-worker.js && node --check backend/workers/outbox-health-check.js",
     "backend:outbox": "node backend/workers/outbox-worker.js"
   },
   "dependencies": {
