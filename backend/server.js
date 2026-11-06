@@ -1860,20 +1860,22 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
     }
     if (target.rows[0].is_private) {
       const request = await client.query(
-        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW() RETURNING id",
+        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW() WHERE follow_requests.status <> 'pending' RETURNING id",
         [randomUUID(), req.user.id, req.params.userId],
       );
-      await enqueueNotification(
-        client,
-        req.params.userId,
-        req.user.id,
-        "follow_request",
-        "user",
-        req.user.id,
-        {
-          followRequestId: request.rows[0].id,
-        },
-      );
+      if (request.rowCount) {
+        await enqueueNotification(
+          client,
+          req.params.userId,
+          req.user.id,
+          "follow_request",
+          "user",
+          req.user.id,
+          {
+            followRequestId: request.rows[0].id,
+          },
+        );
+      }
       await client.query("COMMIT");
       return res.json({ status: "requested", following: false });
     }
