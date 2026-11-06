@@ -1956,8 +1956,8 @@ app.post(
         "UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1",
         [item.id],
       );
+      await enqueueNotification(client, item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
       await client.query("COMMIT");
-      await notifyUser(item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
       return res.json({ accepted: true });
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
