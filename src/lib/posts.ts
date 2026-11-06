@@ -672,6 +672,31 @@ export async function toggleSave(postId: string, _userId: string, saved: boolean
   });
 }
 
+export async function reportPost(postId: string, reason: string) {
+  const normalizedReason =
+    reason === "It's spam or a scam"
+      ? "spam"
+      : reason === "Hate speech or symbols"
+        ? "hate"
+        : reason === "Nudity or sexual content"
+          ? "nudity"
+          : reason === "Violence or dangerous organizations"
+            ? "violence"
+            : reason === "Harassment or bullying"
+              ? "harassment"
+              : "other";
+  await apiRequest<{ report: { id: string; status: string } }>("/api/v1/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      targetType: "post",
+      targetId: postId,
+      reason: normalizedReason,
+      details: reason === "Intellectual property violation" ? reason : "",
+    }),
+  });
+}
+
 export async function recordShare(postId: string, _userId: string, channel = "link") {
   await apiRequest<{ success: boolean }>(`/api/v1/posts/${encodeURIComponent(postId)}/share`, {
     method: "POST",
