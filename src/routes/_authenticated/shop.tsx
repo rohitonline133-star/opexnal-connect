@@ -1,14 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ShoppingBag, Tag, Package, ExternalLink, Sparkles } from "lucide-react";
+import { AlertTriangle, ShoppingBag } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 
 export const Route = createFileRoute("/_authenticated/shop")({
   head: () => ({
     meta: [
-      { title: "Shop & Creator Marketplace — Opexnal" },
+      { title: "Shop — Opexnal" },
       {
         name: "description",
-        content: "Discover creator merchandise, digital drops and affiliate goods.",
+        content: "Creator marketplace status and availability on Opexnal.",
       },
     ],
   }),
@@ -18,82 +18,38 @@ export const Route = createFileRoute("/_authenticated/shop")({
 function ShopPage() {
   const navigate = useNavigate();
 
-  const featuredProducts = [
-    {
-      id: "prod_1",
-      title: "Creator Presets Lightroom Pack v3",
-      creator: "maya_codes",
-      price: "$19.00",
-      image:
-        "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=500&q=80",
-    },
-    {
-      id: "prod_2",
-      title: "Handcrafted Ceramic Mug - Violet Edition",
-      creator: "artisan_clay",
-      price: "$34.00",
-      image:
-        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=500&q=80",
-    },
-    {
-      id: "prod_3",
-      title: "Minimalist Mechanical Desk Mat",
-      creator: "desk_setup_lab",
-      price: "$28.00",
-      image:
-        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=500&q=80",
-    },
-  ];
-
   return (
     <AppShell activeTab="explore">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader title="Shop" showBack onBack={() => navigate({ to: "/explore" })} />
-
-        <div className="p-4 space-y-5">
-          <div className="flex gap-2">
-            <Link
-              to="/shop/products"
-              className="flex-1 py-2 bg-[#1c1c1c] hover:bg-[#252525] border border-[#2c2c2c] rounded-xl text-center text-xs font-semibold text-white transition"
-            >
-              Browse Catalog
-            </Link>
-            <Link
-              to="/shop/orders"
-              className="flex-1 py-2 bg-[#1c1c1c] hover:bg-[#252525] border border-[#2c2c2c] rounded-xl text-center text-xs font-semibold text-white transition"
-            >
-              My Orders
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Featured Creator Drops
-            </h3>
-
-            <div className="grid grid-cols-2 gap-3">
-              {featuredProducts.map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden group flex flex-col justify-between"
-                >
-                  <div className="aspect-square bg-gray-900 relative overflow-hidden">
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    />
-                    <span className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-[11px] font-bold text-white">
-                      {p.price}
-                    </span>
-                  </div>
-                  <div className="p-3 space-y-1">
-                    <h4 className="text-xs font-semibold text-white line-clamp-1">{p.title}</h4>
-                    <p className="text-[10px] text-gray-400">by @{p.creator}</p>
-                  </div>
-                </div>
-              ))}
+      <div className="min-h-screen bg-black pb-20 text-white">
+        <div className="mx-auto max-w-xl">
+          <ScreenHeader title="Shop" showBack onBack={() => navigate({ to: "/explore" })} />
+          <div className="space-y-4 p-4">
+            <section className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold">Creator marketplace is not connected</h2>
+                <p className="text-xs leading-5 text-gray-300">
+                  Opexnal does not currently have a product catalog, seller inventory,
+                  checkout provider, or order service. No sample products or prices are
+                  shown as if they were real listings.
+                </p>
+              </div>
+            </section>
+            <div className="rounded-xl border border-[#262626] bg-[#121212] p-4">
+              <ShoppingBag className="mb-2 h-5 w-5 text-gray-400" />
+              <h3 className="text-sm font-semibold">Marketplace requirements</h3>
+              <ul className="mt-2 list-disc space-y-1.5 pl-5 text-xs leading-5 text-gray-400">
+                <li>Verified seller profiles and product inventory</li>
+                <li>Secure checkout, payment processing, refunds, and order tracking</li>
+                <li>Buyer and seller support with auditable transaction records</li>
+              </ul>
             </div>
+            <Link
+              to="/explore"
+              className="inline-flex rounded-lg bg-white px-4 py-2.5 text-xs font-semibold text-black"
+            >
+              Return to Explore
+            </Link>
           </div>
         </div>
       </div>
