@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Radio, Users, Shield, Video, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, Radio } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 
 export const Route = createFileRoute("/_authenticated/live/create")({
   head: () => ({
     meta: [
       { title: "Go Live — Opexnal" },
-      { name: "description", content: "Start a real-time livestream broadcast on Opexnal." },
+      {
+        name: "description",
+        content: "Start a real livestream when Opexnal's broadcast service is configured.",
+      },
     ],
   }),
   component: LiveCreatePage,
@@ -17,66 +18,36 @@ export const Route = createFileRoute("/_authenticated/live/create")({
 function LiveCreatePage() {
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("");
-  const [audience, setAudience] = useState("public");
-
-  const handleStartBroadcast = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) {
-      toast.error("Please enter a broadcast title.");
-      return;
-    }
-    toast.info("Broadcast prepared. Starting real-time stream...");
-    navigate({ to: "/live" });
-  };
-
   return (
     <AppShell activeTab="create">
-      <div className="min-h-screen bg-black text-white pb-20 max-w-xl mx-auto">
-        <ScreenHeader title="Go Live" showBack onBack={() => navigate({ to: "/live" })} />
-
-        <form onSubmit={handleStartBroadcast} className="p-4 space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-300">Broadcast Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What are you discussing live?"
-              required
-              className="w-full h-11 px-4 bg-[#121212] border border-[#262626] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-rose-500 transition"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-300">Audience Visibility</label>
-            <select
-              value={audience}
-              onChange={(e) => setAudience(e.target.value)}
-              className="w-full h-11 px-3 bg-[#121212] border border-[#262626] rounded-xl text-xs text-white focus:outline-none focus:border-rose-500"
+      <div className="min-h-screen bg-black pb-20 text-white">
+        <div className="mx-auto max-w-xl">
+          <ScreenHeader title="Go Live" showBack onBack={() => navigate({ to: "/live" })} />
+          <div className="space-y-4 p-4">
+            <section className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold">Broadcast setup is unavailable</h2>
+                <p className="text-xs leading-5 text-gray-300">
+                  A real streaming provider is not connected. This page will not pretend
+                  to start a broadcast or collect audience and moderator settings that
+                  cannot yet be enforced.
+                </p>
+              </div>
+            </section>
+            <div className="rounded-xl border border-[#262626] bg-[#121212] p-4 text-xs leading-5 text-gray-400">
+              <Radio className="mb-2 h-5 w-5" />
+              When the broadcast service is configured, this page can safely enable
+              stream title, audience permissions, moderators, and live controls.
+            </div>
+            <Link
+              to="/live"
+              className="inline-flex rounded-lg bg-white px-4 py-2.5 text-xs font-semibold text-black"
             >
-              <option value="public">Public (Anyone can tune in)</option>
-              <option value="close_friends">Close Friends Only</option>
-              <option value="subscribers">Subscribers Only</option>
-            </select>
+              View Live status
+            </Link>
           </div>
-
-          <div className="p-3 bg-[#121212] border border-[#222] rounded-xl text-xs text-gray-400 space-y-1">
-            <span className="font-semibold text-gray-300">Live Safety Architecture:</span>
-            <p className="text-[11px] leading-relaxed">
-              Real-time comment filtering, moderator assignments, and community safety strikes apply
-              to all livestreams.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2"
-          >
-            <Radio className="w-4 h-4 animate-pulse" />
-            <span>Start Live Broadcast</span>
-          </button>
-        </form>
+        </div>
       </div>
     </AppShell>
   );
