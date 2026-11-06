@@ -336,6 +336,9 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
 
       <div className="space-y-1 px-4 pt-2">
         {!hideLikes && <p className="text-sm font-semibold">{formatCount(likes)} likes</p>}
+        {!hideShares && post.shares_count > 0 && (
+          <p className="text-xs text-muted-foreground">{formatCount(post.shares_count)} shares</p>
+        )}
         {captionText && (
           <p className="whitespace-pre-wrap text-sm">
             {author && <span className="mr-1 font-semibold">{author.username}</span>}
