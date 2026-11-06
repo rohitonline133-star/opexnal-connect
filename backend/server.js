@@ -1017,7 +1017,8 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
         ) AS media
       FROM posts p
       JOIN users u ON u.id=p.user_id
-      WHERE NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
+      WHERE p.archived_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
         AND (
           p.user_id=$1
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
@@ -2279,6 +2280,39 @@ app.delete("/api/v1/comments/:commentId/like", dbRequired, authRequired, async (
       [req.params.commentId],
     );
     return res.json({ liked: false });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get("/api/v1/posts/archive", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.caption, p.media_url, p.media_type, p.created_at, p.archived_at
+       FROM posts p
+       WHERE p.user_id=$1 AND p.archived_at IS NOT NULL
+       ORDER BY p.archived_at DESC
+       LIMIT 100`,
+      [req.user.id],
+    );
+    return res.json({ posts: result.rows });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.patch("/api/v1/posts/:postId/archive", dbRequired, authRequired, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `UPDATE posts SET archived_at=CASE WHEN $3::boolean THEN NULL ELSE NOW() END,
+       updated_at=NOW() WHERE id=$1 AND user_id=$2
+       RETURNING id, archived_at`,
+      [req.params.postId, req.user.id, req.body?.restore === true],
+    );
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Post not found or not owned by this account." });
+    }
+    return res.json({ post: result.rows[0] });
   } catch (error) {
     return next(error);
   }
