@@ -36,7 +36,7 @@ The frontend and API are separate processes. Deploy the API on a Node.js host th
 
 ### Producer transaction contract
 
-Application code can use `backend/lib/outbox.js` and call `enqueueOutboxEvent(client, event)` with a PostgreSQL transaction client. The helper validates the envelope and uses the unique idempotency key to avoid duplicate event rows. The notification routes call the transaction-aware helper with the same PostgreSQL client used for their authoritative write. Post comments, follow-request acceptance, public/private follow, post likes, and messages now commit their data changes and notification events atomically. Notification enqueue failures in the legacy helper are logged and do not fail the already-completed social action.
+Application code can use `backend/lib/outbox.js` and call `enqueueOutboxEvent(client, event)` with a PostgreSQL transaction client. The helper validates the envelope and uses the unique idempotency key to avoid duplicate event rows. The notification routes call the transaction-aware helper with the same PostgreSQL client used for their authoritative write. Post comments, follow-request acceptance, public/private follow, post likes, and messages now commit their data changes and notification events atomically.
 
 ## Transactional outbox worker
 
