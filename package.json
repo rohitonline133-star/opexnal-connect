@@ -15,7 +15,8 @@
     "test": "node --import tsx --test tests/**/*.test.ts",
     "backend:start": "node backend/server.js",
     "backend:dev": "node --watch backend/server.js",
-    "backend:check": "node --check backend/server.js"
+    "backend:check": "node --check backend/server.js && node --check backend/workers/outbox-worker.js",
+    "backend:outbox": "node backend/workers/outbox-worker.js"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
