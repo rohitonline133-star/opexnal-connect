@@ -33,6 +33,7 @@ import {
   getMessages,
   markConversationRead,
   sendMessage,
+  subscribeToMessageEvents,
   updateMessageReaction,
   type Message,
 } from "@/lib/messages";
@@ -92,6 +93,14 @@ function Conversation() {
     if (!user) return;
     markConversationRead(conversationId, user.id).catch(() => undefined);
   }, [conversationId, user, messagesQuery.data?.length]);
+
+  useEffect(() => {
+    if (!user) return;
+    return subscribeToMessageEvents(() => {
+      void queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      void queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
+    });
+  }, [conversationId, queryClient, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
