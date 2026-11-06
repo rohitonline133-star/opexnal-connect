@@ -1645,10 +1645,15 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
 });
 
 app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, res, next) => {
-  const cursor = typeof req.query.cursor === "string" ? new Date(req.query.cursor) : null;
-  if (cursor && !Number.isFinite(cursor.getTime()))
-    return res.status(400).json({ error: "Invalid cursor." });
-  const limit = Math.min(Math.max(Number(req.query.limit || 18), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 18 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  const limit = Math.min(requestedLimit, 100);
+  const legacyCursor = typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime()) ? new Date(req.query.cursor).toISOString() : null;
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime()) ? new Date(req.query.beforeCreatedAt).toISOString() : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId) ? req.query.beforeId : null;
+  if (req.query.cursor && !legacyCursor) return res.status(400).json({ error: "Invalid cursor." });
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  if (legacyCursor && (beforeCreatedAt || beforeId)) return res.status(400).json({ error: "Use either the legacy cursor or the keyset cursor, not both." });
   try {
     const result = await pool.query(
       `SELECT
@@ -1680,16 +1685,21 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
-         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
-       ORDER BY p.created_at DESC LIMIT $4`,
+         AND (($3::timestamptz IS NOT NULL AND p.created_at<$3::timestamptz) OR ($3::timestamptz IS NULL AND $4::timestamptz IS NULL) OR ($4::timestamptz IS NOT NULL AND (p.created_at,p.id)<($4::timestamptz,$5::uuid)))
+       ORDER BY p.created_at DESC,p.id DESC LIMIT $6`,
       [
         String(req.params.username).toLowerCase(),
         req.user.id,
-        cursor ? cursor.toISOString() : null,
-        limit,
+        legacyCursor,
+        beforeCreatedAt,
+        beforeId,
+        limit + 1,
       ],
     );
-    return res.json({ posts: result.rows });
+    const hasMore = result.rows.length > limit;
+    const posts = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = posts[posts.length - 1];
+    return res.json({ posts, nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id } : null });
   } catch (error) {
     return next(error);
   }
