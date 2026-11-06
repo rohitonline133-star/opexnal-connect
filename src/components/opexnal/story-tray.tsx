@@ -20,20 +20,20 @@ export function StoryTray({ viewerId = "" }: { viewerId?: string | null }) {
 
   return (
     <div className="border-b border-border">
-      <ul className="flex gap-4 overflow-x-auto px-4 py-3">
+      <ul className="flex gap-3 overflow-x-auto px-4 py-2">
         <li className="shrink-0">
           {mine ? (
             <Link
               to="/stories/$userId"
               params={{ userId: currentViewerId }}
-              className="flex w-16 flex-col items-center gap-1.5"
+              className="flex w-16 flex-col items-center gap-1"
             >
               <MyStoryBadge
                 avatarUrl={mine.author.avatar_url}
                 fallback={initialsFor(mine.author)}
                 ring={mine.hasUnseen}
               />
-              <span className="w-16 truncate text-center text-xs text-muted-foreground">
+              <span className="w-16 truncate text-center text-[11px] text-muted-foreground">
                 Your story
               </span>
             </Link>
