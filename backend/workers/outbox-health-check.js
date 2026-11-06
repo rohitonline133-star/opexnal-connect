@@ -42,13 +42,24 @@ try {
        COUNT(*) FILTER (WHERE status='pending')::int AS pending_count,
        COUNT(*) FILTER (WHERE status='processing')::int AS processing_count,
        COUNT(*) FILTER (WHERE status='dead')::int AS dead_count,
-       COALESCE(EXTRACT(EPOCH FROM NOW() - MIN(created_at) FILTER (WHERE status='pending')), 0)::int AS oldest_pending_seconds,
+       COALESCE(
+         EXTRACT(EPOCH FROM NOW() - MIN(created_at) FILTER (WHERE status='pending')),
+         0
+       )::int AS oldest_pending_seconds,
        COUNT(*) FILTER (
          WHERE status='processing'
            AND locked_at < NOW() - make_interval(secs => $1::int)
        )::int AS stale_processing_count
      FROM event_outbox`,
-    [boundedInteger(process.env.OUTBOX_LEASE_SECONDS, 300, 30, 3600, "OUTBOX_LEASE_SECONDS")],
+    [
+      boundedInteger(
+        process.env.OUTBOX_LEASE_SECONDS,
+        300,
+        30,
+        3600,
+        "OUTBOX_LEASE_SECONDS",
+      ),
+    ],
   );
   const health = summarizeOutboxHealth(result.rows[0], {
     maxPendingAgeSeconds,
