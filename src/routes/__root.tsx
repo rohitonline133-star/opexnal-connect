@@ -154,28 +154,22 @@ function RootComponent() {
 
     const checkForPlayStoreUpdate = async () => {
       try {
-        updateListener = await AppUpdate.addListener(
-          "onFlexibleUpdateStateChange",
-          (state) => {
-            if (
-              active &&
-              state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED
-            ) {
-              toast("Opexnal update is ready", {
-                description: "Restart Opexnal to finish installing the update.",
-                duration: Infinity,
-                action: {
-                  label: "Restart",
-                  onClick: () => {
-                    void AppUpdate.completeFlexibleUpdate().catch(() => {
-                      toast.error("Update could not be completed. Please try again.");
-                    });
-                  },
+        updateListener = await AppUpdate.addListener("onFlexibleUpdateStateChange", (state) => {
+          if (active && state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
+            toast("Opexnal update is ready", {
+              description: "Restart Opexnal to finish installing the update.",
+              duration: Infinity,
+              action: {
+                label: "Restart",
+                onClick: () => {
+                  void AppUpdate.completeFlexibleUpdate().catch(() => {
+                    toast.error("Update could not be completed. Please try again.");
+                  });
                 },
-              });
-            }
-          },
-        );
+              },
+            });
+          }
+        });
 
         const info = await AppUpdate.getAppUpdateInfo();
         if (!active || info.updateAvailability !== AppUpdateAvailability.UPDATE_AVAILABLE) {
