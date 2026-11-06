@@ -49,6 +49,26 @@ export async function resolveMediaUrl(path: string, expiresIn = 300) {
   ) {
     return path;
   }
+  if (path.startsWith("/api/v1/storage/")) {
+    try {
+      const response = await fetch(apiUrl("/api/v1/storage/signed-url"), {
+        method: "POST",
+        headers: {
+          ...authClient.getAuthHeader(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path, expiresIn }),
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        signedUrl?: string;
+        error?: string;
+      };
+      return response.ok && payload.signedUrl ? apiUrl(payload.signedUrl) : null;
+    } catch {
+      return null;
+    }
+  }
   try {
     const { data, error } = await supabase.storage
       .from("post-media")
