@@ -5,12 +5,7 @@
  * A market is launchable only when an explicit, current approval record is
  * supplied by a trusted server-side configuration/data source.
  */
-export type MarketReviewStatus =
-  | "NOT_REVIEWED"
-  | "IN_REVIEW"
-  | "BLOCKED"
-  | "LIMITED_FEATURES"
-  | "APPROVED";
+export type MarketReviewStatus = "NOT_REVIEWED" | "IN_REVIEW" | "BLOCKED" | "LIMITED_FEATURES" | "APPROVED";
 
 export type MarketApprovalRecord = {
   status: MarketReviewStatus;
