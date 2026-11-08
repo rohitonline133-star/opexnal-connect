@@ -51,20 +51,23 @@ function OpexnalColourStudio() {
   const [enabled, setEnabled] = useState(false);
   const [selected, setSelected] = useState("emerald");
   const [advanced, setAdvanced] = useState(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
   useEffect(() => {
     const isEnabled = window.localStorage.getItem(STORAGE_ENABLED) === "true";
     const savedTheme = window.localStorage.getItem(STORAGE_THEME) || "emerald";
     setEnabled(isEnabled);
     setSelected(themes.some((theme) => theme.id === savedTheme) ? savedTheme : "emerald");
+    setPreferencesLoaded(true);
   }, []);
 
   useEffect(() => {
+    if (!preferencesLoaded) return;
     if (enabled) document.documentElement.setAttribute("data-opexnal-theme", selected);
     else document.documentElement.removeAttribute("data-opexnal-theme");
     window.localStorage.setItem(STORAGE_ENABLED, String(enabled));
     window.localStorage.setItem(STORAGE_THEME, selected);
-  }, [enabled, selected]);
+  }, [enabled, selected, preferencesLoaded]);
 
   function toggleTheme(id: string) {
     if (selected === id && enabled) {
