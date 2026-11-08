@@ -329,7 +329,7 @@ function Settings() {
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#111827] shadow-sm ring-1 ring-white/10">
                     {/* prettier-ignore */}
-                  <svg
+                    <svg
                       viewBox="0 0 100 100"
                       className="h-8 w-8"
                       role="img"
