@@ -10,14 +10,14 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/settings/colour")({
   head: () => ({
     meta: [
-      { title: "Opexnal Colour Studio — Opexnal" },
+      { title: "Opexnal Colour Official — Opexnal" },
       {
         name: "description",
         content: "Personalize Opexnal with premium colour themes.",
       },
     ],
   }),
-  component: OpexnalColourStudio,
+  component: OpexnalColourOfficial,
 });
 
 const STORAGE_ENABLED = "opexnal-colour-enabled";
@@ -151,7 +151,7 @@ function OpexnalMark() {
 }
 
 // prettier-ignore
-function OpexnalColourStudio() {
+function OpexnalColourOfficial() {
   const [enabled, setEnabled] = useState(false);
   const [selected, setSelected] = useState("emerald");
   const [advanced, setAdvanced] = useState(false);
@@ -213,7 +213,7 @@ function OpexnalColourStudio() {
             <OpexnalMark />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
-                Opexnal Studio
+                Opexnal Colour Official
               </p>
               <h1 className="text-xl font-bold tracking-tight">
                 Colour, your way.
@@ -329,7 +329,7 @@ function OpexnalColourStudio() {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold">
-                Optional studio settings
+                Optional controls
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 Extra controls, only when you need them.
