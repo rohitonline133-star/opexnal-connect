@@ -373,14 +373,14 @@ export function CreatorDashboardPage() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">Opexnal AI workspace</p>
+                  <p className="text-xs font-bold text-foreground">Opexnal AI</p>
                   <p className="text-[11px] text-muted-foreground">
                     Generate viral reels & captions
                   </p>
                 </div>
               </div>
               <Button asChild size="sm" className="brand-gradient-bg text-white rounded-xl text-xs">
-                <Link to="/ai">Open workspace</Link>
+                <Link to="/ai">Open Opexnal AI</Link>
               </Button>
             </div>
           </div>
