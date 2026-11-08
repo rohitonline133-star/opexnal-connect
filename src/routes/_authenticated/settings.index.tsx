@@ -319,7 +319,7 @@ function Settings() {
           </div>
         ) : (
           <>
-            {/* Opexnal Colour — one entry point for the separate theme studio */}
+            {/* Opexnal Colour — one entry point for Opexnal Colour Official */}
             <section className="space-y-1.5" id="section-opexnal-colour">
               <div className="space-y-1.5">
                 <Link
@@ -363,10 +363,10 @@ function Settings() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-xs font-semibold text-foreground">
-                      Opexnal Colour
+                      Opexnal Colour Official
                     </span>
                     <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                      Premium colour themes and appearance studio
+                      Premium Opexnal colour themes and appearance controls
                     </span>
                   </span>
                   <ChevronRight
