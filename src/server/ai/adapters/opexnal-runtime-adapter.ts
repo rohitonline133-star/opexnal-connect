@@ -34,7 +34,7 @@ export class OpexnalAutonomousRuntimeAdapter implements AIProvider {
     let text = "";
 
     if (hasImage || lower.includes("image") || lower.includes("analyze this")) {
-      text = `📸 **Opexnal Visual Studio Analysis**:
+      text = `📸 **Opexnal Visual workspace Analysis**:
 - **Aesthetic Breakdown**: Crisp composition, dynamic contrast, contemporary digital finish.
 - **Visual Focal Points**: Strong leading lines and balanced subject hierarchy.
 - **Top 3 Ready-to-Post Captions**:
@@ -44,10 +44,10 @@ export class OpexnalAutonomousRuntimeAdapter implements AIProvider {
 - **Recommended Hashtags**: #OpexnalCreators #VisualStorytelling #DigitalArt #AestheticFeed
 - **Audio Mood**: Deep ambient synth-wave or subtle lo-fi chill hop.`;
     } else if (lower.includes("caption")) {
-      text = `✨ **Opexnal Studio Captions**:
+      text = `✨ **Opexnal workspace Captions**:
 
 1. 🚀 **The Creator Vibe**:
-"Quiet discipline in the studio turns into effortless execution on stage. Keep building. 💫"
+"Quiet discipline in the workspace turns into effortless execution on stage. Keep building. 💫"
 👉 *CTA: What’s your biggest project this month? Let me know below!*
 #Opexnal #CreatorEconomy #BuildInPublic #DailyGrind
 
@@ -75,16 +75,16 @@ export class OpexnalAutonomousRuntimeAdapter implements AIProvider {
       text = `🔥 **Curated Opexnal Hashtag Strategy**:
 
 • **🚀 High-Reach Discovery (Top 5)**:
-#Opexnal #CreatorStudio #ContentCreators #ExplorePage #ViralReels
+#Opexnal #Creatorworkspace #ContentCreators #ExplorePage #ViralReels
 
 • **🎯 Niche Community Engagement (Top 8)**:
-#CreativeWorkflow #AestheticDesign #BuildInPublic #VisualStorytellers #TechCommunity #StudioVibes #HinglishCreators #DesignInspo
+#CreativeWorkflow #AestheticDesign #BuildInPublic #VisualStorytellers #TechCommunity #workspaceVibes #HinglishCreators #DesignInspo
 
 • **✨ Aesthetic & Mood (Top 5)**:
 #MinimalistAesthetics #ModernCraft #NextGenSocial #DigitalCulture #VibeCheck
 
 📋 *Copyable Set*:
-\`#Opexnal #CreatorStudio #CreativeWorkflow #AestheticDesign #BuildInPublic #VisualStorytellers #ViralReels\``;
+\`#Opexnal #Creatorworkspace #CreativeWorkflow #AestheticDesign #BuildInPublic #VisualStorytellers #ViralReels\``;
     } else if (lower.includes("bio")) {
       text = `✨ **Modern Profile Bio Options for Opexnal**:
 
