@@ -18,7 +18,7 @@ export const SEED_PROFILES: Record<string, Profile> = {
     id: "user_zenith",
     username: "zenith_design",
     display_name: "Zenith Creative",
-    bio: "3D Design Studio & Motion graphics laboratory. Exploring fluid forms and spatial UI.",
+    bio: "3D Design workspace & Motion graphics laboratory. Exploring fluid forms and spatial UI.",
     avatar_url:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
     posts_count: 18,

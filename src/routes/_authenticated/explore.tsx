@@ -251,11 +251,11 @@ function Explore() {
           right={
             <Link
               to="/ai"
-              aria-label="Opexnal AI Studio"
+              aria-label="Opexnal AI workspace"
               className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
             >
               <Sparkles className="h-4 w-4 text-primary" />
-              AI Studio
+              AI workspace
             </Link>
           }
         />

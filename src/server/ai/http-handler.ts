@@ -342,7 +342,7 @@ Provide 3 variations (Short & punchy, Storytelling, and Witty/Hinglish).`;
       const generateReq: GenerateRequest = {
         messages: [{ role: "user", parts }],
         systemInstruction:
-          "You are Opexnal AI Studio, a creative generator designed for creators on Opexnal. Output crisp, nicely formatted markdown with clear headers, emojis, and ready-to-copy text.",
+          "You are Opexnal AI workspace, a creative generator designed for creators on Opexnal. Output crisp, nicely formatted markdown with clear headers, emojis, and ready-to-copy text.",
         temperature: 0.75,
         userId,
       };

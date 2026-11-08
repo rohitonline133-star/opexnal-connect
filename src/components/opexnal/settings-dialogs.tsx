@@ -933,7 +933,7 @@ function ActiveSubscriptionsModal({ onClose }: { onClose: () => void }) {
             <div>
               <p className="text-xs font-semibold">Opexnal One Membership</p>
               <p className="text-[11px] text-muted-foreground">
-                $9.99/mo • AI Studio Pro + 4K HD Uploads
+                $9.99/mo • AI workspace Pro + 4K HD Uploads
               </p>
             </div>
           </div>
@@ -2021,7 +2021,7 @@ function CreatorWebModal({ onClose }: { onClose: () => void }) {
       <DialogHeader>
         <DialogTitle className="text-lg font-bold flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
-          Opexnal Studio for Web
+          Opexnal workspace for Web
         </DialogTitle>
         <DialogDescription className="text-xs text-muted-foreground">
           Desktop publishing, multi-reel scheduling, and professional analytics for creators.
@@ -2265,7 +2265,7 @@ function RecentlyDeletedModal({ onClose }: { onClose: () => void }) {
     {
       id: "del_story_2",
       type: "story",
-      title: "Behind the scenes in studio",
+      title: "Behind the scenes in workspace",
       deletedAt: "2026-03-02T15:00:00Z",
       daysRemaining: 28,
     },

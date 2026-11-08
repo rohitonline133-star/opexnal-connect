@@ -259,7 +259,7 @@ export function CreatorDashboardPage() {
                     engagement: "14.8%",
                   },
                   {
-                    title: "Studio desk setup & workflow tips",
+                    title: "workspace desk setup & workflow tips",
                     type: "Post",
                     reach: "12.8K",
                     engagement: "11.2%",
@@ -373,14 +373,14 @@ export function CreatorDashboardPage() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">Opexnal AI Studio</p>
+                  <p className="text-xs font-bold text-foreground">Opexnal AI workspace</p>
                   <p className="text-[11px] text-muted-foreground">
                     Generate viral reels & captions
                   </p>
                 </div>
               </div>
               <Button asChild size="sm" className="brand-gradient-bg text-white rounded-xl text-xs">
-                <Link to="/ai">Open Studio</Link>
+                <Link to="/ai">Open workspace</Link>
               </Button>
             </div>
           </div>

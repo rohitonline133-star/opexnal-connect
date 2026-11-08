@@ -295,7 +295,7 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
       id: "qr_2",
       shortcut: "gear",
       message:
-        "I shoot with Sony A7IV + 35mm f/1.4 GM and edit in DaVinci Resolve & Opexnal AI Studio!",
+        "I shoot with Sony A7IV + 35mm f/1.4 GM and edit in DaVinci Resolve & Opexnal AI workspace!",
     },
   ],
   faqAutomationEnabled: true,
@@ -451,7 +451,7 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
     {
       id: "del_story_2",
       type: "story",
-      title: "Behind the scenes in studio",
+      title: "Behind the scenes in workspace",
       deletedAt: "2026-03-02T15:00:00Z",
       daysRemaining: 28,
       thumbnailUrl:
@@ -870,11 +870,11 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
 
   // 4. Your Insights & Tools
   {
-    id: "ai_studio",
+    id: "ai_workspace",
     categoryNumber: 4,
     categoryTitle: "Your insights & tools",
-    title: "Opexnal AI Studio",
-    titleGu: "Opexnal AI સ્ટુડિયો",
+    title: "Opexnal AI workspace",
+    titleGu: "Opexnal AI વર્કસ્પેસ",
     description: "Multimodal generative AI tools, viral captions, hooks & hashtag co-pilot",
     descriptionGu: "મલ્ટિમોડલ AI ટૂલ્સ, વાયરલ કેપ્શન્સ, હુક્સ અને હેશટેગ કો-પાઇલટ",
     keywords: [
@@ -886,7 +886,7 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
       "hooks",
       "assistant",
       "એઆઈ",
-      "સ્ટુડિયો",
+      "વર્કસ્પેસ",
       "કેપ્શન",
     ],
     route: "/ai",
@@ -1604,8 +1604,8 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
     categoryTitle: "Also from Opexnal",
     title: "Opexnal AI Suite",
     titleGu: "Opexnal AI સ્યુટ",
-    description: "Multimodal generative AI creator engine and smart content studio",
-    descriptionGu: "મલ્ટિમોડલ જનરેટિવ AI ક્રિએટર એન્જિન અને સ્માર્ટ કન્ટેન્ટ સ્ટુડિયો",
+    description: "Multimodal generative AI creator engine and smart content workspace",
+    descriptionGu: "મલ્ટિમોડલ જનરેટિવ AI ક્રિએટર એન્જિન અને સ્માર્ટ કન્ટેન્ટ વર્કસ્પેસ",
     keywords: ["ai suite", "generative ai", "creator suite", "tools", "એઆઈ સ્યુટ"],
     route: "/ai",
   },
@@ -1632,8 +1632,8 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
     id: "creator_web",
     categoryNumber: 13,
     categoryTitle: "Also from Opexnal",
-    title: "Opexnal Studio for Web",
-    titleGu: "Opexnal વેબ સ્ટુડિયો",
+    title: "Opexnal workspace for Web",
+    titleGu: "Opexnal વેબ વર્કસ્પેસ",
     description: "Desktop publishing suite, post scheduling, bulk uploads & analytics",
     descriptionGu: "ડેસ્કટોપ પબ્લિશિંગ, પોસ્ટ શેડ્યૂલિંગ, બલ્ક અપલોડ્સ અને એનાલિટિક્સ",
     keywords: [
@@ -1643,7 +1643,7 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
       "scheduling",
       "bulk upload",
       "publishing",
-      "વેબ સ્ટુડિયો",
+      "વેબ વર્કસ્પેસ",
     ],
     dialog: "creator_web",
   },

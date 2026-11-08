@@ -28,7 +28,7 @@ function ReelsCreatePage() {
             onClick={() => navigate({ to: "/create" })}
             className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#9333EA] text-white text-xs font-semibold rounded-xl transition shadow-lg"
           >
-            Open Creative Studio
+            Open Creative workspace
           </button>
         </div>
       </div>
