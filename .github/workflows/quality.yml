@@ -11,6 +11,7 @@ on:
       - main
       - "fix/**"
       - "security/**"
+      - "chore/**"
 
 permissions:
   contents: read
@@ -32,54 +33,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies (repository currently has no lockfile)
+      - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Check first-party API syntax
         run: npm run backend:check
-      - name: Production build (generates TanStack route types)
+      - name: Production build
         run: npm run build
       - name: Type check
         run: npm run typecheck
-      - name: Lint
+      - name: Lint changed first-party files
+        shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
           BEFORE_SHA: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
             npm run lint
             exit $?
           fi
 
-          if [ "$EVENT_NAME" = "pull_request" ]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
             base="$PR_BASE_SHA"
-          elif [ "$BEFORE_SHA" != "" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+          elif [[ -n "$BEFORE_SHA" && "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]]; then
             base="$BEFORE_SHA"
           else
             base="HEAD^"
           fi
 
-          git diff --name-only "$base"...HEAD > /tmp/changed-files.txt
-          mapfile -t files < <(
-            grep -E '^[^/]+\.(ts|tsx|js|jsx|mjs|cjs)$|^(src|backend|tests)/.*\.(ts|tsx|js|jsx|mjs|cjs)
-          )
+          mapfile -t changed < <(git diff --name-only --diff-filter=ACMRT "$base"...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs')
+          files=()
+          for file in "${changed[@]}"; do
+            case "$file" in
+              src/*|backend/*|tests/*|*.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs)
+                [[ "$file" == android/* ]] && continue
+                [[ -f "$file" ]] && files+=("$file")
+                ;;
+            esac
+          done
 
-          if [ "${#files[@]}" -gt 0 ]; then
-            printf 'Linting %s first-party files\n' "${#files[@]}"
-            npx eslint "${files[@]}"
-          else
-            echo "No changed first-party JS/TS files; skipping targeted lint."
-          fi
-      - name: Unit and security tests
-        run: npm test
- /tmp/changed-files.txt |
-            grep -v '^android/' |
-            grep -v '^android/app/src/main/assets/public/assets/' |
-            while IFS= read -r file; do [ -f "$file" ] && printf '%s\n' "$file"; done || true
-          )
-
-          if [ "${#files[@]}" -gt 0 ]; then
-            printf 'Linting %s first-party files\n' "${#files[@]}"
+          if (( ${#files[@]} > 0 )); then
+            printf 'Linting %s existing first-party files\n' "${#files[@]}"
             npx eslint "${files[@]}"
           else
             echo "No changed first-party JS/TS files; skipping targeted lint."
