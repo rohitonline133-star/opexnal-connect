@@ -159,27 +159,55 @@ export function HelpPage() {
             <div className="rounded-3xl border border-border bg-card p-4 space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-bold text-foreground">All Help Topics</p>
-                <Badge variant="outline" className="text-[10px]">{HELP_TOPICS.length} topics</Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  {HELP_TOPICS.length} topics
+                </Badge>
               </div>
-              <Input value={helpSearch} onChange={(event) => setHelpSearch(event.target.value)} placeholder="Search all help topics..." aria-label="Search all help topics" className="h-10 rounded-xl bg-surface text-xs" />
+              <Input
+                value={helpSearch}
+                onChange={(event) => setHelpSearch(event.target.value)}
+                placeholder="Search all help topics..."
+                aria-label="Search all help topics"
+                className="h-10 rounded-xl bg-surface text-xs"
+              />
               <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                 {visibleHelpTopics.length === 0 ? (
-                  <p className="py-4 text-center text-xs text-muted-foreground">No matching help topics.</p>
+                  <p className="py-4 text-center text-xs text-muted-foreground">
+                    No matching help topics.
+                  </p>
                 ) : (
-                  Array.from(new Set(visibleHelpTopics.map((topic) => topic.category))).map((group) => (
-                    <section key={group} className="space-y-1.5">
-                      <h3 className="px-1 text-[11px] font-semibold text-muted-foreground">{group}</h3>
-                      {visibleHelpTopics.filter((topic) => topic.category === group).map((topic) => (
-                        <button key={topic.id} type="button" onClick={() => { setCategory(topic.title); setSelectedHelpTopic(topic.title); setSection("report_problem"); }} className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-surface">
-                          <span>{topic.title}</span>
-                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        </button>
-                      ))}
-                    </section>
-                  ))
+                  Array.from(new Set(visibleHelpTopics.map((topic) => topic.category))).map(
+                    (group) => (
+                      <section key={group} className="space-y-1.5">
+                        <h3 className="px-1 text-[11px] font-semibold text-muted-foreground">
+                          {group}
+                        </h3>
+                        {visibleHelpTopics
+                          .filter((topic) => topic.category === group)
+                          .map((topic) => (
+                            <button
+                              key={topic.id}
+                              type="button"
+                              onClick={() => {
+                                setCategory(topic.title);
+                                setSelectedHelpTopic(topic.title);
+                                setSection("report_problem");
+                              }}
+                              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-surface"
+                            >
+                              <span>{topic.title}</span>
+                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            </button>
+                          ))}
+                      </section>
+                    ),
+                  )
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground">Choose a topic to prefill a support report. A live support-ticket backend is not yet connected.</p>
+              <p className="text-[10px] text-muted-foreground">
+                Choose a topic to prefill a support report. A live support-ticket backend is not yet
+                connected.
+              </p>
             </div>
 
             {/* Menu Options */}
@@ -316,7 +344,11 @@ export function HelpPage() {
               >
                 <div>
                   <label className="text-xs font-semibold block mb-1">Issue Category</label>
-                  {selectedHelpTopic && <p className="mb-2 text-[11px] text-muted-foreground">Selected help topic: {selectedHelpTopic}</p>}
+                  {selectedHelpTopic && (
+                    <p className="mb-2 text-[11px] text-muted-foreground">
+                      Selected help topic: {selectedHelpTopic}
+                    </p>
+                  )}
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
@@ -324,7 +356,9 @@ export function HelpPage() {
                   >
                     <option>Something isn't working</option>
                     {HELP_TOPICS.map((topic) => (
-                      <option key={topic.id} value={topic.title}>{topic.category} — {topic.title}</option>
+                      <option key={topic.id} value={topic.title}>
+                        {topic.category} — {topic.title}
+                      </option>
                     ))}
                   </select>
                 </div>

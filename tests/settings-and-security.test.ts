@@ -289,7 +289,9 @@ describe("Help Center Master Inventory", () => {
     assert.ok(categories.has("Data, Legal & Support"));
   });
   test("search returns matching topics and handles no matches", () => {
-    assert.ok(searchHelpTopics("copyright").some((topic) => topic.title === "Submit a copyright complaint"));
+    assert.ok(
+      searchHelpTopics("copyright").some((topic) => topic.title === "Submit a copyright complaint"),
+    );
     assert.ok(searchHelpTopics("password").some((topic) => topic.title === "Change password"));
     assert.deepStrictEqual(searchHelpTopics("no-such-help-topic"), []);
   });
