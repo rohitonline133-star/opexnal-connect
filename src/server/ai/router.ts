@@ -1,5 +1,4 @@
 import type { AIProvider } from "./provider-interface";
-import { GeminiProviderAdapter } from "./adapters/gemini-adapter";
 import { SelfHostedProviderAdapter } from "./adapters/self-hosted-adapter";
 import { OpexnalAutonomousRuntimeAdapter } from "./adapters/opexnal-runtime-adapter";
 import { CircuitBreaker } from "./circuit-breaker";
@@ -8,7 +7,7 @@ import { CircuitBreaker } from "./circuit-breaker";
  * OPEX AI Model Router & Orchestrator
  *
  * Directs traffic across model providers based on configuration, health, and circuit state.
- * Allows seamless hot-switching between Gemini, Self-Hosted clusters, and Opexnal native runtime.
+ * Routes requests through Opexnal-controlled self-hosted inference or native runtime.
  */
 export class ModelRouter {
   private providers = new Map<string, AIProvider>();
@@ -18,7 +17,6 @@ export class ModelRouter {
   constructor() {
     this.autonomousFallback = new OpexnalAutonomousRuntimeAdapter();
     this.registerProvider(this.autonomousFallback);
-    this.registerProvider(new GeminiProviderAdapter());
     this.registerProvider(new SelfHostedProviderAdapter());
   }
 
@@ -45,15 +43,6 @@ export class ModelRouter {
       const cb = this.circuitBreakers.get("self_hosted");
       if (selfHosted?.isConfigured() && cb?.canExecute()) {
         return selfHosted;
-      }
-    }
-
-    // 2. Gemini is available only when explicitly selected by configuration
-    if (configTarget === "gemini") {
-      const gemini = this.providers.get("gemini") as GeminiProviderAdapter | undefined;
-      const cb = this.circuitBreakers.get("gemini");
-      if (gemini?.isConfigured() && cb?.canExecute()) {
-        return gemini;
       }
     }
 

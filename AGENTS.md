@@ -1,12 +1,7 @@
-<!-- LOVABLE:BEGIN -->
+# Opexnal repository guidance
 
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-
-<!-- LOVABLE:END -->
+- Keep Opexnal branding and product identity independent.
+- Preserve existing working features unless a task explicitly requests a change.
+- Keep secrets out of source control and use environment variables or a secrets manager.
+- Run the repository quality checks before proposing a merge.
+- Use pull requests for reviewed changes to the main branch.

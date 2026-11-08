@@ -187,7 +187,7 @@ const ENGINE_STATUSES = [
     id: "20",
     name: "AI Engine (Opexnal AI)",
     status: "VERIFIED",
-    notes: "Gemini server proxy, caption studio, chat",
+    notes: "Opexnal AI gateway, caption studio, chat",
   },
   {
     id: "21",
@@ -393,13 +393,6 @@ export function AdminPage() {
             </p>
 
             {[
-              {
-                service: "Gemini AI Studio SDK",
-                provider: "@google/genai",
-                status: "VERIFIED",
-                notes:
-                  "Server-side proxy routes active; offline creative model fallback configured.",
-              },
               {
                 service: "Live Streaming Cluster",
                 provider: "WebRTC / RTMP (Mux / AWS IVS)",

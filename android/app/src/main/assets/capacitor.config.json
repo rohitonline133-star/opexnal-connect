@@ -1,5 +1,16 @@
 {
-  "appId": "com.opexnal.connect",
-  "appName": "opexnal",
-  "webDir": ".output/public"
+	"appId": "com.opexnal.connect",
+	"appName": "Opexnal",
+	"webDir": ".output/public",
+	"server": {
+		"url": "https://opexnal.com",
+		"cleartext": false,
+		"allowNavigation": [
+			"opexnal.com",
+			"www.opexnal.com"
+		]
+	},
+	"android": {
+		"allowMixedContent": false
+	}
 }

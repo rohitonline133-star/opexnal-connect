@@ -1,5 +1,5 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "opexnal",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -18,9 +18,7 @@
     "backend:check": "node --check backend/server.js"
   },
   "dependencies": {
-    "@google/genai": "^2.21.0",
     "@hookform/resolvers": "^5.2.2",
-    "@lovable.dev/cloud-auth-js": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -93,7 +91,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.13.1",
     "@types/archiver": "^8.0.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
