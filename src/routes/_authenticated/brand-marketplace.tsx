@@ -21,7 +21,7 @@ function BrandMarketplacePage() {
   const campaigns = [
     {
       id: "camp_1",
-      brand: "Lumix Creative Studio",
+      brand: "Lumix Creative workspace",
       payout: "$500 - $1,200",
       niche: "Photography & Color Grading",
       requirement: "1 Reel + 2 Stories demonstrating raw photo workflows",
