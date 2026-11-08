@@ -1,0 +1,49 @@
+name: One-time Prettier repair
+
+on:
+  push:
+    branches:
+      - fix/prettier-lint-errors
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Format tracked JavaScript and TypeScript files
+        shell: bash
+        run: |
+          mapfile -d '' files < <(git ls-files -z | while IFS= read -r -d '' file; do
+            case "$file" in
+              *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs) printf '%s\\0' "$file" ;;
+            esac
+          done)
+          if (( ${#files[@]} > 0 )); then
+            npx prettier --write "${files[@]}"
+          fi
+      - name: Remove one-time repair workflow and commit formatting
+        shell: bash
+        run: |
+          git rm .github/workflows/format-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix repository-wide Prettier lint errors"
+            git push origin HEAD
+          else
+            echo "No formatting changes were required."
+          fi
