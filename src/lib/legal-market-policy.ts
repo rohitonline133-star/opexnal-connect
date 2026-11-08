@@ -55,6 +55,7 @@ export function getMarketLaunchDecision(
   if (
     !Number.isFinite(reviewedAt) ||
     !Number.isFinite(expiresAt) ||
+    !Number.isFinite(now.getTime()) ||
     !record.counselReference.trim() ||
     expiresAt <= reviewedAt
   ) {
