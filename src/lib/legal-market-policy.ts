@@ -6,7 +6,10 @@
  * supplied by a trusted server-side configuration/data source.
  */
 export type MarketReviewStatus =
-  "NOT_REVIEWED" | "IN_REVIEW" | "BLOCKED" | "LIMITED_FEATURES"
+  | "NOT_REVIEWED"
+  | "IN_REVIEW"
+  | "BLOCKED"
+  | "LIMITED_FEATURES"
   | "APPROVED";
 
 export type MarketApprovalRecord = {
@@ -42,7 +45,7 @@ export function getMarketLaunchDecision(
     return { allowed: false, status: "NOT_REVIEWED", reason: "INVALID_MARKET_CODE" };
   }
 
-  const record = approvals[normalizedCode];
+  const record = approvals[normalizedizedCode];
   if (!record) {
     return { allowed: false, status: "NOT_REVIEWED", reason: "NO_REVIEW_RECORD" };
   }
