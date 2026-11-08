@@ -5,12 +5,7 @@
  * A market is launchable only when an explicit, current approval record is
  * supplied by a trusted server-side configuration/data source.
  */
-export type MarketReviewStatus =
-  | "NOT_REVIEWED"
-  | "IN_REVIEW"
-  | "BLOCKED"
-  | "LIMITED_FEATURES"
-  | "APPROVED";
+export type MarketReviewStatus = "NOT_REVIEWED" | "IN_REVIEW" | "BLOCKED" | "LIMITED_FEATURES" | "APPROVED";
 
 export type MarketApprovalRecord = {
   status: MarketReviewStatus;
@@ -25,7 +20,12 @@ export type MarketLaunchDecision =
   | {
       allowed: false;
       status: MarketReviewStatus | "NOT_REVIEWED";
-      reason: "INVALID_MARKET_CODE" | "NO_REVIEW_RECORD" | "NOT_APPROVED" | "REVIEW_EXPIRED" | "INVALID_APPROVAL_EVIDENCE";
+      reason:
+        | "INVALID_MARKET_CODE"
+        | "NO_REVIEW_RECORD"
+        | "NOT_APPROVED"
+        | "REVIEW_EXPIRED"
+        | "INVALID_APPROVAL_EVIDENCE";
     };
 
 const MARKET_CODE_PATTERN = /^[A-Z]{2}$/;
