@@ -14,7 +14,7 @@ on:
       - "chore/**"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -80,3 +80,22 @@ jobs:
           fi
       - name: Unit and security tests
         run: npm test
+      - name: Regenerate and verify Android web assets
+        run: |
+          npx cap sync android
+          if grep -RniE 'lovable|oauth\\.lovable\\.app|lovable://oauth-callback' android/app/src/main/assets/public/assets; then
+            echo "Stale Lovable references remain in generated Android assets."
+            exit 1
+          fi
+      - name: Commit regenerated Android assets
+        if: github.event_name != 'pull_request' && github.ref_name == 'chore/remove-lovable-dependencies'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android/app/src/main/assets/public android/app/src/main/assets/capacitor.config.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Regenerate Android assets without platform branding"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Android assets are already up to date."
+          fi
