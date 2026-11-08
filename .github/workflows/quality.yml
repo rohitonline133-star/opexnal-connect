@@ -61,9 +61,21 @@ jobs:
 
           git diff --name-only "$base"...HEAD > /tmp/changed-files.txt
           mapfile -t files < <(
-            grep -E '^[^/]+\.(ts|tsx|js|jsx|mjs|cjs)$|^(src|backend|tests)/.*\.(ts|tsx|js|jsx|mjs|cjs)$' /tmp/changed-files.txt |
+            grep -E '^[^/]+\.(ts|tsx|js|jsx|mjs|cjs)$|^(src|backend|tests)/.*\.(ts|tsx|js|jsx|mjs|cjs)
+          )
+
+          if [ "${#files[@]}" -gt 0 ]; then
+            printf 'Linting %s first-party files\n' "${#files[@]}"
+            npx eslint "${files[@]}"
+          else
+            echo "No changed first-party JS/TS files; skipping targeted lint."
+          fi
+      - name: Unit and security tests
+        run: npm test
+ /tmp/changed-files.txt |
             grep -v '^android/' |
-            grep -v '^android/app/src/main/assets/public/assets/' || true
+            grep -v '^android/app/src/main/assets/public/assets/' |
+            while IFS= read -r file; do [ -f "$file" ] && printf '%s\n' "$file"; done || true
           )
 
           if [ "${#files[@]}" -gt 0 ]; then
