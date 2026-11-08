@@ -39,13 +39,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/ai")({
   head: () => ({
     meta: [
-      { title: "Opexnal AI — Intelligent Assistant & Creator workspace" },
+      { title: "Opexnal AI — Intelligent Assistant & Creator Tools" },
       {
         name: "description",
         content:
           "Multilingual AI creative assistant, reels generator, smart captions and social strategist on Opexnal.",
       },
-      { property: "og:title", content: "Opexnal AI — Intelligent Assistant & Creator workspace" },
+      { property: "og:title", content: "Opexnal AI — Intelligent Assistant & Creator Tools" },
       {
         property: "og:description",
         content:
@@ -298,7 +298,7 @@ function AIPage() {
       setworkspaceResult(result);
     } catch (err: unknown) {
       const e = err as Error;
-      toast.error(e.message || "Failed to generate workspace output");
+      toast.error(e.message || "Failed to generate creator tool result");
     } finally {
       setworkspaceLoading(false);
     }
@@ -350,7 +350,7 @@ function AIPage() {
             )}
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            Creator workspace Tools
+            Creator Tools
           </button>
         </div>
 
@@ -509,7 +509,7 @@ function AIPage() {
             </form>
           </>
         ) : (
-          /* CREATOR workspace TOOLS */
+          /* CREATOR TOOLS */
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
             {/* Tool Selection Grid */}
             <div className="grid grid-cols-3 gap-2">
