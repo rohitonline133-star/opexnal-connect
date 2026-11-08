@@ -27,7 +27,7 @@ function CreatePostRouteComponent() {
             onClick={() => navigate({ to: "/create" })}
             className="w-full py-3 bg-[#1e1e1e] hover:bg-[#252525] text-white text-xs font-semibold rounded-xl transition"
           >
-            Launch Publishing Studio
+            Launch Publishing workspace
           </button>
         </div>
       </div>
