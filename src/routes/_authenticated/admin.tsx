@@ -127,7 +127,7 @@ const ENGINE_STATUSES = [
     id: "10",
     name: "Live Engine",
     status: "INTEGRATION_BOUNDARY",
-    notes: "Studio active; external streaming cluster NOT VERIFIED",
+    notes: "workspace active; external streaming cluster NOT VERIFIED",
   },
   {
     id: "11",
@@ -187,7 +187,7 @@ const ENGINE_STATUSES = [
     id: "20",
     name: "AI Engine (Opexnal AI)",
     status: "VERIFIED",
-    notes: "Opexnal AI gateway, caption studio, chat",
+    notes: "Opexnal AI gateway, caption workspace, chat",
   },
   {
     id: "21",
