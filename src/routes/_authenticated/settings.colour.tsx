@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronRight, Palette, Power, Sparkles } from "lucide-react";
+import { Check, ChevronRight, Palette, Power, Sparkles } from "lucide-react";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -51,7 +51,6 @@ function OpexnalColourStudio() {
   const [enabled, setEnabled] = useState(false);
   const [selected, setSelected] = useState("emerald");
   const [advanced, setAdvanced] = useState(false);
-  const [preview, setPreview] = useState(true);
 
   useEffect(() => {
     const isEnabled = window.localStorage.getItem(STORAGE_ENABLED) === "true";
@@ -113,8 +112,9 @@ function OpexnalColourStudio() {
               return (
                 <div key={theme.id} className={`group rounded-2xl border p-3 transition-all ${active ? "border-primary/70 bg-primary/5 shadow-md shadow-primary/10" : "border-border bg-card hover:border-primary/40"}`}>
                   <div className="mb-3 flex h-10 items-center gap-1.5 overflow-hidden rounded-xl bg-muted/40 p-1">
-                    {theme.colors.map((color) => <span key={color} className="h-full flex-1 rounded-lg" style={{ backgroundColor: color }} />)}
+                    {theme.colors.map((color) => <span key={color} title={color} className="h-full flex-1 rounded-lg" style={{ backgroundColor: color }} />)}
                   </div>
+                  {advanced && <p className="mb-2 font-mono text-[9px] tracking-wide text-muted-foreground">{theme.colors.join("  ·  ")}</p>}
                   <div className="flex items-center gap-2">
                     <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{theme.name}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{theme.detail}</p></div>
                     <Button type="button" size="sm" variant={active ? "default" : "outline"} className="h-8 min-w-[66px] rounded-full px-3 text-[11px]" aria-pressed={active} onClick={() => toggleTheme(theme.id)}>{active ? <><Check className="mr-1 h-3.5 w-3.5" /> ON</> : "OFF"}</Button>
@@ -127,9 +127,7 @@ function OpexnalColourStudio() {
 
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between"><div><h2 className="text-sm font-semibold">Optional studio settings</h2><p className="text-[11px] text-muted-foreground">Extra controls, only when you need them.</p></div><Palette className="h-5 w-5 text-primary" /></div>
-          <div className="flex items-center justify-between py-2"><Label htmlFor="advanced-colour" className="text-xs">Advanced colour mode</Label><Switch id="advanced-colour" checked={advanced} onCheckedChange={setAdvanced} /></div>
-          <div className="flex items-center justify-between border-t border-border py-2"><Label htmlFor="live-preview" className="text-xs">Live preview</Label><Switch id="live-preview" checked={preview} onCheckedChange={setPreview} /></div>
-          {advanced && <p className="mt-2 rounded-xl bg-muted/50 p-3 text-[11px] text-muted-foreground">Advanced mode is reserved for future fine-tuning controls. Your selected theme remains unchanged.</p>}
+          <div className="flex items-center justify-between py-2"><div><Label htmlFor="advanced-colour" className="text-xs">Advanced colour details</Label><p className="mt-0.5 text-[10px] text-muted-foreground">Show palette HEX values for precision</p></div><Switch id="advanced-colour" checked={advanced} onCheckedChange={setAdvanced} /></div>
         </section>
         <div className="flex items-center justify-between rounded-xl px-1 text-[11px] text-muted-foreground"><span>One active theme at a time</span><Link to="/settings" className="inline-flex items-center gap-1 font-medium text-primary">Settings <ChevronRight className="h-3.5 w-3.5" /></Link></div>
       </div>
