@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/settings/colour")({
 const STORAGE_ENABLED = "opexnal-colour-enabled";
 const STORAGE_THEME = "opexnal-colour-theme";
 
+// prettier-ignore
 const themes = [
   {
     id: "emerald",
@@ -110,6 +111,7 @@ const themes = [
   },
 ];
 
+// prettier-ignore
 function OpexnalMark() {
   return (
     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#111827] shadow-lg ring-1 ring-white/10">
@@ -148,6 +150,7 @@ function OpexnalMark() {
   );
 }
 
+// prettier-ignore
 function OpexnalColourStudio() {
   const [enabled, setEnabled] = useState(false);
   const [selected, setSelected] = useState("emerald");
