@@ -2,7 +2,6 @@ import { test, describe, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 
 import { OpexnalAutonomousRuntimeAdapter } from "../src/server/ai/adapters/opexnal-runtime-adapter.ts";
-import { GeminiProviderAdapter } from "../src/server/ai/adapters/gemini-adapter.ts";
 import { SelfHostedProviderAdapter } from "../src/server/ai/adapters/self-hosted-adapter.ts";
 import { SafetyEngine } from "../src/server/ai/safety-engine.ts";
 import { RateLimiter } from "../src/server/ai/rate-limiter.ts";
@@ -71,21 +70,6 @@ describe("OPEX AI Architecture: Provider Interface & Contracts", () => {
     assert.strictEqual(caps.supportsEmbeddings, false);
     assert.strictEqual(caps.supportsFunctionCalling, false);
     assert.ok(caps.maxContextTokens > 1000);
-  });
-
-  test("GeminiProviderAdapter provides safe health check when unconfigured", async () => {
-    const unconfiguredGemini = new GeminiProviderAdapter("");
-    assert.strictEqual(unconfiguredGemini.isConfigured(), false);
-    const health = await unconfiguredGemini.healthCheck();
-    assert.strictEqual(health.status, "unhealthy");
-    assert.ok(health.error?.includes("missing") || health.error?.includes("not configured"));
-  });
-
-  test("GeminiProviderAdapter does not advertise simulated streaming", async () => {
-    const gemini = new GeminiProviderAdapter("test-key");
-    assert.strictEqual(gemini.capabilities().supportsStreaming, false);
-    const iterator = gemini.stream({} as never)[Symbol.asyncIterator]();
-    await assert.rejects(iterator.next(), /Gemini streaming is not implemented/);
   });
 
   test("SelfHostedProviderAdapter correctly detects configured endpoints", async () => {
@@ -368,13 +352,12 @@ describe("OPEX AI Tool Permissions & Authorization Boundaries", () => {
 });
 
 describe("OPEX AI Gateway & Model Router Orchestration", () => {
-  test("Router defaults to self-hosted and never selects Gemini implicitly", () => {
+  test("Router selects only Opexnal native or self-hosted runtimes", () => {
     const previousProvider = process.env["OPEX_AI_PROVIDER"];
     delete process.env["OPEX_AI_PROVIDER"];
     try {
       const router = new ModelRouter();
       const provider = router.resolveProvider();
-      assert.notStrictEqual(provider.id, "gemini");
       assert.ok(provider.id === "self_hosted" || provider.id === "opex_runtime");
     } finally {
       if (previousProvider === undefined) {
