@@ -576,6 +576,17 @@ export interface SearchableSettingItem {
 }
 
 export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
+  {
+    id: "opexnal_colour",
+    categoryNumber: 0,
+    categoryTitle: "Personalization",
+    title: "Opexnal Colour",
+    titleGu: "Opexnal Colour",
+    description: "Premium colour themes, theme engine and appearance studio",
+    descriptionGu: "એપના રંગો અને દેખાવ કસ્ટમાઇઝ કરો",
+    keywords: ["colour", "color", "theme", "themes", "appearance", "palette", "રંગ", "થીમ"],
+    route: "/settings/colour",
+  },
   // 1. Your Account
   {
     id: "edit_profile",
