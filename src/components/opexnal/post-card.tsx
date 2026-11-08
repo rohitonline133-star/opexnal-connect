@@ -188,7 +188,10 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
         headers: { ...authClient.getAuthHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({ caption: editInput }),
       });
-      const payload = (await response.json().catch(() => ({}))) as { error?: string; post?: { caption?: string } };
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        post?: { caption?: string };
+      };
       if (!response.ok) throw new Error(payload.error || "Could not update this post.");
       setCaptionText(payload.post?.caption ?? editInput);
       setActiveModal(null);
@@ -503,7 +506,9 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
                           body: JSON.stringify({ hideLikesCount: nextHideLikes }),
                         },
                       );
-                      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+                      const payload = (await response.json().catch(() => ({}))) as {
+                        error?: string;
+                      };
                       if (!response.ok) {
                         throw new Error(payload.error || "Could not update like visibility.");
                       }
@@ -512,7 +517,9 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
                       toast.success(nextHideLikes ? "Like count hidden" : "Like count visible");
                     } catch (error) {
                       toast.error(
-                        error instanceof Error ? error.message : "Could not update like visibility.",
+                        error instanceof Error
+                          ? error.message
+                          : "Could not update like visibility.",
                       );
                     }
                   }}
@@ -542,16 +549,22 @@ export function PostCard({ post, viewerId }: { post: FeedPost; viewerId?: string
                           body: JSON.stringify({ commentsEnabled: nextCommentsEnabled }),
                         },
                       );
-                      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+                      const payload = (await response.json().catch(() => ({}))) as {
+                        error?: string;
+                      };
                       if (!response.ok) {
                         throw new Error(payload.error || "Could not update comment settings.");
                       }
                       setCommentsDisabled(!nextCommentsEnabled);
                       setMenuOpen(false);
-                      toast.success(nextCommentsEnabled ? "Comments enabled" : "Comments turned off");
+                      toast.success(
+                        nextCommentsEnabled ? "Comments enabled" : "Comments turned off",
+                      );
                     } catch (error) {
                       toast.error(
-                        error instanceof Error ? error.message : "Could not update comment settings.",
+                        error instanceof Error
+                          ? error.message
+                          : "Could not update comment settings.",
                       );
                     }
                   }}

@@ -9,7 +9,8 @@ export const Route = createFileRoute("/_authenticated/admin/security")({
       { title: "10,000 Security Controls Architecture — Opexnal" },
       {
         name: "description",
-        content: "Master registry of 10,000 security controls across 100 categories with automated audit verifications.",
+        content:
+          "Master registry of 10,000 security controls across 100 categories with automated audit verifications.",
       },
     ],
   }),

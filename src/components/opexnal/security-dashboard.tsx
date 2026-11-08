@@ -27,11 +27,7 @@ import {
   getControlById,
 } from "@/lib/security-engine";
 import { SECURITY_CATEGORIES } from "@/lib/security-categories";
-import type {
-  SecurityControl,
-  ControlStatus,
-  RiskLevel,
-} from "@/lib/security-framework-types";
+import type { SecurityControl, ControlStatus, RiskLevel } from "@/lib/security-framework-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,7 +100,10 @@ export function SecurityDashboard() {
         );
       case "NOT_IMPLEMENTED":
         return (
-          <Badge variant="outline" className="text-muted-foreground border-border text-[10px] uppercase">
+          <Badge
+            variant="outline"
+            className="text-muted-foreground border-border text-[10px] uppercase"
+          >
             Roadmap / Backlog
           </Badge>
         );
@@ -116,7 +115,10 @@ export function SecurityDashboard() {
         );
       default:
         return (
-          <Badge variant="outline" className="text-purple-400 border-purple-500/30 text-[10px] uppercase">
+          <Badge
+            variant="outline"
+            className="text-purple-400 border-purple-500/30 text-[10px] uppercase"
+          >
             Review
           </Badge>
         );
@@ -197,7 +199,9 @@ export function SecurityDashboard() {
           </div>
           <div>
             <span className="text-foreground font-medium">Active Incidents: </span>
-            <span className="text-emerald-400 font-bold">{metrics.openSecurityIncidents} (Nominal)</span>
+            <span className="text-emerald-400 font-bold">
+              {metrics.openSecurityIncidents} (Nominal)
+            </span>
           </div>
         </div>
       </div>
@@ -444,7 +448,9 @@ export function SecurityDashboard() {
             {queryResult.controls.length === 0 ? (
               <div className="p-8 text-center space-y-2">
                 <ShieldAlert className="h-8 w-8 text-muted-foreground mx-auto" />
-                <p className="text-sm font-semibold text-foreground">No controls match your filter</p>
+                <p className="text-sm font-semibold text-foreground">
+                  No controls match your filter
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Try adjusting your search query, status, or category selection.
                 </p>
@@ -570,7 +576,8 @@ export function SecurityDashboard() {
                   {activeModalControl.name}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground">
-                  Full security architecture specification, threat model, code references, and audit verification.
+                  Full security architecture specification, threat model, code references, and audit
+                  verification.
                 </DialogDescription>
               </DialogHeader>
 
@@ -580,7 +587,9 @@ export function SecurityDashboard() {
                   <div className="mt-1">{getStatusBadge(activeModalControl.status)}</div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">RISK CLASSIFICATION</span>
+                  <span className="text-muted-foreground block text-[10px]">
+                    RISK CLASSIFICATION
+                  </span>
                   <div className="mt-1">{getRiskBadge(activeModalControl.riskLevel)}</div>
                 </div>
               </div>
@@ -610,7 +619,10 @@ export function SecurityDashboard() {
                   </p>
                   <div className="mt-1 bg-card p-2.5 rounded-xl border border-border space-y-1">
                     {activeModalControl.sourceCodeReferences.map((ref, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 font-mono text-[11px] text-primary">
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 font-mono text-[11px] text-primary"
+                      >
                         <FileCode className="h-3.5 w-3.5 shrink-0" />
                         <span>{ref}</span>
                       </div>
@@ -624,7 +636,10 @@ export function SecurityDashboard() {
                   </p>
                   <div className="mt-1 bg-card p-2.5 rounded-xl border border-border space-y-1.5">
                     {activeModalControl.automatedTestReferences.map((testRef, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 font-mono text-[11px] text-teal-400">
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 font-mono text-[11px] text-teal-400"
+                      >
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-teal-400" />
                         <span>{testRef}</span>
                       </div>
