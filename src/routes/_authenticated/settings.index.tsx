@@ -328,7 +328,8 @@ function Settings() {
                   className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#111827] shadow-sm ring-1 ring-white/10">
-                    <svg
+                    {/* prettier-ignore */}
+                  <svg
                       viewBox="0 0 100 100"
                       className="h-8 w-8"
                       role="img"
