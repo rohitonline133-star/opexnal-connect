@@ -43,6 +43,7 @@ import {
   History,
   AlertTriangle,
   Radio,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,7 +72,8 @@ type AllowedSettingsRoute =
   | "/close-friends"
   | "/creator"
   | "/help"
-  | "/admin";
+  | "/admin"
+  | "/settings/colour";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
@@ -318,6 +320,21 @@ function Settings() {
           </div>
         ) : (
           <>
+            {/* Opexnal Colour — one entry point for the separate theme studio */}
+            <section className="space-y-1.5" id="section-opexnal-colour">
+              <div className="space-y-1.5">
+                <SettingsLink
+                  to="/settings/colour"
+                  id="link-opexnal-colour"
+                  icon={Palette}
+                  label="Opexnal Colour"
+                  labelGu="Opexnal Colour"
+                  hint="Premium colour themes and appearance studio"
+                  hintGu="એપના રંગો અને દેખાવ કસ્ટમાઇઝ કરો"
+                />
+              </div>
+            </section>
+
             {/* 1. Your account */}
             <section className="space-y-1.5" id="section-your-account">
               <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
