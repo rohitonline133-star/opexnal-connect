@@ -205,7 +205,7 @@ function OpexnalColourOfficial() {
   return (
     <AppShell activeTab="profile">
       <div className="mx-auto min-h-screen w-full max-w-xl space-y-5 px-4 pb-24 pt-4">
-        <ScreenHeader title="Opexnal Colour" showBack />
+        <ScreenHeader title="Opexnal Colour Official" showBack />
 
         <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-xl">
           <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl" />
