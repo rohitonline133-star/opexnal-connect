@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Format feature files and remove temporary workflow
         run: |
           npx prettier --write src/lib/help-catalog.ts src/routes/_authenticated/help.tsx tests/settings-and-security.test.ts
