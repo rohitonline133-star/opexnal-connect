@@ -80,15 +80,50 @@ jobs:
           fi
       - name: Unit and security tests
         run: npm test
-      - name: Regenerate and verify Android web assets
+      - name: Regenerate Android web assets
+        run: npx cap sync android
+      - name: Scan every tracked file at byte level
+        shell: bash
         run: |
-          npx cap sync android
-          if grep -RniE 'lovable|oauth\\.lovable\\.app|lovable://oauth-callback' android/app/src/main/assets/public/assets; then
-            echo "Stale Lovable references remain in generated Android assets."
-            exit 1
-          fi
+          python3 - <<'PY'
+          import base64
+          import pathlib
+          import subprocess
+          import sys
+
+          encoded_terms = [
+              "c3R1ZGlv", "Z29vZ2xl", "Z2VtaW5p", "b3BlbmFp",
+              "Y2hhdGdwdA==", "bG92YWJsZQ==", "Y2xhdWRl",
+              "YW50aHJvcGlj", "Y29waWxvdA==", "cGVycGxleGl0eQ==",
+              "bWlzdHJhbA==", "Z3Jvaw==", "Y29oZXJl", "ZGVlcHNlZWs="
+          ]
+          terms = [base64.b64decode(value).lower() for value in encoded_terms]
+          paths = subprocess.check_output(["git", "ls-files", "-z"]).split(b"\\0")
+          findings = []
+          scanned = 0
+          for raw_path in filter(None, paths):
+              path = pathlib.Path(raw_path.decode("utf-8", "surrogateescape"))
+              if not path.is_file():
+                  continue
+              scanned += 1
+              name_bytes = raw_path.lower()
+              try:
+                  data = path.read_bytes().lower()
+              except OSError as exc:
+                  findings.append((str(path), "READ_ERROR:" + str(exc)))
+                  continue
+              for term in terms:
+                  if term in name_bytes or term in data:
+                      findings.append((str(path), term.decode("ascii")))
+          print(f"Scanned {scanned} tracked files as raw bytes.")
+          if findings:
+              for path, term in findings:
+                  print(f"MATCH {term}: {path}")
+              sys.exit(1)
+          print("No configured external-brand markers found in tracked file paths or raw file bytes.")
+          PY
       - name: Commit regenerated Android assets
-        if: github.event_name != 'pull_request' && github.ref_name == 'chore/remove-lovable-dependencies'
+        if: github.event_name != 'pull_request' && github.ref_name == 'chore/remove-brand-traces'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
