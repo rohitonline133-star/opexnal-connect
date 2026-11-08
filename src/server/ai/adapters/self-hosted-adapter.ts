@@ -15,7 +15,7 @@ import type {
  * Self-Hosted Model Runtime Adapter
  *
  * Implements the AIProvider interface for Opexnal-controlled inference runtimes.
- * Supports OpenAI-compatible REST inference servers (e.g., vLLM, Ollama, TGI, LocalAI)
+ * Supports standard chat-completions REST inference servers (e.g., vLLM, Ollama, TGI, LocalAI)
  * hosted within Opexnal private infrastructure or local clusters.
  */
 export class SelfHostedProviderAdapter implements AIProvider {
