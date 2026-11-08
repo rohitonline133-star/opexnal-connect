@@ -39,13 +39,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/ai")({
   head: () => ({
     meta: [
-      { title: "Opexnal AI — Intelligent Assistant & Creator Studio" },
+      { title: "Opexnal AI — Intelligent Assistant & Creator workspace" },
       {
         name: "description",
         content:
           "Multilingual AI creative assistant, reels generator, smart captions and social strategist on Opexnal.",
       },
-      { property: "og:title", content: "Opexnal AI — Intelligent Assistant & Creator Studio" },
+      { property: "og:title", content: "Opexnal AI — Intelligent Assistant & Creator workspace" },
       {
         property: "og:description",
         content:
@@ -134,7 +134,7 @@ function renderAiMarkdown(content: string) {
 function AIPage() {
   const { user } = useSession();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"chat" | "studio">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "workspace">("chat");
 
   // Chat State
   const [input, setInput] = useState("");
@@ -160,14 +160,14 @@ function AIPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
 
-  // Creator Studio State
-  const [studioTool, setStudioTool] = useState<AiCreatorOptions["tool"]>("caption");
-  const [studioTopic, setStudioTopic] = useState("");
-  const [studioTone, setStudioTone] = useState(TONES[0]);
-  const [studioLang, setStudioLang] = useState(LANGUAGES[0]);
-  const [studioResult, setStudioResult] = useState("");
-  const [studioLoading, setStudioLoading] = useState(false);
-  const [studioCopied, setStudioCopied] = useState(false);
+  // Creator workspace State
+  const [workspaceTool, setworkspaceTool] = useState<AiCreatorOptions["tool"]>("caption");
+  const [workspaceTopic, setworkspaceTopic] = useState("");
+  const [workspaceTone, setworkspaceTone] = useState(TONES[0]);
+  const [workspaceLang, setworkspaceLang] = useState(LANGUAGES[0]);
+  const [workspaceResult, setworkspaceResult] = useState("");
+  const [workspaceLoading, setworkspaceLoading] = useState(false);
+  const [workspaceCopied, setworkspaceCopied] = useState(false);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -280,27 +280,27 @@ function AIPage() {
     navigate({ to: "/create" });
   };
 
-  const handleRunStudioTool = async () => {
-    if (!studioTopic.trim() && studioTool !== "image_analysis") {
+  const handleRunworkspaceTool = async () => {
+    if (!workspaceTopic.trim() && workspaceTool !== "image_analysis") {
       toast.error("Please provide a topic or prompt");
       return;
     }
-    setStudioLoading(true);
-    setStudioResult("");
+    setworkspaceLoading(true);
+    setworkspaceResult("");
     try {
       const result = await runAiCreatorTool({
-        tool: studioTool,
-        topic: studioTopic.trim(),
-        ...(studioTone ? { tone: studioTone } : {}),
-        ...(studioLang ? { language: studioLang } : {}),
-        contextText: studioTopic.trim(),
+        tool: workspaceTool,
+        topic: workspaceTopic.trim(),
+        ...(workspaceTone ? { tone: workspaceTone } : {}),
+        ...(workspaceLang ? { language: workspaceLang } : {}),
+        contextText: workspaceTopic.trim(),
       });
-      setStudioResult(result);
+      setworkspaceResult(result);
     } catch (err: unknown) {
       const e = err as Error;
-      toast.error(e.message || "Failed to generate studio output");
+      toast.error(e.message || "Failed to generate workspace output");
     } finally {
-      setStudioLoading(false);
+      setworkspaceLoading(false);
     }
   };
 
@@ -341,16 +341,16 @@ function AIPage() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("studio")}
+            onClick={() => setActiveTab("workspace")}
             className={cn(
               "flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all",
-              activeTab === "studio"
+              activeTab === "workspace"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            Creator Studio Tools
+            Creator workspace Tools
           </button>
         </div>
 
@@ -509,7 +509,7 @@ function AIPage() {
             </form>
           </>
         ) : (
-          /* CREATOR STUDIO TOOLS */
+          /* CREATOR workspace TOOLS */
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
             {/* Tool Selection Grid */}
             <div className="grid grid-cols-3 gap-2">
@@ -522,14 +522,14 @@ function AIPage() {
                 { id: "image_analysis", label: "Photo Vibe", icon: Compass },
               ].map((tool) => {
                 const Icon = tool.icon;
-                const active = studioTool === tool.id;
+                const active = workspaceTool === tool.id;
                 return (
                   <button
                     key={tool.id}
                     type="button"
                     onClick={() => {
-                      setStudioTool(tool.id as AiCreatorOptions["tool"]);
-                      setStudioResult("");
+                      setworkspaceTool(tool.id as AiCreatorOptions["tool"]);
+                      setworkspaceResult("");
                     }}
                     className={cn(
                       "flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all",
@@ -549,24 +549,24 @@ function AIPage() {
             <div className="rounded-2xl border border-border bg-surface p-4 space-y-3.5">
               <div>
                 <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  {studioTool === "caption" && "What is your post about?"}
-                  {studioTool === "reels_idea" && "What is the topic or niche of your reel?"}
-                  {studioTool === "hashtags" && "What is the post theme / industry?"}
-                  {studioTool === "bio" && "Describe your identity, hobbies, or brand"}
-                  {studioTool === "rewrite" && "Paste the draft caption or text to elevate"}
-                  {studioTool === "image_analysis" && "Describe the photo visual elements"}
+                  {workspaceTool === "caption" && "What is your post about?"}
+                  {workspaceTool === "reels_idea" && "What is the topic or niche of your reel?"}
+                  {workspaceTool === "hashtags" && "What is the post theme / industry?"}
+                  {workspaceTool === "bio" && "Describe your identity, hobbies, or brand"}
+                  {workspaceTool === "rewrite" && "Paste the draft caption or text to elevate"}
+                  {workspaceTool === "image_analysis" && "Describe the photo visual elements"}
                 </label>
                 <Textarea
-                  value={studioTopic}
-                  onChange={(e) => setStudioTopic(e.target.value)}
+                  value={workspaceTopic}
+                  onChange={(e) => setworkspaceTopic(e.target.value)}
                   placeholder={
-                    studioTool === "caption"
+                    workspaceTool === "caption"
                       ? "e.g. Sunset rooftop shoot in Mumbai with friends, celebrating project launch"
-                      : studioTool === "reels_idea"
+                      : workspaceTool === "reels_idea"
                         ? "e.g. Coding morning routine, 3 minimal desk setup tips"
-                        : studioTool === "hashtags"
+                        : workspaceTool === "hashtags"
                           ? "e.g. Street photography, cinematic urban aesthetic"
-                          : studioTool === "bio"
+                          : workspaceTool === "bio"
                             ? "e.g. Tech founder & visual designer based in Bangalore, building AI tools"
                             : "Enter text..."
                   }
@@ -581,8 +581,8 @@ function AIPage() {
                     Tone / Aesthetic
                   </label>
                   <select
-                    value={studioTone}
-                    onChange={(e) => setStudioTone(e.target.value)}
+                    value={workspaceTone}
+                    onChange={(e) => setworkspaceTone(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {TONES.map((t) => (
@@ -598,8 +598,8 @@ function AIPage() {
                     Language
                   </label>
                   <select
-                    value={studioLang}
-                    onChange={(e) => setStudioLang(e.target.value)}
+                    value={workspaceLang}
+                    onChange={(e) => setworkspaceLang(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {LANGUAGES.map((l) => (
@@ -613,11 +613,11 @@ function AIPage() {
 
               <Button
                 type="button"
-                onClick={handleRunStudioTool}
-                disabled={studioLoading || !studioTopic.trim()}
+                onClick={handleRunworkspaceTool}
+                disabled={workspaceLoading || !workspaceTopic.trim()}
                 className="w-full h-11 rounded-xl brand-gradient-bg text-primary-foreground font-semibold shadow-md shadow-primary/20"
               >
-                {studioLoading ? (
+                {workspaceLoading ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Generating with Opexnal AI...
@@ -631,8 +631,8 @@ function AIPage() {
               </Button>
             </div>
 
-            {/* Generated Studio Result Card */}
-            {studioResult && (
+            {/* Generated workspace Result Card */}
+            {workspaceResult && (
               <div className="rounded-2xl border border-primary/30 bg-surface p-4 shadow-sm space-y-3 animate-in fade-in-50">
                 <div className="flex items-center justify-between border-b border-border/80 pb-2.5">
                   <div className="flex items-center gap-2">
@@ -646,23 +646,23 @@ function AIPage() {
                       variant="outline"
                       size="sm"
                       onClick={async () => {
-                        await navigator.clipboard.writeText(studioResult);
-                        setStudioCopied(true);
+                        await navigator.clipboard.writeText(workspaceResult);
+                        setworkspaceCopied(true);
                         toast.success("Result copied");
-                        setTimeout(() => setStudioCopied(false), 2000);
+                        setTimeout(() => setworkspaceCopied(false), 2000);
                       }}
                       className="h-7 text-xs rounded-lg gap-1 border-border"
                     >
-                      {studioCopied ? (
+                      {workspaceCopied ? (
                         <Check className="h-3 w-3 text-emerald-500" />
                       ) : (
                         <Copy className="h-3 w-3" />
                       )}
-                      {studioCopied ? "Copied" : "Copy"}
+                      {workspaceCopied ? "Copied" : "Copy"}
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => handleUseInPost(studioResult)}
+                      onClick={() => handleUseInPost(workspaceResult)}
                       className="h-7 text-xs rounded-lg gap-1 brand-gradient-bg text-primary-foreground"
                     >
                       <Share2 className="h-3 w-3" /> Create Post
@@ -671,7 +671,7 @@ function AIPage() {
                 </div>
 
                 <div className="whitespace-pre-line text-xs sm:text-sm text-foreground/90 leading-relaxed font-normal">
-                  {studioResult}
+                  {workspaceResult}
                 </div>
               </div>
             )}
