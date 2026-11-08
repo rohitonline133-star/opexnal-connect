@@ -130,6 +130,14 @@ function RootComponent() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    try {
+      const colourEnabled = window.localStorage.getItem("opexnal-colour-enabled") === "true";
+      const colourTheme = window.localStorage.getItem("opexnal-colour-theme") || "emerald";
+      if (colourEnabled) document.documentElement.setAttribute("data-opexnal-theme", colourTheme);
+      else document.documentElement.removeAttribute("data-opexnal-theme");
+    } catch {
+      // Theme preference storage is optional; keep the default app appearance.
+    }
     setMounted(true);
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
