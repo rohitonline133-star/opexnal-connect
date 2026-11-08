@@ -511,10 +511,10 @@ function Settings() {
               <div className="space-y-1.5">
                 <SettingsLink
                   to="/ai"
-                  id="link-ai-studio"
+                  id="link-ai-workspace"
                   icon={Sparkles}
-                  label="Opexnal AI Studio"
-                  labelGu="AI સ્ટુડિયો"
+                  label="Opexnal AI workspace"
+                  labelGu="AI વર્કસ્પેસ"
                   hint="Captions, viral hooks, hashtags, reels co-pilot"
                   hintGu="વાયરલ કેપ્શન્સ, હુક્સ અને હેશટેગ કો-પાઇલટ"
                 />
@@ -934,9 +934,9 @@ function Settings() {
                 />
                 <SettingsLink
                   to="/live"
-                  id="link-live-studio"
+                  id="link-live-workspace"
                   icon={Radio}
-                  label="Live Broadcast Studio"
+                  label="Live Broadcast workspace"
                   labelGu="લાઇવ સ્ટ્રીમિંગ"
                   hint="Go live, Q&A, and interactive audience broadcasts"
                   hintGu="લાઇવ બ્રોડકાસ્ટ અને દર્શકો સાથે ચર્ચા"
