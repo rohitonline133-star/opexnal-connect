@@ -23,29 +23,12 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Format tracked JavaScript and TypeScript files
+      - name: Format tracked first-party JavaScript and TypeScript files
         shell: bash
         run: |
-          mapfile -t files < <(git ls-files | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)
-          if (( ${#files[@]} > 0 )); then
-            npx prettier --write "${files[@]}"
-          fi
-      - name: Remove one-time repair workflow and commit formatting
-        shell: bash
-        run: |
-          git rm .github/workflows/format-fix.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -u
-          if ! git diff --cached --quiet; then
-            git commit -m "Fix repository-wide Prettier lint errors"
-            git push origin HEAD
-          else
-            echo "No formatting changes were required."
-          fi
- || true)
-          if (( ${#files[@]} > 0 )); then
-            npx prettier --write "${files[@]}"
+          mapfile -t files < <(git ls-files | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' | grep -v '^android/' | grep -v '^src/routeTree.gen.ts$' || true)
+          if (( \${#files[@]} > 0 )); then
+            npx prettier --write "\${files[@]}"
           fi
       - name: Remove one-time repair workflow and commit formatting
         shell: bash
