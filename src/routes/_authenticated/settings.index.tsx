@@ -43,7 +43,6 @@ import {
   History,
   AlertTriangle,
   Radio,
-  Palette,
   type LucideIcon,
 } from "lucide-react";
 
@@ -323,15 +322,24 @@ function Settings() {
             {/* Opexnal Colour — one entry point for the separate theme studio */}
             <section className="space-y-1.5" id="section-opexnal-colour">
               <div className="space-y-1.5">
-                <SettingsLink
+                <Link
                   to="/settings/colour"
                   id="link-opexnal-colour"
-                  icon={Palette}
-                  label="Opexnal Colour"
-                  labelGu="Opexnal Colour"
-                  hint="Premium colour themes and appearance studio"
-                  hintGu="એપના રંગો અને દેખાવ કસ્ટમાઇઝ કરો"
-                />
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-colors hover:bg-secondary cursor-pointer"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#111827] shadow-sm ring-1 ring-white/10">
+                    <svg viewBox="0 0 100 100" className="h-8 w-8" role="img" aria-label="Opexnal Colour">
+                      <defs><linearGradient id="opexnal-settings-colour-mark" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#34D399" /><stop offset="52%" stopColor="#38BDF8" /><stop offset="100%" stopColor="#A78BFA" /></linearGradient></defs>
+                      <path d="M50 10 C27 10 10 26 10 47 C10 69 27 86 48 86 H57 C65 86 69 80 65 73 C62 68 66 62 73 62 H78 C88 62 92 55 90 46 C86 25 70 10 50 10Z" fill="none" stroke="url(#opexnal-settings-colour-mark)" strokeWidth="7" strokeLinejoin="round" />
+                      <circle cx="31" cy="39" r="6" fill="#34D399" /><circle cx="48" cy="27" r="6" fill="#38BDF8" /><circle cx="67" cy="34" r="6" fill="#A78BFA" /><circle cx="76" cy="49" r="5" fill="#FBBF24" />
+                    </svg>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-semibold text-foreground">Opexnal Colour</span>
+                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">Premium colour themes and appearance studio</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </Link>
               </div>
             </section>
 
