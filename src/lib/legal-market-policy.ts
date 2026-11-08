@@ -77,6 +77,7 @@ export function isMarketFeatureAllowed(
   if (!decision.allowed) return false;
 
   const record = approvals[marketCode.trim().toUpperCase()];
+  if (!record) return false;
   // An omitted feature list means no feature has been specifically approved.
   return Boolean(record.approvedFeatures?.includes(feature));
 }
