@@ -548,7 +548,7 @@ Apple Developer account
 
 Production admin account
 
-Do not permanently lock production functionality to this AI builder.
+Do not permanently lock production functionality to any development platform.
 
 Provide:
 
@@ -1214,15 +1214,9 @@ The AI builder is only a development tool.
 
 The Opexnal owner must retain legitimate control over the source code, infrastructure, database, storage, domain, credentials, publishing accounts and administrator access.
 
-This project was built with [Lovable](https://lovable.dev).
+## Development workflow
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/c317be2d-2c8f-4954-9c58-14c027ea53bc).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+The Git repository is the source of truth for Opexnal. Develop, review, test, and deploy through owner-controlled tools and infrastructure. Keep production credentials in secure environment settings and merge verified changes through pull requests.
 
 ## Development
 
