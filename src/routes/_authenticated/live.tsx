@@ -32,14 +32,14 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/live")({
   head: () => ({
     meta: [
-      { title: "Live Streaming workspace — Opexnal" },
+      { title: "Live Streaming — Opexnal" },
       {
         name: "description",
         content: "Broadcast live to your followers and community on Opexnal.",
       },
     ],
   }),
-  component: LiveworkspacePage,
+  component: LiveStreamPage,
 });
 
 type LiveStage = "setup" | "broadcasting" | "summary";
@@ -60,7 +60,7 @@ interface QuestionItem {
   answered: boolean;
 }
 
-export function LiveworkspacePage() {
+export function LiveStreamPage() {
   const { user } = useSession();
   const navigate = useNavigate();
 
@@ -222,7 +222,7 @@ export function LiveworkspacePage() {
             ) : stage === "summary" ? (
               "Broadcast Ended"
             ) : (
-              "Live workspace"
+              "Live Stream"
             )
           }
           left={
@@ -315,7 +315,7 @@ export function LiveworkspacePage() {
               <div className="relative z-10 space-y-2">
                 <p className="text-[11px] font-semibold text-white/80">Camera Effects</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {["Normal", "workspace Glow", "Vibrant", "Vintage", "Noir B&W"].map((fx) => (
+                  {["Normal", "Glow", "Vibrant", "Vintage", "Noir B&W"].map((fx) => (
                     <button
                       key={fx}
                       type="button"
