@@ -884,7 +884,6 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
       "captions",
       "hashtags",
       "hooks",
-      "gemini",
       "assistant",
       "એઆઈ",
       "સ્ટુડિયો",
@@ -1607,7 +1606,7 @@ export const SETTINGS_SEARCH_INDEX: SearchableSettingItem[] = [
     titleGu: "Opexnal AI સ્યુટ",
     description: "Multimodal generative AI creator engine and smart content studio",
     descriptionGu: "મલ્ટિમોડલ જનરેટિવ AI ક્રિએટર એન્જિન અને સ્માર્ટ કન્ટેન્ટ સ્ટુડિયો",
-    keywords: ["ai suite", "gemini", "generative ai", "creator suite", "tools", "એઆઈ સ્યુટ"],
+    keywords: ["ai suite", "generative ai", "creator suite", "tools", "એઆઈ સ્યુટ"],
     route: "/ai",
   },
   {

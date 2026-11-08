@@ -1971,7 +1971,7 @@ function AboutModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex items-center justify-between p-3 rounded-2xl border border-border bg-surface">
           <span className="font-medium text-foreground">AI Foundation</span>
-          <span className="font-medium text-muted-foreground">Google Gemini 3.7 Flash</span>
+          <span className="font-medium text-muted-foreground">Opexnal AI Runtime</span>
         </div>
         <div className="flex items-center justify-between p-3 rounded-2xl border border-border bg-surface">
           <span className="font-medium text-foreground">Backend & Storage</span>
