@@ -294,8 +294,7 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
     {
       id: "qr_2",
       shortcut: "gear",
-      message:
-        "I shoot with Sony A7IV + 35mm f/1.4 GM and edit in DaVinci Resolve & Opexnal AI!",
+      message: "I shoot with Sony A7IV + 35mm f/1.4 GM and edit in DaVinci Resolve & Opexnal AI!",
     },
   ],
   faqAutomationEnabled: true,
