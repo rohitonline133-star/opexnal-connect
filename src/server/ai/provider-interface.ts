@@ -13,7 +13,7 @@ import type {
 /**
  * Universal AI Provider Interface
  *
- * Defines the standard contract all runtime model adapters (Gemini, Self-Hosted,
+ * Defines the standard contract all runtime model adapters (Opexnal Native, Self-Hosted,
  * Local Autonomous Runtime) must fulfill. Application logic strictly consumes
  * this interface without direct vendor dependencies.
  */
