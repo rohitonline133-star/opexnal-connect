@@ -26,7 +26,7 @@ jobs:
       - name: Format tracked first-party JavaScript and TypeScript files
         shell: bash
         run: |
-          mapfile -t files < <(git ls-files | grep -E '\\.(ts|tsx|js|jsx|mjs|cjs)$' | grep -v '^android/' | grep -v '^src/routeTree.gen.ts$' || true)
+          mapfile -t files < <(git ls-files | grep -E '[.]ts$|[.]tsx$|[.]js$|[.]jsx$|[.]mjs$|[.]cjs$' | grep -v '^android/' | grep -v '^src/routeTree.gen.ts$' || true)
           npx prettier --write "${files[@]}"
       - name: Remove one-time repair workflow and commit formatting
         shell: bash
