@@ -1,0 +1,58 @@
+name: Opexnal iOS platform validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "capacitor.config.ts"
+      - "src/**"
+      - "public/**"
+      - ".github/workflows/ios-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator-build:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Opexnal dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Opexnal web application
+        run: npm run build
+
+      - name: Generate native iOS project
+        run: npx cap add ios
+
+      - name: Sync Opexnal web assets and native plugins
+        run: npx cap sync ios
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/opexnal-ios-build" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload iOS Simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: opexnal-ios-simulator
+          path: ${{ runner.temp }}/opexnal-ios-build/Build/Products/Debug-iphonesimulator/App.app
+          if-no-files-found: error
+          retention-days: 14
