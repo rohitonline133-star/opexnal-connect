@@ -53,7 +53,10 @@ test("expired, future-dated or incomplete approvals fail closed", () => {
   for (const record of [expired, future, noEvidence]) {
     assert.equal(getMarketLaunchDecision("IN", { IN: record }, now).allowed, false);
   }
-  assert.equal(getMarketLaunchDecision("IN", { IN: validRecord }, new Date("invalid")).allowed, false);
+  assert.equal(
+    getMarketLaunchDecision("IN", { IN: validRecord }, new Date("invalid")).allowed,
+    false,
+  );
 });
 
 test("features require explicit approval even in an approved market", () => {
