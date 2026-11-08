@@ -45,7 +45,7 @@ export function getMarketLaunchDecision(
     return { allowed: false, status: "NOT_REVIEWED", reason: "INVALID_MARKET_CODE" };
   }
 
-  const record = approvals[normalizedizedCode];
+  const record = approvals[normalizedCode];
   if (!record) {
     return { allowed: false, status: "NOT_REVIEWED", reason: "NO_REVIEW_RECORD" };
   }
