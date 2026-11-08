@@ -416,7 +416,10 @@ export function getSessionsForUser(userId: string): DeviceSessionRecord[] {
 export function revokeSession(userId: string, sessionId: string): boolean {
   const list = activeSessionsStore.get(userId) || [];
   if (!list.some((session) => session.id === sessionId)) return false;
-  activeSessionsStore.set(userId, list.filter((session) => session.id !== sessionId));
+  activeSessionsStore.set(
+    userId,
+    list.filter((session) => session.id !== sessionId),
+  );
   recordSecurityAudit(userId, "SESSION_REVOKED", `Session ${sessionId} was manually revoked.`);
   return true;
 }
@@ -437,7 +440,12 @@ export function revokeAllSessions(userId: string, keepCurrent = true): number {
 // ============================================================================
 
 export type RecoveryReason =
-  "forgot_password" | "lost_email" | "lost_phone" | "account_takeover" | "suspicious_login" | "other";
+  | "forgot_password"
+  | "lost_email"
+  | "lost_phone"
+  | "account_takeover"
+  | "suspicious_login"
+  | "other";
 
 // 7. SECURITY AUDIT LOGGING
 // ============================================================================

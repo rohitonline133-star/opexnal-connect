@@ -302,8 +302,7 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
       };
       if (currentUser.email) userArgs.email = currentUser.email;
       const meta = currentUser.user_metadata as
-        | { display_name?: string; full_name?: string; avatar_url?: string }
-        | undefined;
+        { display_name?: string; full_name?: string; avatar_url?: string } | undefined;
       const dName =
         (currentUser as { displayName?: string }).displayName ||
         meta?.full_name ||

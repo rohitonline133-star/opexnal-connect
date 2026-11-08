@@ -157,10 +157,7 @@ function AccountHelpPage() {
 
       <p className="text-center text-xs text-gray-500">
         Still need to sign in?{" "}
-        <Link
-          to="/auth/login"
-          className="font-semibold text-violet-300 hover:underline"
-        >
+        <Link to="/auth/login" className="font-semibold text-violet-300 hover:underline">
           Return to login
         </Link>
       </p>

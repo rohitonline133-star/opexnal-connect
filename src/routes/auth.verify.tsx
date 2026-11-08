@@ -75,14 +75,21 @@ function VerifyPage() {
     const normalizedCode = code.trim();
 
     if (!normalizedContact) {
-      setErrorMessage(type === "email" ? "Enter the email address receiving the code." : "Enter the phone number receiving the code.");
+      setErrorMessage(
+        type === "email"
+          ? "Enter the email address receiving the code."
+          : "Enter the phone number receiving the code.",
+      );
       return;
     }
     if (type === "email" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedContact)) {
       setErrorMessage("Enter a valid email address.");
       return;
     }
-    if (type === "phone" && !/^\\+?[1-9]\\d{7,14}$/.test(normalizedContact.replace(/[\\s()-]/g, ""))) {
+    if (
+      type === "phone" &&
+      !/^\\+?[1-9]\\d{7,14}$/.test(normalizedContact.replace(/[\\s()-]/g, ""))
+    ) {
       setErrorMessage("Enter a valid phone number with country code.");
       return;
     }

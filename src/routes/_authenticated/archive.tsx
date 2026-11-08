@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Archive, Trash2, Clock, Radio, Image as ImageIcon, ChevronLeft, RotateCcw } from "lucide-react";
+import {
+  Archive,
+  Trash2,
+  Clock,
+  Radio,
+  Image as ImageIcon,
+  ChevronLeft,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, ScreenHeader } from "@/components/opexnal/app-shell";
 import { Button } from "@/components/ui/button";
@@ -57,7 +65,8 @@ export function ArchivePage() {
         if (!response.ok) throw new Error(payload.error || "Could not load your archive.");
         if (active) setPosts(payload.posts || []);
       } catch (error) {
-        if (active) toast.error(error instanceof Error ? error.message : "Could not load your archive.");
+        if (active)
+          toast.error(error instanceof Error ? error.message : "Could not load your archive.");
       } finally {
         if (active) setLoading(false);
       }
@@ -100,7 +109,8 @@ export function ArchivePage() {
     },
     recently_deleted: {
       title: "Recently Deleted is not connected",
-      description: "Post deletion currently removes posts immediately. Deleted posts cannot be restored from this page.",
+      description:
+        "Post deletion currently removes posts immediately. Deleted posts cannot be restored from this page.",
       icon: Trash2,
     },
   } as const;
@@ -111,7 +121,11 @@ export function ArchivePage() {
         <ScreenHeader
           title="Archive & Deleted"
           left={
-            <Link to="/settings" aria-label="Back" className="text-muted-foreground hover:text-foreground">
+            <Link
+              to="/settings"
+              aria-label="Back"
+              className="text-muted-foreground hover:text-foreground"
+            >
               <ChevronLeft className="h-5 w-5" />
             </Link>
           }
@@ -144,14 +158,21 @@ export function ArchivePage() {
         {activeTab === "posts" ? (
           <div className="space-y-3">
             {loading ? (
-              <p className="text-center text-sm text-muted-foreground py-10">Loading archived posts…</p>
+              <p className="text-center text-sm text-muted-foreground py-10">
+                Loading archived posts…
+              </p>
             ) : posts.length ? (
               posts.map((post) => (
-                <article key={post.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                <article
+                  key={post.id}
+                  className="rounded-2xl border border-border bg-card p-4 space-y-3"
+                >
                   <div className="flex items-start gap-3">
                     <Archive className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium line-clamp-3">{post.caption || "No caption"}</p>
+                      <p className="text-sm font-medium line-clamp-3">
+                        {post.caption || "No caption"}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Archived {new Date(post.archived_at).toLocaleString()}
                       </p>
@@ -174,7 +195,9 @@ export function ArchivePage() {
               <div className="text-center py-12 bg-card border border-border rounded-3xl p-6">
                 <Archive className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs font-semibold text-foreground">No archived posts</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Posts you archive will appear here. You can restore them to your feed at any time.</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Posts you archive will appear here. You can restore them to your feed at any time.
+                </p>
               </div>
             )}
           </div>

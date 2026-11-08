@@ -137,5 +137,4 @@ describe("Authentication & Account Security Engine", () => {
     assert.strictEqual(revokeAllSessions(testUserId, true), 0);
     assert.deepStrictEqual(getSessionsForUser(testUserId), []);
   });
-
 });
