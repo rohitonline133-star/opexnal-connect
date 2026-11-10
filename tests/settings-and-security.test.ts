@@ -13,6 +13,7 @@ import {
 } from "../src/lib/moderation-copyright.ts";
 import { getStoryHighlights, saveStoryHighlight } from "../src/lib/stories.ts";
 import { getMessageReactions, setMessageReaction } from "../src/lib/messages.ts";
+import { HELP_TOPICS, searchHelpTopics } from "../src/lib/help-catalog.ts";
 
 describe("Settings & Activity Master Inventory Audit", () => {
   test("All 14 Settings & Activity sections are present in inventory", () => {
@@ -272,5 +273,29 @@ describe("Story Highlights & Message Interactions", () => {
     const reactions = getMessageReactions();
     // Local reaction storage is browser-only; Node has no window/localStorage.
     assert.deepStrictEqual(reactions, {});
+  });
+});
+describe("Help Center Master Inventory", () => {
+  test("contains exactly 141 unique support topics", () => {
+    assert.strictEqual(HELP_TOPICS.length, 141);
+    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.id)).size, 141);
+    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.title)).size, 141);
+  });
+  test("topics cover all expected help categories", () => {
+    const categories = new Set(HELP_TOPICS.map((topic) => topic.category));
+    assert.strictEqual(categories.size, 11);
+    assert.ok(categories.has("Safety, Copyright & Appeals"));
+    assert.ok(categories.has("Privacy & Security"));
+    assert.ok(categories.has("Data, Legal & Support"));
+  });
+  test("search returns matching topics and handles no matches", () => {
+    assert.ok(
+      searchHelpTopics("copyright").some((topic) => topic.title === "Submit a copyright complaint"),
+    );
+    assert.ok(
+      searchHelpTopics("counter-notice").some((topic) => topic.title === "Submit a copyright counter-notice"),
+    );
+    assert.ok(searchHelpTopics("password").some((topic) => topic.title === "Change password"));
+    assert.deepStrictEqual(searchHelpTopics("no-such-help-topic"), []);
   });
 });
