@@ -276,10 +276,10 @@ describe("Story Highlights & Message Interactions", () => {
   });
 });
 describe("Help Center Master Inventory", () => {
-  test("contains exactly 127 unique support topics", () => {
-    assert.strictEqual(HELP_TOPICS.length, 127);
-    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.id)).size, 127);
-    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.title)).size, 127);
+  test("contains exactly 141 unique support topics", () => {
+    assert.strictEqual(HELP_TOPICS.length, 141);
+    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.id)).size, 141);
+    assert.strictEqual(new Set(HELP_TOPICS.map((topic) => topic.title)).size, 141);
   });
   test("topics cover all expected help categories", () => {
     const categories = new Set(HELP_TOPICS.map((topic) => topic.category));
@@ -291,6 +291,9 @@ describe("Help Center Master Inventory", () => {
   test("search returns matching topics and handles no matches", () => {
     assert.ok(
       searchHelpTopics("copyright").some((topic) => topic.title === "Submit a copyright complaint"),
+    );
+    assert.ok(
+      searchHelpTopics("counter-notice").some((topic) => topic.title === "Submit a copyright counter-notice"),
     );
     assert.ok(searchHelpTopics("password").some((topic) => topic.title === "Change password"));
     assert.deepStrictEqual(searchHelpTopics("no-such-help-topic"), []);
