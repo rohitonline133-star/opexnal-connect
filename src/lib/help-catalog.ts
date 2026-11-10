@@ -363,6 +363,62 @@ const topicRows: Array<Pick<HelpTopic, "category" | "title">> = [
   },
   {
     category: "Safety, Copyright & Appeals",
+    title: "File a copyright report for a photo",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "File a copyright report for a video",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Report unauthorized music in a reel",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Report unauthorized music in a story",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Report copied original artwork",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Report copied written content",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Verify copyright ownership",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Provide proof of authorization or license",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Track a copyright complaint",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Withdraw a copyright complaint",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Submit a copyright counter-notice",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Appeal a copyright removal",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Respond to a copyright claim",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
+    title: "Request review of a mistaken copyright match",
+  },
+  {
+    category: "Safety, Copyright & Appeals",
     title: "Appeal a moderation decision",
   },
   {
