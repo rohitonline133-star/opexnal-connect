@@ -473,44 +473,103 @@ export const DEFAULT_SETTINGS: OpexnalSettings = {
 };
 
 const STORAGE_KEY = "opexnal_master_settings_v3";
+const AUTH_SESSION_KEY = "opexnal_auth_session";
+
+/** Pure validation helper so account-partition rules can be covered by unit tests. */
+export function isUsableSettingsSession(
+  value: unknown,
+  now = Date.now(),
+): value is { token: string; userId: string; user: { id: string }; expiresAt: number } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const session = value as Record<string, unknown>;
+  const user = session.user;
+  return (
+    typeof session.token === "string" &&
+    session.token.length > 0 &&
+    !session.token.startsWith("opexnal_demo_") &&
+    !session.token.startsWith("opexnal_jwt_") &&
+    typeof session.userId === "string" &&
+    session.userId.length > 0 &&
+    !!user &&
+    typeof user === "object" &&
+    !Array.isArray(user) &&
+    (user as Record<string, unknown>).id === session.userId &&
+    typeof session.expiresAt === "number" &&
+    Number.isFinite(session.expiresAt) &&
+    session.expiresAt > now
+  );
+}
+
+export function getSettingsStorageKey(userId?: string): string {
+  return userId ? `${STORAGE_KEY}_${encodeURIComponent(userId)}` : STORAGE_KEY;
+}
 
 /**
- * Retrieves the unified settings object with deep merge and Supabase profile synchronization.
+ * Resolve the currently stored app session only for client-side storage partitioning.
+ * This value is NOT an authorization credential; server writes still require Supabase auth/RLS.
+ */
+function getActiveStorageUserId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) return undefined;
+    const session: unknown = JSON.parse(raw);
+    if (!isUsableSettingsSession(session)) return undefined;
+    return session.userId;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Retrieves settings from the active account's isolated local storage partition.
+ * Authenticated accounts never fall back to the legacy global key: doing so can expose
+ * another account's preferences and private lists.
  */
 export function getStoredSettings(userId?: string): OpexnalSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
-    const raw = localStorage.getItem(key) || localStorage.getItem(STORAGE_KEY);
+    const activeUserId = getActiveStorageUserId();
+    // A caller cannot select another account's local namespace by supplying an arbitrary ID.
+    if (userId && userId !== activeUserId) return DEFAULT_SETTINGS;
+    const ownerId = activeUserId;
+    const raw = localStorage.getItem(getSettingsStorageKey(ownerId));
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, ...(parsed as Partial<OpexnalSettings>) };
   } catch {
     return DEFAULT_SETTINGS;
   }
 }
 
 /**
- * Saves updated settings, updates local storage, and syncs profile columns with Supabase when logged in.
+ * Saves settings to the active account's isolated local partition. A caller-supplied userId
+ * is used only as a storage namespace; Supabase profile writes are scoped exclusively to
+ * the authenticated Supabase user and remain subject to database RLS.
  */
 export async function saveSettings(
   patch: Partial<OpexnalSettings>,
   userId?: string,
 ): Promise<OpexnalSettings> {
-  const current = getStoredSettings();
+  const activeUserId = getActiveStorageUserId();
+  // Reject stale or caller-controlled IDs instead of writing to an unintended account.
+  if (userId && userId !== activeUserId) return getStoredSettings(activeUserId);
+  const ownerId = activeUserId;
+  const current = getStoredSettings(ownerId);
   const updated: OpexnalSettings = { ...current, ...patch };
 
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(settingsStorageKey(ownerId), JSON.stringify(updated));
     } catch {
-      // ignore storage quota error
+      // Do not silently move account data into a shared/global key on storage failure.
     }
   }
 
-  // Synchronize applicable privacy & profile columns with Supabase if userId is authenticated
+  // Only the authenticated Supabase identity may determine the remote profile row.
   const { data: authData } = await supabase.auth.getUser();
-  const effectiveUserId = authData?.user?.id || userId;
+  const effectiveUserId = authData?.user?.id;
 
   if (effectiveUserId) {
     try {
