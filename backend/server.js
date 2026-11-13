@@ -18,6 +18,8 @@ import { WebSocketServer } from "ws";
 import nodemailer from "nodemailer";
 import multer from "multer";
 import { fileTypeFromFile } from "file-type";
+import { enqueueOutboxEvent } from "./lib/outbox.js";
+import { consumeDistributedRateLimit } from "./lib/distributed-rate-limit.js";
 
 const { Pool } = pg;
 const app = express();
@@ -94,6 +96,10 @@ function signMediaUrl(objectKey, expires) {
 }
 const socketsByUser = new Map();
 const attempts = new Map();
+const rateLimitHmacSecret = process.env.RATE_LIMIT_HMAC_SECRET || "";
+if (rateLimitHmacSecret && rateLimitHmacSecret.length < 32) {
+  throw new Error("RATE_LIMIT_HMAC_SECRET must contain at least 32 characters when configured.");
+}
 const scrypt = promisify(scryptCallback);
 
 if (jwtSecret.length < 32) {
@@ -128,9 +134,21 @@ function dbRequired(_req, res, next) {
     return res.status(503).json({ error: "Database is not configured on this deployment." });
   next();
 }
-function rateLimit(key, max = 10, windowMs = 60_000) {
+async function rateLimit(key, max = 10, windowMs = 60_000) {
+  if (rateLimitHmacSecret.length >= 32 && pool) {
+    try {
+      const result = await consumeDistributedRateLimit(pool, rateLimitHmacSecret, key, max, windowMs);
+      return result.allowed;
+    } catch (error) {
+      // Fail closed when distributed limiting is explicitly enabled.
+      console.error("Distributed rate limiter unavailable; request denied.", {
+        code: typeof error?.code === "string" ? error.code : "RATE_LIMIT_STORAGE_ERROR",
+      });
+      return false;
+    }
+  }
   const now = Date.now();
-  // Keep the in-process fallback bounded; use Redis/shared storage for multi-instance production.
+  // Bounded single-process fallback for local development only.
   if (attempts.size > 10_000) {
     for (const [attemptKey, record] of attempts) {
       if (record.resetAt <= now) attempts.delete(attemptKey);
@@ -230,7 +248,8 @@ async function issueToken(user, req) {
     algorithm: "HS256",
   });
 }
-async function notifyUser(
+async function enqueueNotification(
+  client,
   recipientId,
   actorId,
   type,
@@ -238,24 +257,27 @@ async function notifyUser(
   targetId = null,
   metadata = {},
 ) {
-  if (!recipientId || recipientId === actorId) return;
-  try {
-    await pool.query(
-      "INSERT INTO notifications (id,recipient_id,actor_id,notification_type,target_type,target_id,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)",
-      [
-        randomUUID(),
-        recipientId,
-        actorId || null,
-        type,
-        targetType,
-        targetId,
-        JSON.stringify(metadata),
-      ],
-    );
-  } catch (error) {
-    // A notification failure must not turn a successful post/message action into a client-visible failure.
-    console.error("Notification write failed", error?.message || "unknown error");
-  }
+  if (!recipientId || recipientId === actorId) return null;
+  const aggregateId =
+    typeof targetId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)
+      ? targetId
+      : randomUUID();
+  return enqueueOutboxEvent(client, {
+    eventType: "notification.requested",
+    eventVersion: 1,
+    aggregateType: "notification",
+    aggregateId,
+    idempotencyKey: randomUUID(),
+    payload: {
+      recipientId,
+      actorId: actorId || null,
+      notificationType: type,
+      targetType,
+      targetId,
+      metadata,
+    },
+  });
 }
 
 async function adminRequired(req, res, next) {
@@ -358,7 +380,7 @@ app.post("/api/auth/recovery/request", dbRequired, async (req, res, next) => {
   const ipKey = "recovery-request:" + String(req.ip || "unknown");
   const identityKey =
     "recovery-identity:" + createHmac("sha256", jwtSecret).update(identity).digest("hex");
-  if (!rateLimit(ipKey, 5, 60 * 60 * 1000) || !rateLimit(identityKey, 3, 60 * 60 * 1000)) {
+  if (!(await rateLimit(ipKey, 5, 60 * 60 * 1000)) || !(await rateLimit(identityKey, 3, 60 * 60 * 1000))) {
     return res.status(429).json({ error: "Too many recovery requests. Try again later." });
   }
   try {
@@ -394,7 +416,7 @@ app.post("/api/auth/recovery/status", dbRequired, async (req, res, next) => {
   if (!/^rec_[A-Za-z0-9_-]{30,50}$/.test(ticketId)) {
     return res.status(400).json({ error: "Enter a valid recovery tracking ID." });
   }
-  if (!rateLimit("recovery-status:" + String(req.ip || "unknown"), 20, 60 * 60 * 1000)) {
+  if (!(await rateLimit("recovery-status:" + String(req.ip || "unknown"), 20, 60 * 60 * 1000))) {
     return res.status(429).json({ error: "Too many status checks. Try again later." });
   }
   const ticketHash = createHash("sha256").update(ticketId).digest("hex");
@@ -448,7 +470,7 @@ app.get("/api/v1/auth/username-availability", dbRequired, async (req, res, next)
       error: "Username must be 3–30 characters using letters, numbers, dots, or underscores.",
     });
   }
-  if (!rateLimit("username-check:" + String(req.ip || "unknown"), 30)) {
+  if (!(await rateLimit("username-check:" + String(req.ip || "unknown"), 30))) {
     return res
       .status(429)
       .json({ available: false, error: "Too many username checks. Try again shortly." });
@@ -471,7 +493,7 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     });
   }
   const { username, email, password, displayName, dateOfBirth } = req.body || {};
-  if (!rateLimit("signup:" + String(req.ip || "unknown"), 5)) {
+  if (!(await rateLimit("signup:" + String(req.ip || "unknown"), 5))) {
     return res.status(429).json({ error: "Too many signup attempts. Try again later." });
   }
   if (!validUsername(username) || !validEmail(email) || !validPassword(password)) {
@@ -481,8 +503,8 @@ app.post("/api/v1/auth/signup", dbRequired, async (req, res, next) => {
     });
   }
   if (
-    !rateLimit("signup-email:" + email.toLowerCase(), 3) ||
-    !rateLimit("signup-username:" + username.toLowerCase(), 3)
+    !(await rateLimit("signup-email:" + email.toLowerCase(), 3)) ||
+    !(await rateLimit("signup-username:" + username.toLowerCase(), 3))
   ) {
     return res.status(429).json({ error: "Too many signup attempts for this email or username." });
   }
@@ -587,8 +609,8 @@ app.post("/api/v1/auth/password-reset/request", dbRequired, async (req, res, nex
   if (!validEmail(email))
     return res.status(400).json({ error: "A valid email address is required." });
   if (
-    !rateLimit("password-reset:" + String(req.ip || "unknown"), 5) ||
-    !rateLimit("password-reset-email:" + email, 3)
+    !(await rateLimit("password-reset:" + String(req.ip || "unknown"), 5)) ||
+    !(await rateLimit("password-reset-email:" + email, 3))
   ) {
     return res.status(429).json({ error: "Too many reset requests. Try again later." });
   }
@@ -654,7 +676,7 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
         "Password must be 12–128 characters and include lowercase, uppercase, a number, and a symbol.",
     });
   }
-  if (!rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10)) {
+  if (!(await rateLimit("password-reset-confirm:" + String(req.ip || "unknown"), 10))) {
     return res.status(429).json({ error: "Too many reset attempts. Try again later." });
   }
 
@@ -701,7 +723,7 @@ app.post("/api/v1/auth/password-reset/confirm", dbRequired, async (req, res, nex
 app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
   try {
     const { identity, password } = req.body || {};
-    if (!rateLimit("login:" + String(req.ip || "unknown"), 10))
+    if (!(await rateLimit("login:" + String(req.ip || "unknown"), 10)))
       return res.status(429).json({ error: "Too many login attempts. Try again later." });
     if (
       typeof identity !== "string" ||
@@ -710,7 +732,7 @@ app.post("/api/v1/auth/login", dbRequired, async (req, res, next) => {
       password.length > 128
     )
       return res.status(400).json({ error: "Username/email and password are required." });
-    if (!rateLimit("login-identity:" + identity.toLowerCase(), 10)) {
+    if (!(await rateLimit("login-identity:" + identity.toLowerCase(), 10))) {
       return res
         .status(429)
         .json({ error: "Too many login attempts for this account. Try again later." });
@@ -989,8 +1011,32 @@ app.get("/api/v1/storage/:objectKey", dbRequired, async (req, res, next) => {
 });
 
 app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 50." });
+  }
+  const limit = Math.min(requestedLimit, 50);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+      ? req.query.beforeId
+      : null;
+  const legacyCursor =
+    typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime())
+      ? new Date(req.query.cursor).toISOString()
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
+  if (legacyCursor && (beforeCreatedAt || beforeId)) {
+    return res.status(400).json({ error: "Use either the legacy cursor or the keyset cursor, not both." });
+  }
   try {
-    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
       `SELECT
         p.id, p.user_id AS author_id, u.username, u.display_name, u.avatar_url,
@@ -1024,25 +1070,33 @@ app.get("/api/v1/posts/feed", dbRequired, authRequired, async (req, res, next) =
           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
         )
-        AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
+        AND (($3::timestamptz IS NOT NULL AND p.created_at<$3::timestamptz) OR ($3::timestamptz IS NULL AND $4::timestamptz IS NULL) OR ($4::timestamptz IS NOT NULL AND (p.created_at,p.id)<($4::timestamptz,$5::uuid)))
         AND (
-          COALESCE($4::text, 'for_you') <> 'following'
+          COALESCE($6::text, 'for_you') <> 'following'
           OR p.user_id=$1
           OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)
         )
-      ORDER BY p.created_at DESC
-      LIMIT $2`,
+      ORDER BY p.created_at DESC,p.id DESC
+      LIMIT $7`,
       [
         req.user.id,
         limit,
-        typeof req.query.cursor === "string" &&
-        Number.isFinite(new Date(req.query.cursor).getTime())
-          ? new Date(req.query.cursor).toISOString()
-          : null,
+        legacyCursor,
+        beforeCreatedAt,
+        beforeId,
         req.query.feed === "following" ? "following" : "for_you",
-      ],
+        limit + 1,
+      ]
     );
-    res.json({ posts: result.rows });
+    const hasMore = result.rows.length > limit;
+    const posts = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = posts[posts.length - 1];
+    res.json({
+      posts,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     next(error);
   }
@@ -1103,7 +1157,26 @@ const profileSelect = `
 `;
 
 app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next) => {
-  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT n.id,n.notification_type,n.target_type,n.target_id,n.metadata,n.read_at,n.created_at,
@@ -1117,14 +1190,24 @@ app.get("/api/v1/notifications", dbRequired, authRequired, async (req, res, next
         END AS target_summary
        FROM notifications n LEFT JOIN users actor ON actor.id=n.actor_id
        WHERE n.recipient_id=$1
-       ORDER BY n.created_at DESC LIMIT $2`,
-      [req.user.id, limit],
+         AND ($2::timestamptz IS NULL OR (n.created_at,n.id)<($2::timestamptz,$3::uuid))
+       ORDER BY n.created_at DESC,n.id DESC LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
+    const hasMore = result.rows.length > limit;
+    const notifications = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = notifications[notifications.length - 1];
     const unread = await pool.query(
       "SELECT COUNT(*)::int AS count FROM notifications WHERE recipient_id=$1 AND read_at IS NULL",
       [req.user.id],
     );
-    return res.json({ notifications: result.rows, unreadCount: unread.rows[0].count });
+    return res.json({
+      notifications,
+      unreadCount: unread.rows[0].count,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -1182,7 +1265,7 @@ app.post("/api/v1/reports", dbRequired, authRequired, async (req, res, next) => 
   ) {
     return res.status(400).json({ error: "Invalid report payload." });
   }
-  if (!rateLimit("report:" + req.user.id, 20)) {
+  if (!(await rateLimit("report:" + req.user.id, 20))) {
     return res.status(429).json({ error: "Too many reports. Try again later." });
   }
   const tables = {
@@ -1389,23 +1472,47 @@ app.get("/api/v1/users/id/:userId", dbRequired, authRequired, async (req, res, n
 
 app.get("/api/v1/users/search", dbRequired, authRequired, async (req, res, next) => {
   const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
-  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 30);
-  if (!rateLimit("user-search:" + req.user.id, 60)) {
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 30." });
+  const limit = Math.min(requestedLimit, 30);
+  const beforeFollowers = req.query.beforeFollowers === undefined ? null : Number(req.query.beforeFollowers);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  const hasCursor = req.query.beforeFollowers !== undefined || req.query.beforeCreatedAt !== undefined || req.query.beforeId !== undefined;
+  if (hasCursor && (!Number.isSafeInteger(beforeFollowers) || beforeFollowers < 0 || !beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeFollowers, beforeCreatedAt and beforeId cursor is required." });
+  if (!(await rateLimit("user-search:" + req.user.id, 60)))
     return res.status(429).json({ error: "Too many searches. Try again shortly." });
-  }
   try {
-    const result = query
-      ? await pool.query(
-          profileSelect +
-            " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY followers_count DESC LIMIT $3",
-          [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
-        )
-      : await pool.query(
-          profileSelect +
-            " WHERE u.is_deactivated=FALSE AND u.id<>$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1)) ORDER BY followers_count DESC, u.created_at DESC LIMIT $2",
-          [req.user.id, limit],
-        );
-    return res.json({ profiles: result.rows.map(publicProfile) });
+    const searchPattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
+    const result = await pool.query(
+      `SELECT ranked.* FROM (
+        ${profileSelect}
+        WHERE u.is_deactivated=FALSE AND u.id<>$1
+          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))
+          AND ($2='' OR u.username ILIKE $3 OR u.display_name ILIKE $3)
+      ) ranked
+      WHERE ($4::bigint IS NULL OR (ranked.followers_count,ranked.created_at,ranked.id)<($4::bigint,$5::timestamptz,$6::uuid))
+      ORDER BY ranked.followers_count DESC,ranked.created_at DESC,ranked.id DESC
+      LIMIT $7`,
+      [req.user.id, query, searchPattern, beforeFollowers, beforeCreatedAt, beforeId, limit + 1],
+    );
+    const hasMore = result.rows.length > limit;
+    const page = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = page.at(-1);
+    return res.json({
+      profiles: page.map(publicProfile),
+      nextCursor: hasMore && last ? {
+        beforeFollowers: Number(last.followers_count),
+        beforeCreatedAt: new Date(last.created_at).toISOString(),
+        beforeId: last.id,
+      } : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -1562,10 +1669,15 @@ app.patch("/api/v1/users/me", dbRequired, authRequired, async (req, res, next) =
 });
 
 app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, res, next) => {
-  const cursor = typeof req.query.cursor === "string" ? new Date(req.query.cursor) : null;
-  if (cursor && !Number.isFinite(cursor.getTime()))
-    return res.status(400).json({ error: "Invalid cursor." });
-  const limit = Math.min(Math.max(Number(req.query.limit || 18), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 18 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  const limit = Math.min(requestedLimit, 100);
+  const legacyCursor = typeof req.query.cursor === "string" && Number.isFinite(new Date(req.query.cursor).getTime()) ? new Date(req.query.cursor).toISOString() : null;
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime()) ? new Date(req.query.beforeCreatedAt).toISOString() : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId) ? req.query.beforeId : null;
+  if (req.query.cursor && !legacyCursor) return res.status(400).json({ error: "Invalid cursor." });
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  if (legacyCursor && (beforeCreatedAt || beforeId)) return res.status(400).json({ error: "Use either the legacy cursor or the keyset cursor, not both." });
   try {
     const result = await pool.query(
       `SELECT
@@ -1597,16 +1709,21 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))
          AND (p.user_id=$2 OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
            OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$2 AND f.following_id=u.id)))
-         AND ($3::timestamptz IS NULL OR p.created_at < $3::timestamptz)
-       ORDER BY p.created_at DESC LIMIT $4`,
+         AND (($3::timestamptz IS NOT NULL AND p.created_at<$3::timestamptz) OR ($3::timestamptz IS NULL AND $4::timestamptz IS NULL) OR ($4::timestamptz IS NOT NULL AND (p.created_at,p.id)<($4::timestamptz,$5::uuid)))
+       ORDER BY p.created_at DESC,p.id DESC LIMIT $6`,
       [
         String(req.params.username).toLowerCase(),
         req.user.id,
-        cursor ? cursor.toISOString() : null,
-        limit,
+        legacyCursor,
+        beforeCreatedAt,
+        beforeId,
+        limit + 1,
       ],
     );
-    return res.json({ posts: result.rows });
+    const hasMore = result.rows.length > limit;
+    const posts = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = posts[posts.length - 1];
+    return res.json({ posts, nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id } : null });
   } catch (error) {
     return next(error);
   }
@@ -1614,20 +1731,29 @@ app.get("/api/v1/users/:username/posts", dbRequired, authRequired, async (req, r
 
 app.get("/api/v1/users/me/followers", dbRequired, authRequired, async (req, res, next) => {
   const query = typeof req.query.q === "string" ? req.query.q.trim().slice(0, 50) : "";
-  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 100);
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime()) ? new Date(req.query.beforeCreatedAt).toISOString() : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId) ? req.query.beforeId : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
-    const result = query
-      ? await pool.query(
-          profileSelect +
-            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND (u.username ILIKE $2 OR u.display_name ILIKE $2) ORDER BY f.created_at DESC LIMIT $3",
-          [req.user.id, `%${query.replace(/[\\%_]/g, "\\$&")}%`, limit],
-        )
-      : await pool.query(
-          profileSelect +
-            " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 ORDER BY f.created_at DESC LIMIT $2",
-          [req.user.id, limit],
-        );
-    return res.json({ profiles: result.rows.map(publicProfile) });
+    const result = await pool.query(
+      profileSelect.replace("SELECT u.id,", "SELECT f.created_at AS follow_created_at,u.id,") +
+        " JOIN follows f ON f.follower_id=u.id WHERE f.following_id=$1 AND ($2::text IS NULL OR u.username ILIKE $2 OR u.display_name ILIKE $2) AND ($3::timestamptz IS NULL OR (f.created_at,f.follower_id)<($3::timestamptz,$4::uuid)) ORDER BY f.created_at DESC,f.follower_id DESC LIMIT $5",
+      [req.user.id, query ? "%" + query.replace(/[\\%_]/g, "\\$&") + "%" : null, beforeCreatedAt, beforeId, limit + 1],
+    );
+    const hasMore = result.rows.length > limit;
+    const rows = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = rows[rows.length - 1];
+    return res.json({
+      profiles: rows.map(publicProfile),
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.follow_created_at).toISOString(), beforeId: last.id } : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -1710,12 +1836,34 @@ app.delete(
 );
 
 app.get("/api/v1/users/:userId/following", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 100 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 100)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
   try {
     const result = await pool.query(
-      "SELECT following_id FROM follows WHERE follower_id=$1 ORDER BY created_at DESC LIMIT 5000",
-      [req.user.id],
+      `SELECT following_id, created_at
+       FROM follows
+       WHERE follower_id=$1
+         AND ($2::timestamptz IS NULL OR (created_at,following_id)<($2::timestamptz,$3::uuid))
+       ORDER BY created_at DESC, following_id DESC
+       LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, requestedLimit + 1],
     );
-    return res.json({ following: result.rows.map((row) => row.following_id) });
+    const hasMore = result.rows.length > requestedLimit;
+    const page = hasMore ? result.rows.slice(0, requestedLimit) : result.rows;
+    const last = page.at(-1);
+    return res.json({
+      following: page.map((row) => row.following_id),
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.following_id } : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -1835,6 +1983,7 @@ app.get("/api/v1/users/:userId/follow-status", dbRequired, authRequired, async (
 app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, res, next) => {
   if (req.params.userId === req.user.id)
     return res.status(400).json({ error: "You cannot follow yourself." });
+  let client;
   try {
     const target = await pool.query(
       "SELECT id,is_private,is_deactivated FROM users WHERE id=$1 AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2)) LIMIT 1",
@@ -1842,28 +1991,57 @@ app.post("/api/v1/users/:userId/follow", dbRequired, authRequired, async (req, r
     );
     if (!target.rowCount || target.rows[0].is_deactivated)
       return res.status(404).json({ error: "User not found." });
-    const alreadyFollowing = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const alreadyFollowing = await client.query(
       "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2 LIMIT 1",
       [req.user.id, req.params.userId],
     );
-    if (alreadyFollowing.rowCount) return res.json({ status: "following", following: true });
+    if (alreadyFollowing.rowCount) {
+      await client.query("COMMIT");
+      return res.json({ status: "following", following: true });
+    }
     if (target.rows[0].is_private) {
-      await pool.query(
-        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW()",
+      const request = await client.query(
+        "INSERT INTO follow_requests (id,requester_id,target_id,status) VALUES ($1,$2,$3,'pending') ON CONFLICT (requester_id,target_id) DO UPDATE SET status='pending',updated_at=NOW() WHERE follow_requests.status <> 'pending' RETURNING id",
         [randomUUID(), req.user.id, req.params.userId],
       );
-      await notifyUser(req.params.userId, req.user.id, "follow_request", "user", req.user.id);
+      if (request.rowCount) {
+        await enqueueNotification(
+          client,
+          req.params.userId,
+          req.user.id,
+          "follow_request",
+          "user",
+          req.user.id,
+          {
+            followRequestId: request.rows[0].id,
+          },
+        );
+      }
+      await client.query("COMMIT");
       return res.json({ status: "requested", following: false });
     }
-    const inserted = await pool.query(
+    const inserted = await client.query(
       "INSERT INTO follows (follower_id,following_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING following_id",
       [req.user.id, req.params.userId],
     );
     if (inserted.rowCount)
-      await notifyUser(req.params.userId, req.user.id, "new_follower", "user", req.user.id);
+      await enqueueNotification(
+        client,
+        req.params.userId,
+        req.user.id,
+        "new_follower",
+        "user",
+        req.user.id,
+      );
+    await client.query("COMMIT");
     return res.json({ status: "following", following: true });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
@@ -1897,14 +2075,44 @@ app.delete(
 );
 
 app.get("/api/v1/follow-requests", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT fr.id,fr.requester_id,fr.created_at,u.username,u.display_name,u.avatar_url
        FROM follow_requests fr JOIN users u ON u.id=fr.requester_id
-       WHERE fr.target_id=$1 AND fr.status='pending' ORDER BY fr.created_at DESC LIMIT 100`,
-      [req.user.id],
+       WHERE fr.target_id=$1 AND fr.status='pending'
+         AND ($2::timestamptz IS NULL OR (fr.created_at,fr.id)<($2::timestamptz,$3::uuid))
+       ORDER BY fr.created_at DESC,fr.id DESC LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
-    return res.json({ requests: result.rows });
+    const hasMore = result.rows.length > limit;
+    const requests = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = requests[requests.length - 1];
+    return res.json({
+      requests,
+      nextCursor: hasMore && last
+        ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -1935,8 +2143,8 @@ app.post(
         "UPDATE follow_requests SET status='accepted',updated_at=NOW() WHERE id=$1",
         [item.id],
       );
+      await enqueueNotification(client, item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
       await client.query("COMMIT");
-      await notifyUser(item.requester_id, req.user.id, "follow_accepted", "user", req.user.id);
       return res.json({ accepted: true });
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
@@ -2081,22 +2289,36 @@ async function findVisiblePost(postId, userId) {
 }
 
 app.post("/api/v1/posts/:postId/like", dbRequired, authRequired, async (req, res, next) => {
+  let client;
   try {
     const post = await findVisiblePost(req.params.postId, req.user.id);
     if (!post) return res.status(404).json({ error: "Post not found." });
-    const inserted = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const inserted = await client.query(
       "INSERT INTO post_likes (user_id,post_id) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING post_id",
       [req.user.id, post.id],
     );
     if (inserted.rowCount)
-      await notifyUser(post.user_id, req.user.id, "post_like", "post", post.id);
-    const count = await pool.query(
+      await enqueueNotification(
+        client,
+        post.user_id,
+        req.user.id,
+        "post_like",
+        "post",
+        post.id,
+      );
+    const count = await client.query(
       "SELECT COUNT(*)::int AS count FROM post_likes WHERE post_id=$1",
       [post.id],
     );
+    await client.query("COMMIT");
     return res.json({ liked: true, likeCount: count.rows[0].count });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
@@ -2212,15 +2434,34 @@ app.post("/api/v1/posts/:postId/comments", dbRequired, authRequired, async (req,
         return res.status(400).json({ error: "Reply target is not part of this post." });
     }
     const id = randomUUID();
-    const result = await pool.query(
-      "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
-      [id, post.id, req.user.id, parentId, body],
-    );
+    const client = await pool.connect();
+    let result;
+    try {
+      await client.query("BEGIN");
+      result = await client.query(
+        "INSERT INTO post_comments (id,post_id,user_id,parent_id,body) VALUES ($1,$2,$3,$4,$5) RETURNING id,post_id,user_id,parent_id,body,likes_count,created_at,updated_at",
+        [id, post.id, req.user.id, parentId, body],
+      );
+      await enqueueNotification(
+        client,
+        post.user_id,
+        req.user.id,
+        "post_comment",
+        "comment",
+        id,
+        { postId: post.id },
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
     const author = await pool.query(
       "SELECT username,display_name,avatar_url FROM users WHERE id=$1",
       [req.user.id],
     );
-    await notifyUser(post.user_id, req.user.id, "post_comment", "comment", id, { postId: post.id });
     return res.status(201).json({
       comment: { ...result.rows[0], ...author.rows[0], liked_by_me: false },
     });
@@ -2598,18 +2839,66 @@ app.delete("/api/v1/users/:userId/story-mute", dbRequired, authRequired, async (
 });
 
 app.get("/api/v1/reels", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 20 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1)
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 50." });
+  const limit = Math.min(requestedLimit, 50);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" && Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+    ? new Date(req.query.beforeCreatedAt).toISOString()
+    : null;
+  const beforeId = typeof req.query.beforeId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(req.query.beforeId)
+    ? req.query.beforeId
+    : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId))
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
   try {
-    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 50);
     const result = await pool.query(
-      "SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at FROM posts p JOIN users u ON u.id=p.user_id WHERE p.media_type='video' AND (p.visibility='public' OR p.user_id=$1) ORDER BY p.created_at DESC LIMIT $2",
-      [req.user.id, limit],
+      `SELECT p.id,p.user_id AS author_id,u.username,u.avatar_url,p.caption,p.media_url,p.created_at
+       FROM posts p JOIN users u ON u.id=p.user_id
+       WHERE p.media_type='video' AND p.archived_at IS NULL
+         AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$1))
+         AND (
+           p.user_id=$1
+           OR (p.visibility='public' AND (u.is_private=FALSE OR EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id)))
+           OR (p.visibility='followers' AND EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=p.user_id))
+         )
+         AND ($2::timestamptz IS NULL OR (p.created_at,p.id)<($2::timestamptz,$3::uuid))
+       ORDER BY p.created_at DESC,p.id DESC
+       LIMIT $4`,
+      [req.user.id, beforeCreatedAt, beforeId, limit + 1],
     );
-    res.json({ reels: result.rows });
+    const hasMore = result.rows.length > limit;
+    const reels = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = reels.at(-1);
+    return res.json({
+      reels,
+      nextCursor: hasMore && last ? { beforeCreatedAt: new Date(last.created_at).toISOString(), beforeId: last.id } : null,
+    });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 30 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeLastMessageAt =
+    typeof req.query.beforeLastMessageAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeLastMessageAt).getTime())
+      ? new Date(req.query.beforeLastMessageAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeLastMessageAt || req.query.beforeId) && (!beforeLastMessageAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeLastMessageAt and beforeId cursor pair is required." });
+  }
   try {
     const result = await pool.query(
       `SELECT c.id,c.created_at,c.last_message_at,
@@ -2629,10 +2918,19 @@ app.get("/api/v1/messages/conversations", dbRequired, authRequired, async (req, 
         ) AS others
        FROM conversations c
        JOIN conversation_members mine ON mine.conversation_id=c.id AND mine.user_id=$1
-       ORDER BY c.last_message_at DESC LIMIT 100`,
-      [req.user.id],
+       WHERE ($2::timestamptz IS NULL OR (c.last_message_at,c.id)<($2::timestamptz,$3::uuid))
+       ORDER BY c.last_message_at DESC,c.id DESC LIMIT $4`,
+      [req.user.id, beforeLastMessageAt, beforeId, limit + 1],
     );
-    return res.json({ conversations: result.rows });
+    const hasMore = result.rows.length > limit;
+    const conversations = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const last = conversations[conversations.length - 1];
+    return res.json({
+      conversations,
+      nextCursor: hasMore && last
+        ? { beforeLastMessageAt: new Date(last.last_message_at).toISOString(), beforeId: last.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -2729,6 +3027,26 @@ app.post(
 );
 
 app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req, res, next) => {
+  const requestedLimit = req.query.limit === undefined ? 50 : Number(req.query.limit);
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) {
+    return res.status(400).json({ error: "Limit must be a whole number from 1 to 100." });
+  }
+  const limit = Math.min(requestedLimit, 100);
+  const beforeCreatedAt =
+    typeof req.query.beforeCreatedAt === "string" &&
+    Number.isFinite(new Date(req.query.beforeCreatedAt).getTime())
+      ? new Date(req.query.beforeCreatedAt).toISOString()
+      : null;
+  const beforeId =
+    typeof req.query.beforeId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      req.query.beforeId,
+    )
+      ? req.query.beforeId
+      : null;
+  if ((req.query.beforeCreatedAt || req.query.beforeId) && (!beforeCreatedAt || !beforeId)) {
+    return res.status(400).json({ error: "A valid beforeCreatedAt and beforeId cursor pair is required." });
+  }
   try {
     const member = await pool.query(
       "SELECT 1 FROM conversation_members WHERE conversation_id=$1 AND user_id=$2",
@@ -2743,10 +3061,20 @@ app.get("/api/v1/messages/:conversationId", dbRequired, authRequired, async (req
       `SELECT m.id,m.conversation_id,m.sender_id,m.body,m.created_at,
         u.username AS sender_username,u.display_name AS sender_display_name,u.avatar_url AS sender_avatar_url
        FROM messages m JOIN users u ON u.id=m.sender_id
-       WHERE m.conversation_id=$1 ORDER BY m.created_at ASC LIMIT 200`,
-      [req.params.conversationId],
+       WHERE m.conversation_id=$1
+         AND ($2::timestamptz IS NULL OR (m.created_at,m.id)<($2::timestamptz,$3::uuid))
+       ORDER BY m.created_at DESC,m.id DESC LIMIT $4`,
+      [req.params.conversationId, beforeCreatedAt, beforeId, limit + 1],
     );
-    return res.json({ messages: result.rows });
+    const hasMore = result.rows.length > limit;
+    const pageDescending = hasMore ? result.rows.slice(0, limit) : result.rows;
+    const oldest = pageDescending[pageDescending.length - 1];
+    return res.json({
+      messages: pageDescending.reverse(),
+      nextCursor: hasMore && oldest
+        ? { beforeCreatedAt: new Date(oldest.created_at).toISOString(), beforeId: oldest.id }
+        : null,
+    });
   } catch (error) {
     return next(error);
   }
@@ -2757,53 +3085,80 @@ app.post("/api/v1/messages/:conversationId", dbRequired, authRequired, async (re
   const conversationId = req.params.conversationId;
   if (!body || body.length > 5000)
     return res.status(400).json({ error: "Message must contain 1–5000 characters." });
+  let client;
+  let member;
+  let message;
   try {
-    const member = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    member = await client.query(
       "SELECT user_id FROM conversation_members WHERE conversation_id=$1",
       [conversationId],
     );
     if (!member.rowCount || !member.rows.some((row) => row.user_id === req.user.id)) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ error: "Conversation not found." });
     }
     const otherIds = member.rows.map((row) => row.user_id).filter((id) => id !== req.user.id);
     if (otherIds.length) {
-      const blocked = await pool.query(
+      const blocked = await client.query(
         "SELECT 1 FROM user_blocks WHERE (blocker_id=$1 AND blocked_id=ANY($2::uuid[])) OR (blocked_id=$1 AND blocker_id=ANY($2::uuid[])) LIMIT 1",
         [req.user.id, otherIds],
       );
-      const restricted = await pool.query(
+      const restricted = await client.query(
         "SELECT 1 FROM user_restrictions WHERE (restrictor_id=$1 AND restricted_id=ANY($2::uuid[])) OR (restricted_id=$1 AND restrictor_id=ANY($2::uuid[])) LIMIT 1",
         [req.user.id, otherIds],
       );
       if (blocked.rowCount || restricted.rowCount) {
+        await client.query("ROLLBACK");
         return res.status(403).json({ error: "Messaging is unavailable for this relationship." });
       }
     }
-    const result = await pool.query(
+    const messageId = randomUUID();
+    const result = await client.query(
       "INSERT INTO messages (id,conversation_id,sender_id,body) VALUES ($1,$2,$3,$4) RETURNING id,conversation_id,sender_id,body,created_at",
-      [randomUUID(), conversationId, req.user.id, body],
+      [messageId, conversationId, req.user.id, body],
     );
-    const message = result.rows[0];
-    await pool.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [
+    message = result.rows[0];
+    await client.query("UPDATE conversations SET last_message_at=NOW() WHERE id=$1", [
       conversationId,
     ]);
     for (const recipientId of otherIds) {
-      await notifyUser(recipientId, req.user.id, "message", "conversation", conversationId);
+      await enqueueNotification(
+        client,
+        recipientId,
+        req.user.id,
+        "message",
+        "conversation",
+        conversationId,
+        { messageId },
+      );
     }
-    await pool.query(
+    await client.query(
       "UPDATE conversation_members SET last_read_at=NOW() WHERE conversation_id=$1 AND user_id=$2",
       [conversationId, req.user.id],
     );
+    await client.query("COMMIT");
     for (const row of member.rows) {
       if (row.user_id === req.user.id) continue;
       for (const socket of socketsByUser.get(row.user_id) || []) {
-        if (socket.readyState === 1)
+        if (socket.readyState !== 1) continue;
+        try {
           socket.send(JSON.stringify({ type: "message.created", message }));
+        } catch (socketError) {
+          console.warn("Message websocket delivery failed", {
+            conversationId,
+            error: socketError?.message || "unknown error",
+          });
+        }
       }
     }
     return res.status(201).json({ message });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     return next(error);
+  } finally {
+    client?.release();
   }
 });
 
